@@ -101,6 +101,60 @@ dialog h2{font-size:19px;margin:0}
 .auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--pine)}
 .auth form{width:min(400px,100%);display:flex;flex-direction:column;gap:12px;padding:24px;background:#fff;border-radius:12px}
 .auth .brand{padding:0}
+.sep{height:1px;background:#33453A;margin:8px 10px}
+.side{overflow-y:auto}
+.btn.sm{min-height:38px;padding:0 10px;font-size:13px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.form{display:flex;flex-direction:column;gap:14px;max-width:560px;width:100%}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pad{padding:0 10px 8px}
+.scroll{overflow-x:auto}
+.subtabs{display:inline-flex;gap:4px;background:#E6E8DF;border-radius:10px;padding:4px;align-self:flex-start;max-width:100%}
+.subtabs button{min-height:40px;border:0;border-radius:7px;background:none;padding:0 16px;font-weight:600;color:var(--muted)}
+.subtabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.hero{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:28px}
+.hero h2{font-size:21px;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.hexdeco{width:64px;height:56px;background:var(--honey);clip-path:polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0 50%)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 16px;margin-top:6px}
+.step{display:flex;align-items:center;gap:10px;background:none;border:0;min-height:44px;text-align:left;font-weight:600;padding:0}
+.step .dot{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:13px}
+.step.ok{color:var(--muted);font-weight:500;opacity:1}
+.step.ok .dot{background:var(--good);border-color:var(--good);color:#fff}
+.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.rcard{display:flex;align-items:center;gap:12px;background:var(--ground);border:0;border-radius:8px;padding:10px 12px;text-align:left;min-height:60px}
+.rcard:hover{background:#ECEEE5}
+.rmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.rcard .num{display:flex;flex-direction:column;align-items:flex-end}
+.small-hex{flex:none;width:30px;height:26px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px}
+.chips button{min-height:38px;border:1px dashed var(--line2);border-radius:999px;background:none;padding:0 12px;font-size:13px;font-weight:600}
+.chips button:hover{background:var(--ground)}
+.menu{display:flex;flex-direction:column;padding:6px 14px}
+.menu button{display:flex;align-items:center;gap:12px;min-height:54px;background:none;border:0;border-top:1px solid #EDEFE7;text-align:left;font-weight:600}
+.menu button:first-child{border-top:0}
+.task{display:flex;align-items:center;gap:12px;border-top:1px solid #EDEFE7;padding:6px 0}
+.task:first-of-type{border-top:0}
+.check{flex:none;width:30px;height:30px;border-radius:8px;border:2px solid var(--line2);background:#fff;font-weight:700;color:#fff}
+.task.done .check{background:var(--good);border-color:var(--good)}
+.task.done b{text-decoration:line-through;color:var(--muted);font-weight:500}
+.tmain{flex:1;min-width:0;background:none;border:0;text-align:left;padding:6px 0;display:flex;flex-direction:column;min-height:44px}
+.simgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}
+.yr{flex-direction:row;align-items:center;gap:8px}
+.yr select{width:auto;min-height:44px}
+.chart{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .gl{stroke:#E8EAE2;stroke-width:1}
+.chart .gl.zero{stroke:#9AA39C}
+.chart .at{font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px}
+.dt{margin-top:8px;font-size:13px}
+.dt summary{cursor:pointer;color:#245640;font-weight:600;min-height:28px}
+.dt td,.dt th{padding:5px 8px;font-size:13px}
+.tip{position:fixed;z-index:60;background:var(--pine);color:#fff;font-size:12px;padding:7px 10px;border-radius:7px;white-space:pre-line;pointer-events:none;max-width:220px}
+.fab{display:none;position:fixed;right:16px;bottom:78px;width:56px;height:56px;border-radius:16px;border:0;background:var(--honey);color:var(--ink);font-size:28px;line-height:1;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:21}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+a{color:#245640}
 .bottom{display:none}
 @media (max-width:800px){
   .side{display:none}
@@ -110,7 +164,13 @@ dialog h2{font-size:19px;margin:0}
   .grid2{grid-template-columns:minmax(0,1fr)}
   .kpi .big{font-size:24px}
   .bottom{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;background:var(--pine);padding:4px 2px calc(4px + env(safe-area-inset-bottom));z-index:20}
-  .bottom button{background:none;border:0;color:#fff;font-size:11px;font-weight:600;min-height:52px;border-radius:8px;padding:0}
+  .bottom button{background:none;border:0;color:#fff;font-size:11px;font-weight:600;min-height:54px;border-radius:8px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .fab{display:block}
+  .simgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  td .link{white-space:nowrap}
+  .form{max-width:none}
+  .subtabs{display:flex}
+  .subtabs button{flex:1}
   .bottom button.on{color:var(--honey)}
 }
 </style>

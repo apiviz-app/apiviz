@@ -1,548 +1,165 @@
-/* Apidoo : application de gestion apicole (MVP) */
-const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key);
-const $app = document.getElementById('app');
-const $sheet = document.getElementById('sheet');
-const $sheetForm = document.getElementById('sheetForm');
-
-const ROUTES = [['dash', 'Accueil'], ['ruches', 'Ruches'], ['miel', 'Miel'], ['materiel', 'Matériel'], ['clients', 'Clients'], ['compta', 'Compta']];
-const TABLES = {
-  ruches: ['ruches', 'nom'], articles: ['articles', 'nom'], visites: ['visites', 'date_visite', false],
-  intrants: ['visite_intrants'], recoltes: ['recoltes', 'date_recolte', false], lots: ['lots_stock', 'code'],
-  clients: ['clients', 'nom'], ventes: ['ventes', 'date_vente', false], lignes: ['vente_lignes'], depenses: ['depenses', 'date_depense', false]
-};
-const CERCLES = ['Famille', 'Amis', 'Collègues', 'Autre'];
-const CATEGORIES = ['Pots & étiquettes', 'Alimentation', 'Traitements', 'Matériel', 'Autre'];
-const ETATS = ['Bonne', 'À surveiller', 'Critique'];
-const etatClass = (e) => (e === 'Bonne' ? 'good' : e === 'Critique' ? 'crit' : 'watch');
-
-const S = { session: null, member: null, route: 'dash', ruche: null, d: null, visite: null, vente: null, authMode: 'in', authMsg: '', recovery: false, busy: false };
-
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const n = (v, d = 1) => Number(v || 0).toLocaleString('fr-FR', { maximumFractionDigits: d });
-const eur = (v) => n(v, 2) + ' €';
-const today = () => { const t = new Date(); return new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
-const dfr = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '–');
-const byId = (list, id) => list.find((x) => x.id === id);
-const sum = (list, f) => list.reduce((t, x) => t + Number(f(x) || 0), 0);
-
-function toast(msg, err) {
-  document.querySelectorAll('.toast').forEach((t) => t.remove());
-  const t = document.createElement('div');
-  t.className = 'toast' + (err ? ' err' : '');
-  t.setAttribute('role', 'status');
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), err ? 6000 : 3000);
-}
-const fail = (e) => { console.error(e); toast(e.message || 'Une erreur est survenue', true); };
-
-async function loadAll() {
-  const keys = Object.keys(TABLES);
-  const res = await Promise.all(keys.map((k) => {
-    const [t, ord, asc] = TABLES[k];
-    let q = sb.from(t).select('*');
-    if (ord) q = q.order(ord, { ascending: asc !== false });
-    return q;
-  }));
-  const d = {};
-  res.forEach((r, i) => { if (r.error) throw r.error; d[keys[i]] = r.data; });
-  S.d = d;
-}
-async function refresh() { await loadAll(); render(); }
-async function write(promise, ok) {
-  const { error } = await promise;
-  if (error) throw error;
-  await refresh();
-  if (ok) toast(ok);
-}
-
-/* ---------- Connexion ---------- */
-function authView() {
-  const m = S.authMode;
-  $app.innerHTML = `<div class="auth"><form data-form="auth">
+const sb=supabase.createClient(window.APIDOO.url,window.APIDOO.key),$app=document.getElementById("app"),$sheet=document.getElementById("sheet"),$sheetForm=document.getElementById("sheetForm"),TABLES={ruches:["ruches","nom"],articles:["articles","nom"],visites:["visites","date_visite",!1],intrants:["visite_intrants"],recoltes:["recoltes","date_recolte",!1],lots:["lots_stock","code"],clients:["clients","nom"],ventes:["ventes","date_vente",!1],lignes:["vente_lignes"],depenses:["depenses","date_depense",!1],fournisseurs:["fournisseurs","nom"],taches:["taches","echeance"],budgets:["budgets"],reglages:["reglages"]},DEF={nom:"Bee\u2019s Brothers",napi:"",objectif:0,postes:["Pots & \xE9tiquettes","Alimentation","Traitements","Mat\xE9riel","Autre"],cercles:["Famille","Amis","Coll\xE8gues","Autre"],modes:["Esp\xE8ces","Ch\xE8que","Virement","Autre"]},ETATS=["Bonne","\xC0 surveiller","Critique"],MOIS=["Janv.","F\xE9vr.","Mars","Avr.","Mai","Juin","Juil.","Ao\xFBt","Sept.","Oct.","Nov.","D\xE9c."],C={honey:"#D08F00",green:"#16805A",blue:"#3B6FB6"},PRESETS={Consommable:[["Candy","kg"],["Sirop","L"],["Pots 500 g vides","unit\xE9"],["Pots 250 g vides","unit\xE9"],["Couvercles","unit\xE9"],["\xC9tiquettes","unit\xE9"],["Lani\xE8res anti-varroa","unit\xE9"],["Cire gaufr\xE9e","feuille"]],\u00C9quipement:[["Enfumoir","unit\xE9"],["Combinaison","unit\xE9"],["L\xE8ve-cadre","unit\xE9"],["Hausse","unit\xE9"],["Nourrisseur","unit\xE9"],["Extracteur","unit\xE9"],["Maturateur","unit\xE9"],["Balance","unit\xE9"]]},SAISON=[["Surveiller les entr\xE9es et les pes\xE9es","Pr\xE9parer et r\xE9parer le mat\xE9riel","Commander pots et \xE9tiquettes"],["V\xE9rifier les provisions","Nettoyer et pr\xE9parer les cadres","Faire le bilan de la saison pass\xE9e"],["Premi\xE8re visite de printemps par temps doux","V\xE9rifier la pr\xE9sence de la reine","Surveiller les r\xE9serves"],["Contr\xF4ler le d\xE9veloppement du couvain","Pr\xE9voir la pose des hausses","Anticiper l\u2019essaimage"],["Poser les hausses","Surveiller l\u2019essaimage","Pr\xE9parer des essaims si besoin"],["Pr\xE9parer l\u2019extraction","Contr\xF4ler les hausses","Surveiller le varroa"],["R\xE9colter et extraire","Mettre le miel en pots et cr\xE9er les lots","Surveiller le frelon"],["Traiter contre le varroa selon le protocole choisi","\xC9valuer les r\xE9serves","Renseigner les r\xE9coltes"],["D\xE9clarer les ruches","Nourrir si les r\xE9serves sont faibles","Resserrer les entr\xE9es"],["Peser les ruches","Pr\xE9parer l\u2019hivernage","Lancer les ventes de fin d\u2019ann\xE9e"],["Surveiller les pes\xE9es","V\xE9rifier la protection contre le vent","Relancer les clients avant les f\xEAtes"],["Traitement hivernal selon le protocole choisi","Faire le bilan financier","Pr\xE9parer le budget de l\u2019ann\xE9e suivante"]],S={session:null,member:null,route:"dash",lastRoute:"",ruche:null,d:null,visite:null,vente:null,authMode:"in",authMsg:"",recovery:!1,busy:!1,annee:new Date().getFullYear(),tab:"fin",rucheStat:null,sim:null,venteFiltre:"toutes"},esc=e=>String(e??"").replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[t]),n=(e,t=1)=>Number(e||0).toLocaleString("fr-FR",{maximumFractionDigits:t}),eur=e=>n(e,2)+" \u20AC",eur0=e=>n(e,0)+" \u20AC",today=()=>{const e=new Date;return new Date(e-e.getTimezoneOffset()*6e4).toISOString().slice(0,10)},dfr=e=>e?e.slice(8,10)+"/"+e.slice(5,7)+"/"+e.slice(0,4):"\u2013",dshort=e=>e?e.slice(8,10)+"/"+e.slice(5,7):"\u2013",byId=(e,t)=>e.find(s=>s.id===t),sum=(e,t)=>e.reduce((s,i)=>s+Number(t(i)||0),0),days=e=>Math.floor((new Date(today())-new Date(e))/864e5),yr=e=>Number(String(e).slice(0,4)),mo=e=>Number(String(e).slice(5,7))-1,num=e=>e===""||e===void 0||e===null?null:Number(e),orNull=e=>e||null,etatClass=e=>e==="Bonne"?"good":e==="Critique"?"crit":"watch",cfg=()=>({...DEF,...(S.d?.reglages[0]||{}).data||{}}),consommables=()=>S.d.articles.filter(e=>e.type!=="\xC9quipement"),equipements=()=>S.d.articles.filter(e=>e.type==="\xC9quipement");function toast(e,t){document.querySelectorAll(".toast").forEach(i=>i.remove());const s=document.createElement("div");s.className="toast"+(t?" err":""),s.setAttribute("role","status"),s.textContent=e,document.body.appendChild(s),setTimeout(()=>s.remove(),t?6e3:3e3)}function fail(e){console.error(e);const t=e.message||"Une erreur est survenue";if(/foreign key/.test(t))return toast("Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",!0);if(/unique|duplicate/.test(t))return toast("Ce nom existe d\xE9j\xE0.",!0);toast(t,!0)}async function loadAll(){const e=Object.keys(TABLES),t=await Promise.all(e.map(i=>{const[a,r,l]=TABLES[i];let o=sb.from(a).select("*");return r&&(o=o.order(r,{ascending:l!==!1})),o})),s={};t.forEach((i,a)=>{if(i.error)throw i.error;s[e[a]]=i.data}),S.d=s}async function refresh(){await loadAll(),render()}async function write(e,t){const{error:s}=await e;if(s)throw s;await refresh(),t&&toast(t)}async function saveCfg(e,t){const s={...(S.d.reglages[0]||{}).data||{},...e};await write(sb.from("reglages").update({data:s}).eq("id",1),t)}function authView(){const e=S.authMode;$app.innerHTML=`<div class="auth"><form data-form="auth">
     <div class="brand"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M9 3h16l8 14-8 14H9L1 17z" fill="#E3A008"/></svg>Apidoo</div>
-    ${S.recovery ? `<label>Nouveau mot de passe<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
-      <button class="btn main block">Enregistrer</button>` : `
+    ${S.recovery?`<label>Nouveau mot de passe<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+      <button class="btn main block">Enregistrer</button>`:`
     <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
-    ${m === 'reset' ? '' : `<label>Mot de passe<input name="password" type="password" minlength="8" required autocomplete="${m === 'up' ? 'new-password' : 'current-password'}"></label>`}
-    <button class="btn main block">${m === 'up' ? 'Créer mon compte' : m === 'reset' ? 'Recevoir le lien' : 'Se connecter'}</button>
+    ${e==="reset"?"":`<label>Mot de passe<input name="password" type="password" minlength="8" required autocomplete="${e==="up"?"new-password":"current-password"}"></label>`}
+    <button class="btn main block">${e==="up"?"Cr\xE9er mon compte":e==="reset"?"Recevoir le lien":"Se connecter"}</button>
     <div class="actions" style="justify-content:space-between">
-      <button type="button" class="link" data-act="authmode" data-v="${m === 'in' ? 'up' : 'in'}">${m === 'in' ? 'Créer mon compte' : 'J’ai déjà un compte'}</button>
-      ${m === 'in' ? '<button type="button" class="link" data-act="authmode" data-v="reset">Mot de passe oublié</button>' : ''}
+      <button type="button" class="link" data-act="authmode" data-v="${e==="in"?"up":"in"}">${e==="in"?"Cr\xE9er mon compte":"J\u2019ai d\xE9j\xE0 un compte"}</button>
+      ${e==="in"?'<button type="button" class="link" data-act="authmode" data-v="reset">Mot de passe oubli\xE9</button>':""}
     </div>`}
-    ${S.authMsg ? `<p class="notice" role="status">${esc(S.authMsg)}</p>` : ''}
-  </form></div>`;
-}
-const AUTH_FR = { 'Invalid login credentials': 'E-mail ou mot de passe incorrect.', 'Email not confirmed': 'Confirme d’abord ton adresse grâce à l’e-mail reçu.', 'User already registered': 'Ce compte existe déjà.' };
-async function submitAuth(f) {
-  const redirect = location.origin + location.pathname;
-  S.authMsg = '';
-  try {
-    if (S.recovery) {
-      const { error } = await sb.auth.updateUser({ password: f.password.value });
-      if (error) throw error;
-      S.recovery = false; await boot(); return;
-    }
-    if (S.authMode === 'reset') {
-      const { error } = await sb.auth.resetPasswordForEmail(f.email.value, { redirectTo: redirect });
-      if (error) throw error;
-      S.authMsg = 'Si ce compte existe, un lien vient de partir par e-mail.';
-    } else if (S.authMode === 'up') {
-      const { error } = await sb.auth.signUp({ email: f.email.value, password: f.password.value, options: { emailRedirectTo: redirect } });
-      if (error) throw error;
-      S.authMsg = 'Compte créé. Ouvre l’e-mail de confirmation, puis reviens te connecter.';
-      S.authMode = 'in';
-    } else {
-      const { error } = await sb.auth.signInWithPassword({ email: f.email.value, password: f.password.value });
-      if (error) throw error;
-      return;
-    }
-  } catch (e) { S.authMsg = AUTH_FR[e.message] || e.message; }
-  authView();
-}
-
-/* ---------- Coque ---------- */
-function shell(title, sub, actions, body) {
-  const nav = ROUTES.map(([r, t]) => `<button class="nav ${S.route === r ? 'on' : ''}" data-act="go" data-v="${r}" ${S.route === r ? 'aria-current="page"' : ''}>${t}</button>`).join('');
-  const bottom = ROUTES.map(([r, t]) => `<button class="${S.route === r ? 'on' : ''}" data-act="go" data-v="${r}">${t}</button>`).join('');
-  $app.innerHTML = `<div class="shell">
+    ${S.authMsg?`<p class="notice" role="status">${esc(S.authMsg)}</p>`:""}
+  </form></div>`}const AUTH_FR={"Invalid login credentials":"E-mail ou mot de passe incorrect.","Email not confirmed":"Confirme d\u2019abord ton adresse gr\xE2ce \xE0 l\u2019e-mail re\xE7u.","User already registered":"Ce compte existe d\xE9j\xE0."};async function submitAuth(e){const t=location.origin+location.pathname;S.authMsg="";try{if(S.recovery){const{error:s}=await sb.auth.updateUser({password:e.password.value});if(s)throw s;S.recovery=!1,await boot();return}if(S.authMode==="reset"){const{error:s}=await sb.auth.resetPasswordForEmail(e.email.value,{redirectTo:t});if(s)throw s;S.authMsg="Si ce compte existe, un lien vient de partir par e-mail."}else if(S.authMode==="up"){const{error:s}=await sb.auth.signUp({email:e.email.value,password:e.password.value,options:{emailRedirectTo:t}});if(s)throw s;S.authMsg="Compte cr\xE9\xE9. Ouvre l\u2019e-mail de confirmation, puis reviens te connecter.",S.authMode="in"}else{const{error:s}=await sb.auth.signInWithPassword({email:e.email.value,password:e.password.value});if(s)throw s;return}}catch(s){S.authMsg=AUTH_FR[s.message]||s.message}authView()}const ICON={dash:"M3 11l9-8 9 8M5 10v10h14V10",agenda:"M4 5h16v16H4zM4 10h16M9 3v4M15 3v4",ruches:"M7 3h10l5 9-5 9H7l-5-9z",miel:"M7 8h10l1 12H6zM8 4h8v4H8z",materiel:"M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8",clients:"M9 12a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M16 4a4 4 0 010 8M18 15c2 1 4 3 4 6",fournisseurs:"M2 6h12v11H2zM14 10h5l3 3v4h-8zM7 21a2 2 0 100-4 2 2 0 000 4zM18 21a2 2 0 100-4 2 2 0 000 4z",compta:"M12 2v20M17 6H9.500a3.500 3.500 0 000 7h5a3.500 3.500 0 010 7H6",pilotage:"M4 20V10M12 20V4M20 20v-7",previsions:"M3 17l6-6 4 4 8-8M15 7h6v6",reglages:"M4 7h10M18 7h2M4 17h2M10 17h10M16 5v4M8 15v4",plus:"M5 12h.01M12 12h.01M19 12h.01"},icon=e=>`<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[e]}"/></svg>`,SIDE=[["dash","Accueil"],["agenda","Agenda"],null,["ruches","Ruches"],["miel","Miel"],["materiel","Mat\xE9riel"],null,["clients","Clients & ventes"],["fournisseurs","Fournisseurs"],["compta","D\xE9penses"],null,["pilotage","Pilotage"],["previsions","Pr\xE9visions"],null,["reglages","R\xE9glages"]],BOTTOM=[["dash","Accueil"],["ruches","Ruches"],["miel","Stocks"],["clients","Ventes"],["pilotage","Pilotage"],["plus","Plus"]],GROUP={ruche:"ruches",visite:"ruches",vente:"clients",materiel:"miel",agenda:"plus",fournisseurs:"plus",compta:"plus",previsions:"plus",reglages:"plus"};function shell(e,t,s,i){const a=SIDE.map(o=>o?`<button class="nav ${S.route===o[0]||GROUP[S.route]===o[0]?"on":""}" data-act="go" data-v="${o[0]}">${icon(o[0])}${o[1]}</button>`:'<div class="sep"></div>').join(""),r=GROUP[S.route]||S.route,l=BOTTOM.map(([o,$])=>`<button class="${r===o?"on":""}" data-act="go" data-v="${o}">${icon(o)}<span>${$}</span></button>`).join("");$app.innerHTML=`<div class="shell">
     <nav class="side" aria-label="Navigation">
       <div class="brand"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M9 3h16l8 14-8 14H9L1 17z" fill="#E3A008"/></svg>Apidoo</div>
-      ${nav}
-      <div class="me">${esc(S.session.user.email)}<br><button class="link" data-act="logout">Se déconnecter</button></div>
+      ${a}
+      <div class="me">${esc(S.session.user.email)}<br><button class="link" data-act="logout">Se d\xE9connecter</button></div>
     </nav>
     <main><div class="wrap">
-      <div class="head"><div><h1>${esc(title)}</h1>${sub ? `<p class="sub">${esc(sub)}</p>` : ''}</div><div class="actions">${actions || ''}</div></div>
-      ${body}
+      <div class="head"><div><h1>${esc(e)}</h1>${t?`<p class="sub">${esc(t)}</p>`:""}</div><div class="actions">${s||""}</div></div>
+      ${i}
     </div></main>
-    <nav class="bottom" aria-label="Navigation">${bottom}</nav>
-  </div>`;
-}
-const table = (heads, rows, emptyMsg) => (rows.length ? `<table><thead><tr>${heads.map((h) => (h[0] === '#' ? `<th class="num">${esc(h.slice(1))}</th>` : `<th>${esc(h)}</th>`)).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>` : `<p class="empty">${esc(emptyMsg)}</p>`);
-
-/* ---------- Calculs ---------- */
-function metrics() {
-  const d = S.d;
-  const potsRestants = sum(d.lots, (l) => l.pots_restants);
-  const kgStock = sum(d.lots, (l) => l.pots_restants * l.format_g / 1000);
-  const ca = sum(d.lignes, (l) => l.quantite * l.prix_unitaire);
-  const dep = sum(d.depenses, (x) => x.montant);
-  const kgRecolte = sum(d.recoltes, (r) => r.kg);
-  const kgPots = sum(d.lots, (l) => l.pots_initiaux * l.format_g / 1000);
-  return { potsRestants, kgStock, ca, dep, kgRecolte, kgPots, valeur: sum(d.lots, (l) => l.pots_restants * l.prix) };
-}
-const venteTotal = (v) => sum(S.d.lignes.filter((l) => l.vente_id === v.id), (l) => l.quantite * l.prix_unitaire);
-const lastVisit = (rid) => S.d.visites.find((v) => v.ruche_id === rid);
-
-function todos() {
-  const d = S.d, out = [];
-  if (!d.recoltes.length) out.push(['Démarrer', 'watch', 'Saisir votre récolte de miel', 'ruches']);
-  if (!d.lots.length) out.push(['Démarrer', 'watch', 'Créer vos lots de pots de 250 g et 500 g', 'miel']);
-  d.articles.filter((a) => Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil)).forEach((a) => out.push(['Stock bas', 'watch', `${a.nom} : ${n(a.stock)} ${a.unite} restants (seuil ${n(a.seuil)})`, 'materiel']));
-  d.ruches.filter((r) => r.etat !== 'Bonne').forEach((r) => out.push([r.nom, etatClass(r.etat), `État : ${r.etat}`, 'ruche:' + r.id]));
-  const m = new Date().getMonth();
-  if (m >= 8) out.push(['Obligation', 'good', `Déclarer les ruches avant le 31 décembre ${new Date().getFullYear()}`, 'ruches']);
-  return out;
-}
-
-/* ---------- Écrans ---------- */
-function viewDash() {
-  const m = metrics(), d = S.d;
-  const kpi = (l, v, s) => `<div class="card kpi"><div class="l">${esc(l)}</div><div class="big">${esc(v)}</div><div class="s">${esc(s)}</div></div>`;
-  const hexes = d.ruches.map((r) => `<button class="hexbtn" data-act="ruche" data-v="${r.id}" aria-label="Ouvrir ${esc(r.nom)}, état ${esc(r.etat)}"><span class="hex bg-${etatClass(r.etat)}">${esc(r.nom)}</span><span class="tag">${esc(r.etat)}</span></button>`).join('');
-  const t = todos().map(([tag, c, txt, go]) => `<button class="todo" data-act="${go.startsWith('ruche:') ? 'ruche' : 'go'}" data-v="${go.replace('ruche:', '')}"><b class="${c}">${esc(tag)}</b><span>${esc(txt)}</span></button>`).join('');
-  const perHive = d.ruches.map((r) => [r.nom, sum(d.recoltes.filter((x) => x.ruche_id === r.id), (x) => x.kg)]).filter((x) => x[1] > 0);
-  const max = Math.max(1, ...perHive.map((x) => x[1]));
-  const bars = perHive.map(([nom, kg]) => `<div class="bar"><span>${esc(nom)}</span><span class="t"><i style="width:${Math.round(kg / max * 100)}%"></i></span><span>${n(kg)} kg</span></div>`).join('');
-  const months = {};
-  d.ventes.forEach((v) => { const k = v.date_vente.slice(0, 7); months[k] = (months[k] || 0) + venteTotal(v); });
-  const mk = Object.keys(months).sort().slice(-6), mm = Math.max(1, ...mk.map((k) => months[k]));
-  const mbars = mk.map((k) => `<div class="bar"><span>${k.slice(5, 7)}/${k.slice(0, 4)}</span><span class="t"><i style="width:${Math.round(months[k] / mm * 100)}%"></i></span><span>${n(months[k], 0)} €</span></div>`).join('');
-  shell('Accueil', 'Bee’s Brothers', `<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newvente">Nouvelle vente</button>`, `
+    <button class="fab" data-act="quick" aria-label="Ajouter rapidement">+</button>
+    <nav class="bottom" aria-label="Navigation">${l}</nav>
+  </div>`}const table=(e,t,s)=>t.length?`<table><thead><tr>${e.map(i=>i[0]==="#"?`<th class="num">${esc(i.slice(1))}</th>`:`<th>${esc(i)}</th>`).join("")}</tr></thead><tbody>${t.join("")}</tbody></table>`:`<p class="empty">${esc(s)}</p>`,emptyState=(e,t,s,i,a="")=>`<section class="card hero"><div class="hexdeco" aria-hidden="true"></div><h2>${esc(e)}</h2><p class="sub">${esc(t)}</p>${s?`<button class="btn main" data-act="${i}">${esc(s)}</button>`:""}${a}</section>`,kpi=(e,t,s,i="")=>`<div class="card kpi"><div class="l">${esc(e)}</div><div class="big ${i}">${esc(t)}</div>${s?`<div class="s">${esc(s)}</div>`:""}</div>`,subtabs=(e,t,s)=>`<div class="subtabs" role="tablist">${e.map(([i,a])=>`<button role="tab" aria-selected="${i===t}" class="${i===t?"on":""}" data-act="${s}" data-v="${i}">${esc(a)}</button>`).join("")}</div>`,chartW=()=>window.innerWidth<=800?Math.max(280,window.innerWidth-66):Math.min(1e3,window.innerWidth-300);function niceMax(e){if(e<=0)return 1;const t=10**Math.floor(Math.log10(e));return[1,2,2.5,5,10].map(s=>s*t).find(s=>s>=e)}const legend=e=>e.length>1?`<div class="legend">${e.map(t=>`<span><i style="background:${t.color}"></i>${esc(t.name)}</span>`).join("")}</div>`:"",chartTable=(e,t,s)=>`<details class="dt"><summary>Voir les chiffres</summary><div class="scroll"><table><thead><tr><th></th>${t.map(i=>`<th class="num">${esc(i.name)}</th>`).join("")}</tr></thead><tbody>${e.map((i,a)=>`<tr><td>${esc(i)}</td>${t.map(r=>`<td class="num">${r.values[a]===null?"\u2013":esc(s(r.values[a]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`,tipFor=(e,t,s,i)=>esc(e[i]+`
+`+t.map(a=>`${a.name} : ${a.values[i]===null?"\u2013":s(a.values[i])}`).join(`
+`));function barChart({labels:e,series:t,fmt:s=eur0,h:i=210,title:a}){const r=chartW(),l={l:46,r:6,t:12,b:24},o=r-l.l-l.r,$=i-l.t-l.b,v=niceMax(Math.max(0,...t.flatMap(d=>d.values.map(Number)))),b=d=>l.t+$-d/v*$,m=o/e.length,p=Math.min(20,Math.max(4,(m-6)/t.length-2)),g=[0,.5,1].map(d=>`<line x1="${l.l}" x2="${r-l.r}" y1="${b(v*d)}" y2="${b(v*d)}" class="gl"/><text x="${l.l-6}" y="${b(v*d)+4}" text-anchor="end" class="at">${esc(s(v*d))}</text>`).join(""),y=e.length>8&&r<420?2:1,w=e.map((d,c)=>{const f=l.l+c*m+(m-(p+2)*t.length+2)/2,k=t.map((h,_)=>{const M=Number(h.values[c]||0),j=b(M);return M>0?`<rect x="${f+_*(p+2)}" y="${j}" width="${p}" height="${Math.max(1,l.t+$-j)}" rx="3" fill="${h.color}"/>`:""}).join(""),u=c%y===0?`<text x="${l.l+c*m+m/2}" y="${i-7}" text-anchor="middle" class="at">${esc(d)}</text>`:"";return`${k}${u}<rect x="${l.l+c*m}" y="${l.t}" width="${m}" height="${$}" fill="transparent" data-tip="${tipFor(e,t,s,c)}"/>`}).join("");return`${legend(t)}<svg class="chart" viewBox="0 0 ${r} ${i}" role="img" aria-label="${esc(a||"Graphique")}">${g}${w}</svg>${chartTable(e,t,s)}`}function lineChart({labels:e,series:t,fmt:s=eur0,h:i=210,title:a}){const r=chartW(),l={l:46,r:12,t:12,b:24},o=r-l.l-l.r,$=i-l.t-l.b,v=t.flatMap(h=>h.values).filter(h=>h!==null).map(Number),b=Math.max(0,...v),m=b>0?niceMax(b):Math.min(0,...v)<0?0:1,p=Math.min(0,...v)<0?-niceMax(-Math.min(0,...v)):0,g=h=>l.l+(e.length>1?h/(e.length-1)*o:o/2),y=h=>l.t+$-(h-p)/(m-p)*$,d=(p<0?m>0?[p,0,m]:[p,p/2,0]:[0,m/2,m]).map(h=>`<line x1="${l.l}" x2="${r-l.r}" y1="${y(h)}" y2="${y(h)}" class="gl ${h===0?"zero":""}"/><text x="${l.l-6}" y="${y(h)+4}" text-anchor="end" class="at">${esc(s(h))}</text>`).join(""),c=e.length>8&&r<420?2:1,f=e.map((h,_)=>_%c===0?`<text x="${g(_)}" y="${i-7}" text-anchor="middle" class="at">${esc(h)}</text>`:"").join(""),k=t.map(h=>{const _=h.values.map((M,j)=>M===null?null:[g(j),y(Number(M))]).filter(Boolean);return`<polyline fill="none" stroke="${h.color}" stroke-width="2" stroke-linejoin="round" points="${_.map(M=>M.join(",")).join(" ")}"/>${_.map(M=>`<circle cx="${M[0]}" cy="${M[1]}" r="3.500" fill="${h.color}" stroke="#fff" stroke-width="1.500"/>`).join("")}`}).join(""),u=e.map((h,_)=>`<rect x="${g(_)-o/Math.max(1,e.length)/2}" y="${l.t}" width="${o/Math.max(1,e.length)}" height="${$}" fill="transparent" data-tip="${tipFor(e,t,s,_)}"/>`).join("");return`${legend(t)}<svg class="chart" viewBox="0 0 ${r} ${i}" role="img" aria-label="${esc(a||"Graphique")}">${d}${f}${k}${u}</svg>${chartTable(e,t,s)}`}function hbars(e,t=C.honey){if(!e.length)return'<p class="small">Pas encore de donn\xE9es.</p>';const s=Math.max(1,...e.map(i=>Number(i[1])));return`<div class="bars">${e.map(([i,a,r])=>`<div class="bar" data-tip="${esc(i+`
+`+r)}"><span>${esc(i)}</span><span class="t"><i style="width:${Math.round(a/s*100)}%;background:${t}"></i></span><span>${esc(r)}</span></div>`).join("")}</div>`}function stock(){const e=S.d;return{pots:sum(e.lots,t=>t.pots_restants),kg:sum(e.lots,t=>t.pots_restants*t.format_g/1e3),kgPots:sum(e.lots,t=>t.pots_initiaux*t.format_g/1e3),valeur:sum(e.lots,t=>t.pots_restants*t.prix)}}const venteTotal=e=>sum(S.d.lignes.filter(t=>t.vente_id===e.id),t=>t.quantite*t.prix_unitaire),lastVisit=e=>S.d.visites.find(t=>t.ruche_id===e),years=()=>{const e=S.d,t=new Set([new Date().getFullYear()]);return e.ventes.forEach(s=>t.add(yr(s.date_vente))),e.depenses.forEach(s=>t.add(yr(s.date_depense))),e.recoltes.forEach(s=>t.add(yr(s.date_recolte))),e.visites.forEach(s=>t.add(yr(s.date_visite))),[...t].sort((s,i)=>i-s)};function fin(e){const t=S.d,s=t.ventes.filter(u=>yr(u.date_vente)===e),i=t.depenses.filter(u=>yr(u.date_depense)===e),a=t.recoltes.filter(u=>yr(u.date_recolte)===e),r=new Set(s.map(u=>u.id)),l=t.lignes.filter(u=>r.has(u.vente_id)),o=sum(l,u=>u.quantite*u.prix_unitaire),$=sum(s.filter(u=>u.paye),venteTotal),v=sum(i,u=>u.montant),b=sum(a,u=>u.kg),m=sum(l,u=>u.quantite*(byId(t.lots,u.lot_id)?.format_g||0)/1e3),p=Array(12).fill(0),g=Array(12).fill(0),y=Array(12).fill(0),w=Array(12).fill(0);s.forEach(u=>{const h=venteTotal(u);p[mo(u.date_vente)]+=h,u.paye&&(g[mo(u.date_vente)]+=h),w[mo(u.date_vente)]+=sum(t.lignes.filter(_=>_.vente_id===u.id),_=>_.quantite)}),i.forEach(u=>{y[mo(u.date_depense)]+=Number(u.montant)});const d=sum(t.ventes.filter(u=>yr(u.date_vente)<e&&u.paye),venteTotal)-sum(t.depenses.filter(u=>yr(u.date_depense)<e),u=>u.montant);let c=d;const f=new Date().getFullYear()===e?new Date().getMonth():e>new Date().getFullYear()?-1:11,k=g.map((u,h)=>(c+=u-y[h],h<=f?c:null));return{ventes:s,dep:i,lignes:l,ca:o,encaisse:$,aEncaisser:o-$,charges:v,resultat:o-v,kgRec:b,kgVendu:m,mCa:p,mEnc:g,mDep:y,mPots:w,treso:k,report:d,tresoFin:d+$-v,coutKg:b?v/b:null,prixKg:m?o/m:null}}function rythme(){const e=S.d,t=new Date(Date.now()-90*864e5).toISOString().slice(0,10),s=new Set(e.ventes.filter(l=>l.date_vente>=t).map(l=>l.id)),a=sum(e.lignes.filter(l=>s.has(l.vente_id)),l=>l.quantite)/3,r=stock().pots;return{mois:a,moisRestants:a>0?r/a:null}}function todos(){const e=S.d,t=[];e.taches.filter(a=>!a.faite&&a.echeance&&a.echeance<today()).forEach(a=>t.push(["En retard","crit",a.titre+" ("+dshort(a.echeance)+")","agenda"])),e.articles.filter(a=>a.type!=="\xC9quipement"&&Number(a.seuil)>0&&Number(a.stock)<=Number(a.seuil)).forEach(a=>t.push(["Stock bas","watch",`${a.nom} : ${n(a.stock)} ${a.unite} (seuil ${n(a.seuil)})`,"materiel"])),e.ruches.filter(a=>a.etat!=="Bonne").forEach(a=>t.push([a.nom,etatClass(a.etat),`\xC9tat : ${a.etat}`,"ruche:"+a.id])),e.ruches.forEach(a=>{const r=lastVisit(a.id);r&&days(r.date_visite)>30&&t.push([a.nom,"watch",`Pas de visite depuis ${days(r.date_visite)} jours`,"ruche:"+a.id])});const s=e.ventes.filter(a=>!a.paye);s.length&&t.push(["\xC0 encaisser","watch",`${s.length} vente(s) non pay\xE9e(s) : ${eur(sum(s,venteTotal))}`,"clients"]);const i=sum(e.recoltes,a=>a.kg)-stock().kgPots;return i>.05&&t.push(["Miel","good",`${n(i)} kg r\xE9colt\xE9s pas encore mis en pots`,"miel"]),new Date().getMonth()>=8&&e.ruches.length&&t.push(["Obligation","good",`D\xE9clarer les ruches avant le 31 d\xE9cembre ${new Date().getFullYear()}`,"agenda"]),e.taches.filter(a=>!a.faite&&(!a.echeance||a.echeance>=today())).slice(0,4).forEach(a=>t.push([a.echeance?dshort(a.echeance):"\xC0 faire","good",a.titre,"agenda"])),t}function viewDash(){const e=S.d,t=cfg(),s=stock(),i=new Date().getFullYear(),a=fin(i),r=[[e.ruches.length>0,"Ajouter vos ruches","newruches"],[e.articles.length>0,"Renseigner votre mat\xE9riel","gomateriel"],[e.recoltes.length>0,"Saisir une r\xE9colte","newrecolte"],[e.lots.length>0,"Cr\xE9er vos lots de pots","newlot"],[e.clients.length>0,"Ajouter un client","newclient"],[e.ventes.length>0,"Enregistrer une vente","newvente"]],l=r.filter(b=>b[0]).length,o=l<r.length?`<section class="card">
+    <h2>Bien d\xE9marrer</h2><p class="small">${l} sur ${r.length} \xE9tapes termin\xE9es</p><div class="track"><i style="width:${Math.round(l/r.length*100)}%"></i></div>
+    <div class="steps">${r.map(([b,m,p])=>`<button class="step ${b?"ok":""}" ${b?"disabled":`data-act="${p}"`}><span class="dot">${b?"\u2713":""}</span>${esc(m)}</button>`).join("")}</div>
+  </section>`:"",$=e.ruches.map(b=>`<button class="hexbtn" data-act="ruche" data-v="${b.id}" aria-label="Ouvrir ${esc(b.nom)}, \xE9tat ${esc(b.etat)}"><span class="hex bg-${etatClass(b.etat)}">${esc(b.nom)}</span><span class="tag">${esc(b.etat)}</span></button>`).join(""),v=todos().slice(0,7).map(([b,m,p,g])=>`<button class="todo" data-act="${g.startsWith("ruche:")?"ruche":"go"}" data-v="${g.replace("ruche:","")}"><b class="${m}">${esc(b)}</b><span>${esc(p)}</span></button>`).join("");shell(t.nom,new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}),'<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newvente">Nouvelle vente</button>',`
+    ${o}
     <div class="grid">
-      ${kpi('Miel en pots', n(m.kgStock) + ' kg', m.kgRecolte ? `sur ${n(m.kgRecolte)} kg récoltés` : 'récolte à saisir')}
-      ${kpi('Pots restants', m.potsRestants, 'à vendre : ' + eur(m.valeur))}
-      ${kpi('Ventes', eur(m.ca), d.ventes.length + ' vente(s)')}
-      ${kpi('Résultat à date', eur(m.ca - m.dep), 'après ' + eur(m.dep) + ' de dépenses')}
+      ${kpi("Miel en stock",n(s.kg)+" kg",s.pots+" pots")}
+      ${kpi("Ventes "+i,eur0(a.ca),a.aEncaisser>0?eur0(a.aEncaisser)+" \xE0 encaisser":a.ventes.length+" vente(s)")}
+      ${kpi("R\xE9sultat "+i,eur0(a.resultat),"apr\xE8s "+eur0(a.charges)+" de d\xE9penses")}
+      ${kpi("Tr\xE9sorerie",eur0(a.tresoFin),"encaiss\xE9 moins d\xE9pens\xE9")}
     </div>
     <div class="grid2">
-      <section class="card"><h2>État des ruches</h2><div class="hexes">${hexes}</div></section>
-      <section class="card"><h2>À faire</h2>${t || '<p class="small">Rien à signaler.</p>'}</section>
-    </div>
-    <div class="grid2">
-      <section class="card"><h2>Ventes par mois</h2><div class="bars">${mbars || '<p class="small">Aucune vente pour le moment.</p>'}</div></section>
-      <section class="card"><h2>Miel récolté par ruche</h2><div class="bars">${bars || '<p class="small">Aucune récolte par ruche pour le moment.</p>'}</div></section>
-    </div>`);
-}
-
-function viewRuches() {
-  const d = S.d;
-  const rows = d.ruches.map((r) => {
-    const v = lastVisit(r.id);
-    return `<tr><td><button class="link" data-act="ruche" data-v="${r.id}">${esc(r.nom)}</button></td><td>${esc(r.rucher) || '–'}</td><td><span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span></td><td>${v ? dfr(v.date_visite) : 'Jamais'}</td><td class="num">${n(sum(d.recoltes.filter((x) => x.ruche_id === r.id), (x) => x.kg))} kg</td></tr>`;
-  });
-  const rec = d.recoltes.map((r) => `<tr><td>${dfr(r.date_recolte)}</td><td>${r.ruche_id ? esc(byId(d.ruches, r.ruche_id)?.nom) : 'Toutes les ruches'}</td><td class="num">${n(r.kg)} kg</td><td class="num"><button class="link" data-act="delrecolte" data-v="${r.id}">Supprimer</button></td></tr>`);
-  shell('Ruches', d.ruches.length + ' ruches', `<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newrecolte">Récolte</button><button class="btn" data-act="newruche">Ajouter une ruche</button>`, `
-    <section class="card tbl">${table(['Ruche', 'Rucher', 'État', 'Dernière visite', '#Miel'], rows, 'Aucune ruche.')}</section>
-    <section class="card tbl"><h2>Récoltes</h2>${table(['Date', 'Origine', '#Quantité', '#'], rec, 'Aucune récolte saisie.')}</section>`);
-}
-
-function viewRuche() {
-  const d = S.d, r = byId(d.ruches, S.ruche);
-  if (!r) { S.route = 'ruches'; return render(); }
-  const vs = d.visites.filter((v) => v.ruche_id === r.id);
-  const rows = vs.map((v) => {
-    const intr = d.intrants.filter((i) => i.visite_id === v.id).map((i) => { const a = byId(d.articles, i.article_id); return `${n(i.quantite)} ${esc(a?.unite)} ${esc(a?.nom)}`; }).join(', ');
-    return `<tr><td>${dfr(v.date_visite)}</td><td>Activité ${esc(v.activite.toLowerCase())}, provisions ${esc(v.provisions.toLowerCase())}, reine ${esc(v.reine.toLowerCase())}${v.poids_kg ? ', ' + n(v.poids_kg) + ' kg' : ''}${v.note ? '<br><span class="small">' + esc(v.note) + '</span>' : ''}</td><td>${intr || '–'}</td><td class="num"><button class="link" data-act="delvisite" data-v="${v.id}">Supprimer</button></td></tr>`;
-  });
-  const kg = sum(d.recoltes.filter((x) => x.ruche_id === r.id), (x) => x.kg);
-  const candy = sum(d.intrants.filter((i) => vs.some((v) => v.id === i.visite_id)), (i) => i.quantite);
-  shell(r.nom, [r.rucher, r.annee_reine ? 'reine ' + r.annee_reine : ''].filter(Boolean).join(' · ') || 'Fiche de la ruche', `<button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button class="btn" data-act="editruche" data-v="${r.id}">Modifier</button>`, `
+      <section class="card"><h2>\xC9tat des ruches</h2>${$?`<div class="hexes">${$}</div>`:'<p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button>'}</section>
+      <section class="card"><h2>\xC0 faire</h2>${v||'<p class="small">Rien \xE0 signaler.</p>'}</section>
+    </div>`)}function viewPlus(){shell("Plus","","",`<section class="card menu">${[["agenda","Agenda et t\xE2ches"],["previsions","Pr\xE9visions et budget"],["compta","D\xE9penses"],["fournisseurs","Fournisseurs"],["reglages","R\xE9glages et exports"]].map(([t,s])=>`<button data-act="go" data-v="${t}">${icon(t)}<span>${s}</span></button>`).join("")}<button data-act="logout">${icon("plus")}<span>Se d\xE9connecter</span></button></section>`)}function viewRuches(){const e=S.d;if(!e.ruches.length)return shell("Ruches","","",emptyState("Ajoutez votre premi\xE8re ruche","Une par une ou plusieurs d\u2019un coup. Vous pourrez les renommer et les regrouper par rucher.","Ajouter des ruches","newruches"));const t={};e.ruches.forEach(a=>{(t[a.rucher||"Sans rucher"]=t[a.rucher||"Sans rucher"]||[]).push(a)});const s=Object.keys(t).sort().map(a=>`<section class="card"><h2>${esc(a)} <span class="small">\xB7 ${t[a].length} ruche(s)</span></h2><div class="rlist">${t[a].map(r=>{const l=lastVisit(r.id);return`<button class="rcard" data-act="ruche" data-v="${r.id}"><span class="hex small-hex bg-${etatClass(r.etat)}"></span><span class="rmain"><b>${esc(r.nom)}</b><span class="small">${l?"Visite il y a "+days(l.date_visite)+" j":"Jamais visit\xE9e"}</span></span><span class="num"><b>${n(sum(e.recoltes.filter(o=>o.ruche_id===r.id),o=>o.kg))} kg</b><span class="small tag ${etatClass(r.etat)}">${esc(r.etat)}</span></span></button>`}).join("")}</div></section>`).join(""),i=e.recoltes.map(a=>`<tr><td><button class="link" data-act="editrecolte" data-v="${a.id}">${dfr(a.date_recolte)}</button></td><td>${a.ruche_id?esc(byId(e.ruches,a.ruche_id)?.nom):"Toutes les ruches"}</td><td class="num">${n(a.kg)} kg</td></tr>`);shell("Ruches",e.ruches.length+" ruche(s)",'<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newrecolte">R\xE9colte</button><button class="btn" data-act="newruches">Ajouter</button>',`
+    ${s}
+    <section class="card tbl"><h2>R\xE9coltes</h2>${table(["Date","Origine","#Quantit\xE9"],i,"Aucune r\xE9colte saisie.")}</section>`)}function viewRuche(){const e=S.d,t=byId(e.ruches,S.ruche);if(!t)return S.route="ruches",render();const s=e.visites.filter(o=>o.ruche_id===t.id),i=s.map(o=>{const $=e.intrants.filter(v=>v.visite_id===o.id).map(v=>{const b=byId(e.articles,v.article_id);return`${n(v.quantite)} ${esc(b?.unite)} ${esc(b?.nom)}`}).join(", ");return`<tr><td>${dfr(o.date_visite)}</td><td>Activit\xE9 ${esc(o.activite.toLowerCase())}, provisions ${esc(o.provisions.toLowerCase())}, reine ${esc(o.reine.toLowerCase())}${o.couvain?", couvain "+esc(o.couvain.toLowerCase()):""}${o.poids_kg?", "+n(o.poids_kg)+" kg":""}${o.varroa!==null&&o.varroa!==void 0?", varroa "+o.varroa:""}${o.note?'<br><span class="small">'+esc(o.note)+"</span>":""}</td><td>${$||"\u2013"}</td><td class="num"><button class="link" data-act="delvisite" data-v="${o.id}">Supprimer</button></td></tr>`}),a=sum(e.recoltes.filter(o=>o.ruche_id===t.id),o=>o.kg),r=s.filter(o=>o.poids_kg).slice().reverse(),l=e.taches.filter(o=>o.ruche_id===t.id&&!o.faite);shell(t.nom,[t.rucher,t.type_ruche,t.annee_reine?"reine "+t.annee_reine:""].filter(Boolean).join(" \xB7 ")||"Fiche de la ruche",`<button class="btn main" data-act="newvisite" data-v="${t.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${t.id}">T\xE2che</button><button class="btn" data-act="editruche" data-v="${t.id}">Modifier</button>`,`
     <div class="grid">
-      <div class="card kpi"><div class="l">État</div><div class="big ${etatClass(r.etat)}">${esc(r.etat)}</div></div>
-      <div class="card kpi"><div class="l">Miel récolté</div><div class="big">${n(kg)} kg</div></div>
-      <div class="card kpi"><div class="l">Intrants utilisés</div><div class="big">${n(candy)}</div><div class="s">kg ou L au total</div></div>
-      <div class="card kpi"><div class="l">Visites</div><div class="big">${vs.length}</div></div>
+      ${kpi("\xC9tat",t.etat,"",etatClass(t.etat))}
+      ${kpi("Miel r\xE9colt\xE9",n(a)+" kg","")}
+      ${kpi("Derni\xE8re visite",s[0]?"Il y a "+days(s[0].date_visite)+" j":"\u2013",s[0]?dfr(s[0].date_visite):"Aucune visite")}
+      ${kpi("Visites",s.length,"")}
     </div>
-    ${r.notes ? `<section class="card">${esc(r.notes)}</section>` : ''}
-    <section class="card tbl"><h2>Journal des visites</h2>${table(['Date', 'Observations', 'Intrants', '#'], rows, 'Aucune visite enregistrée.')}</section>`);
-}
-
-function viewVisite() {
-  const v = S.visite, d = S.d;
-  const seg = (t, k, opts) => `<div class="field"><div class="t">${t}</div><div class="seg">${opts.map((o) => `<button type="button" class="${v[k] === o ? 'on' : ''}" aria-pressed="${v[k] === o}" data-act="vset" data-k="${k}" data-v="${o}">${o}</button>`).join('')}</div></div>`;
-  const steppers = d.articles.map((a) => `<div class="stepper"><div><b>${esc(a.nom)}</b><div class="small">${n(a.stock)} ${esc(a.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="-0.5">−</button><span>${n(v.q[a.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="0.5">+</button></div></div>`).join('');
-  shell('Nouvelle visite', 'Au rucher', `<button class="btn" data-act="cancel">Annuler</button>`, `
-    <form data-form="visite" style="display:flex;flex-direction:column;gap:16px;max-width:560px">
-      <div class="field"><div class="t">Ruche visitée</div><div class="pick">${d.ruches.map((r) => `<button type="button" class="${v.ruche_id === r.id ? 'on' : ''}" aria-pressed="${v.ruche_id === r.id}" data-act="vset" data-k="ruche_id" data-v="${r.id}">${esc(r.nom)}</button>`).join('')}</div></div>
-      <label>Date<input type="date" id="v_date" value="${esc(v.date_visite)}" max="${today()}" required></label>
-      ${seg('Activité à l’entrée', 'activite', ['Faible', 'Normale', 'Forte'])}
-      ${seg('Provisions', 'provisions', ['Faibles', 'Moyennes', 'Bonnes'])}
-      ${seg('Reine', 'reine', ['Vue', 'Non vue', 'Non cherchée'])}
-      <section class="card"><h2>Ce que vous avez utilisé</h2>${steppers || '<p class="small">Ajoutez des articles dans Matériel.</p>'}</section>
-      <label>Poids de la ruche (kg, facultatif)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(v.poids_kg)}"></label>
-      <label>Note<textarea id="v_note">${esc(v.note)}</textarea></label>
-      <button class="btn main block" ${S.busy ? 'disabled' : ''}>Enregistrer la visite</button>
-    </form>`);
-}
-
-function viewMiel() {
-  const d = S.d, m = metrics();
-  const rows = d.lots.map((l) => `<tr><td><button class="link" data-act="editlot" data-v="${l.id}">${esc(l.code)}</button></td><td>${esc(l.miel)}</td><td>${l.format_g} g</td><td class="num">${eur(l.prix)}</td><td class="num">${l.pots_restants} / ${l.pots_initiaux}</td><td>${dfr(l.ddm)}</td></tr>`);
-  const ecart = m.kgRecolte - m.kgPots;
-  shell('Stock de miel', 'Du kilo récolté au pot vendu', `<button class="btn main" data-act="newlot">Nouveau lot</button><button class="btn" data-act="newrecolte">Récolte</button>`, `
+    ${t.notes?`<section class="card">${esc(t.notes)}</section>`:""}
+    ${l.length?`<section class="card"><h2>T\xE2ches pr\xE9vues</h2>${l.map(taskRow).join("")}</section>`:""}
+    ${r.length>1?`<section class="card"><h2>\xC9volution du poids</h2>${lineChart({labels:r.map(o=>dshort(o.date_visite)),series:[{name:"Poids",color:C.honey,values:r.map(o=>Number(o.poids_kg))}],fmt:o=>n(o)+" kg",title:"\xC9volution du poids de la ruche",h:180})}</section>`:""}
+    <section class="card tbl"><h2>Journal des visites</h2>${table(["Date","Observations","Intrants","#"],i,"Aucune visite enregistr\xE9e.")}</section>`)}function viewVisite(){const e=S.visite,t=S.d,s=(a,r,l)=>`<div class="field"><div class="t">${a}</div><div class="seg" style="grid-template-columns:repeat(${l.length},minmax(0,1fr))">${l.map(o=>`<button type="button" class="${e[r]===o?"on":""}" aria-pressed="${e[r]===o}" data-act="vset" data-k="${r}" data-v="${o}">${o}</button>`).join("")}</div></div>`,i=consommables().map(a=>{const r=["kg","L"].includes(a.unite)?.5:1;return`<div class="stepper"><div><b>${esc(a.nom)}</b><div class="small">${n(a.stock)} ${esc(a.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${-r}">\u2212</button><span>${n(e.q[a.id]||0)}</span><button type="button" aria-label="Augmenter ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${r}">+</button></div></div>`}).join("");shell("Nouvelle visite","Au rucher",'<button class="btn" data-act="cancel">Annuler</button>',`
+    <form data-form="visite" class="form">
+      <div class="field"><div class="t">Ruche visit\xE9e</div><div class="pick">${t.ruches.map(a=>`<button type="button" class="${e.ruche_id===a.id?"on":""}" aria-pressed="${e.ruche_id===a.id}" data-act="vset" data-k="ruche_id" data-v="${a.id}">${esc(a.nom)}</button>`).join("")}</div></div>
+      <label>Date<input type="date" id="v_date" value="${esc(e.date_visite)}" max="${today()}" required></label>
+      ${s("Activit\xE9 \xE0 l\u2019entr\xE9e","activite",["Faible","Normale","Forte"])}
+      ${s("Provisions","provisions",["Faibles","Moyennes","Bonnes"])}
+      ${s("Reine","reine",["Vue","Non vue","Non cherch\xE9e"])}
+      ${s("Couvain","couvain",["Non vu","R\xE9duit","Normal","Abondant"])}
+      ${s("\xC9tat de la ruche apr\xE8s la visite","etat",ETATS)}
+      <section class="card"><h2>Ce que vous avez utilis\xE9</h2>${i||'<p class="small">Ajoutez vos consommables dans Mat\xE9riel pour les suivre ici.</p>'}</section>
+      <div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(e.poids_kg)}"></label>
+      <label>Varroas compt\xE9s<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>
+      <label>Note<textarea id="v_note">${esc(e.note)}</textarea></label>
+      <button class="btn main block" ${S.busy?"disabled":""}>Enregistrer la visite</button>
+    </form>`)}function viewMiel(){const e=S.d,t=stock(),s=sum(e.recoltes,o=>o.kg),i=s-t.kgPots,a=rythme(),r=e.lots.map(o=>`<tr><td><button class="link" data-act="editlot" data-v="${o.id}">${esc(o.code)}</button></td><td>${esc(o.miel)}</td><td>${n(o.format_g,0)} g</td><td class="num">${eur(o.prix)}</td><td class="num">${o.pots_restants} / ${o.pots_initiaux}</td><td>${dfr(o.ddm)}</td></tr>`),l=e.lots.length||s?`
     <div class="grid">
-      <div class="card kpi"><div class="l">Récolté</div><div class="big">${n(m.kgRecolte)} kg</div></div>
-      <div class="card kpi"><div class="l">Mis en pots</div><div class="big">${n(m.kgPots)} kg</div><div class="s">${ecart > 0 ? n(ecart) + ' kg pas encore en pots' : ecart < 0 ? 'Plus que la récolte saisie : à vérifier' : 'Tout est en pots'}</div></div>
-      <div class="card kpi"><div class="l">En stock</div><div class="big">${n(m.kgStock)} kg</div><div class="s">${m.potsRestants} pots</div></div>
-      <div class="card kpi"><div class="l">À vendre</div><div class="big">${eur(m.valeur)}</div></div>
+      ${kpi("R\xE9colt\xE9",n(s)+" kg","")}
+      ${kpi("Mis en pots",n(t.kgPots)+" kg",i>.05?n(i)+" kg \xE0 mettre en pots":i<-.05?"Plus que la r\xE9colte saisie":"Tout est en pots")}
+      ${kpi("En stock",n(t.kg)+" kg",t.pots+" pots")}
+      ${kpi("Valeur \xE0 vendre",eur0(t.valeur),a.moisRestants!==null?`Environ ${n(a.moisRestants,0)} mois de ventes`:"")}
     </div>
-    <section class="card tbl">${table(['Lot', 'Miel', 'Format', '#Prix', '#Pots restants', 'DDM'], rows, 'Aucun lot. Créez un lot par format de pot.')}</section>`);
-}
-
-function viewMateriel() {
-  const rows = S.d.articles.map((a) => {
-    const low = Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil);
-    return `<tr><td><button class="link" data-act="editarticle" data-v="${a.id}">${esc(a.nom)}</button></td><td class="num">${n(a.stock)} ${esc(a.unite)}</td><td class="num">${n(a.seuil)} ${esc(a.unite)}</td><td><span class="tag ${low ? 'watch' : 'good'}">${low ? 'À commander' : 'OK'}</span></td><td class="num"><button class="btn" data-act="entree" data-v="${a.id}">Entrée de stock</button></td></tr>`;
-  });
-  shell('Matériel', 'Ce que vous avez et ce qu’il faut racheter', `<button class="btn main" data-act="newarticle">Ajouter un article</button>`, `<section class="card tbl">${table(['Article', '#Stock', '#Seuil', 'État', '#'], rows, 'Aucun article.')}</section>`);
-}
-
-function viewClients() {
-  const d = S.d;
-  const rows = d.clients.map((c) => {
-    const vs = d.ventes.filter((v) => v.client_id === c.id);
-    return `<tr><td><button class="link" data-act="editclient" data-v="${c.id}">${esc(c.nom)}</button></td><td>${esc(c.cercle)}</td><td>${esc(c.telephone) || '–'}</td><td class="num">${eur(sum(vs, venteTotal))}</td><td>${vs[0] ? dfr(vs[0].date_vente) : 'Jamais'}</td></tr>`;
-  });
-  const sales = d.ventes.slice(0, 15).map((v) => {
-    const det = d.lignes.filter((l) => l.vente_id === v.id).map((l) => `${l.quantite} × ${byId(d.lots, l.lot_id)?.format_g} g`).join(', ');
-    return `<tr><td>${dfr(v.date_vente)}</td><td>${esc(byId(d.clients, v.client_id)?.nom)}</td><td>${esc(det)}</td><td class="num">${eur(venteTotal(v))}</td><td class="num"><button class="link" data-act="delvente" data-v="${v.id}">Supprimer</button></td></tr>`;
-  });
-  shell('Clients & ventes', d.clients.length + ' client(s)', `<button class="btn main" data-act="newvente">Nouvelle vente</button><button class="btn" data-act="newclient">Ajouter un client</button>`, `
-    <section class="card tbl">${table(['Client', 'Cercle', 'Téléphone', '#Total', 'Dernier achat'], rows, 'Aucun client.')}</section>
-    <section class="card tbl"><h2>Dernières ventes</h2>${table(['Date', 'Client', 'Pots', '#Montant', '#'], sales, 'Aucune vente.')}</section>`);
-}
-
-function viewVente() {
-  const v = S.vente, d = S.d;
-  const lots = d.lots.filter((l) => l.pots_restants > 0);
-  const total = sum(lots, (l) => (v.q[l.id] || 0) * l.prix);
-  const steppers = lots.map((l) => `<div class="stepper"><div><b>${l.format_g} g · ${esc(l.code)}</b><div class="small">${eur(l.prix)} · ${l.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="Retirer un pot ${l.format_g} g" data-act="sstep" data-k="${l.id}" data-v="-1">−</button><span>${v.q[l.id] || 0}</span><button type="button" aria-label="Ajouter un pot ${l.format_g} g" data-act="sstep" data-k="${l.id}" data-v="1">+</button></div></div>`).join('');
-  const opts = d.clients.map((c) => `<option value="${c.id}" ${v.client_id === c.id ? 'selected' : ''}>${esc(c.nom)}</option>`).join('');
-  shell('Nouvelle vente', '', `<button class="btn" data-act="cancel">Annuler</button>`, `
-    <form data-form="vente" style="display:flex;flex-direction:column;gap:14px;max-width:560px">
-      ${d.clients.length ? `<label>Client<select id="s_client" required><option value="">Choisir…</option>${opts}</select></label>` : ''}
+    <section class="card tbl">${table(["Lot","Miel","Format","#Prix","#Pots restants","DDM"],r,"Aucun lot. Cr\xE9ez un lot par format de pot.")}</section>`:emptyState("Votre stock de miel est vide","Saisissez une r\xE9colte, puis cr\xE9ez un lot par format de pot.","Saisir une r\xE9colte","newrecolte",'<button class="btn" data-act="newlot">Cr\xE9er un lot</button>');shell("Stocks","Miel et mat\xE9riel",'<button class="btn main" data-act="newlot">Nouveau lot</button><button class="btn" data-act="newrecolte">R\xE9colte</button>',subtabs([["miel","Miel"],["materiel","Mat\xE9riel"]],"miel","go")+l)}function viewMateriel(){const e=a=>{const r=new Set(S.d.articles.map(o=>o.nom)),l=PRESETS[a].filter(o=>!r.has(o[0]));return l.length?`<div class="chips"><span class="small">Ajouter vite :</span>${l.map(o=>`<button data-act="preset" data-v="${esc(o[0])}" data-k="${a}">+ ${esc(o[0])}</button>`).join("")}</div>`:""},t=a=>esc(byId(S.d.fournisseurs,a.fournisseur_id)?.nom)||"\u2013",s=consommables().map(a=>{const r=Number(a.seuil)>0&&Number(a.stock)<=Number(a.seuil);return`<tr><td><button class="link" data-act="editarticle" data-v="${a.id}">${esc(a.nom)}</button></td><td class="num">${n(a.stock)} ${esc(a.unite)}</td><td class="num">${n(a.seuil)}</td><td><span class="tag ${r?"watch":"good"}">${r?"\xC0 commander":"OK"}</span></td><td class="num"><button class="btn sm" data-act="entree" data-v="${a.id}">+ Entr\xE9e</button></td></tr>`}),i=equipements().map(a=>`<tr><td><button class="link" data-act="editarticle" data-v="${a.id}">${esc(a.nom)}</button></td><td class="num">${n(a.stock)}</td><td class="num">${a.valeur?eur(a.valeur*a.stock):"\u2013"}</td><td>${t(a)}</td></tr>`);shell("Stocks","Miel et mat\xE9riel",'<button class="btn main" data-act="newarticle">Ajouter un article</button>',subtabs([["miel","Miel"],["materiel","Mat\xE9riel"]],"materiel","go")+`
+    <section class="card tbl"><h2>Consommables</h2>${table(["Article","#Stock","#Seuil","\xC9tat","#"],s,"Aucun consommable : candy, sirop, pots, \xE9tiquettes\u2026")}${e("Consommable")}</section>
+    <section class="card tbl"><h2>\xC9quipement</h2>${table(["\xC9quipement","#Qt\xE9","#Valeur","Fournisseur"],i,"Aucun \xE9quipement enregistr\xE9.")}${e("\xC9quipement")}</section>`)}function viewClients(){const e=S.d,t=e.ventes.filter(r=>S.venteFiltre==="toutes"||!r.paye),s=e.clients.map(r=>{const l=e.ventes.filter(o=>o.client_id===r.id);return`<tr><td><button class="link" data-act="editclient" data-v="${r.id}">${esc(r.nom)}</button></td><td>${esc(r.cercle)}</td><td>${r.telephone?`<a href="tel:${esc(r.telephone)}">${esc(r.telephone)}</a>`:"\u2013"}</td><td class="num">${eur(sum(l,venteTotal))}</td><td>${l[0]?dfr(l[0].date_vente):"Jamais"}</td></tr>`}),i=t.slice(0,25).map(r=>{const l=e.lignes.filter(o=>o.vente_id===r.id).map(o=>`${o.quantite} \xD7 ${n(byId(e.lots,o.lot_id)?.format_g,0)} g`).join(", ");return`<tr><td>${dfr(r.date_vente)}</td><td>${esc(byId(e.clients,r.client_id)?.nom)}</td><td>${esc(l)}</td><td class="num">${eur(venteTotal(r))}</td><td><button class="link ${r.paye?"":"watch"}" data-act="togglepaye" data-v="${r.id}">${r.paye?"Pay\xE9e"+(r.mode?" \xB7 "+esc(r.mode):""):"\xC0 encaisser"}</button></td><td class="num"><button class="link" data-act="delvente" data-v="${r.id}">Supprimer</button></td></tr>`});if(!e.clients.length)return shell("Clients & ventes","","",emptyState("Ajoutez votre premier client","Famille, amis, coll\xE8gues : retrouvez qui a achet\xE9 quoi.","Ajouter un client","newclient"));const a=sum(e.ventes.filter(r=>!r.paye),venteTotal);shell("Clients & ventes",e.clients.length+" client(s)"+(a?" \xB7 "+eur(a)+" \xE0 encaisser":""),'<button class="btn main" data-act="newvente">Nouvelle vente</button><button class="btn" data-act="newclient">Ajouter un client</button>',`
+    <section class="card tbl">${table(["Client","Cercle","T\xE9l\xE9phone","#Total","Dernier achat"],s,"Aucun client.")}</section>
+    <section class="card tbl"><h2>Ventes</h2><div class="pad">${subtabs([["toutes","Toutes"],["impayees","\xC0 encaisser"]],S.venteFiltre,"vfiltre")}</div>${table(["Date","Client","Pots","#Montant","Paiement","#"],i,"Aucune vente.")}</section>`)}function viewVente(){const e=S.vente,t=S.d,s=cfg(),i=t.lots.filter(o=>o.pots_restants>0),a=sum(i,o=>(e.q[o.id]||0)*o.prix),r=i.map(o=>`<div class="stepper"><div><b>${n(o.format_g,0)} g \xB7 ${esc(o.code)}</b><div class="small">${eur(o.prix)} \xB7 ${o.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="Retirer un pot ${o.format_g} g" data-act="sstep" data-k="${o.id}" data-v="-1">\u2212</button><span>${e.q[o.id]||0}</span><button type="button" aria-label="Ajouter un pot ${o.format_g} g" data-act="sstep" data-k="${o.id}" data-v="1">+</button></div></div>`).join(""),l=t.clients.map(o=>`<option value="${o.id}" ${e.client_id===o.id?"selected":""}>${esc(o.nom)}</option>`).join("");shell("Nouvelle vente","",'<button class="btn" data-act="cancel">Annuler</button>',`
+    <form data-form="vente" class="form">
+      ${t.clients.length?`<label>Client<select id="s_client" required><option value="">Choisir\u2026</option>${l}</select></label>`:""}
       <button type="button" class="link" data-act="newclient">Ajouter un client</button>
-      <label>Date<input type="date" id="s_date" value="${esc(v.date_vente)}" max="${today()}" required></label>
-      <section class="card"><h2>Pots vendus</h2>${steppers || '<p class="small">Aucun pot en stock. Créez d’abord un lot dans Miel.</p>'}</section>
-      <button class="btn main block" ${S.busy ? 'disabled' : ''}>Enregistrer · ${eur(total)}</button>
-    </form>`);
-}
-
-function viewCompta() {
-  const d = S.d, m = metrics();
-  const rows = d.depenses.map((x) => `<tr><td>${dfr(x.date_depense)}</td><td>${esc(x.libelle)}</td><td>${esc(x.categorie)}</td><td class="num">${eur(x.montant)}</td><td class="num"><button class="link" data-act="deldepense" data-v="${x.id}">Supprimer</button></td></tr>`);
-  const cats = CATEGORIES.map((c) => [c, sum(d.depenses.filter((x) => x.categorie === c), (x) => x.montant)]).filter((x) => x[1] > 0);
-  const mx = Math.max(1, ...cats.map((c) => c[1]));
-  const cout = m.kgRecolte ? m.dep / m.kgRecolte : null;
-  shell('Compta', 'Ventes, dépenses et coût de revient', `<button class="btn main" data-act="newdepense">Ajouter une dépense</button>`, `
-    <div class="grid">
-      <div class="card kpi"><div class="l">Ventes</div><div class="big">${eur(m.ca)}</div></div>
-      <div class="card kpi"><div class="l">Dépenses</div><div class="big">${eur(m.dep)}</div></div>
-      <div class="card kpi"><div class="l">Résultat à date</div><div class="big">${eur(m.ca - m.dep)}</div></div>
-      <div class="card kpi"><div class="l">Coût de revient</div><div class="big">${cout === null ? '–' : eur(cout)}</div><div class="s">par kg récolté</div></div>
-    </div>
-    ${cats.length ? `<section class="card"><h2>Dépenses par poste</h2><div class="bars">${cats.map(([c, v]) => `<div class="bar"><span>${esc(c)}</span><span class="t"><i style="width:${Math.round(v / mx * 100)}%"></i></span><span>${n(v, 0)} €</span></div>`).join('')}</div></section>` : ''}
-    <section class="card tbl">${table(['Date', 'Libellé', 'Poste', '#Montant', '#'], rows, 'Aucune dépense.')}</section>`);
-}
-
-function render() {
-  if (S.recovery || !S.session) return authView();
-  if (S.member === false) {
-    $app.innerHTML = `<div class="auth"><form><div class="brand">Apidoo</div><p>Cette adresse (${esc(S.session.user.email)}) n’a pas encore accès aux données.</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></form></div>`;
-    return;
-  }
-  if (!S.d) { $app.innerHTML = '<p style="padding:24px">Chargement…</p>'; return; }
-  ({ dash: viewDash, ruches: viewRuches, ruche: viewRuche, visite: viewVisite, miel: viewMiel, materiel: viewMateriel, clients: viewClients, vente: viewVente, compta: viewCompta }[S.route])();
-  window.scrollTo?.(0, 0);
-}
-
-/* ---------- Fiches de saisie ---------- */
-function sheet({ title, fields, submit, label = 'Enregistrer', del }) {
-  $sheetForm.innerHTML = `<h2>${esc(title)}</h2>${fields.map((f) => {
-    const a = `name="${f.name}" ${f.required ? 'required' : ''} ${f.step ? `step="${f.step}"` : ''} ${f.min !== undefined ? `min="${f.min}"` : ''}`;
-    let inp;
-    if (f.type === 'select') inp = `<select ${a}>${f.options.map((o) => { const [v, t] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}" ${String(f.value ?? '') === String(v) ? 'selected' : ''}>${esc(t)}</option>`; }).join('')}</select>`;
-    else if (f.type === 'textarea') inp = `<textarea ${a}>${esc(f.value)}</textarea>`;
-    else inp = `<input type="${f.type || 'text'}" ${a} value="${esc(f.value)}" ${f.type === 'number' ? 'inputmode="decimal"' : ''}>`;
-    return `<label>${esc(f.label)}${inp}</label>`;
-  }).join('')}
-  <div class="actions"><button class="btn main" style="flex:1">${esc(label)}</button><button type="button" class="btn" data-act="closesheet">Annuler</button></div>
-  ${del ? '<button type="button" class="link" data-act="sheetdel" style="color:#A61B1B">Supprimer</button>' : ''}`;
-  $sheetForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = $sheetForm.querySelector('.btn.main');
-    btn.disabled = true;
-    try {
-      await submit(Object.fromEntries(new FormData($sheetForm)));
-      $sheet.close();
-    } catch (err) { fail(err); btn.disabled = false; }
-  };
-  sheet.del = del;
-  $sheet.showModal();
-}
-const num = (v) => (v === '' || v === undefined ? null : Number(v));
-const orNull = (v) => v || null;
-
-function rucheForm(r) {
-  sheet({
-    title: r ? 'Modifier la ruche' : 'Ajouter une ruche',
-    fields: [
-      { name: 'nom', label: 'Nom', required: true, value: r?.nom },
-      { name: 'rucher', label: 'Rucher', value: r?.rucher },
-      { name: 'annee_reine', label: 'Année de la reine', type: 'number', value: r?.annee_reine },
-      { name: 'etat', label: 'État', type: 'select', options: ETATS, value: r?.etat || 'Bonne' },
-      { name: 'notes', label: 'Notes', type: 'textarea', value: r?.notes }
-    ],
-    submit: (f) => { const row = { ...f, annee_reine: num(f.annee_reine) }; return write(r ? sb.from('ruches').update(row).eq('id', r.id) : sb.from('ruches').insert(row), 'Ruche enregistrée'); }
-  });
-}
-function lotForm(l) {
-  sheet({
-    title: l ? 'Modifier le lot' : 'Nouveau lot',
-    fields: [
-      { name: 'code', label: 'Numéro de lot', required: true, value: l?.code },
-      { name: 'miel', label: 'Miel', required: true, value: l?.miel || 'Toutes fleurs' },
-      { name: 'format_g', label: 'Format', type: 'select', options: [[250, '250 g'], [500, '500 g']], value: l?.format_g || 500 },
-      { name: 'prix', label: 'Prix du pot (€)', type: 'number', step: '0.01', min: 0, required: true, value: l?.prix },
-      { name: 'pots_initiaux', label: 'Nombre de pots remplis', type: 'number', step: '1', min: l?.pots_vendus || 0, required: true, value: l?.pots_initiaux },
-      { name: 'date_mise_en_pot', label: 'Mise en pot', type: 'date', value: l?.date_mise_en_pot },
-      { name: 'ddm', label: 'Date de durabilité minimale (DDM)', type: 'date', value: l?.ddm }
-    ],
-    submit: (f) => {
-      const row = { ...f, format_g: num(f.format_g), prix: num(f.prix), pots_initiaux: num(f.pots_initiaux), date_mise_en_pot: orNull(f.date_mise_en_pot), ddm: orNull(f.ddm) };
-      return write(l ? sb.from('lots').update(row).eq('id', l.id) : sb.from('lots').insert(row), 'Lot enregistré');
-    }
-  });
-}
-function articleForm(a) {
-  sheet({
-    title: a ? 'Modifier l’article' : 'Ajouter un article',
-    fields: [
-      { name: 'nom', label: 'Nom', required: true, value: a?.nom },
-      { name: 'unite', label: 'Unité (kg, L, unité…)', required: true, value: a?.unite || 'unité' },
-      { name: 'stock', label: 'Stock actuel', type: 'number', step: '0.01', min: 0, required: true, value: a?.stock ?? 0 },
-      { name: 'seuil', label: 'Seuil d’alerte', type: 'number', step: '0.01', min: 0, required: true, value: a?.seuil ?? 0 }
-    ],
-    submit: (f) => { const row = { ...f, stock: num(f.stock), seuil: num(f.seuil) }; return write(a ? sb.from('articles').update(row).eq('id', a.id) : sb.from('articles').insert(row), 'Article enregistré'); }
-  });
-}
-function clientForm(c) {
-  const fromSale = S.route === 'vente';
-  sheet({
-    title: c ? 'Modifier le client' : 'Ajouter un client',
-    fields: [
-      { name: 'nom', label: 'Nom', required: true, value: c?.nom },
-      { name: 'cercle', label: 'Cercle', type: 'select', options: CERCLES, value: c?.cercle || 'Amis' },
-      { name: 'telephone', label: 'Téléphone', type: 'tel', value: c?.telephone },
-      { name: 'email', label: 'E-mail', type: 'email', value: c?.email },
-      { name: 'notes', label: 'Notes', type: 'textarea', value: c?.notes }
-    ],
-    submit: async (f) => {
-      if (c) return write(sb.from('clients').update(f).eq('id', c.id), 'Client enregistré');
-      const { data, error } = await sb.from('clients').insert(f).select().single();
-      if (error) throw error;
-      if (fromSale) S.vente.client_id = data.id;
-      await refresh();
-      toast('Client enregistré');
-    }
-  });
-}
-
-/* ---------- Actions ---------- */
-const go = (r) => { S.route = r; render(); };
-function readVisitForm() {
-  const d = document.getElementById('v_date'); if (!d) return;
-  S.visite.date_visite = d.value;
-  S.visite.poids_kg = document.getElementById('v_poids').value;
-  S.visite.note = document.getElementById('v_note').value;
-}
-function readSaleForm() {
-  const c = document.getElementById('s_client'); if (c) S.vente.client_id = c.value;
-  const d = document.getElementById('s_date'); if (d) S.vente.date_vente = d.value;
-}
-const twoStep = async (el, label, run) => {
-  if (el.dataset.armed) { el.disabled = true; try { await run(); } catch (e) { fail(e); el.disabled = false; } return; }
-  el.dataset.armed = '1';
-  el.textContent = label;
-  setTimeout(() => { if (el.isConnected) { delete el.dataset.armed; el.textContent = 'Supprimer'; } }, 4000);
-};
-
-const ACT = {
-  go: (v) => go(v),
-  authmode: (v) => { S.authMode = v; S.authMsg = ''; authView(); },
-  logout: async () => { await sb.auth.signOut(); },
-  ruche: (v) => { S.ruche = v; go('ruche'); },
-  cancel: () => go('dash'),
-  closesheet: () => $sheet.close(),
-  sheetdel: (v, k, el) => twoStep(el, 'Confirmer', async () => { await sheet.del(); $sheet.close(); }),
-  newvisite: (v) => { S.visite = { ruche_id: v || S.d.ruches[0]?.id, date_visite: today(), activite: 'Normale', provisions: 'Moyennes', reine: 'Non cherchée', poids_kg: '', note: '', q: {} }; go('visite'); },
-  vset: (v, k) => { readVisitForm(); S.visite[k] = v; viewVisite(); },
-  vstep: (v, k) => {
-    readVisitForm();
-    const a = byId(S.d.articles, k);
-    S.visite.q[k] = Math.max(0, Math.min(Number(a.stock), (S.visite.q[k] || 0) + Number(v)));
-    viewVisite();
-  },
-  newvente: () => { S.vente = { client_id: '', date_vente: today(), q: {} }; go('vente'); },
-  sstep: (v, k) => {
-    readSaleForm();
-    const l = byId(S.d.lots, k);
-    S.vente.q[k] = Math.max(0, Math.min(l.pots_restants, (S.vente.q[k] || 0) + Number(v)));
-    viewVente();
-  },
-  newruche: () => rucheForm(),
-  editruche: (v) => rucheForm(byId(S.d.ruches, v)),
-  newlot: () => lotForm(),
-  editlot: (v) => lotForm(byId(S.d.lots, v)),
-  newarticle: () => articleForm(),
-  editarticle: (v) => articleForm(byId(S.d.articles, v)),
-  newclient: () => { if (S.route === 'vente') readSaleForm(); clientForm(); },
-  editclient: (v) => clientForm(byId(S.d.clients, v)),
-  newrecolte: () => sheet({
-    title: 'Saisir une récolte',
-    fields: [
-      { name: 'ruche_id', label: 'Origine', type: 'select', options: [['', 'Toutes les ruches']].concat(S.d.ruches.map((r) => [r.id, r.nom])), value: '' },
-      { name: 'kg', label: 'Quantité (kg)', type: 'number', step: '0.1', min: 0.1, required: true },
-      { name: 'date_recolte', label: 'Date', type: 'date', required: true, value: today() }
-    ],
-    submit: (f) => write(sb.from('recoltes').insert({ ...f, ruche_id: orNull(f.ruche_id), kg: num(f.kg) }), 'Récolte enregistrée')
-  }),
-  entree: (v) => {
-    const a = byId(S.d.articles, v);
-    sheet({
-      title: 'Entrée de stock : ' + a.nom, label: 'Ajouter',
-      fields: [{ name: 'q', label: `Quantité reçue (${a.unite})`, type: 'number', step: '0.01', min: 0.01, required: true }],
-      submit: (f) => write(sb.from('articles').update({ stock: Number(a.stock) + num(f.q) }).eq('id', a.id), 'Stock mis à jour')
-    });
-  },
-  newdepense: () => sheet({
-    title: 'Ajouter une dépense',
-    fields: [
-      { name: 'libelle', label: 'Libellé', required: true },
-      { name: 'categorie', label: 'Poste', type: 'select', options: CATEGORIES, value: 'Matériel' },
-      { name: 'montant', label: 'Montant (€)', type: 'number', step: '0.01', min: 0, required: true },
-      { name: 'date_depense', label: 'Date', type: 'date', required: true, value: today() }
-    ],
-    submit: (f) => write(sb.from('depenses').insert({ ...f, montant: num(f.montant) }), 'Dépense enregistrée')
-  }),
-  delvisite: (v, k, el) => twoStep(el, 'Confirmer', () => write(sb.from('visites').delete().eq('id', v), 'Visite supprimée, stock rétabli')),
-  delvente: (v, k, el) => twoStep(el, 'Confirmer', () => write(sb.from('ventes').delete().eq('id', v), 'Vente supprimée, stock rétabli')),
-  delrecolte: (v, k, el) => twoStep(el, 'Confirmer', () => write(sb.from('recoltes').delete().eq('id', v), 'Récolte supprimée')),
-  deldepense: (v, k, el) => twoStep(el, 'Confirmer', () => write(sb.from('depenses').delete().eq('id', v), 'Dépense supprimée'))
-};
-
-document.addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-act]');
-  if (!b) return;
-  e.preventDefault();
-  try { await ACT[b.dataset.act](b.dataset.v, b.dataset.k, b); } catch (err) { fail(err); }
-});
-
-document.addEventListener('submit', async (e) => {
-  const form = e.target.dataset.form;
-  if (!form) return;
-  e.preventDefault();
-  if (form === 'auth') return submitAuth(e.target);
-  if (S.busy) return;
-  try {
-    if (form === 'visite') {
-      readVisitForm();
-      const v = S.visite;
-      if (!v.ruche_id) throw new Error('Choisissez une ruche');
-      S.busy = true;
-      const intrants = Object.entries(v.q).filter(([, q]) => q > 0).map(([article_id, quantite]) => ({ article_id, quantite }));
-      const { error } = await sb.rpc('creer_visite', { p: { ...v, q: undefined, intrants } });
-      if (error) throw error;
-      S.ruche = v.ruche_id; S.route = 'ruche';
-      await refresh();
-      toast('Visite enregistrée');
-    } else if (form === 'vente') {
-      readSaleForm();
-      const v = S.vente;
-      if (!v.client_id) throw new Error('Choisissez un client');
-      const lignes = Object.entries(v.q).filter(([, q]) => q > 0).map(([lot_id, quantite]) => ({ lot_id, quantite }));
-      if (!lignes.length) throw new Error('Ajoutez au moins un pot');
-      S.busy = true;
-      const { error } = await sb.rpc('creer_vente', { p: { client_id: v.client_id, date_vente: v.date_vente, lignes } });
-      if (error) throw error;
-      S.route = 'clients';
-      await refresh();
-      toast('Vente enregistrée');
-    }
-  } catch (err) { fail(err); } finally { S.busy = false; }
-});
-
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && S.d && !['visite', 'vente'].includes(S.route) && !$sheet.open) refresh().catch(() => {});
-});
-
-/* ---------- Démarrage ---------- */
-async function boot() {
-  const { data } = await sb.auth.getSession();
-  S.session = data.session;
-  if (!S.session) { S.d = null; S.member = null; return render(); }
-  render();
-  try {
-    const m = await sb.rpc('est_membre');
-    S.member = m.data === true;
-    if (S.member) await loadAll();
-  } catch (e) { fail(e); }
-  render();
-}
-sb.auth.onAuthStateChange((ev) => {
-  if (ev === 'PASSWORD_RECOVERY') { S.recovery = true; render(); return; }
-  if (ev === 'SIGNED_IN' && S.session) return;
-  if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') setTimeout(boot, 0);
-});
-boot();
+      <label>Date<input type="date" id="s_date" value="${esc(e.date_vente)}" max="${today()}" required></label>
+      <section class="card"><h2>Pots vendus</h2>${r||'<p class="small">Aucun pot en stock. Cr\xE9ez d\u2019abord un lot dans Stocks.</p>'}</section>
+      <div class="field"><div class="t">Paiement</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${e.paye?"on":""}" data-act="spaye" data-v="1">Pay\xE9e</button><button type="button" class="${e.paye?"":"on"}" data-act="spaye" data-v="0">\xC0 encaisser</button></div></div>
+      ${e.paye?`<label>Mode de paiement<select id="s_mode">${s.modes.map(o=>`<option ${e.mode===o?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`:""}
+      <button class="btn main block" ${S.busy?"disabled":""}>Enregistrer \xB7 ${eur(a)}</button>
+    </form>`)}function viewFournisseurs(){const e=S.d;if(!e.fournisseurs.length)return shell("Fournisseurs","","",emptyState("Ajoutez vos fournisseurs","Gardez leurs coordonn\xE9es et suivez ce que vous leur achetez.","Ajouter un fournisseur","newfournisseur"));const t=e.fournisseurs.map(s=>{const i=e.depenses.filter(a=>a.fournisseur_id===s.id);return`<tr><td><button class="link" data-act="editfournisseur" data-v="${s.id}">${esc(s.nom)}</button></td><td>${esc(s.produits)||"\u2013"}</td><td>${s.telephone?`<a href="tel:${esc(s.telephone)}">${esc(s.telephone)}</a>`:esc(s.contact)||"\u2013"}</td><td>${i[0]?dfr(i[0].date_depense):"\u2013"}</td><td class="num">${eur(sum(i,a=>a.montant))}</td></tr>`});shell("Fournisseurs",e.fournisseurs.length+" fournisseur(s)",'<button class="btn main" data-act="newfournisseur">Ajouter un fournisseur</button>',`<section class="card tbl">${table(["Fournisseur","Produits","Contact","Dernier achat","#Achats"],t,"")}</section>`)}const yearSel=()=>`<label class="yr">Ann\xE9e<select data-chg="annee">${years().map(e=>`<option ${e===S.annee?"selected":""}>${e}</option>`).join("")}</select></label>`;function viewCompta(){const e=S.d,t=fin(S.annee),s=t.dep.map(i=>`<tr><td><button class="link" data-act="editdepense" data-v="${i.id}">${dfr(i.date_depense)}</button></td><td>${esc(i.libelle)}</td><td>${esc(i.categorie)}</td><td>${esc(byId(e.fournisseurs,i.fournisseur_id)?.nom)||"\u2013"}</td><td class="num">${eur(i.montant)}</td></tr>`);shell("D\xE9penses","Total "+S.annee+" : "+eur(t.charges),`${yearSel()}<button class="btn main" data-act="newdepense">Ajouter une d\xE9pense</button>`,`<section class="card tbl">${table(["Date","Libell\xE9","Poste","Fournisseur","#Montant"],s,"Aucune d\xE9pense sur cette ann\xE9e.")}</section>`)}function pilotFin(){const e=S.d,t=S.annee,s=fin(t),i=cfg(),a=stock(),r=fin(t-1),l=r.ca?` (${s.ca>=r.ca?"+":""}${n((s.ca-r.ca)/r.ca*100,0)} % sur ${t-1})`:"",$=[...new Set([...i.postes,...s.dep.map(d=>d.categorie)])].map(d=>[d,sum(s.dep.filter(c=>c.categorie===d),c=>c.montant)]).filter(d=>d[1]>0).sort((d,c)=>c[1]-d[1]).map(([d,c])=>[d,c,eur0(c)]),v={};s.lignes.forEach(d=>{const c=n(byId(e.lots,d.lot_id)?.format_g,0)+" g";v[c]=v[c]||{v:0,p:0},v[c].v+=d.quantite*d.prix_unitaire,v[c].p+=d.quantite});const b=Object.entries(v).map(([d,c])=>[d,c.v,`${eur0(c.v)}`]),m={};s.ventes.forEach(d=>{const c=byId(e.clients,d.client_id)?.cercle||"Autre";m[c]=(m[c]||0)+venteTotal(d)});const p=Object.entries(m).sort((d,c)=>c[1]-d[1]).map(([d,c])=>[d,c,eur0(c)]),g={};s.ventes.forEach(d=>{g[d.client_id]=(g[d.client_id]||0)+venteTotal(d)});const y=Object.entries(g).sort((d,c)=>c[1]-d[1]).slice(0,5).map(([d,c])=>[byId(e.clients,d)?.nom||"?",c,eur0(c)]),w=s.charges-s.ca;return`<div class="grid">
+    ${kpi("Chiffre d\u2019affaires",eur0(s.ca),s.ventes.length+" vente(s)"+l)}
+    ${kpi("D\xE9penses",eur0(s.charges),s.dep.length+" d\xE9pense(s)")}
+    ${kpi("R\xE9sultat",eur0(s.resultat),s.ca?"Marge "+n(s.resultat/s.ca*100,0)+" %":"",s.resultat<0?"crit":"good")}
+    ${kpi("Tr\xE9sorerie fin de p\xE9riode",eur0(s.tresoFin),s.aEncaisser?eur0(s.aEncaisser)+" \xE0 encaisser":"Tout est encaiss\xE9")}
+    ${kpi("Prix de vente moyen",s.prixKg?eur(s.prixKg):"\u2013","par kg vendu")}
+    ${kpi("Co\xFBt de revient",s.coutKg!==null?eur(s.coutKg):"\u2013","par kg r\xE9colt\xE9")}
+    ${kpi("Stock \xE0 vendre",eur0(a.valeur),"R\xE9sultat potentiel "+eur0(s.resultat+a.valeur))}
+    ${kpi("Seuil de rentabilit\xE9",w>0?eur0(w):"Atteint",w>0?"de ventes restantes pour couvrir les d\xE9penses":"les ventes couvrent les d\xE9penses")}
+  </div>
+  <section class="card"><h2>Ventes et d\xE9penses par mois</h2>${barChart({labels:MOIS,series:[{name:"Ventes",color:C.honey,values:s.mCa},{name:"D\xE9penses",color:C.blue,values:s.mDep}],title:"Ventes et d\xE9penses par mois"})}</section>
+  <section class="card"><h2>Tr\xE9sorerie cumul\xE9e</h2><p class="small">Argent encaiss\xE9 moins d\xE9penses, depuis le d\xE9but.</p>${lineChart({labels:MOIS,series:[{name:"Tr\xE9sorerie",color:C.green,values:s.treso}],title:"Tr\xE9sorerie cumul\xE9e"})}</section>
+  <div class="grid2">
+    <section class="card"><h2>D\xE9penses par poste</h2>${hbars($,C.blue)}</section>
+    <section class="card"><h2>Ventes par format</h2>${hbars(b)}</section>
+    <section class="card"><h2>Ventes par cercle</h2>${hbars(p)}</section>
+    <section class="card"><h2>Meilleurs clients</h2>${hbars(y)}</section>
+  </div>`}function pilotOps(){const e=S.d,t=S.annee,s=rythme(),i=e.recoltes.filter(c=>yr(c.date_recolte)===t),a=e.visites.filter(c=>yr(c.date_visite)===t),r=sum(i,c=>c.kg),l=e.ruches.length,o=Array(12).fill(0);a.forEach(c=>o[mo(c.date_visite)]++);const $=fin(t),v=new Set(a.map(c=>c.id)),b=e.intrants.filter(c=>v.has(c.visite_id)),m=e.ruches.map(c=>[c.nom,sum(i.filter(f=>f.ruche_id===c.id),f=>f.kg)]).filter(c=>c[1]>0).sort((c,f)=>f[1]-c[1]).map(([c,f])=>[c,f,n(f)+" kg"]),g=[...new Set(b.map(c=>c.article_id))].map(c=>{const f=byId(e.articles,c),k=sum(b.filter(u=>u.article_id===c),u=>u.quantite);return[f?.nom||"?",k,n(k)+" "+(f?.unite||"")]}),y=consommables().map(c=>{const f=new Date(Date.now()-15552e6).toISOString().slice(0,10),k=new Set(e.visites.filter(h=>h.date_visite>=f).map(h=>h.id)),u=sum(e.intrants.filter(h=>h.article_id===c.id&&k.has(h.visite_id)),h=>h.quantite)/6;return{a:c,cons:u,mois:u>0?Number(c.stock)/u:null}}).filter(c=>c.cons>0),w=ETATS.map(c=>[c,e.ruches.filter(f=>f.etat===c).length]),d=e.ruches.map(c=>{const f=lastVisit(c.id),k=sum(i.filter(h=>h.ruche_id===c.id),h=>h.kg),u=e.visites.find(h=>h.ruche_id===c.id&&h.poids_kg);return`<tr><td><button class="link" data-act="ruche" data-v="${c.id}">${esc(c.nom)}</button></td><td><span class="tag ${etatClass(c.etat)}">${esc(c.etat)}</span></td><td class="num">${f?days(f.date_visite)+" j":"\u2013"}</td><td>${f?esc(f.provisions):"\u2013"}</td><td class="num">${u?n(u.poids_kg)+" kg":"\u2013"}</td><td class="num">${n(k)} kg</td></tr>`});return`<div class="grid">
+    ${kpi("Miel r\xE9colt\xE9",n(r)+" kg",l?n(r/l)+" kg par ruche":"")}
+    ${kpi("Visites",a.length,l?n(a.length/l)+" par ruche":"")}
+    ${kpi("Ruches \xE0 surveiller",w[1][1]+w[2][1],"sur "+l)}
+    ${kpi("Pots vendus par mois",n(s.mois,0),s.moisRestants!==null?"Stock pour "+n(s.moisRestants,0)+" mois \xE0 ce rythme":"sur les 3 derniers mois")}
+  </div>
+  <section class="card tbl"><h2>Tableau des ruches</h2>${table(["Ruche","\xC9tat","#Derni\xE8re visite","Provisions","#Poids","#Miel "+t],d,"Aucune ruche.")}</section>
+  <div class="grid2">
+    <section class="card"><h2>Rendement par ruche</h2>${hbars(m)}</section>
+    <section class="card"><h2>Intrants utilis\xE9s</h2>${hbars(g,C.green)}</section>
+  </div>
+  <section class="card"><h2>Visites par mois</h2>${barChart({labels:MOIS,series:[{name:"Visites",color:C.green,values:o}],fmt:c=>n(c,1),h:170,title:"Visites par mois"})}</section>
+  <section class="card"><h2>Pots vendus par mois</h2>${barChart({labels:MOIS,series:[{name:"Pots",color:C.honey,values:$.mPots}],fmt:c=>n(c,1),h:170,title:"Pots vendus par mois"})}</section>
+  ${y.length?`<section class="card tbl"><h2>Autonomie des consommables</h2>${table(["Article","#Stock","#Conso/mois","#Autonomie"],y.map(c=>`<tr><td>${esc(c.a.nom)}</td><td class="num">${n(c.a.stock)} ${esc(c.a.unite)}</td><td class="num">${n(c.cons)} ${esc(c.a.unite)}</td><td class="num">${n(c.mois)} mois</td></tr>`),"")}</section>`:""}`}function viewPilotage(){const e=!S.d.ventes.length&&!S.d.depenses.length&&!S.d.recoltes.length&&!S.d.visites.length;shell("Pilotage","Vos chiffres financiers et op\xE9rationnels",yearSel(),subtabs([["fin","Financier"],["ops","Op\xE9rationnel"]],S.tab,"ptab")+(e?'<p class="notice">Les graphiques se rempliront avec vos r\xE9coltes, ventes, d\xE9penses et visites.</p>':"")+(S.tab==="fin"?pilotFin():pilotOps()))}function simDefaults(){const e=S.d,t=cfg(),s=fin(new Date().getFullYear()),i=e.ruches.length||1,a=l=>e.lots.find(o=>o.format_g===l),r=sum(e.lots,l=>l.pots_initiaux)||0;return{ruches:i,ajout:0,rendement:s.kgRec&&e.ruches.length?Math.round(s.kgRec/i*10)/10:12,part500:50,prix500:Number(a(500)?.prix)||14,prix250:Number(a(250)?.prix)||8,vendu:100,coutRuche:s.charges&&e.ruches.length&&r===0?Math.round(s.charges/i):50,coutPot:.6,coutNouvelle:200,...t.sim||{}}}function simCalc(e){const t=[0,1,2,3].map(l=>{const o=e.ruches+l*e.ajout,$=o*e.rendement,v=$*e.vendu/100,b=v*e.part500/100,m=v-b,p=b/.5,g=m/.25,y=p*e.prix500+g*e.prix250,w=o*e.coutRuche+(p+g)*e.coutPot+(l>0?e.ajout*e.coutNouvelle:0);return{an:new Date().getFullYear()+1+l,ruches:o,kg:$,pots:p+g,pots5:p,pots2:g,ca:y,charges:w,res:y-w}});let s=0;t.forEach(l=>{s+=l.res,l.cum=s});const i=t[0],a=i.ruches?i.res/i.ruches:0,r=i.ca>0?i.charges/i.ca:null;return{rows:t,parRuche:a,seuil:r}}function simOut(){const e=S.sim,t=cfg(),s=simCalc(e),i=s.rows[0],a=Number(t.objectif)||0,r=a>0&&s.parRuche>0?Math.ceil(a/s.parRuche):null,l=s.rows.map(o=>`<tr><td>${o.an}</td><td class="num">${n(o.ruches,0)}</td><td class="num">${n(o.kg,0)} kg</td><td class="num">${n(o.pots,0)}</td><td class="num">${eur0(o.ca)}</td><td class="num">${eur0(o.charges)}</td><td class="num"><b>${eur0(o.res)}</b></td></tr>`);return`<div class="grid">
+    ${kpi("Miel pr\xE9vu",n(i.kg,0)+" kg",`${n(i.pots5,0)} pots 500 g \xB7 ${n(i.pots2,0)} pots 250 g`)}
+    ${kpi("Ventes pr\xE9vues",eur0(i.ca),"")}
+    ${kpi("R\xE9sultat pr\xE9vu",eur0(i.res),eur0(s.parRuche)+" par ruche",i.res<0?"crit":"good")}
+    ${kpi("Point mort",s.seuil!==null?n(s.seuil*100,0)+" %":"\u2013","des ventes pr\xE9vues pour couvrir les co\xFBts")}
+    ${r!==null?kpi("Pour viser "+eur0(a),r+" ruches","avec ces hypoth\xE8ses"):""}
+  </div>
+  <section class="card"><h2>Projection sur 4 ans</h2>${barChart({labels:s.rows.map(o=>String(o.an)),series:[{name:"Ventes",color:C.honey,values:s.rows.map(o=>o.ca)},{name:"Co\xFBts",color:C.blue,values:s.rows.map(o=>o.charges)}],title:"Projection des ventes et co\xFBts",h:190})}</section>
+  <section class="card tbl">${table(["Ann\xE9e","#Ruches","#Miel","#Pots","#Ventes","#Co\xFBts","#R\xE9sultat"],l,"")}</section>`}function viewPrevisions(){S.sim=S.sim||simDefaults();const e=S.d,t=S.annee,s=fin(t),i=cfg(),a=S.sim,r=(m,p,g="1",y="")=>`<label>${p}${y?` (${y})`:""}<input type="number" step="${g}" min="0" inputmode="decimal" data-sim="${m}" value="${esc(a[m])}"></label>`,l=["Ventes de miel",...i.postes],o=m=>Number(e.budgets.find(p=>p.annee===t&&p.poste===m)?.montant||0),$=m=>m==="Ventes de miel"?s.ca:sum(s.dep.filter(p=>p.categorie===m),p=>p.montant),v=l.map(m=>{const p=o(m),g=$(m),y=p?Math.round(g/p*100):0,w=m!=="Ventes de miel"&&p&&g>p;return`<tr><td><button class="link" data-act="editbudget" data-v="${esc(m)}">${esc(m)}</button></td><td class="num">${p?eur0(p):"\xC0 d\xE9finir"}</td><td class="num">${eur0(g)}</td><td class="num ${w?"crit":""}">${p?y+" %":"\u2013"}</td></tr>`}),b=sum(l.slice(1),o);shell("Pr\xE9visions","Testez vos hypoth\xE8ses et suivez votre budget",yearSel(),`
+    <section class="card"><h2>Simulateur</h2><p class="small">Changez une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que vos donn\xE9es sont incompl\xE8tes.</p>
+      <div class="simgrid">
+        ${r("ruches","Ruches")}${r("ajout","Ruches ajout\xE9es par an")}${r("rendement","Rendement","0.5","kg/ruche")}${r("vendu","Part du miel vendue","5","%")}
+        ${r("part500","Part en pots de 500 g","5","%")}${r("prix500","Prix pot 500 g","0.5","\u20AC")}${r("prix250","Prix pot 250 g","0.5","\u20AC")}
+        ${r("coutRuche","Co\xFBt annuel par ruche","5","\u20AC")}${r("coutPot","Co\xFBt par pot","0.05","\u20AC")}${r("coutNouvelle","Co\xFBt d\u2019une nouvelle ruche","10","\u20AC")}
+      </div>
+      <div class="actions" style="margin-top:12px"><button class="btn" data-act="savesim">Enregistrer ces hypoth\xE8ses</button><button class="btn" data-act="resetsim">Revenir aux valeurs calcul\xE9es</button></div>
+    </section>
+    <div id="simOut" class="stack">${simOut()}</div>
+    <section class="card tbl"><h2>Budget ${t}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(b)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(o("Ventes de miel")-b)}.</p>${table(["Poste","#Budget","#R\xE9alis\xE9","#Avancement"],v,"")}</section>`)}function taskRow(e){const t=!e.faite&&e.echeance&&e.echeance<today(),s=e.ruche_id?byId(S.d.ruches,e.ruche_id)?.nom:"";return`<div class="task ${e.faite?"done":""}"><button class="check" role="checkbox" aria-checked="${e.faite}" aria-label="Marquer ${esc(e.titre)}" data-act="toggletache" data-v="${e.id}">${e.faite?"\u2713":""}</button><button class="tmain" data-act="edittache" data-v="${e.id}"><b>${esc(e.titre)}</b><span class="small ${t?"crit":""}">${[e.echeance?dfr(e.echeance):"Sans date",s,e.assigne].filter(Boolean).map(esc).join(" \xB7 ")}</span></button></div>`}function viewAgenda(){const e=S.d,t=e.taches.filter(l=>!l.faite).sort((l,o)=>(l.echeance||"9").localeCompare(o.echeance||"9")),s=e.taches.filter(l=>l.faite).slice(0,8),i=new Set(t.map(l=>l.titre)),a=new Date().getMonth(),r=SAISON[a].filter(l=>!i.has(l));shell("Agenda","T\xE2ches \xE0 faire et id\xE9es de saison",'<button class="btn main" data-act="newtache">Ajouter une t\xE2che</button>',`
+    <section class="card"><h2>\xC0 faire</h2>${t.map(taskRow).join("")||'<p class="small">Aucune t\xE2che pr\xE9vue.</p>'}</section>
+    ${r.length?`<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR",{month:"long"}))}</h2><p class="small">\xC0 adapter \xE0 votre r\xE9gion et \xE0 vos protocoles.</p><div class="chips">${r.map(l=>`<button data-act="addsug" data-v="${esc(l)}">+ ${esc(l)}</button>`).join("")}</div></section>`:""}
+    ${s.length?`<section class="card"><h2>Termin\xE9es</h2>${s.map(taskRow).join("")}</section>`:""}`)}function viewReglages(){const e=cfg();shell("R\xE9glages","Adaptez Apidoo \xE0 votre exploitation","",`
+    <form data-form="reglages" class="form">
+      <section class="card stack">
+        <h2>Votre exploitation</h2>
+        <label>Nom<input name="nom" value="${esc(e.nom)}" required></label>
+        <label>Num\xE9ro d\u2019apiculteur (NAPI)<input name="napi" value="${esc(e.napi)}"></label>
+        <label>Objectif de r\xE9sultat annuel (\u20AC)<input name="objectif" type="number" min="0" step="10" value="${esc(e.objectif||"")}"></label>
+      </section>
+      <section class="card stack">
+        <h2>Vos listes</h2><p class="small">Une valeur par ligne.</p>
+        <label>Postes de d\xE9pense<textarea name="postes" rows="5">${esc(e.postes.join(`
+`))}</textarea></label>
+        <label>Cercles de clients<textarea name="cercles" rows="4">${esc(e.cercles.join(`
+`))}</textarea></label>
+        <label>Modes de paiement<textarea name="modes" rows="4">${esc(e.modes.join(`
+`))}</textarea></label>
+      </section>
+      <button class="btn main block">Enregistrer</button>
+    </form>
+    <section class="card form stack">
+      <h2>Exports et sauvegarde</h2><p class="small">Fichiers lisibles dans Excel, \xE0 garder de votre c\xF4t\xE9.</p>
+      <div class="actions"><button class="btn" data-act="exp" data-v="visites">Journal des visites</button><button class="btn" data-act="exp" data-v="ventes">Ventes</button><button class="btn" data-act="exp" data-v="depenses">D\xE9penses</button><button class="btn" data-act="exp" data-v="clients">Clients</button><button class="btn" data-act="exp" data-v="json">Sauvegarde compl\xE8te</button></div>
+    </section>`)}function render(){if(S.recovery||!S.session)return authView();if(S.member===!1){$app.innerHTML=`<div class="auth"><form><div class="brand">Apidoo</div><p>Cette adresse (${esc(S.session.user.email)}) n\u2019a pas encore acc\xE8s aux donn\xE9es.</p><button type="button" class="btn" data-act="logout">Se d\xE9connecter</button></form></div>`;return}if(!S.d){$app.innerHTML='<p style="padding:24px">Chargement\u2026</p>';return}const e={dash:viewDash,plus:viewPlus,agenda:viewAgenda,ruches:viewRuches,ruche:viewRuche,visite:viewVisite,miel:viewMiel,materiel:viewMateriel,clients:viewClients,vente:viewVente,fournisseurs:viewFournisseurs,compta:viewCompta,pilotage:viewPilotage,previsions:viewPrevisions,reglages:viewReglages}[S.route];e(),S.lastRoute!==S.route&&window.scrollTo?.(0,0),S.lastRoute=S.route}function sheet({title:e,intro:t,fields:s,submit:i,label:a="Enregistrer",del:r,delLabel:l}){$sheetForm.innerHTML=`<h2>${esc(e)}</h2>${t?`<p class="small">${esc(t)}</p>`:""}${s.map(o=>{const $=`name="${o.name}" ${o.required?"required":""} ${o.step?`step="${o.step}"`:""} ${o.min!==void 0?`min="${o.min}"`:""} ${o.list?`list="dl_${o.name}"`:""}`;let v;o.type==="select"?v=`<select ${$}>${o.options.map(m=>{const[p,g]=Array.isArray(m)?m:[m,m];return`<option value="${esc(p)}" ${String(o.value??"")===String(p)?"selected":""}>${esc(g)}</option>`}).join("")}</select>`:o.type==="textarea"?v=`<textarea ${$}>${esc(o.value)}</textarea>`:v=`<input type="${o.type||"text"}" ${$} value="${esc(o.value)}" ${o.type==="number"?'inputmode="decimal"':""} autocomplete="off">`;const b=o.list?`<datalist id="dl_${o.name}">${o.list.map(m=>`<option value="${esc(m)}">`).join("")}</datalist>`:"";return`<label>${esc(o.label)}${v}${b}</label>`}).join("")}
+  <div class="actions"><button class="btn main" style="flex:1">${esc(a)}</button><button type="button" class="btn" data-act="closesheet">Annuler</button></div>
+  ${r?`<button type="button" class="link crit" data-act="sheetdel">${esc(l||"Supprimer")}</button>`:""}`,$sheetForm.onsubmit=async o=>{o.preventDefault();const $=$sheetForm.querySelector(".btn.main");$.disabled=!0;try{await i(Object.fromEntries(new FormData($sheetForm))),$sheet.close()}catch(v){fail(v),$.disabled=!1}},sheet.del=r,$sheet.showModal()}const ruchers=()=>[...new Set(S.d.ruches.map(e=>e.rucher).filter(Boolean))],fournOpts=()=>[["","Aucun"]].concat(S.d.fournisseurs.map(e=>[e.id,e.nom])),del=(e,t,s)=>()=>write(sb.from(e).delete().eq("id",t),s);function ruchesForm(){sheet({title:"Ajouter des ruches",label:"Ajouter",fields:[{name:"nombre",label:"Nombre de ruches",type:"number",step:"1",min:1,required:!0,value:1},{name:"prefixe",label:"Nom",required:!0,value:"Ruche"},{name:"rucher",label:"Rucher (facultatif)",list:ruchers()},{name:"type_ruche",label:"Type de ruche (facultatif)",list:["Dadant 10 cadres","Dadant 12 cadres","Langstroth","Warr\xE9"]}],submit:e=>{const t=Math.min(200,Number(e.nombre)),s=new Set(S.d.ruches.map(r=>r.nom)),i=[];let a=1;for(;i.length<t;){const r=t===1&&!s.has(e.prefixe)?e.prefixe:`${e.prefixe} ${a}`;s.has(r)||(i.push({nom:r,rucher:e.rucher,type_ruche:e.type_ruche}),s.add(r)),a++}return write(sb.from("ruches").insert(i),t>1?t+" ruches ajout\xE9es":"Ruche ajout\xE9e")}})}function rucheForm(e){sheet({title:"Modifier la ruche",fields:[{name:"nom",label:"Nom",required:!0,value:e.nom},{name:"rucher",label:"Rucher",value:e.rucher,list:ruchers()},{name:"type_ruche",label:"Type de ruche",value:e.type_ruche,list:["Dadant 10 cadres","Dadant 12 cadres","Langstroth","Warr\xE9"]},{name:"annee_reine",label:"Ann\xE9e de la reine",type:"number",value:e.annee_reine},{name:"date_installation",label:"Date d\u2019installation",type:"date",value:e.date_installation},{name:"etat",label:"\xC9tat",type:"select",options:ETATS,value:e.etat},{name:"notes",label:"Notes",type:"textarea",value:e.notes}],submit:t=>write(sb.from("ruches").update({...t,annee_reine:num(t.annee_reine),date_installation:orNull(t.date_installation)}).eq("id",e.id),"Ruche enregistr\xE9e"),del:async()=>{S.route="ruches",await del("ruches",e.id,"Ruche supprim\xE9e")()},delLabel:"Supprimer la ruche et ses visites"})}function lotForm(e){const t=String(new Date().getFullYear()).slice(2);sheet({title:e?"Modifier le lot":"Nouveau lot",fields:[{name:"code",label:"Num\xE9ro de lot",required:!0,value:e?.code||`L${t}-${String(S.d.lots.length+1).padStart(2,"0")}`},{name:"miel",label:"Miel",required:!0,value:e?.miel||"Toutes fleurs"},{name:"format_g",label:"Format du pot (g)",type:"number",step:"1",min:1,required:!0,value:e?.format_g||500,list:[125,250,500,1e3]},{name:"prix",label:"Prix du pot (\u20AC)",type:"number",step:"0.01",min:0,required:!0,value:e?.prix},{name:"pots_initiaux",label:"Nombre de pots remplis",type:"number",step:"1",min:e?.pots_vendus||0,required:!0,value:e?.pots_initiaux},{name:"date_mise_en_pot",label:"Mise en pot",type:"date",value:e?.date_mise_en_pot||today()},{name:"ddm",label:"Date de durabilit\xE9 minimale (DDM)",type:"date",value:e?.ddm}],submit:s=>{const i={...s,format_g:num(s.format_g),prix:num(s.prix),pots_initiaux:num(s.pots_initiaux),date_mise_en_pot:orNull(s.date_mise_en_pot),ddm:orNull(s.ddm)};return write(e?sb.from("lots").update(i).eq("id",e.id):sb.from("lots").insert(i),"Lot enregistr\xE9")},del:e?del("lots",e.id,"Lot supprim\xE9"):null})}function articleForm(e,t){const s=e?.type||t||"Consommable",i=!!e?.id;sheet({title:i?"Modifier l\u2019article":"Ajouter un article",fields:[{name:"nom",label:"Nom",required:!0,value:e?.nom},{name:"type",label:"Type",type:"select",options:["Consommable","\xC9quipement"],value:s},{name:"unite",label:"Unit\xE9",required:!0,value:e?.unite||"unit\xE9",list:["kg","L","unit\xE9","feuille","bo\xEEte"]},{name:"stock",label:"Quantit\xE9",type:"number",step:"0.01",min:0,required:!0,value:e?.stock??0},{name:"seuil",label:"Seuil d\u2019alerte",type:"number",step:"0.01",min:0,required:!0,value:e?.seuil??0},{name:"valeur",label:"Prix unitaire (\u20AC, facultatif)",type:"number",step:"0.01",min:0,value:e?.valeur},{name:"fournisseur_id",label:"Fournisseur",type:"select",options:fournOpts(),value:e?.fournisseur_id||""}],submit:a=>{const r={...a,stock:num(a.stock),seuil:num(a.seuil),valeur:num(a.valeur),fournisseur_id:orNull(a.fournisseur_id)};return write(i?sb.from("articles").update(r).eq("id",e.id):sb.from("articles").insert(r),"Article enregistr\xE9")},del:i?del("articles",e.id,"Article supprim\xE9"):null})}function clientForm(e){const t=S.route==="vente";sheet({title:e?"Modifier le client":"Ajouter un client",fields:[{name:"nom",label:"Nom",required:!0,value:e?.nom},{name:"cercle",label:"Cercle",type:"select",options:cfg().cercles,value:e?.cercle||cfg().cercles[0]},{name:"telephone",label:"T\xE9l\xE9phone",type:"tel",value:e?.telephone},{name:"email",label:"E-mail",type:"email",value:e?.email},{name:"notes",label:"Notes",type:"textarea",value:e?.notes}],submit:async s=>{if(e)return write(sb.from("clients").update(s).eq("id",e.id),"Client enregistr\xE9");const{data:i,error:a}=await sb.from("clients").insert(s).select().single();if(a)throw a;t&&(S.vente.client_id=i.id),await refresh(),toast("Client enregistr\xE9")},del:e?del("clients",e.id,"Client supprim\xE9"):null})}function fournisseurForm(e){sheet({title:e?"Modifier le fournisseur":"Ajouter un fournisseur",fields:[{name:"nom",label:"Nom",required:!0,value:e?.nom},{name:"produits",label:"Produits",value:e?.produits},{name:"contact",label:"Contact",value:e?.contact},{name:"telephone",label:"T\xE9l\xE9phone",type:"tel",value:e?.telephone},{name:"email",label:"E-mail",type:"email",value:e?.email},{name:"notes",label:"Notes",type:"textarea",value:e?.notes}],submit:t=>write(e?sb.from("fournisseurs").update(t).eq("id",e.id):sb.from("fournisseurs").insert(t),"Fournisseur enregistr\xE9"),del:e?del("fournisseurs",e.id,"Fournisseur supprim\xE9"):null})}function depenseForm(e,t={}){const s=cfg();sheet({title:e?"Modifier la d\xE9pense":"Ajouter une d\xE9pense",fields:[{name:"libelle",label:"Libell\xE9",required:!0,value:e?.libelle??t.libelle},{name:"categorie",label:"Poste",type:"select",options:[...new Set([...s.postes,...e?[e.categorie]:[]])],value:e?.categorie??s.postes[0]},{name:"montant",label:"Montant (\u20AC)",type:"number",step:"0.01",min:0,required:!0,value:e?.montant},{name:"date_depense",label:"Date",type:"date",required:!0,value:e?.date_depense||today()},{name:"fournisseur_id",label:"Fournisseur",type:"select",options:fournOpts(),value:e?.fournisseur_id??t.fournisseur_id??""}],submit:i=>{const a={...i,montant:num(i.montant),fournisseur_id:orNull(i.fournisseur_id)};return write(e?sb.from("depenses").update(a).eq("id",e.id):sb.from("depenses").insert(a),"D\xE9pense enregistr\xE9e")},del:e?del("depenses",e.id,"D\xE9pense supprim\xE9e"):null})}function tacheForm(e,t){sheet({title:e?"Modifier la t\xE2che":"Ajouter une t\xE2che",fields:[{name:"titre",label:"T\xE2che",required:!0,value:e?.titre},{name:"echeance",label:"\xC9ch\xE9ance",type:"date",value:e?.echeance},{name:"ruche_id",label:"Ruche",type:"select",options:[["","Toutes"]].concat(S.d.ruches.map(s=>[s.id,s.nom])),value:e?.ruche_id??t??""},{name:"assigne",label:"Qui s\u2019en occupe",value:e?.assigne}],submit:s=>{const i={...s,echeance:orNull(s.echeance),ruche_id:orNull(s.ruche_id)};return write(e?sb.from("taches").update(i).eq("id",e.id):sb.from("taches").insert(i),"T\xE2che enregistr\xE9e")},del:e?del("taches",e.id,"T\xE2che supprim\xE9e"):null})}function recolteForm(e){sheet({title:e?"Modifier la r\xE9colte":"Saisir une r\xE9colte",fields:[{name:"ruche_id",label:"Origine",type:"select",options:[["","Toutes les ruches"]].concat(S.d.ruches.map(t=>[t.id,t.nom])),value:e?.ruche_id??""},{name:"kg",label:"Quantit\xE9 (kg)",type:"number",step:"0.1",min:.1,required:!0,value:e?.kg},{name:"date_recolte",label:"Date",type:"date",required:!0,value:e?.date_recolte||today()}],submit:t=>{const s={...t,ruche_id:orNull(t.ruche_id),kg:num(t.kg)};return write(e?sb.from("recoltes").update(s).eq("id",e.id):sb.from("recoltes").insert(s),"R\xE9colte enregistr\xE9e")},del:e?del("recoltes",e.id,"R\xE9colte supprim\xE9e"):null})}function download(e,t,s){const i=document.createElement("a");i.href=URL.createObjectURL(new Blob([t],{type:s})),i.download=e,document.body.appendChild(i),i.click(),i.remove(),setTimeout(()=>URL.revokeObjectURL(i.href),2e3)}function csv(e,t,s){const i=a=>`"${String(a??"").replace(/"/g,'""')}"`;download(`apidoo-${e}-${today()}.csv`,"\uFEFF"+[t,...s].map(a=>a.map(i).join(";")).join(`\r
+`),"text/csv;charset=utf-8")}const EXP={visites:()=>{const e=S.d;csv("visites",["Date","Ruche","Rucher","Activit\xE9","Provisions","Reine","Couvain","Poids kg","Varroa","Intrants","Note","Auteur"],e.visites.map(t=>{const s=byId(e.ruches,t.ruche_id);return[t.date_visite,s?.nom,s?.rucher,t.activite,t.provisions,t.reine,t.couvain,t.poids_kg,t.varroa,e.intrants.filter(i=>i.visite_id===t.id).map(i=>{const a=byId(e.articles,i.article_id);return`${i.quantite} ${a?.unite} ${a?.nom}`}).join(", "),t.note,t.auteur]}))},ventes:()=>{const e=S.d;csv("ventes",["Date","Client","Lot","Format g","Quantit\xE9","Prix unitaire","Montant","Pay\xE9e","Mode"],e.lignes.map(t=>{const s=byId(e.ventes,t.vente_id),i=byId(e.lots,t.lot_id);return[s?.date_vente,byId(e.clients,s?.client_id)?.nom,i?.code,i?.format_g,t.quantite,t.prix_unitaire,t.quantite*t.prix_unitaire,s?.paye?"Oui":"Non",s?.mode]}))},depenses:()=>{const e=S.d;csv("depenses",["Date","Libell\xE9","Poste","Fournisseur","Montant"],e.depenses.map(t=>[t.date_depense,t.libelle,t.categorie,byId(e.fournisseurs,t.fournisseur_id)?.nom,t.montant]))},clients:()=>csv("clients",["Nom","Cercle","T\xE9l\xE9phone","E-mail","Notes"],S.d.clients.map(e=>[e.nom,e.cercle,e.telephone,e.email,e.notes])),json:()=>download(`apidoo-sauvegarde-${today()}.json`,JSON.stringify(S.d,null,1),"application/json")},go=e=>{S.route=e,render()};function readVisitForm(){const e=document.getElementById("v_date");e&&(S.visite.date_visite=e.value,S.visite.poids_kg=document.getElementById("v_poids").value,S.visite.varroa=document.getElementById("v_varroa").value,S.visite.note=document.getElementById("v_note").value)}function readSaleForm(){const e=document.getElementById("s_client");e&&(S.vente.client_id=e.value);const t=document.getElementById("s_date");t&&(S.vente.date_vente=t.value);const s=document.getElementById("s_mode");s&&(S.vente.mode=s.value)}const twoStep=async(e,t,s)=>{if(e.dataset.armed){e.disabled=!0;try{await s()}catch(a){fail(a),e.disabled=!1}return}const i=e.textContent;e.dataset.armed="1",e.textContent=t,setTimeout(()=>{e.isConnected&&(delete e.dataset.armed,e.textContent=i)},4e3)};function quickSheet(){const e=[["newvisite","Visite"],["newvente","Vente"],["newrecolte","R\xE9colte"],["newdepense","D\xE9pense"],["newtache","T\xE2che"],["newclient","Client"]];$sheetForm.onsubmit=t=>t.preventDefault(),$sheetForm.innerHTML=`<h2>Ajouter</h2><div class="quick">${e.map(([t,s])=>`<button type="button" class="btn" data-act="qk" data-v="${t}">${s}</button>`).join("")}</div><button type="button" class="btn" data-act="closesheet">Annuler</button>`,$sheet.showModal()}const ACT={go:e=>go(e),gomateriel:()=>go("materiel"),authmode:e=>{S.authMode=e,S.authMsg="",authView()},logout:async()=>{await sb.auth.signOut()},ruche:e=>{S.ruche=e,go("ruche")},cancel:()=>go("dash"),quick:()=>quickSheet(),qk:e=>{$sheet.close(),ACT[e]()},closesheet:()=>$sheet.close(),sheetdel:(e,t,s)=>twoStep(s,"Confirmer la suppression",async()=>{await sheet.del(),$sheet.close()}),newvisite:e=>{if(!S.d.ruches.length)return toast("Ajoutez d\u2019abord une ruche",!0),go("ruches");const t=e||S.ruche&&byId(S.d.ruches,S.ruche)?.id||S.d.ruches[0].id;S.visite={ruche_id:t,date_visite:today(),activite:"Normale",provisions:"Moyennes",reine:"Non cherch\xE9e",couvain:"Non vu",etat:byId(S.d.ruches,t).etat,poids_kg:"",varroa:"",note:"",q:{}},go("visite")},vset:(e,t)=>{readVisitForm(),S.visite[t]=e,t==="ruche_id"&&(S.visite.etat=byId(S.d.ruches,e).etat),viewVisite()},vstep:(e,t)=>{readVisitForm();const s=byId(S.d.articles,t);S.visite.q[t]=Math.max(0,Math.min(Number(s.stock),(S.visite.q[t]||0)+Number(e))),viewVisite()},newvente:()=>{S.vente={client_id:"",date_vente:today(),q:{},paye:!0,mode:cfg().modes[0]},go("vente")},sstep:(e,t)=>{readSaleForm();const s=byId(S.d.lots,t);S.vente.q[t]=Math.max(0,Math.min(s.pots_restants,(S.vente.q[t]||0)+Number(e))),viewVente()},spaye:e=>{readSaleForm(),S.vente.paye=e==="1",viewVente()},vfiltre:e=>{S.venteFiltre=e,viewClients()},togglepaye:async e=>{const t=byId(S.d.ventes,e);await write(sb.from("ventes").update({paye:!t.paye}).eq("id",e),t.paye?"Vente \xE0 encaisser":"Vente pay\xE9e")},ptab:e=>{S.tab=e,viewPilotage()},newruches:()=>ruchesForm(),editruche:e=>rucheForm(byId(S.d.ruches,e)),newlot:()=>lotForm(),editlot:e=>lotForm(byId(S.d.lots,e)),newarticle:()=>articleForm(),editarticle:e=>articleForm(byId(S.d.articles,e)),preset:(e,t)=>{const s=PRESETS[t].find(i=>i[0]===e);return articleForm({nom:s[0],unite:s[1],type:t,stock:0,seuil:0})},newclient:()=>{S.route==="vente"&&readSaleForm(),clientForm()},editclient:e=>clientForm(byId(S.d.clients,e)),newfournisseur:()=>fournisseurForm(),editfournisseur:e=>fournisseurForm(byId(S.d.fournisseurs,e)),newrecolte:()=>recolteForm(),editrecolte:e=>recolteForm(byId(S.d.recoltes,e)),newdepense:()=>depenseForm(),editdepense:e=>depenseForm(byId(S.d.depenses,e)),newtache:e=>tacheForm(null,e),edittache:e=>tacheForm(byId(S.d.taches,e)),addsug:e=>write(sb.from("taches").insert({titre:e}),"T\xE2che ajout\xE9e"),toggletache:e=>{const t=byId(S.d.taches,e);return write(sb.from("taches").update({faite:!t.faite,faite_le:t.faite?null:today()}).eq("id",e))},entree:e=>{const t=byId(S.d.articles,e);sheet({title:"Entr\xE9e de stock : "+t.nom,label:"Ajouter",fields:[{name:"q",label:`Quantit\xE9 re\xE7ue (${t.unite})`,type:"number",step:"0.01",min:.01,required:!0},{name:"cout",label:"Prix pay\xE9 (\u20AC, facultatif : cr\xE9e la d\xE9pense)",type:"number",step:"0.01",min:0}],submit:async s=>{const{error:i}=await sb.from("articles").update({stock:Number(t.stock)+num(s.q)}).eq("id",t.id);if(i)throw i;if(num(s.cout)){const a=cfg(),r=/pot|couvercle|étiquette/i.test(t.nom)?"Pots & \xE9tiquettes":/candy|sirop/i.test(t.nom)?"Alimentation":/varroa/i.test(t.nom)?"Traitements":"Mat\xE9riel",l=await sb.from("depenses").insert({libelle:t.nom,categorie:a.postes.includes(r)?r:a.postes[0],montant:num(s.cout),date_depense:today(),fournisseur_id:t.fournisseur_id});if(l.error)throw l.error}await refresh(),toast("Stock mis \xE0 jour")}})},editbudget:e=>{const t=S.annee,s=S.d.budgets.find(i=>i.annee===t&&i.poste===e);sheet({title:`${e} : budget ${t}`,fields:[{name:"montant",label:"Montant (\u20AC)",type:"number",step:"1",min:0,required:!0,value:s?.montant}],submit:i=>write(sb.from("budgets").upsert({annee:t,poste:e,montant:num(i.montant)}),"Budget enregistr\xE9")})},savesim:()=>saveCfg({sim:S.sim},"Hypoth\xE8ses enregistr\xE9es"),resetsim:async()=>{const e={...(S.d.reglages[0]||{}).data||{}};delete e.sim,S.sim=null,await write(sb.from("reglages").update({data:e}).eq("id",1),"Valeurs recalcul\xE9es")},exp:e=>{EXP[e](),toast("Fichier pr\xE9par\xE9")},delvisite:(e,t,s)=>twoStep(s,"Confirmer",()=>write(sb.from("visites").delete().eq("id",e),"Visite supprim\xE9e, stock r\xE9tabli")),delvente:(e,t,s)=>twoStep(s,"Confirmer",()=>write(sb.from("ventes").delete().eq("id",e),"Vente supprim\xE9e, stock r\xE9tabli"))};document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]");if(!(!t||t.disabled)){e.preventDefault();try{await ACT[t.dataset.act](t.dataset.v,t.dataset.k,t)}catch(s){fail(s)}}}),document.addEventListener("change",e=>{e.target.dataset.chg==="annee"&&(S.annee=Number(e.target.value),render())}),document.addEventListener("input",e=>{const t=e.target.dataset.sim;t&&(S.sim[t]=Number(e.target.value)||0,document.getElementById("simOut").innerHTML=simOut())});const $tip=document.createElement("div");$tip.className="tip",$tip.hidden=!0,document.body.appendChild($tip);function showTip(e){const t=e.target.closest?.("[data-tip]");if(!t){$tip.hidden=!0;return}$tip.textContent=t.dataset.tip,$tip.hidden=!1;const s=Math.min(e.clientX+12,window.innerWidth-$tip.offsetWidth-8);$tip.style.left=Math.max(8,s)+"px",$tip.style.top=Math.max(8,e.clientY-$tip.offsetHeight-10)+"px"}document.addEventListener("pointermove",showTip),document.addEventListener("pointerdown",showTip),document.addEventListener("submit",async e=>{const t=e.target.dataset.form;if(t){if(e.preventDefault(),t==="auth")return submitAuth(e.target);if(!S.busy)try{if(t==="visite"){readVisitForm();const s=S.visite;if(!s.ruche_id)throw new Error("Choisissez une ruche");S.busy=!0;const i=Object.entries(s.q).filter(([,r])=>r>0).map(([r,l])=>({article_id:r,quantite:l})),{error:a}=await sb.rpc("creer_visite",{p:{...s,q:void 0,couvain:s.couvain==="Non vu"?"":s.couvain,intrants:i}});if(a)throw a;S.ruche=s.ruche_id,S.route="ruche",await refresh(),toast("Visite enregistr\xE9e")}else if(t==="vente"){readSaleForm();const s=S.vente;if(!s.client_id)throw new Error("Choisissez un client");const i=Object.entries(s.q).filter(([,r])=>r>0).map(([r,l])=>({lot_id:r,quantite:l}));if(!i.length)throw new Error("Ajoutez au moins un pot");S.busy=!0;const{error:a}=await sb.rpc("creer_vente",{p:{client_id:s.client_id,date_vente:s.date_vente,lignes:i,paye:s.paye,mode:s.paye?s.mode:""}});if(a)throw a;S.route="clients",await refresh(),toast("Vente enregistr\xE9e")}else if(t==="reglages"){const s=e.target,i=o=>o.value.split(`
+`).map($=>$.trim()).filter(Boolean),a=i(s.postes),r=i(s.cercles),l=i(s.modes);if(!a.length||!r.length||!l.length)throw new Error("Gardez au moins une valeur par liste");S.busy=!0,await saveCfg({nom:s.nom.value.trim(),napi:s.napi.value.trim(),objectif:Number(s.objectif.value)||0,postes:a,cercles:r,modes:l},"R\xE9glages enregistr\xE9s")}}catch(s){fail(s)}finally{S.busy=!1}}}),document.addEventListener("visibilitychange",()=>{!document.hidden&&S.d&&!["visite","vente","previsions","reglages"].includes(S.route)&&!$sheet.open&&refresh().catch(()=>{})});async function boot(){const{data:e}=await sb.auth.getSession();if(S.session=e.session,!S.session)return S.d=null,S.member=null,render();render();try{const t=await sb.rpc("est_membre");S.member=t.data===!0,S.member&&await loadAll()}catch(t){fail(t)}render()}sb.auth.onAuthStateChange(e=>{if(e==="PASSWORD_RECOVERY"){S.recovery=!0,render();return}e==="SIGNED_IN"&&S.session||(e==="SIGNED_IN"||e==="SIGNED_OUT")&&setTimeout(boot,0)}),boot();
