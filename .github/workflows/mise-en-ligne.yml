@@ -59,7 +59,11 @@ jobs:
             --jq '[.workflow_runs[] | select(.conclusion == "success" or .conclusion == "failure")][0].conclusion // ""')
           if [ "$etat" = failure ]; then echo "::error::Vérifier est rouge sur cette version : rien n'est parti."; exit 1; fi
           if [ "$etat" != success ]; then echo "::notice::Pas de vérification sur cette version (documentation seule, ou en cours)."; fi
-          git rev-parse -q --verify refs/tags/deploiement > /dev/null || { echo "::error::Repère deploiement absent."; exit 1; }
+          # Premier lancement : le repère part de la version en production avant l'adoption de cette méthode.
+          if ! git rev-parse -q --verify refs/tags/deploiement > /dev/null; then
+            git tag deploiement fda908f1194427f9e68ef8d37cba2ad344eebe52
+            git push origin refs/tags/deploiement
+          fi
           if [ "$CIBLE" = production ]; then
             git rev-parse -q --verify refs/tags/recette > /dev/null || { echo "::error::Rien en recette."; exit 1; }
             if [ "$(git rev-parse "$sha^{tree}")" != "$(git rev-parse 'refs/tags/recette^{tree}')" ]; then
