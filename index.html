@@ -422,6 +422,30 @@ dialog::backdrop{background:rgba(20,28,24,.45);backdrop-filter:blur(2px)}
   .u-pin-h{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:34px;height:30px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
   .u-panneau{display:flex;flex-direction:column;gap:12px}
   .u-panneau .u-hexes{justify-content:flex-start}
+  .u-carte.u-visee::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;z-index:1000;pointer-events:none;border:3px solid #1E2B24;border-radius:50%;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.3);background:radial-gradient(circle,#E3A008 0 5px,transparent 6px);box-sizing:border-box}
+  .u-carte.u-visee::before{content:"Faites glisser la carte";position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:1000;pointer-events:none;background:#1E2B24;color:#fff;font:600 13px 'Instrument Sans',system-ui,sans-serif;padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .u-cmp{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"lab val ecart" "lab avant ecart";column-gap:12px;align-items:center;padding:10px 0;border-top:1px solid #EDEFE7}
+  .u-cmp:first-of-type{border-top:0}
+  .u-cmp>span:first-child{grid-area:lab;font-weight:600}
+  .u-cmp>b{grid-area:val;text-align:right;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px}
+  .u-cmp>.small{grid-area:avant;text-align:right}
+  .u-cmp>.u-chip{grid-area:ecart;min-width:58px;text-align:center}
+  @media screen and (max-width:800px){
+    .card.tbl{padding:6px 0;overflow:visible}
+    .card.tbl h2{margin:10px 16px 2px}
+    .card.tbl table,.card.tbl tbody,.card.tbl tr,.card.tbl td{display:block;width:auto}
+    .card.tbl thead{display:none}
+    .card.tbl tbody tr{padding:12px 16px;border-top:1px solid #EDEFE7}
+    .card.tbl tbody tr:first-child{border-top:0}
+    .card.tbl tbody tr:hover{background:none}
+    .card.tbl td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:3px 0;border:0;text-align:right;white-space:normal;min-height:28px}
+    .card.tbl td::before{content:attr(data-label);flex:none;max-width:48%;color:var(--muted);font-size:13px;font-weight:500;text-align:left}
+    .card.tbl td:first-child{font-size:16px;font-weight:700;padding-bottom:6px;justify-content:flex-start;text-align:left}
+    .card.tbl td:first-child::before,.card.tbl td[data-label=""]::before{display:none}
+    .card.tbl td[data-label=""]{justify-content:flex-end;padding-top:6px}
+    .card.tbl td .link{white-space:normal}
+    .card.tbl .empty{padding:10px 16px}
+  }
   @media (max-width:800px){
     .bottom{grid-template-columns:repeat(5,minmax(0,1fr));align-items:end}
     .bottom button[data-v=saisir]{color:var(--ink);font-weight:700}

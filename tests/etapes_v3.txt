@@ -1,0 +1,64 @@
+    import datetime, pathlib as _pl
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    for r in DATA["ruches"][:3]: r.update({"lat": 47.32, "lng": 5.04})
+    an = datetime.date.today().year
+    DATA["recoltes"].append({"id": str(uuid.uuid4()), "ruche_id": DATA["ruches"][0]["id"], "date_recolte": f"{an-1}-07-15", "kg": 30})
+    DATA["visites"].append({**DATA["visites"][0], "id": str(uuid.uuid4()), "date_visite": f"{an-1}-06-01"})
+    LF = _ici / "leaflet" / "package" / "dist"
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
+              headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    cherches = []
+    def nominatim(rt):
+        cherches.append(rt.request.url)
+        rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+                   body=json.dumps([{"lat": "47.3501", "lon": "5.0012", "display_name": "Fontaine-lès-Dijon, Côte-d'Or, France"}]))
+    ctx.route("https://nominatim.openstreetmap.org/**", nominatim)
+    requetes = []
+    page.on("request", lambda r: requetes.append((r.method, r.url, r.post_data)))
+
+    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    # Placement à la main
+    page.evaluate("ACT.go('carte')"); page.wait_for_selector(".leaflet-container", timeout=10000)
+    page.click("[data-act=uchoix][data-v='Bois']"); page.wait_for_selector("[data-act=uplacermain]")
+    verif(page.locator("[data-act=uplacermain]").inner_text() == "Placer sur la carte", "bouton « Placer sur la carte »")
+    page.click("[data-act=uplacermain]"); page.wait_for_selector("#uCarte.u-visee")
+    verif(page.locator("[data-act=uvalider]").count() == 1, "mode placement : croix et « Valider ici »")
+    page.fill("form[data-form=ucherche] input[name=q]", "Fontaine-lès-Dijon"); page.press("form[data-form=ucherche] input[name=q]", "Enter")
+    page.wait_for_selector(".toast >> text=Fontaine-lès-Dijon", timeout=5000)
+    verif("q=Fontaine-l%C3%A8s-Dijon" in cherches[0] and "countrycodes=fr" in cherches[0], "recherche d'une commune")
+    page.wait_for_timeout(600)
+    page.screenshot(path="v2/placement.png", full_page=True)
+    page.click("[data-act=uvalider]")
+    page.wait_for_selector(".toast >> text=« Bois » placé sur la carte", timeout=10000)
+    corps = [json.loads(b) for m, u, b in requetes if m == "PATCH" and "/ruches?" in u and "rucher=eq.Bois" in u]
+    verif(corps and abs(corps[-1]["lat"] - 47.3501) < 0.0005 and abs(corps[-1]["lng"] - 5.0012) < 0.0005, "position du centre enregistrée : %s" % (corps[-1] if corps else "rien"))
+    verif(page.locator("#uCarte.u-visee").count() == 0, "fin du mode placement")
+    # Annuler
+    page.click("[data-act=uchoix][data-v='Verger']"); page.click("[data-act=uplacermain]"); page.wait_for_selector("#uCarte.u-visee")
+    avant = len([1 for m, u, b in requetes if m == "PATCH"])
+    page.click("[data-act=uannuler]")
+    verif(page.locator("#uCarte.u-visee").count() == 0 and len([1 for m, u, b in requetes if m == "PATCH"]) == avant, "« Annuler » ne change rien")
+    # Tableaux en cartes sur téléphone
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".card.tbl td[data-label]")
+    verif(page.locator(".card.tbl thead").first.evaluate("e => getComputedStyle(e).display") == "none", "en-têtes de tableau masqués sur téléphone")
+    lab = page.locator(".card.tbl tbody tr").first.locator("td").nth(1).get_attribute("data-label")
+    verif(lab == "Miel", "chaque cellule porte le titre de sa colonne (%s)" % lab)
+    verif(page.locator(".card.tbl [data-act=etiq]").first.is_visible(), "bouton Étiquettes visible sans faire défiler")
+    page.wait_for_timeout(400); page.screenshot(path="v2/stocks.png", full_page=True)
+    page.evaluate("ACT.go('compta')"); page.wait_for_timeout(300)
+    verif(page.locator(".card.tbl td[data-label='Montant']").count() >= 1, "dépenses en cartes")
+    # Comparaison de saison
+    page.evaluate("ACT.go('pilotage')"); page.wait_for_selector(".u-cmp")
+    t = page.locator(".u-cmp").first.inner_text()
+    verif(page.locator(".u-cmp").count() == 6 and "30 kg en %d" % (an - 1) in t, "comparaison avec l'an dernier : " + " ".join(t.split()))
+    page.wait_for_timeout(400); page.screenshot(path="v2/pilotage.png", full_page=True)
+    page.click("[data-act=ptab][data-v=ops]"); page.wait_for_timeout(300)
+    verif(page.locator(".card.tbl td[data-label='État']").count() >= 1, "tableau des ruches en cartes (onglet changé sans recharger)")
+    # L'impression garde les tableaux
+    page.evaluate("ACT.go('registre')"); page.emulate_media(media="print")
+    verif(page.locator("table").count() == 0 or page.locator("table thead").first.evaluate("e => getComputedStyle(e).display") != "none", "à l'impression, les tableaux restent des tableaux")
+    page.emulate_media(media="screen")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
