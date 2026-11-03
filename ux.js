@@ -91,8 +91,11 @@ const UX = (() => {
   }
 
   // ---------- 1. Accueil ----------
-  let toutVoir = false;
+  let toutVoir = false, filtreTodo = "tout";
   ACT.utout = () => { toutVoir = !toutVoir; viewDash(); };
+  ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; viewDash(); };
+  const CATS = [["ruches", "Ruches"], ["miel", "Miel"], ["stock", "Stock"], ["agenda", "Agenda"]];
+  const categorie = (cible) => (cible.startsWith("ruche:") ? "ruches" : ["clients", "livrer", "miel"].includes(cible) ? "miel" : cible === "materiel" ? "stock" : "agenda");
   function viewDash() {
     const d = S.d, c = cfg(), s = stock(), an = new Date().getFullYear(), f = fin(an);
     const etapes = [[d.ruches.length > 0, "Ajouter vos ruches", "newruches"], [d.articles.length > 0, "Renseigner votre matériel", "gomateriel"],
@@ -103,7 +106,12 @@ const UX = (() => {
       <div class="steps">${etapes.map(([ok, t, a]) => `<button class="step ${ok ? "ok" : ""}" ${ok ? "disabled" : `data-act="${a}"`}><span class="dot">${ok ? "✓" : ""}</span>${esc(t)}</button>`).join("")}</div></section>` : "";
 
     const rang = { crit: 0, watch: 1, good: 2 };
-    const liste = todos().sort((a, b) => rang[a[1]] - rang[b[1]]);
+    const tous = todos().sort((a, b) => rang[a[1]] - rang[b[1]]);
+    const cats = CATS.map(([k, t]) => [k, t, tous.filter((x) => categorie(x[3]) === k).length]).filter((x) => x[2]);
+    if (filtreTodo !== "tout" && !cats.some(([k]) => k === filtreTodo)) filtreTodo = "tout";
+    const liste = filtreTodo === "tout" ? tous : tous.filter((x) => categorie(x[3]) === filtreTodo);
+    const puces = cats.length > 1 ? `<div class="u-puces" role="group" aria-label="Filtrer">${[["tout", "Tout", tous.length], ...cats].map(([k, t, nb]) =>
+      `<button type="button" class="${filtreTodo === k ? "on" : ""}" aria-pressed="${filtreTodo === k}" data-act="utfiltre" data-v="${k}">${t} · ${nb}</button>`).join("")}</div>` : "";
     const montres = toutVoir ? liste : liste.slice(0, 3);
     const libelle = ([lab, , txt, cible]) => {
       if (!cible.startsWith("ruche:")) return [txt, lab];
@@ -113,25 +121,27 @@ const UX = (() => {
     const lignes = montres.map((x) => { const [lab, ton, , cible] = x, [titre, sous] = libelle(x);
       return `<button type="button" class="u-todo" data-act="${cible.startsWith("ruche:") ? "ruche" : "go"}" data-v="${esc(cible.replace("ruche:", ""))}">
         <span class="u-dot bg-${ton}" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(titre)}</b><span class="small ${lab === "En retard" ? "crit" : ""}">${esc(sous)}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`; }).join("");
-    const afaire = `<section class="card u-liste"><div class="u-entete"><h2>À faire</h2>${liste.length > 3 ? `<button type="button" class="link" data-act="utout">${toutVoir ? "Réduire" : `Tout voir (${liste.length})`}</button>` : ""}</div>
-      ${lignes || '<p class="small u-vide">Rien à signaler. Belle journée au rucher !</p>'}</section>`;
+    const afaire = `<section class="card u-liste"><div class="u-entete"><h2>À faire</h2><button type="button" class="link" data-act="go" data-v="agenda">Agenda</button></div>${puces}
+      ${lignes || '<p class="small u-vide">Rien à signaler. Belle journée au rucher !</p>'}
+      ${liste.length > 3 ? `<button type="button" class="link u-plus" data-act="utout">${toutVoir ? "Réduire" : `Voir les ${liste.length - 3} autres`}</button>` : ""}</section>`;
 
     const blocRuchers = d.ruches.length ? `<section class="card"><div class="u-entete"><h2>Mes ruchers</h2><button type="button" class="link" data-act="go" data-v="carte">Carte</button></div>
       ${ruchers().map(([k, rs]) => `<div class="u-rucher"><div class="u-entete"><b>${esc(nomRucher(k))}</b>${typeof V3 != "undefined" && rs.length > 1 ? `<button type="button" class="link" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>` : ""}</div><span class="u-hexes">${rs.map(hexMini).join("")}</span></div>`).join("")}</section>`
       : `<section class="card"><h2>Mes ruchers</h2><p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button></section>`;
 
-    const saison = `<section class="card"><div class="u-entete"><h2>Saison ${an}</h2><button type="button" class="link" data-act="go" data-v="pilotage">Pilotage</button></div>
+    const saison = `<section class="card"><div class="u-entete"><h2>Saison ${an}</h2><button type="button" class="link" data-act="go" data-v="pilotage">Bilan</button></div>
       <div class="u-trois"><div><b>${s.pots}</b><span>pots en stock</span></div><div><b>${esc(eur0(f.ca))}</b><span>vendus</span></div>
       <div><b class="${f.aEncaisser > 0 ? "watch" : ""}">${esc(eur0(f.aEncaisser))}</b><span>à encaisser</span></div></div></section>`;
 
     const surveiller = d.ruches.filter((r) => r.etat !== "Bonne").length;
     const sous = [pluriel(d.ruches.length, "ruche"), surveiller ? `${surveiller} à surveiller` : ""].filter(Boolean).join(" · ");
     const h = new Date().getHours();
+    const N = typeof N4 != "undefined";
     shell(h < 18 ? "Bonjour" : "Bonsoir", sous,
-      '<button class="btn honey" data-act="newvisite">Nouvelle visite</button><button class="btn ghost" data-act="newvente">Nouvelle vente</button>',
+      N ? "" : '<button class="btn honey" data-act="newvisite">Nouvelle visite</button><button class="btn ghost" data-act="newvente">Nouvelle vente</button>',
       `${demarrer}${typeof HL != "undefined" ? HL.section() : ""}${afaire}${blocRuchers}${saison}`,
       c.nom + " · " + new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }));
-    document.querySelector(".hero-head > div:first-child")?.insertAdjacentHTML("beforeend", `<p class="u-meteo" id="uMeteo">${meteoHtml()}</p>`);
+    document.querySelector(".hero-head > div:first-child")?.insertAdjacentHTML("beforeend", `<p class="u-meteo" id="uMeteo">${meteoHtml()}</p>${N ? N4.prochaine() : ""}`);
   }
 
   // ---------- 2. Fiche ruche ----------
@@ -181,22 +191,26 @@ const UX = (() => {
     const varroa = vis.find((v) => v.varroa !== null && v.varroa !== undefined);
     const miel = sum(d.recoltes.filter((x) => x.ruche_id === r.id), (x) => x.kg);
     const taches = d.taches.filter((t) => t.ruche_id === r.id && !t.faite);
-    const chiffres = `<section class="card u-trois">
-      <div><b>${der ? days(der.date_visite) + " j" : "–"}</b><span>dernière visite</span></div>
-      <div><b>${pesees[0] ? n(pesees[0].poids_kg) + " kg" : "–"}</b><span>${ecart === null ? "poids" : ecart < 0 ? `poids ↘ ${n(-ecart)} kg` : ecart > 0 ? `poids ↗ ${n(ecart)} kg` : "poids stable"}</span></div>
-      <div><b>${!varroa ? "–" : tauxVarroa(varroa) !== null ? n(tauxVarroa(varroa), 1) + " %" : varroa.varroa}</b><span>${varroa && tauxVarroa(varroa) !== null ? "varroa / 100 ab." : "varroas"}</span></div></section>`;
+    const tx = varroa ? tauxVarroa(varroa) : null;
+    const chiffres = `<section class="card u-trois u-quatre">
+      <div><b>${der ? days(der.date_visite) + " j" : "–"}</b><span>visite</span></div>
+      <div><b>${pesees[0] ? n(pesees[0].poids_kg) + " kg" : "–"}</b><span>${ecart === null ? "poids" : ecart < 0 ? `poids ↘ ${n(-ecart)}` : ecart > 0 ? `poids ↗ ${n(ecart)}` : "poids stable"}</span></div>
+      <div class="${tx !== null && tx >= seuilVarroa() ? "u-alerte" : ""}"><b>${!varroa ? "–" : tx !== null ? n(tx, 1) + " %" : varroa.varroa}</b><span>varroa</span></div>
+      <div><b>${r.hausses || 0}</b><span>hausse${(r.hausses || 0) > 1 ? "s" : ""}</span></div></section>`;
     const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>${r.sortie ? `<span class="tag crit">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span>` : `<span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>`}${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
     const poids = pesees.length > 1 ? `<details class="card u-pli"><summary><h2>Évolution du poids</h2><span class="u-chev" aria-hidden="true">›</span></summary>${lineChart({ labels: pesees.slice().reverse().map((v) => dshort(v.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.slice().reverse().map((v) => Number(v.poids_kg)) }], fmt: (x) => n(x) + " kg", title: "Évolution du poids de la ruche", h: 170 })}</details>` : "";
     shell(r.nom, [r.type_ruche, r.annee_reine ? "reine " + r.annee_reine : ""].filter(Boolean).join(" · ") || "Fiche de la ruche",
-      r.sortie ? `<button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`
+      r.sortie || typeof N4 != "undefined" ? `<button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`
         : `<button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button><button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`,
       `${tete}${chiffres}${r.notes ? `<section class="card">${esc(r.notes)}</section>` : ""}
        ${taches.length ? `<section class="card"><h2>Tâches prévues</h2>${taches.map(taskRow).join("")}</section>` : ""}
        ${poids}
        ${subtabs([["journal", "Journal"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
        ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
-         : `<h2 class="u-titre">Journal</h2>${vis.map(carteVisite).join("") || '<p class="small">Aucune visite enregistrée.</p>'}`}`);
-    document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", `<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruches${r.rucher ? " · " + esc(r.rucher) : ""}</button>`);
+         : `<h2 class="u-titre">Journal</h2>${vis.map(carteVisite).join("") || '<p class="small">Aucune visite enregistrée.</p>'}`}
+       ${!r.sortie && typeof N4 != "undefined" ? `<div class="n4-rbarre"><button class="btn honey" data-act="newvisite" data-v="${r.id}">Visiter cette ruche</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button></div>` : ""}`);
+    document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", typeof N4 != "undefined" ? N4.navRuche(r)
+      : `<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruches${r.rucher ? " · " + esc(r.rucher) : ""}</button>`);
   }
 
   let ongletRuche = { id: null, v: "journal" };
@@ -272,7 +286,17 @@ const UX = (() => {
 
   // ---------- 4. Ventes ----------
   let onglet = "ventes";
-  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; viewClients(); };
+  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? viewClients() : go("clients"); };
+  ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? viewClients() : go("clients"); };
+  // Tuiles et onglets communs aux écrans Miel (ventes, clients, stock).
+  function enteteMiel(actif) {
+    const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
+    const tuile = (act, v, nb, lab, on, ton = "") => `<button type="button" class="u-tuile ${on ? "on " + ton : ""}" aria-pressed="${on}" data-act="${act}" data-v="${v}"><b>${esc(nb)}</b><span>${lab}</span></button>`;
+    return `<div class="u-tuiles">${tuile("uonglet", "stock", String(stock().pots), "pots en stock", actif === "stock")}
+      ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
+      ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>
+      ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock et lots"]], actif, "uonglet")}`;
+  }
   const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);
   function carteVente(v) {
     const d = S.d, c = byId(d.clients, v.client_id);
@@ -292,14 +316,15 @@ const UX = (() => {
     const impayees = d.ventes.filter((v) => !v.paye);
     const du = sum(impayees, venteTotal);
     let corps = "";
-    if (onglet === "ventes") {
-      const liste = d.ventes.filter((v) => S.venteFiltre === "toutes" || !v.paye).slice(0, 40);
-      corps = `${impayees.length ? `<section class="card u-du"><div><b>${esc(eur(du))}</b><span>à encaisser · ${pluriel(impayees.length, "vente")}</span></div><button type="button" class="btn" data-act="urelancer">Relancer</button></section>` : ""}
-        <h2 class="u-titre">${S.venteFiltre === "toutes" ? "Dernières ventes" : "Ventes à encaisser"}</h2>${impayees.length ? `<div class="u-filtre">${subtabs([["toutes", "Toutes"], ["impayees", "À encaisser"]], S.venteFiltre, "vfiltre")}</div>` : ""}
-        ${liste.map(carteVente).join("") || '<p class="small">Aucune vente.</p>'}
+    const filtre = (txt, extra = "") => `<div class="u-entete u-filtre-t"><span>${txt}</span><span class="u-deux-l">${extra}<button type="button" class="link" data-act="uonglet" data-v="ventes">Tout voir</button></span></div>`;
+    if (onglet === "ventes" && S.venteFiltre === "impayees") {
+      corps = `${filtre(`À encaisser · ${pluriel(impayees.length, "vente")}`, impayees.length > 1 ? '<button type="button" class="link" data-act="urelancer">Relancer</button>' : "")}
+        ${impayees.map(carteVente).join("") || '<p class="small">Tout est encaissé.</p>'}`;
+    } else if (onglet === "ventes") {
+      corps = `<h2 class="u-titre">Dernières ventes</h2>${d.ventes.slice(0, 40).map(carteVente).join("") || '<p class="small">Aucune vente.</p>'}
         ${potsAVendre()}`;
     } else if (onglet === "livrer" && typeof V3 != "undefined") {
-      corps = V3.livraisons();
+      corps = filtre(`À livrer · ${pluriel(aLivrer().length, "commande")}`) + V3.livraisons();
     } else {
       corps = d.clients.map((c) => {
         const vs = d.ventes.filter((v) => v.client_id === c.id);
@@ -307,9 +332,9 @@ const UX = (() => {
           <span class="u-vente-m"><b>${esc(eur(sum(vs, venteTotal)))}</b>${c.telephone ? `<a class="small" href="tel:${esc(c.telephone)}">Appeler</a>` : ""}</span></article>`;
       }).join("");
     }
-    shell("Miel et ventes", du ? `${eur(du)} à encaisser` : pluriel(d.clients.length, "client"),
+    shell("Miel", "",
       onglet === "clients" ? '<button class="btn main" data-act="newclient">Ajouter un client</button>' : '<button class="btn main" data-act="newvente">Nouvelle vente</button>',
-      `${subtabs([["ventes", "Ventes"], ...(typeof V3 != "undefined" && (aLivrer().length || onglet === "livrer") ? [["livrer", "À livrer"]] : []), ["clients", "Clients"], ["stock", "Stock"]], onglet, "uonglet")}${corps}`);
+      `${enteteMiel(onglet === "clients" ? "clients" : "ventes")}${corps}`);
   }
   function potsAVendre() {
     const lots = S.d.lots.filter((l) => l.pots_restants > 0);
@@ -581,7 +606,7 @@ const UX = (() => {
   Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
   return {
     carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, chip, qui, pluriel, nomRucher, ruchers,
-    onglet: (v) => { onglet = v; },
+    onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },
   };
 })();
