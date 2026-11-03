@@ -8,6 +8,7 @@ s'appliquent ensuite, dans l'ordre, dans Supabase > SQL Editor.
 | 004-photos-visites.sql | Table `visite_photos`, espace « photos-visites », `photos_espace()` | 3 nov. 2026 |
 | 005-securite-et-ping.sql | `est_membre()` réservée aux connectés, fonction `ping()` | 3 nov. 2026 |
 | 006-hors-ligne.sql | `creer_visite` et `creer_vente` acceptent un identifiant fourni par le téléphone (pas de doublon au renvoi) | 3 nov. 2026 |
+| 007-registre.sql | Visites : dose, fin de traitement prévue, ordonnance gardée | 3 nov. 2026 |
 
 Les migrations 001 à 003 ne sont pas dans ce dépôt : elles font partie de `schema.sql`
 ou ont été appliquées directement dans Supabase.
