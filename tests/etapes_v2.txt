@@ -16,7 +16,7 @@
     requetes = []
     page.on("request", lambda r: requetes.append((r.method, r.url)))
 
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Barre du bas
     verif(page.locator(".bottom button").count() == 5 and page.locator(".bottom button[data-v=saisir]").count() == 1, "barre du bas à 5 boutons avec « Saisir »")
     verif(not page.locator(".fab").is_visible(), "plus de bouton flottant")

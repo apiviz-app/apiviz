@@ -19,7 +19,7 @@
     requetes = []
     page.on("request", lambda r: requetes.append((r.method, r.url, r.post_data)))
 
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Placement à la main
     page.evaluate("ACT.go('carte')"); page.wait_for_selector(".leaflet-container", timeout=10000)
     page.click("[data-act=uchoix][data-v='Bois']"); page.wait_for_selector("[data-act=uplacermain]")

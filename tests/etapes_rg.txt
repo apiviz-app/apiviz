@@ -1,4 +1,4 @@
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Visite avec traitement
     page.click(".head .btn.honey"); page.wait_for_selector("#v_trt", state="attached"); page.locator("details[data-sec=traitement]").evaluate("d => d.open = true")
     page.fill("#v_trt", "Produit test"); page.fill("#v_lot", "LOT42"); page.fill("#v_dose", "2 lanières")

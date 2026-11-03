@@ -4,7 +4,7 @@
       {"id": str(uuid.uuid4()), "titre": "Tâche faite", "echeance": "2026-12-20", "ruche_id": None, "faite": True, "assigne": ""},
     ]
     page.add_init_script("window.__badge=null; navigator.setAppBadge=(n)=>{window.__badge=n;return Promise.resolve()}; navigator.clearAppBadge=()=>{window.__badge=0;return Promise.resolve()}")
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif(page.evaluate("window.__badge") == 1, "pastille : 1 point à surveiller (tâche en retard)")
     page.evaluate("ACT.go('agenda')"); page.wait_for_selector("h1 >> text=Agenda")
     verif(page.locator("[data-act=rpics]").count() == 1, "bouton « Mettre dans mon agenda »")

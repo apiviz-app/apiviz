@@ -1,5 +1,5 @@
     page.add_init_script("window.print=()=>{window.__imprime=(window.__imprime||0)+1}")
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.evaluate("ACT.go('miel')"); page.wait_for_selector("[data-act=etiq]")
     page.click("[data-act=etiq]")
     page.wait_for_selector(".toast.err >> text=adresse", timeout=5000)

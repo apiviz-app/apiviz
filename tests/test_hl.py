@@ -104,15 +104,15 @@ with sync_playwright() as pw:
     url = f"http://127.0.0.1:{PORT}/"
 
     # 1. En ligne : l'app se charge et le service worker s'installe.
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
-    page.reload(); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif(page.evaluate("!!navigator.serviceWorker.controller"), "service worker actif")
     verif(page.locator(".hl-band").count() == 0, "pas de bandeau en ligne")
 
     # 2. Sans réseau : l'app s'ouvre depuis le téléphone.
     etat["coupe"] = True; ctx.set_offline(True)
-    page.reload(); page.wait_for_selector("text=Bonjour", timeout=20000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
     verif("Hors ligne" in page.locator(".hl-band").inner_text(), "bandeau « Hors ligne » à l'ouverture sans réseau")
 
     # 3. Visite sans réseau.
@@ -131,7 +131,7 @@ with sync_playwright() as pw:
     page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
 
     # 5. L'app survit à un rechargement sans réseau, saisies comprises.
-    page.reload(); page.wait_for_selector("text=Bonjour", timeout=20000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
     verif("2 saisies en attente" in page.locator(".hl-band").inner_text(), "après rechargement : 2 saisies toujours en attente")
     verif(page.locator("text=En attente d’envoi").count() == 1, "liste « En attente d’envoi » sur l'accueil")
 

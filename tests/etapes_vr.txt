@@ -1,7 +1,7 @@
     R2, R3 = str(uuid.uuid4()), str(uuid.uuid4())
     DATA["ruches"] += [{"id": R2, "nom": "Ruche 2", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""},
                        {"id": R3, "nom": "Ruche 3", "rucher": "Bois", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""}]
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.evaluate("ACT.newvisite()"); page.wait_for_selector("[data-act=vrmulti]")
     page.click("[data-act=vrmulti]")
     page.click("[data-act=vrrucher][data-v='Verger']")

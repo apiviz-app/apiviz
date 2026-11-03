@@ -1,5 +1,5 @@
     # A. Une exploitation : elle est envoyée avec chaque requête de données.
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif(entetes["x-exploitation"] == {E1}, "chaque requête porte l'exploitation choisie")
     # B. Membres et invitations.
     page.evaluate("ACT.go('plus')")
@@ -23,7 +23,7 @@
     page.click("form[data-form=exploitation] .btn.main")
     page.wait_for_selector(".toast >> text=Exploitation créée", timeout=10000)
     E2 = EXPL["miennes"][0]["id"]
-    verif(page.evaluate("EX.courante()") == E2 and page.locator("text=Bonjour").count() >= 1, "exploitation créée puis ouverte")
+    verif(page.evaluate("EX.courante()") == E2 and page.locator("text=/Bonjour|Bonsoir/").count() >= 1, "exploitation créée puis ouverte")
     # D. Invitation reçue : on rejoint en ouvrant le lien.
     code = uuid.uuid4().hex
     EXPL["codes"][code] = {"id": E1, "nom": "Bee’s Brothers", "role": "membre"}

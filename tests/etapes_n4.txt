@@ -9,7 +9,7 @@
     import os; os.makedirs("n4", exist_ok=True)
     shot = lambda nom: (page.wait_for_timeout(450), page.screenshot(path=f"n4/{nom}.png", full_page=True))
 
-    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     libs = page.locator(".bottom button span:not(.n4-badge)").all_inner_texts()
     verif(libs == ["Accueil", "Ruchers", "Saisir", "Miel", "Gestion"], "barre du bas : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
