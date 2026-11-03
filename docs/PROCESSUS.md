@@ -1,23 +1,35 @@
 # Processus : recette, validation, production
 
+Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en ligne sans un clic.
+
 | | Recette | Production |
 |---|---|---|
 | Adresse | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
-| Fichiers | dossier `recette/` | racine du dépôt |
 | Base | Supabase `apidoo-test` (données fictives) | Supabase `apidoo` (vraies données) |
-| Repère | bandeau « RECETTE », barre orange | aucun |
+| Repère de version | étiquette git `recette` | étiquette git `deploiement` |
+| Reconnaissable | bandeau « RECETTE », barre orange | aucun |
 
-Les deux environnements gardent sur le téléphone des données séparées (cache hors ligne, photos, service worker).
+Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) et le préfixe de `sw.js` diffèrent, appliqués par `scripts/assembler-site.sh`.
 
 ## Cycle d'une version
-1. **Développement** : les changements sont faits dans `recette/` (jamais directement à la racine).
-2. **Base de données** : toute migration est appliquée d'abord sur `apidoo-test`, et notée dans `migrations/README.md`.
-3. **Livraison en recette** : tests automatiques (`tests/`), puis `git push` → en ligne en 1 à 2 minutes.
-4. **Cahier de recette** : ajouté en tête de `docs/CHANGELOG.md`, rubrique « À vérifier ».
-5. **Validation** : le responsable teste sur son téléphone et répond « validé » (ou liste les problèmes).
-6. **Mise en production** : migration appliquée sur `apidoo`, puis `scripts/promouvoir.sh`, `git commit`, `git push`.
-7. **Documentation** : `CHANGELOG.md` (version validée et date), `GUIDE.md` et `TECHNIQUE.md` si besoin.
 
-Retour arrière : `git revert` du commit de mise en production. Les migrations n'ajoutent que des éléments (aucune suppression), donc une ancienne version de l'app reste compatible.
+1. **Branche** : créer `claude/…` depuis `main`. Jamais d'envoi direct sur `main`.
+2. **Base de données** : toute migration est appliquée d'abord sur `apidoo-test`, notée dans `migrations/README.md`, et ajoutée à `migrations/a-appliquer-en-production.txt`.
+3. **Pull request vers `main`** : « Vérifier » lance les tests. La fusion ne publie rien.
+4. **Recette** : Actions › Mise en ligne › Run workflow, cible `recette`. Une branche peut y être essayée avant fusion.
+5. **Validation** : tester sur téléphone avec la rubrique « À vérifier » de `docs/CHANGELOG.md`.
+6. **Base de production** : sauvegarder, puis appliquer les migrations en attente sur `apidoo`.
+7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`, case « migrations faites » si besoin. Seule la version exacte en recette est acceptée.
+8. **Après** : vider la liste des migrations en attente, passer la version à « en production » dans `CHANGELOG.md`.
 
-Remettre la recette au niveau de la production : `scripts/vers-recette.sh`.
+## Retour arrière
+
+Revenir à une version antérieure en passant par le même circuit (revert, recette, production). Cela suffit quand les migrations sont additives.
+
+**Exception, migration 008 :** l'ancienne app ne fonctionne plus avec la base une fois 008 appliquée, car la v4 n'envoie pas l'en-tête `x-exploitation` et appelle `est_membre()` sans paramètre. La 008 et la v5.0 doivent partir ensemble : envoyer les saisies hors ligne en attente sur chaque téléphone, sauvegarder toute la base, appliquer la migration, lancer aussitôt la production. Le retour arrière passe alors par la restauration de la sauvegarde.
+
+## Différences avec Gladoo, pour l'instant
+
+- Web sur GitHub Pages (Gladoo : Cloudflare, avec son nom de domaine).
+- Migrations appliquées à la main dans Supabase (Gladoo : par la mise en ligne, avec la CLI Supabase).
+- Pas d'application mobile compilée : Apidoo s'installe depuis le site (Gladoo : Expo).

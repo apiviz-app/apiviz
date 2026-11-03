@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 REPO, SBJS = sys.argv[1], sys.argv[2]
+# Référence du projet lue dans config.js : les tests tournent en recette comme en production.
+REF = re.search(r"https://(\w+)\.supabase\.co", open(REPO + "/config.js", encoding="utf-8").read()).group(1)
 PORT = 8765
 
 class Calme(http.server.SimpleHTTPRequestHandler):
@@ -97,7 +99,7 @@ with sync_playwright() as pw:
     ctx.route("**/*supabase.co/**", supabase)
     ctx.route("https://cdn.jsdelivr.net/**", cdn)
     ctx.route(re.compile(r"https://fonts\.(googleapis|gstatic)\.com/.*"), lambda r: r.abort() if etat["coupe"] else r.fulfill(status=200, body="", headers={"Content-Type": "text/css"}))
-    ctx.add_init_script(f"localStorage.getItem('sb-xkucyqzlqfeyuomrtjbu-auth-token')||localStorage.setItem('sb-xkucyqzlqfeyuomrtjbu-auth-token', {json.dumps(json.dumps(session))})")
+    ctx.add_init_script(f"localStorage.getItem('sb-{REF}-auth-token')||localStorage.setItem('sb-{REF}-auth-token', {json.dumps(json.dumps(session))})")
     page = ctx.new_page()
     erreurs = []
     page.on("pageerror", lambda e: erreurs.append(str(e)))

@@ -146,7 +146,7 @@ const PH = (() => {
       if (!visiteId) return toast("Visite enregistrée, mais les photos n’ont pas pu y être rattachées", true);
     }
     for (const p of b) {
-      const o = { id: p.id, visite_id: visiteId, blob: p.blob, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets, cree: Date.now() };
+      const o = { id: p.id, ex: typeof EX != "undefined" ? EX.courante() : "", visite_id: visiteId, blob: p.blob, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets, cree: Date.now() };
       await qMettre(o).catch(() => memoire.set(o.id, o));
       st.attente.push({ ...o, apercu: p.apercu });
     }
@@ -163,7 +163,8 @@ const PH = (() => {
     try {
       for (const p of [...st.attente]) {
         if (typeof HL != "undefined" && HL.enAttente(p.visite_id)) continue; // la visite part d’abord
-        const chemin = `${p.visite_id}/${p.id}.jpg`;
+        if (p.ex && typeof EX != "undefined" && p.ex !== EX.courante()) continue; // photo d’une autre exploitation
+        const chemin = `${p.ex ? p.ex + "/" : ""}${p.visite_id}/${p.id}.jpg`;
         const up = await sb.storage.from(BUCKET).upload(chemin, p.blob, { contentType: "image/jpeg", upsert: true });
         if (up.error) { echec++; break; }
         const { error } = await sb.from("visite_photos").upsert(
