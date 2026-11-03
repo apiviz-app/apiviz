@@ -1,0 +1,30 @@
+# Vérifications : à chaque pull request et à chaque arrivée sur main.
+# Aucune vraie base n'est touchée : les tests utilisent une base simulée.
+name: Vérifier
+
+on:
+  pull_request:
+    paths-ignore: ['docs/**', '**.md']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assembler le site
+        run: sh scripts/assembler-site.sh . . _site
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Installer Playwright
+        run: pip install playwright
+      - name: Tests
+        run: sh tests/lancer.sh _site/recette

@@ -1,3 +1,5 @@
-# apidoo.github.io
-## Recette, production et documentation
-Voir `docs/PROCESSUS.md` (recette sur https://apidoo.github.io/recette/), `docs/CHANGELOG.md`, `docs/GUIDE.md`, `docs/TECHNIQUE.md`.
+# Apidoo
+
+Application de gestion apicole. Production : https://apidoo.github.io/ · recette : https://apidoo.github.io/recette/
+
+Méthode de travail : `docs/PROCESSUS.md`. Aide : `docs/GUIDE.md`. Technique : `docs/TECHNIQUE.md`. Versions : `docs/CHANGELOG.md`.

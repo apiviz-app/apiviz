@@ -1,0 +1,119 @@
+# Mise en ligne, à la main seulement : une fusion sur main ne publie rien.
+# Actions › Mise en ligne › Run workflow, cible « recette », puis « production » une fois validée.
+# Repères git : « recette » (version en recette) et « deploiement » (version en production).
+# Garde-fous : Vérifier doit être vert ; la production n'accepte que la version exacte en recette,
+# et refuse de partir si une migration attend sans que la case soit cochée.
+name: Mise en ligne
+
+on:
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: "Où mettre en ligne"
+        type: choice
+        options: [recette, production]
+        default: recette
+      version:
+        description: "Branche à publier (recette uniquement, pour essayer avant fusion)"
+        type: string
+        default: main
+      migrations_faites:
+        description: "Production : les migrations en attente sont appliquées sur la base apidoo"
+        type: boolean
+        default: false
+
+concurrency:
+  group: mise-en-ligne
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  pages: write
+  id-token: write
+
+jobs:
+  construire:
+    name: Contrôler et assembler
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.c.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - id: c
+        name: Contrôles
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CIBLE: ${{ inputs.cible }}
+          VERSION: ${{ inputs.version }}
+          MIGRATIONS_FAITES: ${{ inputs.migrations_faites }}
+        run: |
+          if [ "$CIBLE" = production ]; then VERSION=main; fi
+          sha=$(git rev-parse --verify -q "origin/$VERSION" || git rev-parse --verify -q "$VERSION") || {
+            echo "::error::Version introuvable : $VERSION"; exit 1; }
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          etat=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/verifier.yml/runs?head_sha=$sha&status=completed&per_page=20" \
+            --jq '[.workflow_runs[] | select(.conclusion == "success" or .conclusion == "failure")][0].conclusion // ""')
+          if [ "$etat" = failure ]; then echo "::error::Vérifier est rouge sur cette version : rien n'est parti."; exit 1; fi
+          if [ "$etat" != success ]; then echo "::notice::Pas de vérification sur cette version (documentation seule, ou en cours)."; fi
+          # Premier lancement : le repère part de la version en production avant l'adoption de cette méthode.
+          if ! git rev-parse -q --verify refs/tags/deploiement > /dev/null; then
+            git tag deploiement fda908f1194427f9e68ef8d37cba2ad344eebe52
+            git push origin refs/tags/deploiement
+          fi
+          if [ "$CIBLE" = production ]; then
+            git rev-parse -q --verify refs/tags/recette > /dev/null || { echo "::error::Rien en recette."; exit 1; }
+            if [ "$(git rev-parse "$sha^{tree}")" != "$(git rev-parse 'refs/tags/recette^{tree}')" ]; then
+              echo "::error::Cette version n'est pas celle en recette : passez-la d'abord en recette."; exit 1
+            fi
+            attente=$(git show "$sha:migrations/a-appliquer-en-production.txt" 2>/dev/null | grep -v '^#' | grep . || true)
+            if [ -n "$attente" ] && [ "$MIGRATIONS_FAITES" != true ]; then
+              echo "::error::Migrations à appliquer d'abord sur la base apidoo : $attente"; exit 1
+            fi
+            prod=$sha
+          else
+            prod=refs/tags/deploiement
+          fi
+          git worktree add -q --detach /tmp/src-prod "$prod"
+          git worktree add -q --detach /tmp/src-recette "$sha"
+          sh /tmp/src-recette/scripts/assembler-site.sh /tmp/src-prod /tmp/src-recette _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publier:
+    name: Publier
+    needs: construire
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/deploy-pages@v4
+
+  finir:
+    name: Repère et contrôle de santé
+    needs: [construire, publier]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Déplacer le repère
+        env:
+          CIBLE: ${{ inputs.cible }}
+          SHA: ${{ needs.construire.outputs.sha }}
+        run: |
+          nom=recette; [ "$CIBLE" = production ] && nom=deploiement
+          git tag -f "$nom" "$SHA"
+          git push -f origin "refs/tags/$nom"
+      - name: Le site répond ?
+        env:
+          CIBLE: ${{ inputs.cible }}
+        run: |
+          url=https://apidoo.github.io/; [ "$CIBLE" = recette ] && url=https://apidoo.github.io/recette/
+          for i in 1 2 3 4 5 6; do
+            curl -fsS -o /dev/null "$url" && { echo "$url répond."; exit 0; }
+            sleep 10
+          done
+          echo "::error::$url ne répond pas."; exit 1
