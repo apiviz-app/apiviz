@@ -336,7 +336,7 @@ const UX = (() => {
   };
 
   // ---------- 6. Carte des ruchers (Leaflet + OpenStreetMap) ----------
-  let promesseCarte = null, choix = null;
+  let promesseCarte = null, choix = null, carteMap = null, visee = null;
   const leaflet = () => promesseCarte || (promesseCarte = new Promise((ok, ko) => {
     const l = document.createElement("link");
     l.rel = "stylesheet"; l.href = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css";
@@ -364,7 +364,8 @@ const UX = (() => {
       <span class="u-hexes">${l.rs.map(hexMini).join("")}</span>
       <div class="u-deux">${l.lat != null ? `<a class="btn main u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${l.lat},${l.lng}" target="_blank" rel="noopener">Itinéraire</a>` : ""}
         <button type="button" class="btn ${l.lat == null ? "main" : ""}" data-act="uvisiterucher" data-v="${esc(l.cle)}">Visiter ce rucher</button></div>
-      <button type="button" class="link" data-act="uplacer" data-v="${esc(l.cle)}">${l.lat == null ? "Placer ce rucher ici (ma position)" : "Déplacer ici (ma position)"}</button></section>`;
+      <div class="u-deux"><button type="button" class="btn" data-act="uplacermain" data-v="${esc(l.cle)}">${l.lat == null ? "Placer sur la carte" : "Déplacer sur la carte"}</button>
+        <button type="button" class="btn" data-act="uplacer" data-v="${esc(l.cle)}">Ma position</button></div></section>`;
   }
   function carte() {
     const ls = infos(), aPlacer = ls.filter((l) => l.lat == null);
@@ -375,17 +376,20 @@ const UX = (() => {
       S.d.ruches.length ? `<div id="uCarte" class="u-carte" role="region" aria-label="Carte des ruchers"><p class="small u-carte-msg">Chargement de la carte…</p></div>
        <div id="uPanneau">${panneau(ls.find((l) => l.cle === choix))}</div>
        <section class="card u-liste"><h2>Ruchers</h2>${liste}</section>
-       <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher, ouvrez cette page sur place et touchez « Placer ce rucher ici ».</p>`
+       <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher : touchez-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
         : emptyState("Aucune ruche", "Ajoutez vos ruches pour les voir sur la carte.", "Ajouter des ruches", "newruches"));
     if (S.d.ruches.length) monter(ls);
+    if (visee) setTimeout(() => ACT.uplacermain(visee), 0);
   }
   async function monter(ls) {
     let L;
     try { L = await leaflet(); } catch (e) { const el = document.querySelector(".u-carte-msg"); if (el) el.textContent = e.message; return; }
     const el = document.getElementById("uCarte");
     if (!el || el.dataset.monte) return;
+    carteMap = null;
     el.dataset.monte = "1"; el.innerHTML = "";
     const m = L.map(el, { zoomControl: true, attributionControl: true });
+    carteMap = m;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(m);
     const places = ls.filter((l) => l.lat != null);
     const couleur = { good: "#1F7350", watch: "#B9500A", crit: "#A61B1B" };
@@ -408,6 +412,46 @@ const UX = (() => {
     if (typeof VR != "undefined" && S.d.ruches.filter((r) => (r.rucher || "") === cle).length > 1) ACT.vrrucher(cle);
     else { const r = S.d.ruches.find((x) => (x.rucher || "") === cle); if (r) ACT.vset(r.id, "ruche_id"); }
   };
+  ACT.uplacermain = async (cle) => {
+    visee = cle; choix = cle;
+    const l = infos().find((x) => x.cle === cle), el = document.getElementById("uCarte"), p = document.getElementById("uPanneau");
+    if (!el || !p || !l) return;
+    try { await leaflet(); } catch (e) { visee = null; throw e; }
+    for (let i = 0; i < 40 && !carteMap; i++) await new Promise((r) => setTimeout(r, 50));
+    if (!carteMap) return;
+    el.classList.add("u-visee");
+    if (l.lat != null) carteMap.setView([l.lat, l.lng], Math.max(carteMap.getZoom(), 15));
+    p.innerHTML = `<section class="card u-panneau"><h2>Placer « ${esc(l.nom)} »</h2>
+      <p class="small">Faites glisser la carte pour amener la croix sur le rucher, zoomez si besoin, puis validez. Vous pouvez aussi chercher une commune ou une adresse.</p>
+      <form data-form="ucherche" class="two ex-ajout"><label>Commune ou adresse<input name="q" autocomplete="off" placeholder="Ex. Fontaine-lès-Dijon"></label><button class="btn">Chercher</button></form>
+      <div class="u-deux"><button type="button" class="btn main" data-act="uvalider" data-v="${esc(cle)}">Valider ici</button><button type="button" class="btn" data-act="uannuler">Annuler</button></div></section>`;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  document.addEventListener("submit", async (e) => {
+    if (e.target.dataset.form !== "ucherche") return;
+    e.preventDefault();
+    const q = String(e.target.q.value || "").trim();
+    if (!q || !carteMap) return;
+    const b = e.target.querySelector(".btn"); b.disabled = true;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&accept-language=fr&q=${encodeURIComponent(q)}`);
+      const j = r.ok ? await r.json() : [];
+      if (!j.length) toast("Adresse introuvable : essayez avec le nom de la commune", true);
+      else { carteMap.setView([Number(j[0].lat), Number(j[0].lon)], 15); toast(j[0].display_name.split(",").slice(0, 2).join(",")); }
+    } catch { toast("Recherche indisponible sans réseau", true); }
+    finally { b.disabled = false; }
+  });
+  ACT.uannuler = () => {
+    visee = null;
+    document.getElementById("uCarte")?.classList.remove("u-visee");
+    ACT.uchoix(choix);
+  };
+  ACT.uvalider = async (cle) => {
+    if (!carteMap) return;
+    const c = carteMap.getCenter();
+    visee = null; choix = cle;
+    await write(sb.from("ruches").update({ lat: Math.round(c.lat * 1e6) / 1e6, lng: Math.round(c.lng * 1e6) / 1e6 }).eq("rucher", cle), `« ${nomRucher(cle)} » placé sur la carte`);
+  };
   ACT.uplacer = (cle) => new Promise((ok) => {
     if (!navigator.geolocation) { toast("Ce téléphone ne donne pas sa position", true); return ok(); }
     toast("Recherche de votre position…");
@@ -419,6 +463,60 @@ const UX = (() => {
       ok();
     }, () => { toast("Position indisponible : autorisez la localisation pour Apidoo", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   });
+
+  // ---------- Tableaux lisibles sur téléphone ----------
+  // Chaque cellule reçoit le titre de sa colonne : sur petit écran, le CSS affiche une carte par ligne.
+  function etiqueter(racine) {
+    racine.querySelectorAll(".card.tbl table:not([data-u])").forEach((t) => {
+      t.dataset.u = "1";
+      const tetes = [...t.querySelectorAll("thead th")].map((th) => th.textContent.trim());
+      t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { td.dataset.label = tetes[i] || ""; }));
+    });
+  }
+  let prevu = false;
+  new MutationObserver(() => {
+    if (prevu) return;
+    prevu = true;
+    queueMicrotask(() => { prevu = false; etiqueter(document.getElementById("app")); });
+  }).observe(document.getElementById("app"), { childList: true, subtree: true });
+
+  // ---------- Pilotage : comparaison avec l'année précédente ----------
+  function comparaison() {
+    const d = S.d, an = S.annee, avant = an - 1;
+    const chiffres = (a) => {
+      const f = fin(a);
+      return {
+        recolte: sum(d.recoltes.filter((x) => yr(x.date_recolte) === a), (x) => x.kg),
+        ca: f.ca, charges: f.charges, resultat: f.resultat,
+        pots: sum(f.lignes, (x) => x.quantite),
+        visites: d.visites.filter((x) => yr(x.date_visite) === a).length,
+      };
+    };
+    const now = chiffres(an), old = chiffres(avant);
+    const vide = !old.recolte && !old.ca && !old.charges && !old.visites;
+    if (vide) return `<section class="card"><h2>Comparaison avec ${avant}</h2><p class="small">Pas encore de données pour ${avant} : la comparaison apparaîtra l’an prochain.</p></section>`;
+    // Même période : jusqu'à aujourd'hui pour l'année en cours.
+    const enCours = an === new Date().getFullYear();
+    const ligne = (lab, a, b, fmt, bonSiHausse = true) => {
+      const ecart = b ? (a - b) / Math.abs(b) * 100 : null;
+      const ton = ecart === null || Math.abs(ecart) < 1 ? "" : (ecart > 0) === bonSiHausse ? "good" : "watch";
+      return `<div class="u-cmp"><span>${lab}</span><b>${esc(fmt(a))}</b><span class="small">${esc(fmt(b))} en ${avant}</span>
+        ${ecart === null ? '<span class="u-chip">nouveau</span>' : `<span class="u-chip ${ton}">${ecart > 0 ? "+" : ""}${n(ecart, 0)} %</span>`}</div>`;
+    };
+    return `<section class="card"><h2>${an} comparé à ${avant}</h2>${enCours ? `<p class="small">${an} est en cours : ${avant} est compté sur l’année entière.</p>` : ""}
+      ${ligne("Miel récolté", now.recolte, old.recolte, (x) => n(x) + " kg")}
+      ${ligne("Pots vendus", now.pots, old.pots, (x) => n(x, 0))}
+      ${ligne("Ventes", now.ca, old.ca, eur0)}
+      ${ligne("Dépenses", now.charges, old.charges, eur0, false)}
+      ${ligne("Résultat", now.resultat, old.resultat, eur0)}
+      ${ligne("Visites", now.visites, old.visites, (x) => n(x, 0))}</section>`;
+  }
+  const pilotFinAvant = window.pilotFin;
+  window.pilotFin = () => {
+    const html = pilotFinAvant();
+    const i = html.indexOf("</div>\n  <section");
+    return i < 0 ? comparaison() + html : html.slice(0, i + 6) + comparaison() + html.slice(i + 6);
+  };
 
   // ---------- Menu Plus ----------
   function viewPlus() {
