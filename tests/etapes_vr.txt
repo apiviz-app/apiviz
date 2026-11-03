@@ -6,8 +6,8 @@
     page.click("[data-act=vrmulti]")
     page.click("[data-act=vrrucher][data-v='Verger']")
     verif("2 choisies" in page.locator(".field .t").first.inner_text(), "« Tout Verger » choisit 2 ruches")
-    page.click("[data-act=vstep][data-v='0.5']")
-    page.fill("#v_trt", "Produit test"); page.fill("#v_retrait", "2026-12-14"); page.fill("#v_note", "Groupe")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
+    page.locator("details[data-sec=traitement]").evaluate("d => d.open = true"); page.locator("details[data-sec=photos]").evaluate("d => d.open = true"); page.fill("#v_trt", "Produit test"); page.fill("#v_retrait", "2026-12-14"); page.fill("#v_note", "Groupe")
     page.click("form[data-form=visite] .btn.main")
     page.wait_for_selector(".toast >> text=2 visites enregistrées", timeout=10000)
     vis = [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
@@ -20,7 +20,7 @@
     DATA["articles"][0]["stock"] = 0.5
     page.evaluate("refresh()"); page.wait_for_timeout(300)
     page.evaluate("ACT.newvisite()"); page.click("[data-act=vrmulti]"); page.click("[data-act=vrtoggle][data-v='%s']" % R3)
-    page.click("[data-act=vstep][data-v='0.5']")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
     avant = len(recu["rpc"])
     page.click("form[data-form=visite] .btn.main")
     page.wait_for_selector(".toast.err >> text=Stock insuffisant", timeout=10000)

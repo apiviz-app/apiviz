@@ -1,6 +1,6 @@
     page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
     # Visite avec traitement
-    page.click(".head .btn.honey"); page.wait_for_selector("#v_trt")
+    page.click(".head .btn.honey"); page.wait_for_selector("#v_trt", state="attached"); page.locator("details[data-sec=traitement]").evaluate("d => d.open = true")
     page.fill("#v_trt", "Produit test"); page.fill("#v_lot", "LOT42"); page.fill("#v_dose", "2 lanières")
     page.fill("#v_retrait", "2026-12-14"); page.check("#v_ordo")
     page.click("form[data-form=visite] .btn.main")
@@ -9,7 +9,7 @@
     verif(vis and vis[0]["traitement"] == "Produit test" and vis[0]["lot_produit"] == "LOT42" and vis[0]["traitement_dose"] == "2 lanières" and vis[0]["retrait_prevu"] == "2026-12-14" and vis[0]["ordonnance"] is True, "traitement transmis avec la visite")
     taches = [x for x in recu["upsert"] if x[0] == "taches"]
     verif(len(taches) == 1 and taches[0][2][0]["echeance"] == "2026-12-14" and "Produit test" in taches[0][2][0]["titre"], "tâche de fin de traitement créée")
-    verif(page.locator("text=Traitement : Produit test").count() == 1, "traitement visible dans le journal")
+    verif(page.locator(".u-chip >> text=Traitement · Produit test").count() == 1 and page.locator(".u-visite >> text=lot LOT42").count() == 1, "traitement visible dans le journal")
     # Registre
     page.evaluate("ACT.go('registre')"); page.wait_for_selector("h1 >> text=Registre")
     t = page.locator(".card.tbl").inner_text()

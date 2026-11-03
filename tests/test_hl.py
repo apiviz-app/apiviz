@@ -118,11 +118,11 @@ with sync_playwright() as pw:
     # 3. Visite sans réseau.
     page.click(".head .btn.honey"); page.wait_for_selector("text=Nouvelle visite")
     verif(page.locator("form[data-form=visite] .btn.main").inner_text().startswith("Enregistrer sur le"), "bouton « Enregistrer sur le téléphone »")
-    page.click("[data-act=vstep][data-v='0.5']")
-    page.fill("#v_note", "Visite test hors ligne")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true"); page.fill("#v_note", "Visite test hors ligne")
     page.click("form[data-form=visite] .btn.main")
     page.wait_for_selector(".toast >> text=Visite gardée sur le téléphone", timeout=10000)
-    verif(page.locator(".hl-tag").count() >= 1, "visite marquée « en attente » dans le journal")
+    verif(page.locator(".u-visite .tag.watch >> text=en attente").count() >= 1, "visite marquée « en attente » dans le journal")
     verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
 
     # 4. Récolte sans réseau (fiche).
