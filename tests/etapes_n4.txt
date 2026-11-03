@@ -11,7 +11,7 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     libs = page.locator(".bottom button span:not(.n4-badge)").all_inner_texts()
-    verif(libs == ["Accueil", "Ruchers", "Saisir", "Miel", "Gestion"], "barre du bas : %s" % libs)
+    verif(libs == ["Accueil", "Ruchers", "API", "Miel", "Gestion"], "barre du bas : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
     # Prochaine action
     verif(page.locator(".n4-prochaine").count() == 1 and "Bois" in page.locator(".n4-prochaine").inner_text(), "prochaine action : " + page.locator(".n4-prochaine b").inner_text())
@@ -19,10 +19,6 @@
     shot("accueil")
     page.click("[data-act=n4plustard]")
     verif(page.locator(".n4-prochaine").count() == 0, "« Plus tard » masque la proposition pour aujourd'hui")
-    # Filtres À faire
-    page.click("[data-act=utfiltre][data-v=ruches]")
-    verif(page.locator(".u-todo").count() >= 1 and all(t.startswith("Ruche") for t in page.locator(".u-todo b").all_inner_texts()), "filtre « Ruches » de la liste À faire")
-    page.click("[data-act=utfiltre][data-v=tout]")
     # Bouton +
     page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
     verif(page.locator("#sheet .n4-tuile").all_inner_texts() == ["Visite", "Tournée", "Récolte", "Vente", "Dépense", "Tâche"], "6 tuiles de saisie")

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1E2B24">
+<meta name="theme-color" content="#F3F4EE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Apidoo">
 <title>Apidoo</title>
@@ -630,6 +630,86 @@ body.soleil .seg button.on{outline:2px solid #000}
 .wrap>.subtabs button{flex:1;padding:0 6px}
 html.recette .topbar,html.recette .side{background:#8A3F06}
 html.recette body::before{content:"RECETTE";position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;background:#E3A008;color:#1B2420;font:700 11px/1 sans-serif;letter-spacing:.1em;padding:4px 10px;border-radius:0 0 8px 8px;pointer-events:none}
+
+/* ---------- Interface Alvéoles : compagnon API, écrans allégés ---------- */
+@media (max-width:800px){
+  .topbar{background:var(--ground);color:var(--ink)}
+  .topbar .v3-cherche{color:var(--ink)}
+  .bottom{background:#fff;border-top:1px solid var(--line);box-shadow:none}
+}
+.bottom button[data-v=saisir] svg.al-api{width:62px;height:62px;padding:0;margin-top:-30px;border-radius:0;background:none!important;box-shadow:none}
+.side .nav svg.al-api{flex:none}
+.al-api{display:block;flex:none}
+.al-tete{justify-content:flex-start;align-items:center;gap:10px}
+.al-tete h2{flex:1;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;letter-spacing:-.015em}
+.al-cherche{width:100%;min-height:50px;padding:0 16px;margin:6px 0 8px;border:1px solid var(--line2);border-radius:25px;background:#fff;font:inherit;color:var(--muted);text-align:left}
+.al-bientot{margin-top:6px}
+
+/* Écrans sans cartes empilées */
+body[data-route=dash] .card,body[data-route=ruches] .card,body[data-route=plus] .card{background:none;border:0;box-shadow:none;padding:0}
+body[data-route=dash] .wrap,body[data-route=ruches] .wrap{gap:24px}
+.head.hero-head{display:block;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
+.head.hero-head::after{display:none}
+.head.hero-head h1{color:var(--ink);font-size:27px;line-height:1.14;letter-spacing:-.018em;margin-top:4px;max-width:640px}
+.head.hero-head .eyebrow{color:var(--muted);font-size:14px;font-weight:500;letter-spacing:0;text-transform:none}
+.u-meteo{color:var(--muted)}
+.u-meteo .link,.head.hero-head .link{color:var(--good)}
+.u-jour{background:#E7EAE1}
+.u-meteo .u-meilleur{color:var(--muted)}
+.n4-prochaine{margin-top:10px;padding-top:0;border-top:0;max-width:520px}
+.n4-prochaine b{font-size:15px;font-weight:600}
+.n4-prochaine .small{color:var(--muted)}
+.n4-deux .btn.honey{background:var(--pine);border-color:var(--pine);color:#fff}
+.n4-deux .btn.ghost{background:#fff;border-color:var(--line2);color:var(--ink)}
+
+/* Carte des ruches en alvéoles */
+.al-carte{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px 12px;align-items:start}
+.al-carte>.u-entete,.al-carte>.al-cle{grid-column:1/-1}
+.al-carte .u-rucher .u-entete{margin:0;flex-wrap:wrap;gap:0 8px}
+.al-carte .u-hexes{display:flex;flex-wrap:wrap;padding:4px 0 34px;gap:0}
+.al-carte .u-hex{width:62px;height:54px;margin:0 -11px 0 0;padding:0;border:0;border-radius:0;display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);color:#fff;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:19px;font-weight:700}
+.al-carte .u-hex:nth-child(even){transform:translateY(31px)}
+.al-carte .u-hex.bg-watch{background:var(--honey);color:var(--ink)}
+.al-carte .u-hex.bg-crit span::after{content:"!"}
+.al-cle{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;font-size:13px;color:var(--muted)}
+.al-cle span{display:inline-flex;align-items:center;gap:6px}
+.al-cle i{width:12px;height:11px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.al-cle i.bg-watch{background:var(--honey)}
+
+/* Listes */
+.n4-hex{width:30px;height:26px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.n4-hex.bg-watch{background:linear-gradient(0deg,var(--honey) 50%,#EBD9A6 50%)}
+.al-kg{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.u-dot.bg-watch{background:var(--honey)}
+body[data-route=ruches] .u-deux{margin-top:6px}
+
+/* Miel : chiffres en ligne */
+.u-tuiles{gap:0}
+.u-tuile,.u-tuile.on,.u-tuile.on.watch{min-height:56px;padding:0 0 0 12px;border:0;border-left:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
+.u-tuile:first-child{padding-left:0;border-left:0}
+.u-tuile.on b,.u-tuile.on span{color:var(--ink)}
+.u-tuile.on.watch b,.u-tuile.on.watch span{color:#7D5200}
+.u-tuile span{font-size:13px}
+
+/* Gestion : une liste plutôt que des tuiles */
+.n4-sect{margin:16px 0 0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:16px;font-weight:700;letter-spacing:-.01em;text-transform:none;color:var(--ink)}
+.n4-grille,.n4-grille.c2,.n4-grille.c3{grid-template-columns:minmax(0,1fr);gap:0}
+.n4-g,.n4-g.large{grid-column:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:6px 0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;box-shadow:none;text-align:left}
+.n4-grille .n4-g:first-child{border-top:0}
+.n4-g b{font-weight:600}
+.n4-g .small{text-align:right}
+
+.al-carte .u-rucher{display:block;margin:0;padding:0;border:0}
+.al-carte .u-rucher .u-entete{justify-content:flex-start;gap:0 10px;margin-bottom:2px}
+.al-carte .u-hexes{flex-wrap:wrap;width:auto}
+.head.hero-head .u-meteo,.head.hero-head .u-meteo a,.head.hero-head .u-meteo button{color:var(--good)}
+.n4-grille .n4-g,.n4-grille .n4-g.large{flex-direction:row;text-align:left}
+.n4-grille .n4-g b{flex:1;text-align:left}
+.subtabs{display:flex;gap:22px;padding:0;background:none;border-radius:0;border-bottom:1px solid var(--line);box-shadow:none}
+.subtabs button{flex:none;min-height:44px;padding:0;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;box-shadow:none;color:var(--muted);font-weight:500;margin-bottom:-1px}
+.subtabs button.on{background:none;box-shadow:none;color:var(--ink);font-weight:700;border-bottom-color:var(--honey)}
+.head.hero-head .u-meteo-lien{color:var(--good)!important}
+.al-carte .u-hexes{justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -648,5 +728,6 @@ html.recette body::before{content:"RECETTE";position:fixed;top:0;left:50%;transf
 <script src="./offline.js"></script>
 <script src="./v3.js"></script>
 <script src="./nav4.js"></script>
+<script src="./alveoles.js"></script>
 </body>
 </html>
