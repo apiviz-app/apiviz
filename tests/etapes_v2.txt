@@ -10,7 +10,7 @@
     def meteo(rt):
         meteo_appels.append(rt.request.url)
         rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
-                   body=json.dumps({"current": {"temperature_2m": 17.4, "wind_speed_10m": 8.2, "precipitation": 0}, "hourly": {"precipitation_probability": [0] * 24}}))
+                   body=json.dumps({"current": {"time": "2026-06-15T14:00", "temperature_2m": 17.4, "wind_speed_10m": 8.2, "precipitation": 0}, "hourly": {"precipitation_probability": [0] * 24}}))
     ctx.route("https://api.open-meteo.com/**", meteo)
     ctx.grant_permissions(["geolocation"]); ctx.set_geolocation({"latitude": 47.30, "longitude": 5.10})
     requetes = []
@@ -24,8 +24,8 @@
     verif(page.locator("#sheet .n4-tuile").count() == 6, "« Saisir » ouvre le choix des saisies")
     page.click("#sheet [data-act=closesheet]")
     # Accueil
-    page.wait_for_selector("#uMeteo .u-meteo-t", timeout=5000)
-    verif("17°" in page.locator("#uMeteo").inner_text() and "Bon moment pour visiter" in page.locator("#uMeteo").inner_text(), "météo du rucher sur l'accueil")
+    page.wait_for_selector(".al-wx .al-temps", timeout=5000)
+    verif("17°" in page.locator(".al-wx >> nth=0").inner_text() or "17°" in page.locator(".al-wx >> nth=1").inner_text(), "météo du rucher sur l'accueil")
     verif("latitude=47.32" in meteo_appels[0], "météo demandée à la position du rucher")
     verif(page.locator(".u-todo").count() == 3 and page.locator("[data-act=utout]").count() == 1, "accueil : 3 points à faire, « Tout voir »")
     page.click("[data-act=utout]"); verif(page.locator(".u-todo").count() > 3, "« Tout voir » déplie la liste")

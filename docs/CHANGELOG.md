@@ -1,5 +1,13 @@
 # Notes de version
 
+## v5.2 · en recette · quatre rubriques, ruchers en colonnes, météo par rucher
+À vérifier sur https://apidoo.github.io/recette/ :
+1. Quatre rubriques partout : Accueil, Ruchers, Miel, Gestion, plus API. Sur ordinateur, le menu est une barre en haut.
+2. Agenda et Activité : depuis « À faire » sur l'accueil. Registre et Déclaration : Ruchers › Santé.
+3. Accueil : un rucher par colonne, avec ses alvéoles, sa météo et sa tournée. « Bien démarrer » passe en bas.
+4. Chaque rucher placé sur la carte a sa météo, ses 3 prochains jours et son meilleur créneau.
+5. « Ouvrir » un rucher : fiche avec 5 jours de prévisions, tâches et ruches.
+
 ## v5.1 · en recette · interface Alvéoles et compagnon API
 À vérifier sur https://apidoo.github.io/recette/ :
 1. Accueil : une phrase donne la priorité du jour, puis la carte des ruches en alvéoles avec sa légende, puis « À faire ».

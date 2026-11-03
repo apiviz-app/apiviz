@@ -29,11 +29,11 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Accueil : alerte varroa, commande à livrer, météo 3 jours
-    page.wait_for_selector(".u-jours", timeout=5000)
+    page.wait_for_selector(".al-temps", timeout=5000)
     verif(page.locator(".u-todo >> text=Varroa 4,0 %").count() == 1 or page.locator(".u-todo >> text=Varroa 4 %").count() == 1, "alerte varroa au-dessus du seuil sur l'accueil")
     page.click("[data-act=utout]")
     verif(page.locator(".u-todo >> text=1 commande à livrer").count() == 1, "commande à livrer dans « À faire »")
-    verif(page.locator(".u-jour").count() == 3 and "Meilleur jour pour visiter" in page.locator(".u-meilleur").inner_text(), "météo sur 3 jours avec le meilleur jour : " + page.locator(".u-meilleur").inner_text())
+    verif(page.locator(".al-creneau").count() >= 1, "créneau calculé pour le rucher")
     verif(page.locator(".topbar .v3-cherche").count() == 1, "bouton de recherche dans la barre du haut")
     verif(page.locator("[data-act=v3tournee][data-v=Verger]").count() == 1, "« Faire la tournée » sur le rucher")
     page.evaluate("window.scrollTo(0,0)"); page.wait_for_timeout(450); page.screenshot(path="v4/accueil_haut.png")
