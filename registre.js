@@ -30,11 +30,11 @@ const RG = (() => {
     S.visite.ordonnance = g("v_ordo").checked;
   }
   // Après l'enregistrement de la visite : la tâche de fin de traitement.
-  async function apres(s) {
+  async function apres(s, noms) {
     if (!s.traitement || !s.retrait_prevu) return;
     const r = byId(S.d.ruches, s.ruche_id);
     try {
-      await write(sb.from("taches").insert({ titre: `Fin du traitement ${s.traitement} (${r?.nom || "ruche"})`, echeance: s.retrait_prevu, ruche_id: s.ruche_id }));
+      await write(sb.from("taches").insert({ titre: `Fin du traitement ${s.traitement} (${noms || r?.nom || "ruche"})`, echeance: s.retrait_prevu, ruche_id: s.ruche_id || null }));
     } catch (err) { toast("Visite enregistrée, mais la tâche de retrait n’a pas pu être créée", true); }
   }
 
