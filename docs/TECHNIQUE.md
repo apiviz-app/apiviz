@@ -8,5 +8,5 @@
 - **Données** : Supabase (Postgres + Auth + Storage). Accès réservé aux adresses de la table `membres` (`est_membre()`),
   règles RLS sur chaque table. Créations atomiques par `creer_visite` et `creer_vente`.
 - **Migrations** : `migrations/`, numérotées, uniquement additives ; état d'application dans `migrations/README.md`.
-- **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`.
-- **Branche `exploitations`** : plusieurs exploitations et invitations par lien ; attend la migration 008.
+- **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette.
+- **Environnements** : un dépôt par environnement, voir `PROCESSUS.md`. `config.js`, `manifest.webmanifest` et `.github/` sont propres à chacun et ne sont jamais copiés de l'un à l'autre.

@@ -1,7 +1,7 @@
 # Notes de version
 
 ## v5.0 · en recette · plusieurs exploitations et invitations
-À vérifier sur https://apidoo.github.io/recette/ :
+À vérifier sur https://apidoo.github.io/apidoo-recette/ :
 1. Créer son compte (adresse autorisée) et confirmer l'e-mail : on arrive sur « Rucher de démonstration (recette) ».
 2. Gestion › Membres : créer un lien d'invitation, l'envoyer à une autre adresse.
 3. Ouvrir le lien avec l'autre compte : il rejoint l'exploitation et voit les mêmes ruches.

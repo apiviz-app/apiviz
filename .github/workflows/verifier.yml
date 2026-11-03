@@ -1,0 +1,17 @@
+# Contrôle chaque pull request vers la production : les tests complets ont déjà tourné en recette.
+name: Vérifier
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuration de production
+        run: sh scripts/verifier-config.sh production

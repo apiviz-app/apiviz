@@ -1,3 +1,5 @@
 # apidoo.github.io
-## Recette, production et documentation
-Voir `docs/PROCESSUS.md` (recette sur https://apidoo.github.io/recette/), `docs/CHANGELOG.md`, `docs/GUIDE.md`, `docs/TECHNIQUE.md`.
+
+Production d'Apidoo : https://apidoo.github.io/ (base Supabase `apidoo`, vraies données).
+
+**Ne pas développer ici.** Tout se fait dans [apidoo/apidoo-recette](https://github.com/apidoo/apidoo-recette), puis arrive ici par pull request. Voir `docs/PROCESSUS.md`.

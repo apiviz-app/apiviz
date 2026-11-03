@@ -2,22 +2,37 @@
 
 | | Recette | Production |
 |---|---|---|
-| Adresse | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
-| Fichiers | dossier `recette/` | racine du dépôt |
+| Dépôt | [apidoo/apidoo-recette](https://github.com/apidoo/apidoo-recette) | [apidoo/apidoo.github.io](https://github.com/apidoo/apidoo.github.io) |
+| Adresse | https://apidoo.github.io/apidoo-recette/ | https://apidoo.github.io/ |
 | Base | Supabase `apidoo-test` (données fictives) | Supabase `apidoo` (vraies données) |
 | Repère | bandeau « RECETTE », barre orange | aucun |
 
 Les deux environnements gardent sur le téléphone des données séparées (cache hors ligne, photos, service worker).
 
 ## Cycle d'une version
-1. **Développement** : les changements sont faits dans `recette/` (jamais directement à la racine).
+
+1. **Branche** : dans `apidoo-recette`, créer une branche depuis `main`. Tout développement se fait ici, jamais dans le dépôt de production.
 2. **Base de données** : toute migration est appliquée d'abord sur `apidoo-test`, et notée dans `migrations/README.md`.
-3. **Livraison en recette** : tests automatiques (`tests/`), puis `git push` → en ligne en 1 à 2 minutes.
-4. **Cahier de recette** : ajouté en tête de `docs/CHANGELOG.md`, rubrique « À vérifier ».
-5. **Validation** : le responsable teste sur son téléphone et répond « validé » (ou liste les problèmes).
-6. **Mise en production** : migration appliquée sur `apidoo`, puis `scripts/promouvoir.sh`, `git commit`, `git push`.
-7. **Documentation** : `CHANGELOG.md` (version validée et date), `GUIDE.md` et `TECHNIQUE.md` si besoin.
+3. **Pull request vers `main` d'`apidoo-recette`** : les tests et le contrôle de configuration tournent tout seuls. La fusion publie la recette en 1 à 2 minutes.
+4. **Validation** : tester sur téléphone en suivant la rubrique « À vérifier » de `docs/CHANGELOG.md`.
+5. **Proposition** : onglet Actions d'`apidoo-recette`, action « Proposer en production », saisir la version. Une pull request s'ouvre sur `apidoo.github.io`, avec les migrations à appliquer.
+6. **Base de production** : appliquer ces migrations sur `apidoo`, s'il y en a.
+7. **Mise en ligne** : fusionner la pull request. Le contrôle de configuration doit être vert. La production est publiée en 1 à 2 minutes.
+8. **Documentation** : dans `apidoo-recette`, passer la version à « en production » dans `CHANGELOG.md`, compléter `GUIDE.md` et `TECHNIQUE.md` si besoin.
 
-Retour arrière : `git revert` du commit de mise en production. Les migrations n'ajoutent que des éléments (aucune suppression), donc une ancienne version de l'app reste compatible.
+## Ce qui ne passe jamais d'un dépôt à l'autre
 
-Remettre la recette au niveau de la production : `scripts/vers-recette.sh`.
+`config.js`, `manifest.webmanifest`, `README.md`, `.gitignore` et `.github/` sont propres à chaque dépôt. `sw.js` perd seulement son préfixe `recette-`. Cette règle est dans `scripts/preparer-production.sh`, et `scripts/verifier-config.sh` bloque une pull request qui mélangerait les deux bases.
+
+## Retour arrière
+
+Sur `apidoo.github.io`, bouton « Revert » de la pull request de mise en production, puis fusion. Les migrations n'ajoutent que des éléments (aucune suppression), donc une ancienne version de l'app reste compatible.
+
+## Correctif urgent en production
+
+Le corriger quand même dans `apidoo-recette`, puis suivre les étapes 3 à 7 en réduisant la validation. Un correctif fait directement en production serait effacé par la promotion suivante.
+
+## Réglages à connaître
+
+- Secret `PROD_REPO_TOKEN` (`apidoo-recette` › Settings › Secrets › Actions) : jeton GitHub du compte apidoo limité au dépôt `apidoo.github.io`, droits Contents et Pull requests en écriture. À renouveler à son expiration : sinon l'action « Proposer en production » échoue, sans aucun effet sur le site.
+- Supabase `apidoo-test` › Authentication › URL Configuration : l'adresse de recette doit être autorisée, sinon les liens reçus par e-mail ne ramènent pas à la recette.
