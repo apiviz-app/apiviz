@@ -67,12 +67,23 @@ const UX = (() => {
     if (meteo.cle !== cle || Date.now() - meteo.at > 18e5) chargerMeteo(l, cle);
     if (!meteo.data || meteo.cle !== cle) return "";
     const a = avis(meteo.data);
-    return `<span class="u-meteo-t">${a.t}°</span><span>${esc(l.nom)} · vent ${a.v} km/h<br><b class="${a.bon ? "u-ok" : ""}">${esc(a.verdict.charAt(0).toUpperCase() + a.verdict.slice(1))}</b></span>`;
+    return `<span class="u-meteo-t">${a.t}°</span><span>${esc(l.nom)} · vent ${a.v} km/h<br><b class="${a.bon ? "u-ok" : ""}">${esc(a.verdict.charAt(0).toUpperCase() + a.verdict.slice(1))}</b></span>${jours(meteo.data)}`;
+  }
+  // Les 3 prochains jours, et le meilleur pour ouvrir les ruches (sec, au moins 15°, peu de vent).
+  function jours(m) {
+    const d = m.daily;
+    if (!d?.time || d.time.length < 2) return "";
+    const js = d.time.slice(1, 4).map((t, i) => ({ t, max: Math.round(d.temperature_2m_max[i + 1]), p: d.precipitation_probability_max?.[i + 1] ?? 0, v: d.wind_speed_10m_max?.[i + 1] ?? 0 }));
+    const nom = (t) => new Date(t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short" });
+    const bons = js.filter((j) => j.p < 30 && j.max >= 15 && j.v < 25);
+    const meilleur = bons.sort((a, b) => a.p - b.p || b.max - a.max)[0];
+    return `<span class="u-jours">${js.map((j) => `<span class="u-jour ${meilleur && j.t === meilleur.t ? "on" : ""}"><b>${esc(nom(j.t))}</b>${j.max}° · ${j.p} %</span>`).join("")}</span>
+      <span class="small u-meilleur">${meilleur ? "Meilleur jour pour visiter : " + esc(new Date(meilleur.t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long" })) : "Pas de bon créneau ces 3 prochains jours"}</span>`;
   }
   function chargerMeteo(l, cle) {
     if (meteo.enCours || navigator.onLine === false) return;
     meteo.enCours = true;
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lng}&current=temperature_2m,wind_speed_10m,precipitation&hourly=precipitation_probability&forecast_days=1&timezone=auto`)
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lng}&current=temperature_2m,wind_speed_10m,precipitation&hourly=precipitation_probability&daily=temperature_2m_max,precipitation_probability_max,wind_speed_10m_max&forecast_days=4&timezone=auto`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((j) => { meteo.data = j; meteo.cle = cle; meteo.at = Date.now(); const el = document.getElementById("uMeteo"); if (el) el.innerHTML = meteoHtml(); })
       .catch(() => {})
@@ -106,7 +117,7 @@ const UX = (() => {
       ${lignes || '<p class="small u-vide">Rien à signaler. Belle journée au rucher !</p>'}</section>`;
 
     const blocRuchers = d.ruches.length ? `<section class="card"><div class="u-entete"><h2>Mes ruchers</h2><button type="button" class="link" data-act="go" data-v="carte">Carte</button></div>
-      ${ruchers().map(([k, rs]) => `<div class="u-rucher"><b>${esc(nomRucher(k))}</b><span class="u-hexes">${rs.map(hexMini).join("")}</span></div>`).join("")}</section>`
+      ${ruchers().map(([k, rs]) => `<div class="u-rucher"><div class="u-entete"><b>${esc(nomRucher(k))}</b>${typeof V3 != "undefined" && rs.length > 1 ? `<button type="button" class="link" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>` : ""}</div><span class="u-hexes">${rs.map(hexMini).join("")}</span></div>`).join("")}</section>`
       : `<section class="card"><h2>Mes ruchers</h2><p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button></section>`;
 
     const saison = `<section class="card"><div class="u-entete"><h2>Saison ${an}</h2><button type="button" class="link" data-act="go" data-v="pilotage">Pilotage</button></div>
@@ -128,6 +139,14 @@ const UX = (() => {
     activite: { Faible: "watch", Forte: "good" }, provisions: { Faibles: "watch", Bonnes: "good" },
     reine: { Vue: "good", "Non vue": "watch" }, couvain: { "Réduit": "watch", Normal: "good", Abondant: "good" },
   };
+  // Taux pour 100 abeilles quand on connaît le nombre d'abeilles prélevées (sucre glace, lavage).
+  const tauxVarroa = (v) => (v && v.varroa != null && v.varroa_abeilles > 0 && v.varroa_methode !== "Lange" ? v.varroa / v.varroa_abeilles * 100 : null);
+  const seuilVarroa = () => Number(cfg().varroaSeuil) || 3;
+  function chipVarroa(v) {
+    const t = tauxVarroa(v);
+    if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");
+    return chip(`Varroa ${n(t, 1)} %`, t >= seuilVarroa() ? "crit" : t >= seuilVarroa() * 0.66 ? "watch" : "good");
+  }
   function carteVisite(v) {
     const d = S.d;
     const chips = [
@@ -136,7 +155,7 @@ const UX = (() => {
       v.reine !== "Non cherchée" ? chip("Reine " + v.reine.toLowerCase(), TON.reine[v.reine]) : "",
       v.couvain ? chip("Couvain " + v.couvain.toLowerCase(), TON.couvain[v.couvain]) : "",
       v.poids_kg ? chip(n(v.poids_kg) + " kg") : "",
-      v.varroa !== null && v.varroa !== undefined ? chip("Varroa " + v.varroa, v.varroa >= 3 ? "watch" : "") : "",
+      v.varroa !== null && v.varroa !== undefined ? chipVarroa(v) : "",
       v.traitement ? chip("Traitement · " + v.traitement) : "",
     ].join("");
     const intr = d.intrants.filter((i) => i.visite_id === v.id).map((i) => { const a = byId(d.articles, i.article_id); return `${a?.nom || "?"} ${n(i.quantite)} ${a?.unite || ""}`.trim(); }).join(", ");
@@ -152,8 +171,9 @@ const UX = (() => {
   }
 
   function viewRuche() {
-    const d = S.d, r = byId(d.ruches, S.ruche);
+    const d = S.d, r = byId(d.ruches, S.ruche) || byId(d.ruchesSorties || [], S.ruche);
     if (!r) { S.route = "ruches"; return render(); }
+    if (ongletRuche.id !== r.id) ongletRuche = { id: r.id, v: "journal" };
     const vis = d.visites.filter((v) => v.ruche_id === r.id);
     const der = vis[0];
     const pesees = vis.filter((v) => v.poids_kg);
@@ -164,16 +184,28 @@ const UX = (() => {
     const chiffres = `<section class="card u-trois">
       <div><b>${der ? days(der.date_visite) + " j" : "–"}</b><span>dernière visite</span></div>
       <div><b>${pesees[0] ? n(pesees[0].poids_kg) + " kg" : "–"}</b><span>${ecart === null ? "poids" : ecart < 0 ? `poids ↘ ${n(-ecart)} kg` : ecart > 0 ? `poids ↗ ${n(ecart)} kg` : "poids stable"}</span></div>
-      <div><b>${varroa ? varroa.varroa : "–"}</b><span>varroas</span></div></section>`;
-    const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span><span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
+      <div><b>${!varroa ? "–" : tauxVarroa(varroa) !== null ? n(tauxVarroa(varroa), 1) + " %" : varroa.varroa}</b><span>${varroa && tauxVarroa(varroa) !== null ? "varroa / 100 ab." : "varroas"}</span></div></section>`;
+    const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>${r.sortie ? `<span class="tag crit">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span>` : `<span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>`}${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
     const poids = pesees.length > 1 ? `<details class="card u-pli"><summary><h2>Évolution du poids</h2><span class="u-chev" aria-hidden="true">›</span></summary>${lineChart({ labels: pesees.slice().reverse().map((v) => dshort(v.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.slice().reverse().map((v) => Number(v.poids_kg)) }], fmt: (x) => n(x) + " kg", title: "Évolution du poids de la ruche", h: 170 })}</details>` : "";
     shell(r.nom, [r.type_ruche, r.annee_reine ? "reine " + r.annee_reine : ""].filter(Boolean).join(" · ") || "Fiche de la ruche",
-      `<button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button><button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`,
+      r.sortie ? `<button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`
+        : `<button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button><button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`,
       `${tete}${chiffres}${r.notes ? `<section class="card">${esc(r.notes)}</section>` : ""}
        ${taches.length ? `<section class="card"><h2>Tâches prévues</h2>${taches.map(taskRow).join("")}</section>` : ""}
        ${poids}
-       <h2 class="u-titre">Journal</h2>${vis.map(carteVisite).join("") || '<p class="small">Aucune visite enregistrée.</p>'}`);
+       ${subtabs([["journal", "Journal"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
+       ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
+         : `<h2 class="u-titre">Journal</h2>${vis.map(carteVisite).join("") || '<p class="small">Aucune visite enregistrée.</p>'}`}`);
     document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", `<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruches${r.rucher ? " · " + esc(r.rucher) : ""}</button>`);
+  }
+
+  let ongletRuche = { id: null, v: "journal" };
+  ACT.uronglet = (v) => { ongletRuche.v = v; viewRuche(); };
+  function photosRuche(vis) {
+    if (typeof PH == "undefined") return "";
+    const blocs = vis.map((v) => [v, PH.vignettes(v.id)]).filter(([, h]) => h);
+    return blocs.length ? blocs.map(([v, h]) => `<section class="card"><h2>${esc(dateCourte(v.date_visite))}</h2>${h}</section>`).join("")
+      : '<p class="small">Aucune photo pour cette ruche. Ajoutez-en pendant une visite.</p>';
   }
 
   // ---------- 3. Visite ----------
@@ -201,12 +233,17 @@ const UX = (() => {
       return `<div class="stepper"><div><b>${esc(a.nom)}</b><div class="small">${n(a.stock)} ${esc(a.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${-pas}">−</button><span>${n(e.q[a.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${pas}">+</button></div></div>`;
     }).join("");
     const utilise = conso.filter((a) => e.q[a.id] > 0).map((a) => `${a.nom} ${n(e.q[a.id])} ${a.unite}`).join(", ");
-    const pv = [e.poids_kg !== "" && e.poids_kg != null ? n(e.poids_kg) + " kg" : "", e.varroa !== "" && e.varroa != null ? "varroa " + e.varroa : ""].filter(Boolean).join(" · ");
+    const tx = e.varroa !== "" && e.varroa != null && Number(e.varroa_abeilles) > 0 && e.varroa_methode !== "Lange" ? Number(e.varroa) / Number(e.varroa_abeilles) * 100 : null;
+    const pv = [e.poids_kg !== "" && e.poids_kg != null ? n(e.poids_kg) + " kg" : "", e.varroa !== "" && e.varroa != null ? (tx !== null ? `varroa ${n(tx, 1)} %` : "varroa " + e.varroa) : ""].filter(Boolean).join(" · ");
+    const T = typeof V3 != "undefined" ? V3.tourneeDe(e) : null;
+    const lange = e.varroa_methode === "Lange";
     const horsLigne = typeof HL != "undefined" && HL.horsLigne();
 
-    shell("Nouvelle visite", "", '<button class="btn" data-act="cancel">Annuler</button>', `
+    shell(T ? byId(d.ruches, e.ruche_id)?.nom || "Visite" : "Nouvelle visite", T ? `Tournée « ${T.nom} » · ruche ${T.i + 1} sur ${T.ids.length}` : "",
+      T ? '<button class="btn" data-act="v3finir">Terminer la tournée</button>' : '<button class="btn" data-act="cancel">Annuler</button>', `
     <form data-form="visite" class="form u-visite-form">
-      <div class="u-haut">${typeof VR != "undefined" ? VR.pick(e) : `<div class="field"><div class="t">Ruche visitée</div><div class="pick">${d.ruches.map((a) => `<button type="button" class="${e.ruche_id === a.id ? "on" : ""}" aria-pressed="${e.ruche_id === a.id}" data-act="vset" data-k="ruche_id" data-v="${a.id}">${esc(a.nom)}</button>`).join("")}</div></div>`}
+      ${T ? V3.enteteTournee(T, e) : ""}
+      <div class="u-haut">${T ? "" : typeof VR != "undefined" ? VR.pick(e) : `<div class="field"><div class="t">Ruche visitée</div><div class="pick">${d.ruches.map((a) => `<button type="button" class="${e.ruche_id === a.id ? "on" : ""}" aria-pressed="${e.ruche_id === a.id}" data-act="vset" data-k="ruche_id" data-v="${a.id}">${esc(a.nom)}</button>`).join("")}</div></div>`}
         <label class="u-date">Date<input type="date" id="v_date" value="${esc(e.date_visite)}" max="${today()}" required></label></div>
       <section class="card u-essentiel">
         ${seg("Activité", "activite", ["Faible", "Normale", "Forte"])}
@@ -217,18 +254,26 @@ const UX = (() => {
       <section class="card u-secs">
         ${sec("couvain", "Couvain", e.couvain || "Non vu", e.couvain && e.couvain !== "Non vu", seg("Couvain", "couvain", ["Non vu", "Réduit", "Normal", "Abondant"]))}
         ${sec("poids", "Poids et varroa", pv || "Ajouter", !!pv, `<div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(e.poids_kg)}"></label>
-          <label>Varroas comptés<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>`)}
+          <label>Varroas comptés<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>
+          ${seg("Méthode", "varroa_methode", ["Sucre glace", "Lavage", "Lange"])}
+          ${lange ? '<p class="small">Lange : notez les varroas tombés pendant le comptage (pas de taux pour 100 abeilles).</p>'
+            : `<label>Abeilles prélevées<input type="number" step="1" min="1" inputmode="numeric" id="v_abeilles" value="${esc(e.varroa_abeilles ?? "")}" placeholder="300 (un demi-verre)"></label>
+          ${tx !== null ? `<p class="small u-taux ${tx >= seuilVarroa() ? "crit" : ""}">Soit ${n(tx, 1)} varroas pour 100 abeilles · seuil ${n(seuilVarroa(), 1)} %</p>` : ""}`}`)}
         ${sec("intrants", "Nourrissement et matériel", utilise || "Ajouter", !!utilise, steppers || '<p class="small">Ajoutez vos consommables dans Stocks › Matériel pour les suivre ici.</p>')}
         ${typeof RG != "undefined" ? sec("traitement", "Traitement", e.traitement || "Ajouter", !!e.traitement, RG.formSection(e)) : ""}
-        ${sec("photos", "Photos et note", e.note ? "note ajoutée" : "Ajouter", !!e.note, `${typeof PH != "undefined" ? PH.formSection() : ""}<label>Note<textarea id="v_note">${esc(e.note)}</textarea></label>`)}
+        ${typeof PH != "undefined" ? sec("photos", "Photos", "Ajouter", false, PH.formSection()) : ""}
       </section>
-      <div class="u-barre"><button class="btn main block" ${S.busy ? "disabled" : ""}>${horsLigne ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button></div>
+      <section class="card u-notecarte"><div class="u-entete"><label for="v_note" class="u-lab">Note</label>${typeof V3 != "undefined" ? V3.boutonDictee() : ""}</div>
+        <textarea id="v_note" rows="3" placeholder="Ce que vous avez vu, ce qu’il faudra faire…">${esc(e.note)}</textarea></section>
+      <div class="u-barre">${T ? `<div class="u-tbarre"><button type="button" class="btn" data-act="v3passer">Passer</button><button class="btn main" ${S.busy ? "disabled" : ""}>${T.i + 1 < T.ids.length ? "Enregistrer · Ruche suivante ›" : "Enregistrer et terminer"}</button></div>`
+        : `<button class="btn main block" ${S.busy ? "disabled" : ""}>${horsLigne ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button>`}</div>
     </form>`);
   }
 
   // ---------- 4. Ventes ----------
   let onglet = "ventes";
   ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; viewClients(); };
+  const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);
   function carteVente(v) {
     const d = S.d, c = byId(d.clients, v.client_id);
     const pots = d.lignes.filter((x) => x.vente_id === v.id).map((x) => `${x.quantite} × ${n(byId(d.lots, x.lot_id)?.format_g, 0)} g`).join(", ");
@@ -238,6 +283,7 @@ const UX = (() => {
       : `<button type="button" class="btn main" data-act="togglepaye" data-v="${v.id}">Encaissé</button><button type="button" class="btn" data-act="urelance" data-v="${v.id}">Relancer</button>`;
     return `<article class="card u-vente"><div class="u-vente-h"><button type="button" class="u-vente-c" data-act="uvente" data-v="${v.id}"><b>${esc(c?.nom || "?")}</b><span class="small">${esc(dateCourte(v.date_vente))} · ${esc(pots)}</span></button>
       <span class="u-vente-m"><b>${esc(eur(venteTotal(v)))}</b>${statut}</span></div>
+      ${v.livre === false ? `<p class="small u-livr">À livrer${v.livraison ? " · " + esc(v.livraison) : ""}</p>` : ""}
       ${v._attente ? '<span class="tag watch hl-tag">en attente d’envoi</span>' : ""}<div class="u-deux">${actions}</div></article>`;
   }
   function viewClients() {
@@ -252,6 +298,8 @@ const UX = (() => {
         <h2 class="u-titre">${S.venteFiltre === "toutes" ? "Dernières ventes" : "Ventes à encaisser"}</h2>${impayees.length ? `<div class="u-filtre">${subtabs([["toutes", "Toutes"], ["impayees", "À encaisser"]], S.venteFiltre, "vfiltre")}</div>` : ""}
         ${liste.map(carteVente).join("") || '<p class="small">Aucune vente.</p>'}
         ${potsAVendre()}`;
+    } else if (onglet === "livrer" && typeof V3 != "undefined") {
+      corps = V3.livraisons();
     } else {
       corps = d.clients.map((c) => {
         const vs = d.ventes.filter((v) => v.client_id === c.id);
@@ -261,7 +309,7 @@ const UX = (() => {
     }
     shell("Miel et ventes", du ? `${eur(du)} à encaisser` : pluriel(d.clients.length, "client"),
       onglet === "clients" ? '<button class="btn main" data-act="newclient">Ajouter un client</button>' : '<button class="btn main" data-act="newvente">Nouvelle vente</button>',
-      `${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock"]], onglet, "uonglet")}${corps}`);
+      `${subtabs([["ventes", "Ventes"], ...(typeof V3 != "undefined" && (aLivrer().length || onglet === "livrer") ? [["livrer", "À livrer"]] : []), ["clients", "Clients"], ["stock", "Stock"]], onglet, "uonglet")}${corps}`);
   }
   function potsAVendre() {
     const lots = S.d.lots.filter((l) => l.pots_restants > 0);
@@ -363,7 +411,7 @@ const UX = (() => {
       ${pb ? `<span class="tag ${etatClass(l.etat)}">${pb} ${l.etat === "Critique" ? "critique" + (pb > 1 ? "s" : "") : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>'}</div>
       <span class="u-hexes">${l.rs.map(hexMini).join("")}</span>
       <div class="u-deux">${l.lat != null ? `<a class="btn main u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${l.lat},${l.lng}" target="_blank" rel="noopener">Itinéraire</a>` : ""}
-        <button type="button" class="btn ${l.lat == null ? "main" : ""}" data-act="uvisiterucher" data-v="${esc(l.cle)}">Visiter ce rucher</button></div>
+        <button type="button" class="btn ${l.lat == null ? "main" : ""}" data-act="uvisiterucher" data-v="${esc(l.cle)}">${typeof V3 != "undefined" && l.rs.length > 1 ? "Faire la tournée" : "Visiter ce rucher"}</button></div>
       <div class="u-deux"><button type="button" class="btn" data-act="uplacermain" data-v="${esc(l.cle)}">${l.lat == null ? "Placer sur la carte" : "Déplacer sur la carte"}</button>
         <button type="button" class="btn" data-act="uplacer" data-v="${esc(l.cle)}">Ma position</button></div></section>`;
   }
@@ -408,6 +456,7 @@ const UX = (() => {
     if (p) { p.innerHTML = panneau(infos().find((l) => l.cle === cle)); p.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
   };
   ACT.uvisiterucher = (cle) => {
+    if (typeof V3 != "undefined" && S.d.ruches.filter((r) => (r.rucher || "") === cle).length > 1) return ACT.v3tournee(cle);
     ACT.newvisite();
     if (typeof VR != "undefined" && S.d.ruches.filter((r) => (r.rucher || "") === cle).length > 1) ACT.vrrucher(cle);
     else { const r = S.d.ruches.find((x) => (x.rucher || "") === cle); if (r) ACT.vset(r.id, "ruche_id"); }
@@ -520,13 +569,19 @@ const UX = (() => {
 
   // ---------- Menu Plus ----------
   function viewPlus() {
-    const items = [["pilotage", "Pilotage"], ["agenda", "Agenda et tâches"], ["carte", "Carte des ruchers"], ["registre", "Registre d’élevage"],
+    const items = [["recherche", "Rechercher"], ["pilotage", "Pilotage"], ["agenda", "Agenda et tâches"], ["carte", "Carte des ruchers"], ["varroa", "Suivi varroa"],
+      ["registre", "Registre d’élevage"], ["declaration", "Déclaration des ruches"], ["activite", "Activité récente"],
       ["previsions", "Prévisions et budget"], ["compta", "Dépenses"], ["fournisseurs", "Fournisseurs"], ["reglages", "Réglages et exports"]];
     if (typeof EX != "undefined") items.unshift(["membres", "Exploitation et membres"]);
     shell("Plus", "", "", `<section class="card menu">${items.filter(([k]) => ICON[k]).map(([k, t]) => `<button data-act="go" data-v="${k}">${icon(k)}<span>${t}</span></button>`).join("")}
+      ${typeof V3 != "undefined" ? V3.boutonSoleil() : ""}
       <button data-act="logout">${icon("plus")}<span>Se déconnecter</span></button></section>`);
   }
 
   Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
-  return { carte, meteoHtml, texteMessage };
+  return {
+    carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, chip, qui, pluriel, nomRucher, ruchers,
+    onglet: (v) => { onglet = v; },
+    ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },
+  };
 })();
