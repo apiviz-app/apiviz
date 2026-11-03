@@ -81,7 +81,8 @@ const HL = (() => {
           reine: p.reine, couvain: p.couvain, poids_kg: p.poids_kg === "" ? null : Number(p.poids_kg),
           varroa: p.varroa === "" ? null : Number(p.varroa), note: p.note,
           traitement: p.traitement || "", lot_produit: p.lot_produit || "", traitement_dose: p.traitement_dose || "",
-          retrait_prevu: p.retrait_prevu || null, ordonnance: !!p.ordonnance, _attente: true });
+          retrait_prevu: p.retrait_prevu || null, ordonnance: !!p.ordonnance,
+          varroa_methode: p.varroa_methode || "", varroa_abeilles: p.varroa_abeilles ? Number(p.varroa_abeilles) : null, _attente: true });
         d.visites.sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
         for (const x of p.intrants || []) {
           d.intrants.push({ visite_id: p.id, article_id: x.article_id, quantite: x.quantite });
@@ -91,7 +92,8 @@ const HL = (() => {
       } else if (it.type === "rpc" && it.nom === "creer_vente") {
         const p = it.args.p;
         if (d.ventes.some((v) => v.id === p.id)) continue;
-        d.ventes.unshift({ id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye, mode: p.mode, _attente: true });
+        d.ventes.unshift({ id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye, mode: p.mode,
+          livre: p.livre !== false, livraison: p.livraison || "", _attente: true });
         for (const x of p.lignes || []) {
           const lot = byId(d.lots, x.lot_id);
           d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0 });

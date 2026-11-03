@@ -126,8 +126,8 @@ with sync_playwright() as pw:
     verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
 
     # 4. Récolte sans réseau (fiche).
-    page.evaluate("ACT.newrecolte()"); page.fill("#sheetForm input[name=kg]", "12.5")
-    page.click("#sheetForm .btn.main")
+    page.evaluate("ACT.newrecolte()"); page.fill("#r_kg", "12.5")
+    page.click("form[data-form=v3recolte] .btn.main")
     page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
 
     # 5. L'app survit à un rechargement sans réseau, saisies comprises.

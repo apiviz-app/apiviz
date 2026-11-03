@@ -8,7 +8,10 @@ avant = '        if req.method == "POST":\n            rows = req.post_data_json
 assert base.count(avant) == 1
 base = base.replace(avant, '''        if req.method == "PATCH":
             corps = req.post_data_json; patchs.append((t, corps))
-            for x in DATA.get(t, []): x.update(corps)
+            from urllib.parse import parse_qsl
+            filtres = [(k, v[3:]) for k, v in parse_qsl(urlparse(req.url).query) if v.startswith("eq.")]
+            for x in DATA.get(t, []):
+                if all(str(x.get(k)) == v for k, v in filtres): x.update(corps)
             return route.fulfill(status=204, headers=hdr, body="")
 ''' + avant)
 base = base.replace('recu = {"rpc": [], "upsert": []}', 'recu = {"rpc": [], "upsert": []}\npatchs = []', 1)

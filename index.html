@@ -484,6 +484,68 @@ dialog::backdrop{background:rgba(20,28,24,.45);backdrop-filter:blur(2px)}
     th,td{font-size:10pt;padding:5px 6px}
     *{animation:none!important}
   }
+
+/* ---------- Version 3 : colonie, varroa, récolte, livraisons, tournée, plein soleil ---------- */
+.u-jours{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;width:100%}
+.u-jour{font-size:12px;background:rgba(255,255,255,.12);border-radius:8px;padding:3px 7px}
+.u-jour b{margin-right:4px;text-transform:capitalize}
+.u-jour.on{background:var(--honey);color:var(--ink)}
+.u-meilleur{display:block;width:100%;margin-top:4px}
+.u-meteo .u-meilleur{color:#DDE3DE}
+.u-meteo{flex-wrap:wrap}
+.u-rucher .u-entete{margin-bottom:6px}
+.u-notecarte textarea{width:100%;box-sizing:border-box}
+.u-notecarte .u-entete{margin-bottom:6px}
+.u-taux{margin:6px 0 0}
+.u-tbarre{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.u-livr,.v3-livr{background:#ECEEE6;border-radius:10px;padding:8px 10px;margin:8px 0 0}
+.v3-cherche{background:none;border:0;color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin-left:auto;margin-right:6px;cursor:pointer}
+.v3-cherche svg{width:22px;height:22px}
+.topbar .v3-cherche + .avatar{margin-left:0}
+.v3-reine-l{display:flex;gap:12px;align-items:center}
+.v3-reine-l .small{display:block}
+.v3-pastille{width:30px;height:30px;border-radius:50%;border:2px solid #1B2420;flex:none}
+.v3-ligne{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.v3-ligne .small{display:block}
+.v3-ligne .ctl,.stepper .ctl{display:flex;align-items:center;gap:10px}
+.v3-ligne .ctl button{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#fff;font:inherit;font-size:20px}
+.v3-sous{font-size:15px;margin:14px 0 6px}
+.v3-equip button.on{background:var(--pine);color:#fff;border-color:var(--pine)}
+.v3-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v3-evt{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.v3-evt .small{display:block}
+.v3-droite{display:flex;align-items:center;gap:10px}
+.v3-pots{display:grid;grid-template-columns:56px 1fr 1fr;gap:8px;align-items:end;margin-bottom:6px}
+.v3-pots b{padding-bottom:12px}
+.v3-trace{background:var(--honeysoft);border-radius:10px;padding:8px 10px}
+.v3-tournee .track{margin:0 0 10px}
+.v3-points{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.v3-points span{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#ECEEE6;color:var(--muted)}
+.v3-points .fait{background:var(--good);color:#fff}
+.v3-points .ici{background:var(--honey);color:var(--ink)}
+.v3-rappel{font-style:italic}
+.v3-micro{display:inline-flex;align-items:center;gap:6px}
+.v3-micro.on{background:var(--crit);color:#fff;border-color:var(--crit)}
+.v3-decla{background:var(--pine);color:#fff}
+.v3-decla .u-trois span,.v3-decla .small{color:#C9D2CB}
+.v3-eyebrow{font-size:13px;color:#F6C453;font-weight:600}
+.card label.v3-coche{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;gap:12px;font-weight:600;padding:8px 0;margin:0}
+.card label.v3-coche input{width:22px;height:22px;flex:none;margin:0}
+.v3-rang{display:flex;gap:8px;margin-top:6px}
+.v3-rang input{flex:1;min-width:0}
+.v3-rang .btn{flex:none}
+.v3-droite{flex:none;white-space:nowrap}
+.v3-deux-chiffres{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+.v3-deux-chiffres b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:30px}
+.v3-deux-chiffres span{font-size:13px;color:#C9D2CB}
+.v3-decla .link{color:#F6C453}
+.u-lot b{white-space:nowrap}
+.v3-fil .u-titre{margin:14px 0 4px;font-size:14px;color:var(--muted)}
+body.soleil{--ink:#000;--muted:#262C28;--ground:#fff;--line:#7D847B;--card:#fff;font-size:17px}
+body.soleil .card{border:1.5px solid #7D847B;box-shadow:none}
+body.soleil .small,body.soleil .sub{color:#262C28}
+body.soleil .btn{border-width:2px}
+body.soleil .seg button.on{outline:2px solid #000}
 </style>
 </head>
 <body>
@@ -500,5 +562,6 @@ dialog::backdrop{background:rgba(20,28,24,.45);backdrop-filter:blur(2px)}
 <script src="./exploitations.js"></script>
 <script src="./ux.js"></script>
 <script src="./offline.js"></script>
+<script src="./v3.js"></script>
 </body>
 </html>
