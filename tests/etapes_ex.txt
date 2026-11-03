@@ -1,0 +1,41 @@
+    # A. Une exploitation : elle est envoyée avec chaque requête de données.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(entetes["x-exploitation"] == {E1}, "chaque requête porte l'exploitation choisie")
+    # B. Membres et invitations.
+    page.evaluate("ACT.go('plus')")
+    verif(page.locator(".n4-g[data-v=membres]").count() == 1, "entrée « Membres » dans Gestion")
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .n4-moi")
+    verif(page.locator("#sheet .n4-radio.on").count() == 1 and "Bee’s Brothers" in page.locator("#sheet").inner_text(), "exploitation choisie dans le menu du compte")
+    page.click("#sheet [data-act=closesheet]")
+    page.evaluate("ACT.go('membres')"); page.wait_for_selector("text=Membres · 2", timeout=10000)
+    verif(page.locator(".ex-row >> text=(vous)").count() == 1 and page.locator("[data-act=exretirer]").count() == 1, "liste des membres, retrait possible pour l'autre membre")
+    page.click("[data-act=exlien]"); page.wait_for_selector(".ex-lien input")
+    lien = page.locator(".ex-lien input").input_value()
+    verif(re.match(r"http://127\.0\.0\.1:\d+/\?invitation=[0-9a-f]{32}$", lien) is not None, "lien d'invitation créé : " + lien)
+    page.fill("#ex_email", "Nouveau@Apidoo.fr"); page.click("[data-act=exajout]")
+    page.wait_for_selector(".toast >> text=Ajouté", timeout=5000)
+    verif(EXPL["membres"][-1]["email"] == "nouveau@apidoo.fr" and EXPL["membres"][-1]["exploitation_id"] == E1, "ajout par e-mail, en minuscules")
+    # C. Inscription sans exploitation : écran de création.
+    EXPL["miennes"].clear()
+    page.evaluate("localStorage.removeItem('apidoo-exploitation')")
+    page.reload(); page.wait_for_selector("form[data-form=exploitation]", timeout=15000)
+    page.fill("form[data-form=exploitation] input[name=nom]", "Le rucher des Tilleuls")
+    page.click("form[data-form=exploitation] .btn.main")
+    page.wait_for_selector(".toast >> text=Exploitation créée", timeout=10000)
+    E2 = EXPL["miennes"][0]["id"]
+    verif(page.evaluate("EX.courante()") == E2 and page.locator("text=/Bonjour|Bonsoir/").count() >= 1, "exploitation créée puis ouverte")
+    # D. Invitation reçue : on rejoint en ouvrant le lien.
+    code = uuid.uuid4().hex
+    EXPL["codes"][code] = {"id": E1, "nom": "Bee’s Brothers", "role": "membre"}
+    page.goto(url + "?invitation=" + code); page.wait_for_selector(".toast >> text=Vous avez rejoint « Bee’s Brothers »", timeout=15000)
+    verif(page.evaluate("EX.courante()") == E1 and "invitation" not in page.url, "invitation acceptée, lien nettoyé")
+    # E. Changer d'exploitation.
+    entetes["x-exploitation"].clear()
+    page.evaluate("ACT.go('membres')"); page.wait_for_selector("[data-act=exouvrir]", timeout=10000)
+    page.click("[data-act=exouvrir][data-v='%s']" % E2)
+    page.wait_for_selector(".toast >> text=Le rucher des Tilleuls", timeout=10000)
+    verif(page.evaluate("EX.courante()") == E2 and E2 in entetes["x-exploitation"], "changement d'exploitation : données rechargées")
+    # F. Lien invalide : message clair.
+    page.goto(url + "?invitation=" + uuid.uuid4().hex); page.wait_for_selector(".toast.err >> text=plus valable", timeout=15000)
+    verif(True, "lien périmé : message d'erreur")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

@@ -1,0 +1,81 @@
+    import datetime, pathlib as _pl
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    for r in DATA["ruches"][:3]: r.update({"lat": 47.32, "lng": 5.04})
+    LF = _ici / "leaflet" / "package" / "dist"
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
+              headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    meteo_appels = []
+    def meteo(rt):
+        meteo_appels.append(rt.request.url)
+        rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+                   body=json.dumps({"current": {"temperature_2m": 17.4, "wind_speed_10m": 8.2, "precipitation": 0}, "hourly": {"precipitation_probability": [0] * 24}}))
+    ctx.route("https://api.open-meteo.com/**", meteo)
+    ctx.grant_permissions(["geolocation"]); ctx.set_geolocation({"latitude": 47.30, "longitude": 5.10})
+    requetes = []
+    page.on("request", lambda r: requetes.append((r.method, r.url)))
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Barre du bas
+    verif(page.locator(".bottom button").count() == 5 and page.locator(".bottom button[data-v=saisir]").count() == 1, "barre du bas à 5 boutons avec « Saisir »")
+    verif(not page.locator(".fab").is_visible(), "plus de bouton flottant")
+    page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    verif(page.locator("#sheet .n4-tuile").count() == 6, "« Saisir » ouvre le choix des saisies")
+    page.click("#sheet [data-act=closesheet]")
+    # Accueil
+    page.wait_for_selector("#uMeteo .u-meteo-t", timeout=5000)
+    verif("17°" in page.locator("#uMeteo").inner_text() and "Bon moment pour visiter" in page.locator("#uMeteo").inner_text(), "météo du rucher sur l'accueil")
+    verif("latitude=47.32" in meteo_appels[0], "météo demandée à la position du rucher")
+    verif(page.locator(".u-todo").count() == 3 and page.locator("[data-act=utout]").count() == 1, "accueil : 3 points à faire, « Tout voir »")
+    page.click("[data-act=utout]"); verif(page.locator(".u-todo").count() > 3, "« Tout voir » déplie la liste")
+    verif(page.locator(".u-todo").first.locator(".bg-crit").count() == 1, "le plus urgent en premier")
+    verif(page.locator(".u-rucher").count() == 2 and page.locator(".u-hex").count() == 6, "ruchers et alvéoles")
+    page.wait_for_timeout(400); page.screenshot(path="v2/accueil.png", full_page=True)
+    # Fiche ruche
+    page.locator(".u-hex").nth(1).click(); page.wait_for_selector(".u-visite")
+    verif(page.locator(".u-visite").count() == 3 and page.locator(".u-visite .u-chip").count() >= 9, "journal en cartes avec pastilles")
+    verif(page.locator(".card.u-trois b").first.inner_text().endswith(" j"), "chiffres clés de la ruche")
+    page.wait_for_timeout(400); page.screenshot(path="v2/ruche.png", full_page=True)
+    # Visite
+    page.click(".n4-rbarre .btn.honey"); page.wait_for_selector(".u-visite-form")
+    verif(not page.locator(".bottom").is_visible() and page.locator(".u-barre .btn").is_visible(), "visite : barre d'enregistrement à la place du menu")
+    page.click("details[data-sec=poids] summary"); page.fill("#v_poids", "41.5")
+    page.click("[data-act=vset][data-k=activite][data-v=Forte]")
+    verif(page.locator("details[data-sec=poids]").get_attribute("open") is not None and page.input_value("#v_poids") == "41.5", "une section ouverte le reste après un choix")
+    verif("41,5 kg" in page.locator("details[data-sec=poids] .u-sec-r").inner_text(), "résumé de la section")
+    page.click("details[data-sec=intrants] summary"); page.click("[data-act=vstep][data-v='0.5']")
+    verif("Candy 0,5 kg" in page.locator("details[data-sec=intrants] .u-sec-r").inner_text(), "résumé du nourrissement")
+    page.wait_for_timeout(400); page.screenshot(path="v2/visite.png", full_page=True)
+    page.click(".u-barre .btn")
+    page.wait_for_selector(".toast >> text=Visite enregistrée", timeout=10000)
+    p = [b["p"] for nn, b in recu["rpc"] if nn == "creer_visite"][-1]
+    verif(p["poids_kg"] == "41.5" and p["activite"] == "Forte" and p["intrants"][0]["quantite"] == 0.5, "visite enregistrée avec ses valeurs")
+    # Ventes
+    page.click(".bottom button[data-v=ventes]"); page.wait_for_selector(".u-vente")
+    verif(page.evaluate("S.route") == "clients" and page.locator(".bottom button.on[data-v=ventes]").count() == 1, "« Miel » ouvre les ventes")
+    verif(page.locator(".u-vente").count() == 2 and page.locator(".u-tuile").count() == 3, "ventes en cartes, tuiles stock / à encaisser / à livrer")
+    page.wait_for_timeout(400); page.screenshot(path="v2/ventes.png", full_page=True)
+    page.click("[data-act=uafiltre]"); page.click("[data-act=urelance]"); page.wait_for_selector("#sheet[open] #u_msg")
+    msg = page.input_value("#u_msg")
+    verif("Paul (bureau)" in msg and "4 pots de 250 g" in msg and "28 €" in msg and "espèces, chèque ou virement" in msg, "message de relance prérempli : " + msg.split("\n")[0][:60] + "…")
+    verif(page.locator("[data-act=umsg][data-v=sms]").is_disabled() and "main" in page.locator("[data-act=umsg][data-v=mail]").get_attribute("class"), "sans téléphone : SMS grisé, e-mail proposé")
+    page.wait_for_timeout(400); page.screenshot(path="v2/relance.png")
+    page.click("#sheet [data-act=umsgmode][data-v=recu]")
+    verif(page.input_value("#u_msg").startswith("Bonjour Paul (bureau), merci pour votre achat"), "bascule vers le reçu")
+    page.click("#sheet [data-act=closesheet]")
+    page.click("[data-act=uonglet][data-v=clients]"); page.wait_for_selector(".u-client")
+    verif(page.locator(".u-client").count() == 2 and page.locator(".u-client a[href^='tel:']").count() == 1, "onglet clients")
+    # Carte
+    page.evaluate("ACT.go('plus')")
+    verif(page.locator(".n4-g[data-v=pilotage]").count() == 1, "Bilan dans Gestion")
+    page.evaluate("ACT.go('ruches')"); verif(page.locator(".subtabs [data-v=carte]").count() == 1, "Carte dans les onglets de Ruchers")
+    page.click(".subtabs [data-v=carte]"); page.wait_for_selector(".leaflet-container", timeout=10000)
+    verif(page.locator(".u-pin").count() == 1, "un repère pour le rucher placé")
+    page.click("[data-act=uchoix][data-v='Bois']"); page.wait_for_selector("#uPanneau [data-act=uplacer]")
+    page.click("#uPanneau [data-act=uplacer]")
+    page.wait_for_selector(".toast >> text=placé sur la carte", timeout=10000)
+    verif(any(m == "PATCH" and "/ruches?" in u and "rucher=eq.Bois" in u for m, u in requetes), "« Placer ici » enregistre la position du rucher")
+    page.wait_for_timeout(500)
+    page.wait_for_timeout(400); page.screenshot(path="v2/carte.png", full_page=True)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

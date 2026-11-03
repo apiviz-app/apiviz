@@ -1,0 +1,43 @@
+    import datetime
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne"), ("Ruche 2", "Verger", "À surveiller"), ("Ruche 3", "Verger", "Bonne"),
+            ("Ruche 4", "Bois", "Bonne"), ("Ruche 5", "Bois", "Critique"), ("Ruche 6", "Bois", "Bonne")]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "type_ruche": "Dadant 10 cadres", "annee_reine": 2025, "notes": ""} for a, b, c in noms]
+    R = [r["id"] for r in DATA["ruches"]]
+    DATA["visites"] = []
+    for i, rid in enumerate(R):
+        for k, d in enumerate([3 + i * 6, 20 + i * 6, 41 + i * 5]):
+            DATA["visites"].append({"id": str(uuid.uuid4()), "ruche_id": rid, "date_visite": J(d), "activite": ["Normale", "Forte", "Faible"][k % 3],
+              "provisions": ["Moyennes", "Bonnes", "Faibles"][(i + k) % 3], "reine": ["Vue", "Non vue", "Non cherchée"][k % 3], "couvain": "Normal",
+              "poids_kg": 38 + i + k, "varroa": k * 2, "note": "Couvain compact, calme." if k == 0 else "", "traitement": "", "lot_produit": "",
+              "traitement_dose": "", "retrait_prevu": None, "ordonnance": False})
+    DATA["visites"].sort(key=lambda v: v["date_visite"], reverse=True)
+    DATA["articles"] = [{"id": A1, "nom": "Candy", "type": "Consommable", "unite": "kg", "stock": 1, "seuil": 2},
+                        {"id": str(uuid.uuid4()), "nom": "Pots 500 g vides", "type": "Consommable", "unite": "unité", "stock": 40, "seuil": 20}]
+    DATA["recoltes"] = [{"id": str(uuid.uuid4()), "ruche_id": R[0], "date_recolte": J(80), "kg": 14}, {"id": str(uuid.uuid4()), "ruche_id": R[3], "date_recolte": J(80), "kg": 11}]
+    L2 = str(uuid.uuid4())
+    DATA["lots_stock"] = [{"id": L1, "code": "L26-01", "miel": "Toutes fleurs", "format_g": 500, "prix": 12, "pots_initiaux": 30, "pots_restants": 18, "ddm": "2028-08-31"},
+                          {"id": L2, "code": "L26-02", "miel": "Toutes fleurs", "format_g": 250, "prix": 7, "pots_initiaux": 20, "pots_restants": 11, "ddm": "2028-08-31"}]
+    C2 = str(uuid.uuid4())
+    DATA["clients"] = [{"id": C1, "nom": "Mme Martin", "cercle": "Famille", "telephone": "0612345678", "email": ""},
+                       {"id": C2, "nom": "Paul (bureau)", "cercle": "Collègues", "telephone": "", "email": "paul@exemple.fr"}]
+    V1, V2 = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["ventes"] = [{"id": V1, "client_id": C1, "date_vente": J(5), "paye": True, "mode": "Espèces"}, {"id": V2, "client_id": C2, "date_vente": J(12), "paye": False, "mode": ""}]
+    DATA["vente_lignes"] = [{"vente_id": V1, "lot_id": L1, "quantite": 3, "prix_unitaire": 12}, {"vente_id": V2, "lot_id": L2, "quantite": 4, "prix_unitaire": 7}]
+    DATA["depenses"] = [{"id": str(uuid.uuid4()), "date_depense": J(60), "categorie": "Pots & étiquettes", "libelle": "Pots 500 g", "montant": 48, "fournisseur_id": None}]
+    DATA["taches"] = [{"id": str(uuid.uuid4()), "titre": "Peser les ruches", "echeance": J(-4), "ruche_id": None, "faite": False, "assigne": ""},
+                      {"id": str(uuid.uuid4()), "titre": "Commander du candy", "echeance": J(2), "ruche_id": None, "faite": False, "assigne": ""}]
+    DATA["reglages"] = [{"id": 1, "data": {"napi": "A1234567"}}]
+    ecrans = [("accueil", "dash"), ("ruches", "ruches"), ("ruche", "ruche"), ("visite", "visite"), ("stocks", "miel"), ("ventes", "clients"),
+              ("nouvelle-vente", "vente"), ("pilotage", "pilotage"), ("plus", "plus"), ("agenda", "agenda")]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    for nom, route in ecrans:
+        if route == "ruche": page.evaluate("ACT.ruche(S.d.ruches[1].id)")
+        elif route == "visite": page.evaluate("ACT.newvisite()")
+        elif route == "vente": page.evaluate("ACT.newvente()")
+        else: page.evaluate(f"ACT.go('{route}')")
+        page.wait_for_timeout(500)
+        page.screenshot(path=f"audit/{nom}.png", full_page=True)
+        h = page.evaluate("document.documentElement.scrollHeight")
+        print(f"{nom}: {h}px de haut")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

@@ -15,7 +15,7 @@ const HL = (() => {
   function db() {
     if (!dbP) dbP = new Promise((ok) => {
       try {
-        const r = indexedDB.open("apidoo-hors-ligne", 1);
+        const r = indexedDB.open("apidoo-hors-ligne" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
         r.onupgradeneeded = () => {
           r.result.createObjectStore("kv", { keyPath: "k" });
           r.result.createObjectStore("file", { keyPath: "id" });
@@ -53,7 +53,7 @@ const HL = (() => {
     try {
       await loadReseau();
       st.hors = false;
-      memo("apidoo-membre", "1");
+      memo("apidoo-membre" + (window.APIDOO?.env === "recette" ? "-recette" : ""), "1");
       await kvMettre({ k: "donnees", d: S.d, at: Date.now() }).catch(() => {});
       st.depuis = Date.now();
       appliquer(S.d);
@@ -160,7 +160,7 @@ const HL = (() => {
 
   // Session et accès gardés, pour ouvrir l'app sans réseau.
   function sessionLocale() {
-    if (memo("apidoo-membre") !== "1") return null;
+    if (memo("apidoo-membre" + (window.APIDOO?.env === "recette" ? "-recette" : "")) !== "1") return null;
     try {
       for (const k of Object.keys(localStorage)) {
         if (!/^sb-.+-auth-token$/.test(k)) continue;
@@ -171,7 +171,7 @@ const HL = (() => {
     } catch {}
     return null;
   }
-  const membre = () => (memo("apidoo-membre") === "1" ? true : null);
+  const membre = () => (memo("apidoo-membre" + (window.APIDOO?.env === "recette" ? "-recette" : "")) === "1" ? true : null);
 
   // ---------- Envoi au retour du réseau ----------
   async function envoyer() {

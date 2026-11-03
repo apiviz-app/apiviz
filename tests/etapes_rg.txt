@@ -1,0 +1,28 @@
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Visite avec traitement
+    page.click(".head .btn.honey"); page.wait_for_selector("#v_trt", state="attached"); page.locator("details[data-sec=traitement]").evaluate("d => d.open = true")
+    page.fill("#v_trt", "Produit test"); page.fill("#v_lot", "LOT42"); page.fill("#v_dose", "2 lanières")
+    page.fill("#v_retrait", "2026-12-14"); page.check("#v_ordo")
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=Visite enregistrée", timeout=10000)
+    vis = [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
+    verif(vis and vis[0]["traitement"] == "Produit test" and vis[0]["lot_produit"] == "LOT42" and vis[0]["traitement_dose"] == "2 lanières" and vis[0]["retrait_prevu"] == "2026-12-14" and vis[0]["ordonnance"] is True, "traitement transmis avec la visite")
+    taches = [x for x in recu["upsert"] if x[0] == "taches"]
+    verif(len(taches) == 1 and taches[0][2][0]["echeance"] == "2026-12-14" and "Produit test" in taches[0][2][0]["titre"], "tâche de fin de traitement créée")
+    verif(page.locator(".u-chip >> text=Traitement · Produit test").count() == 1 and page.locator(".u-visite >> text=lot LOT42").count() == 1, "traitement visible dans le journal")
+    # Registre
+    page.evaluate("ACT.go('registre')"); page.wait_for_selector("h1 >> text=Registre")
+    t = page.locator(".card.tbl").inner_text()
+    verif("Produit test" in t and "LOT42" in t and "Ruche 1" in t and "14/12/2026" in t and "Oui" in t, "ligne complète dans le registre")
+    verif(page.locator(".notice >> text=en cours").count() == 1, "traitement en cours signalé")
+    verif(page.locator("text=à renseigner dans Réglages").count() == 1, "rappel NAPI manquant")
+    with page.expect_download() as dl:
+        page.click("[data-act=exp][data-v=registre]")
+    contenu = open(dl.value.path(), encoding="utf-8-sig").read()
+    verif("Produit test" in contenu and "LOT42" in contenu, "export Excel du registre")
+    page.evaluate("ACT.go('plus')")
+    verif(page.locator(".n4-g >> text=Registre d’élevage").count() == 1, "entrée dans le menu Gestion")
+    page.evaluate("ACT.go('registre')"); page.emulate_media(media="print")
+    verif(not page.locator(".bottom").is_visible() and not page.locator(".head .actions").is_visible(), "impression sans menus ni boutons")
+    page.screenshot(path="registre_print.png", full_page=True)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

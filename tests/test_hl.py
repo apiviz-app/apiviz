@@ -1,0 +1,152 @@
+"""Test de bout en bout du mode hors ligne d'Apidoo, avec une base Supabase simulée."""
+import json, re, sys, time, uuid, threading, http.server, functools
+from urllib.parse import urlparse
+from playwright.sync_api import sync_playwright
+
+REPO, SBJS = sys.argv[1], sys.argv[2]
+PORT = 8765
+
+class Calme(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+srv = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), functools.partial(Calme, directory=REPO))
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+
+R1, A1, L1, C1 = str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())
+DATA = {
+  "ruches": [{"id": R1, "nom": "Ruche 1", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""}],
+  "articles": [{"id": A1, "nom": "Candy", "type": "Consommable", "unite": "kg", "stock": 5, "seuil": 1}],
+  "visites": [], "visite_intrants": [], "recoltes": [], "vente_lignes": [], "depenses": [], "fournisseurs": [],
+  "taches": [], "budgets": [], "visite_photos": [],
+  "lots_stock": [{"id": L1, "code": "L26-01", "miel": "Toutes fleurs", "format_g": 500, "prix": 12, "pots_initiaux": 10, "pots_restants": 10}],
+  "clients": [{"id": C1, "nom": "Mme Martin", "cercle": "Famille"}], "ventes": [],
+  "reglages": [{"id": 1, "data": {}}],
+}
+recu = {"rpc": [], "upsert": []}
+E1 = str(uuid.uuid4())
+EXPL = {"miennes": [{"id": E1, "nom": "Bee’s Brothers", "role": "responsable"}], "codes": {}, "invit": [],
+        "membres": [{"exploitation_id": E1, "email": "test@apidoo.fr", "role": "responsable", "created_at": "2026-11-01"},
+                    {"exploitation_id": E1, "email": "ami@apidoo.fr", "role": "membre", "created_at": "2026-11-02"}]}
+entetes = {"x-exploitation": set()}
+etat = {"coupe": False}
+
+def supabase(route):
+    req = route.request
+    if etat["coupe"]:
+        return route.abort("internetdisconnected")
+    path = urlparse(req.url).path
+    hdr = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+    if req.method == "OPTIONS":
+        return route.fulfill(status=204, headers={**hdr, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+    m = re.match(r"/rest/v1/rpc/(\w+)", path)
+    if m:
+        nom = m.group(1); body = req.post_data_json or {}
+        recu["rpc"].append((nom, body))
+        if nom == "est_membre": return route.fulfill(status=200, headers=hdr, body="true")
+        if nom == "mes_exploitations": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["miennes"]))
+        if nom == "creer_exploitation":
+            e = {"id": str(uuid.uuid4()), "nom": body["p_nom"], "role": "responsable"}
+            EXPL["miennes"].append(e); return route.fulfill(status=200, headers=hdr, body=json.dumps(e["id"]))
+        if nom == "rejoindre":
+            inv = EXPL["codes"].get(body["p_code"])
+            if not inv: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Ce lien d'invitation n'est plus valable : demandez-en un nouveau."}))
+            EXPL["miennes"].append(inv); return route.fulfill(status=200, headers=hdr, body=json.dumps(inv["id"]))
+        if nom == "photos_espace": return route.fulfill(status=200, headers=hdr, body="0")
+        if nom == "creer_visite":
+            p = body["p"]
+            if not any(v["id"] == p["id"] for v in DATA["visites"]):
+                DATA["visites"].append({"id": p["id"], "ruche_id": p["ruche_id"], "date_visite": p["date_visite"], "activite": p["activite"],
+                    "provisions": p["provisions"], "reine": p["reine"], "couvain": p.get("couvain", ""), "poids_kg": None, "varroa": None, "note": p.get("note", "")})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        return route.fulfill(status=200, headers=hdr, body="null")
+    m = re.match(r"/rest/v1/(\w+)", path)
+    if m:
+        t = m.group(1)
+        if t not in ("membres", "invitations", "exploitations"):
+            entetes["x-exploitation"].add(req.headers.get("x-exploitation", ""))
+        if t == "membres" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["membres"]))
+        if t == "membres" and req.method == "POST":
+            EXPL["membres"].append(req.post_data_json); return route.fulfill(status=201, headers=hdr, body="")
+        if t == "invitations" and req.method == "POST":
+            i = {"code": uuid.uuid4().hex, "exploitation_id": req.headers.get("x-exploitation"), "created_at": "2026-11-03T10:00:00Z", "expire_le": "2026-11-17T10:00:00Z"}
+            EXPL["invit"].append(i); return route.fulfill(status=201, headers=hdr, body=json.dumps(i))
+        if t == "invitations" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["invit"]))
+        if req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(DATA.get(t, [])))
+        if req.method == "POST":
+            rows = req.post_data_json; rows = rows if isinstance(rows, list) else [rows]
+            recu["upsert"].append((t, req.url, rows))
+            for r in rows:
+                if not any(x.get("id") == r.get("id") for x in DATA.setdefault(t, [])): DATA[t].append(r)
+            return route.fulfill(status=201, headers=hdr, body="")
+    return route.fulfill(status=200, headers=hdr, body="{}")
+
+def cdn(route):
+    if etat["coupe"]: return route.abort("internetdisconnected")
+    route.fulfill(status=200, headers={"Content-Type": "application/javascript", "Access-Control-Allow-Origin": "*"}, path=SBJS)
+
+session = {"access_token": "x", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 86400,
+           "refresh_token": "r", "user": {"id": "u1", "email": "test@apidoo.fr", "aud": "authenticated", "app_metadata": {}, "user_metadata": {}}}
+
+ok = True
+def verif(cond, msg):
+    global ok
+    print(("OK   " if cond else "ECHEC") + " " + msg); ok = ok and cond
+
+with sync_playwright() as pw:
+    nav = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+    ctx = nav.new_context(viewport={"width": 390, "height": 844})
+    ctx.route("**/*supabase.co/**", supabase)
+    ctx.route("https://cdn.jsdelivr.net/**", cdn)
+    ctx.route(re.compile(r"https://fonts\.(googleapis|gstatic)\.com/.*"), lambda r: r.abort() if etat["coupe"] else r.fulfill(status=200, body="", headers={"Content-Type": "text/css"}))
+    ctx.add_init_script(f"localStorage.getItem('sb-xkucyqzlqfeyuomrtjbu-auth-token')||localStorage.setItem('sb-xkucyqzlqfeyuomrtjbu-auth-token', {json.dumps(json.dumps(session))})")
+    page = ctx.new_page()
+    erreurs = []
+    page.on("pageerror", lambda e: erreurs.append(str(e)))
+    url = f"http://127.0.0.1:{PORT}/"
+
+    # 1. En ligne : l'app se charge et le service worker s'installe.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.evaluate("!!navigator.serviceWorker.controller"), "service worker actif")
+    verif(page.locator(".hl-band").count() == 0, "pas de bandeau en ligne")
+
+    # 2. Sans réseau : l'app s'ouvre depuis le téléphone.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif("Hors ligne" in page.locator(".hl-band").inner_text(), "bandeau « Hors ligne » à l'ouverture sans réseau")
+
+    # 3. Visite sans réseau.
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
+    verif(page.locator("form[data-form=visite] .btn.main").inner_text().startswith("Enregistrer sur le"), "bouton « Enregistrer sur le téléphone »")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true"); page.fill("#v_note", "Visite test hors ligne")
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=Visite gardée sur le téléphone", timeout=10000)
+    verif(page.locator(".u-visite .tag.watch >> text=en attente").count() >= 1, "visite marquée « en attente » dans le journal")
+    verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
+
+    # 4. Récolte sans réseau (fiche).
+    page.evaluate("ACT.newrecolte()"); page.fill("#r_kg", "12.5")
+    page.click("form[data-form=v3recolte] .btn.main")
+    page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+
+    # 5. L'app survit à un rechargement sans réseau, saisies comprises.
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif("2 saisies en attente" in page.locator(".hl-band").inner_text(), "après rechargement : 2 saisies toujours en attente")
+    verif(page.locator("text=En attente d’envoi").count() == 1, "liste « En attente d’envoi » sur l'accueil")
+
+    # 6. Retour du réseau : envoi automatique.
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=saisies envoyées", timeout=20000)
+    vis = [b for n, b in recu["rpc"] if n == "creer_visite"]
+    verif(len(vis) == 1 and vis[0]["p"].get("id") and vis[0]["p"]["note"] == "Visite test hors ligne", "visite envoyée avec son identifiant")
+    verif(vis and vis[0]["p"]["intrants"] == [{"article_id": A1, "quantite": 0.5}], "intrants transmis")
+    rec = [x for x in recu["upsert"] if x[0] == "recoltes"]
+    verif(len(rec) == 1 and rec[0][2][0]["kg"] == 12.5 and "on_conflict=id" in rec[0][1], "récolte envoyée sans doublon possible")
+    page.wait_for_timeout(500)
+    verif(page.locator(".hl-band").count() == 0, "bandeau disparu une fois tout envoyé")
+    verif(len(DATA["visites"]) == 1 and len(DATA["recoltes"]) == 1, "base simulée : 1 visite, 1 récolte")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
+    nav.close()
+srv.shutdown()
+sys.exit(0 if ok else 1)

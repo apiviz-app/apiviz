@@ -23,7 +23,7 @@ const PH = (() => {
   function db() {
     if (!dbP) dbP = new Promise((ok) => {
       try {
-        const r = indexedDB.open("apidoo-photos", 1);
+        const r = indexedDB.open("apidoo-photos" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
         r.onupgradeneeded = () => r.result.createObjectStore("attente", { keyPath: "id" });
         r.onsuccess = () => ok(r.result);
         r.onerror = () => ok(null);

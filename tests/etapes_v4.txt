@@ -1,0 +1,139 @@
+    import datetime, pathlib as _pl
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    an = datetime.date.today().year
+    for r in DATA["ruches"][:3]: r.update({"lat": 47.32, "lng": 5.04, "hausses": 2, "equipement": [], "sortie": "", "reine_origine": ""})
+    for r in DATA["ruches"][3:]: r.update({"hausses": 0, "equipement": [], "sortie": "", "reine_origine": ""})
+    R7 = str(uuid.uuid4())
+    DATA["ruches"].append({"id": R7, "nom": "Ruche 7", "rucher": "Bois", "etat": "Bonne", "type_ruche": "", "annee_reine": 2023, "notes": "", "sortie": "Morte", "date_sortie": f"{an}-03-02", "hausses": 0, "equipement": []})
+    v0 = next(v for v in DATA["visites"] if v["ruche_id"] == R[0])
+    v0.update({"varroa": 12, "varroa_abeilles": 300, "varroa_methode": "Sucre glace", "created_at": f"{an}-11-01T09:00:00Z", "auteur": "ami@apidoo.fr"})
+    DATA["ventes"].append({"id": str(uuid.uuid4()), "client_id": C2, "date_vente": J(1), "paye": False, "mode": "", "livre": False, "livraison": "Jeudi au bureau"})
+    DATA["vente_lignes"].append({"vente_id": DATA["ventes"][-1]["id"], "lot_id": L2, "quantite": 2, "prix_unitaire": 7})
+    DATA["lots_stock"][0]["extraction"] = "E260801-1"
+    DATA["recoltes"][0].update({"extraction": "E260801-1", "hausses": 3, "humidite": 17.2})
+    DATA["ruche_evenements"] = []
+    jours = [(datetime.date.today() + datetime.timedelta(days=k)).isoformat() for k in range(4)]
+    meteo = {"current": {"temperature_2m": 17, "wind_speed_10m": 8, "precipitation": 0}, "hourly": {"precipitation_probability": [0] * 96},
+             "daily": {"time": jours, "temperature_2m_max": [17, 12, 19, 21], "precipitation_probability_max": [5, 80, 10, 40], "wind_speed_10m_max": [10, 30, 8, 12]}}
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, body=json.dumps(meteo)))
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://nominatim.openstreetmap.org/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+              body=json.dumps({"address": {"village": "Plombières-lès-Dijon", "postcode": "21370"}})))
+    requetes = []
+    page.on("request", lambda r: requetes.append((r.method, r.url, r.post_data)))
+    posts = lambda t: [json.loads(b) for m, u, b in requetes if m == "POST" and f"/rest/v1/{t}" in u and b]
+    patches = lambda t: [(u, json.loads(b)) for m, u, b in requetes if m == "PATCH" and f"/rest/v1/{t}?" in u and b]
+    import os; os.makedirs("v4", exist_ok=True)
+    shot = lambda nom: (page.wait_for_timeout(450), page.screenshot(path=f"v4/{nom}.png", full_page=True))
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Accueil : alerte varroa, commande à livrer, météo 3 jours
+    page.wait_for_selector(".u-jours", timeout=5000)
+    verif(page.locator(".u-todo >> text=Varroa 4,0 %").count() == 1 or page.locator(".u-todo >> text=Varroa 4 %").count() == 1, "alerte varroa au-dessus du seuil sur l'accueil")
+    page.click("[data-act=utout]")
+    verif(page.locator(".u-todo >> text=1 commande à livrer").count() == 1, "commande à livrer dans « À faire »")
+    verif(page.locator(".u-jour").count() == 3 and "Meilleur jour pour visiter" in page.locator(".u-meilleur").inner_text(), "météo sur 3 jours avec le meilleur jour : " + page.locator(".u-meilleur").inner_text())
+    verif(page.locator(".topbar .v3-cherche").count() == 1, "bouton de recherche dans la barre du haut")
+    verif(page.locator("[data-act=v3tournee][data-v=Verger]").count() == 1, "« Faire la tournée » sur le rucher")
+    page.evaluate("window.scrollTo(0,0)"); page.wait_for_timeout(450); page.screenshot(path="v4/accueil_haut.png")
+    shot("accueil")
+
+    # Tournée au rucher
+    page.click("[data-act=v3tournee][data-v=Verger]"); page.wait_for_selector(".v3-tournee")
+    verif("ruche 1 sur 3" in page.locator(".head").inner_text(), "tournée : ruche 1 sur 3")
+    verif("Dernière visite" in page.locator(".v3-tournee").inner_text() and "varroa 4" in page.locator(".v3-tournee").inner_text(), "rappel de la dernière visite")
+    verif(page.locator("#v_note").is_visible(), "note visible sans ouvrir de section")
+    shot("tournee")
+    page.click("[data-act=v3passer]"); page.wait_for_selector("text=ruche 2 sur 3")
+    page.locator("details[data-sec=poids]").evaluate("d => d.open = true")
+    page.fill("#v_varroa", "6"); page.fill("#v_abeilles", "300")
+    page.click("[data-act=vset][data-k=varroa_methode][data-v=Lavage]")
+    verif("varroas pour 100 abeilles" in page.locator(".u-taux").inner_text(), "taux calculé pendant la saisie : " + page.locator(".u-taux").inner_text())
+    page.click("form[data-form=visite] .u-tbarre .btn.main"); page.wait_for_selector("text=ruche 3 sur 3", timeout=10000)
+    vis = [b for nm, b in recu["rpc"] if nm == "creer_visite"]
+    verif(vis and vis[-1]["p"]["ruche_id"] == R[1] and vis[-1]["p"]["varroa_methode"] == "Lavage" and str(vis[-1]["p"]["varroa_abeilles"]) == "300", "visite envoyée avec méthode et abeilles")
+    verif(page.locator(".u-tbarre .btn.main").inner_text() == "Enregistrer et terminer", "dernier bouton : « Enregistrer et terminer »")
+    page.click("form[data-form=visite] .u-tbarre .btn.main")
+    page.wait_for_selector(".toast >> text=Tournée « Verger » terminée · 2 visites", timeout=10000)
+    verif(True, "fin de tournée : 2 visites")
+
+    # Fiche ruche : onglet Colonie
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.click("[data-act=uronglet][data-v=colonie]"); page.wait_for_selector(".v3-reine")
+    verif("Marquage bleu" in page.locator(".v3-reine").inner_text(), "reine 2025 : marquage bleu")
+    page.click("[data-act=v3hausse][data-v='1']"); page.wait_for_timeout(500)
+    verif(any(b == {"hausses": 3} and f"id=eq.{R[0]}" in u for u, b in patches("ruches")), "hausse ajoutée (2 → 3)")
+    page.click("[data-act=v3equip][data-v='Grille à reine']"); page.wait_for_timeout(500)
+    verif(any(b.get("equipement") == ["Grille à reine"] for u, b in patches("ruches")), "équipement coché")
+    page.click("[data-act=uronglet][data-v=colonie]") if page.locator(".v3-reine").count() == 0 else None
+    shot("colonie")
+    page.click("[data-act=v3reine]"); page.fill("#sheetForm input[name=annee]", str(an)); page.select_option("#sheetForm select[name=origine]", "Achetée")
+    page.click("#sheetForm .btn.main"); page.wait_for_selector(".toast >> text=Reine enregistrée", timeout=8000)
+    verif(any(b.get("annee_reine") == an and b.get("reine_origine") == "Achetée" for u, b in patches("ruches")) and any(e[0]["type"] == "reine" if isinstance(e, list) else e["type"] == "reine" for e in posts("ruche_evenements")), "nouvelle reine + événement")
+    page.click("[data-act=v3diviser]"); page.wait_for_selector("#sheetForm input[name=nom]")
+    verif(page.locator("#sheetForm input[name=nom]").input_value() == "Ruche 8", "nom proposé pour la division : Ruche 8")
+    page.click("#sheetForm .btn.main"); page.wait_for_selector(".toast >> text=Ruche 8 créée", timeout=8000)
+    nr = posts("ruches"); ev = [x for b in posts("ruche_evenements") for x in (b if isinstance(b, list) else [b])]
+    verif(nr and nr[-1]["nom"] == "Ruche 8" and nr[-1]["rucher"] == "Verger", "nouvelle ruche créée dans le même rucher")
+    verif(any(x["type"] == "division" and x["ruche_id"] == R[0] for x in ev) and any(x["type"] == "installation" and x["autre_ruche_id"] == R[0] for x in ev), "division : événements sur les deux ruches")
+    page.evaluate(f"ACT.ruche('{R[5]}')"); page.click("[data-act=uronglet][data-v=colonie]")
+    page.click("[data-act=v3sortie]"); page.click("#sheetForm .btn.main"); page.wait_for_selector(".toast >> text=sortie enregistrée", timeout=8000)
+    verif(any(b.get("sortie") == "Morte" and f"id=eq.{R[5]}" in u for u, b in patches("ruches")), "sortie : ruche morte")
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector("text=Ruches sorties · 2")
+    verif(page.locator(".rcard >> text=Ruche 6").count() == 0, "ruche sortie retirée de la liste active")
+
+    # Suivi varroa
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector("form[data-form=v3seuil]")
+    verif("au-dessus du seuil" in page.locator(".head").inner_text(), "page varroa : ruche au-dessus du seuil")
+    shot("varroa")
+    page.fill("form[data-form=v3seuil] input[name=s]", "5"); page.click("form[data-form=v3seuil] .btn")
+    page.wait_for_selector(".toast >> text=Seuil enregistré", timeout=8000)
+    verif(any(b.get("data", {}).get("varroaSeuil") == 5 for u, b in patches("reglages")), "seuil réglable enregistré")
+
+    # Récolte et mise en pots
+    page.evaluate("ACT.newrecolte()"); page.wait_for_selector("#r_kg")
+    page.click("[data-act=v3rrucher][data-v=Verger]")
+    page.fill("#r_kg", "20"); page.fill("#r_hum", "17.5")
+    verif("Bon pour la conservation" in page.locator("#r_humh").inner_text(), "humidité : bon pour la conservation")
+    page.fill("#r_p500", "10"); page.fill("#r_x500", "12")
+    verif("5 kg mis en pots" in page.locator("#r_pots").inner_text() and "15 kg" in page.locator("#r_pots").inner_text(), "calcul : 5 kg en pots, 15 kg en vrac")
+    shot("recolte")
+    page.click("form[data-form=v3recolte] .btn.main"); page.wait_for_selector(".toast >> text=Récolte et 1 lot enregistrés", timeout=10000)
+    rec = [x for b in posts("recoltes") for x in (b if isinstance(b, list) else [b])]
+    verif(len(rec) >= 3 and abs(sum(x["kg"] for x in rec) - 20) < 0.001 and len({x["extraction"] for x in rec}) == 1, "récolte répartie par hausses : %s" % [(x["kg"], x["hausses"]) for x in rec])
+    lots = [x for b in posts("lots") for x in (b if isinstance(b, list) else [b])]
+    verif(lots and lots[0]["code"] == "L26-03" and lots[0]["extraction"] == rec[0]["extraction"] and lots[0]["pots_initiaux"] == 10, "lot L26-03 relié à l'extraction")
+    verif(S_ok := any(b == {"hausses": 0} for u, b in patches("ruches")), "hausses retirées après récolte")
+    page.evaluate(f"ACT.editlot('{L1}')"); page.wait_for_selector(".v3-trace")
+    verif("E260801-1" in page.locator(".v3-trace").inner_text() and "17,2" in page.locator(".v3-trace").inner_text(), "traçabilité du lot : " + page.locator(".v3-trace").inner_text())
+    page.click("#sheetForm [data-act=closesheet]")
+
+    # À livrer
+    page.evaluate("ACT.go('ventes')"); page.click("[data-act=uonglet][data-v=livrer]"); page.wait_for_selector("text=À préparer")
+    verif("Jeudi au bureau" in page.locator(".v3-livr").inner_text(), "note de livraison affichée")
+    shot("livrer")
+    page.click("[data-act=v3livre][data-k=paye]"); page.wait_for_selector(".toast >> text=Livrée et payée", timeout=8000)
+    verif(any(b.get("livre") is True and b.get("paye") is True for u, b in patches("ventes")), "commande livrée et payée")
+    page.evaluate("ACT.newvente()"); page.select_option("#s_client", C1)
+    page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']"); page.click("[data-act=v3remise][data-v='0']")
+    page.fill("#s_livraison", "Samedi au marché"); page.click("form[data-form=vente] .btn.main.block"); page.wait_for_timeout(1200)
+    ven = [b for nm, b in recu["rpc"] if nm == "creer_vente"]
+    verif(ven and ven[-1]["p"]["livre"] is False and ven[-1]["p"]["livraison"] == "Samedi au marché", "vente « à livrer » avec sa note")
+
+    # Déclaration
+    page.evaluate("ACT.go('declaration')"); page.wait_for_selector(".v3-decla")
+    page.wait_for_selector("text=Plombières-lès-Dijon · 21370", timeout=8000)
+    verif("A1234567" in page.locator(".v3-decla").inner_text(), "déclaration : NAPI et chiffres")
+    shot("declaration")
+    page.locator("[data-v3d='0']").check(); page.wait_for_timeout(600)
+    verif(any(b.get("data", {}).get("declaration", {}).get(str(an)) == [0] for u, b in patches("reglages")), "étape cochée et gardée")
+
+    # Recherche, activité, plein soleil
+    page.click(".topbar .v3-cherche"); page.fill("#v3q", "martin")
+    verif(page.locator("#v3res >> text=Mme Martin").count() == 1, "recherche sans accents ni majuscules")
+    page.evaluate("ACT.go('activite')"); page.wait_for_selector(".v3-fil")
+    verif(page.locator(".v3-fil >> text=Visite · Ruche 1").count() >= 1 and "ami" in page.locator(".v3-fil").inner_text(), "fil d'activité avec l'auteur")
+    page.evaluate("ACT.n4compte()"); page.click("[data-act=n4soleil]")
+    verif(page.evaluate("document.body.classList.contains('soleil')"), "mode plein soleil activé")
+    shot("soleil")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
