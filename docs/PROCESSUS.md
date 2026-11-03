@@ -26,7 +26,11 @@ Les deux environnements gardent sur le téléphone des données séparées (cach
 
 ## Retour arrière
 
-Sur `apidoo.github.io`, bouton « Revert » de la pull request de mise en production, puis fusion. Les migrations n'ajoutent que des éléments (aucune suppression), donc une ancienne version de l'app reste compatible.
+Sur `apidoo.github.io`, bouton « Revert » de la pull request de mise en production, puis fusion. Cela suffit quand la version ne contient que des migrations additives. **Exception : après la migration 008, l'ancienne app ne fonctionne plus avec la base** ; le retour arrière passe alors par la restauration de la sauvegarde.
+
+## Migration qui casse l'ancienne version (008)
+
+La migration 008 et le code v5.0 doivent arriver ensemble en production : la v4 n'envoie pas l'en-tête `x-exploitation` et appelle `est_membre()` sans paramètre, ce que la base n'accepte plus après 008. Ordre : validation en recette, envoi des saisies hors ligne en attente sur chaque téléphone, sauvegarde complète de la base, migration, fusion immédiate de la pull request.
 
 ## Correctif urgent en production
 
