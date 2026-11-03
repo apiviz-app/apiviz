@@ -1,5 +1,14 @@
 # Notes de version
 
+## v5.1 · en recette · interface Alvéoles et compagnon API
+À vérifier sur https://apidoo.github.io/recette/ :
+1. Accueil : une phrase donne la priorité du jour, puis la carte des ruches en alvéoles avec sa légende, puis « À faire ».
+2. Bouton API au centre de la barre du bas : recherche, saisies, note vocale, photo. Sans réseau, le compagnon s'endort.
+3. Ruchers : dernier poids sur chaque ligne. Fiche ruche : courbe de poids ouverte.
+4. Miel et Ruchers : onglets soulignés, chiffres en ligne. Gestion : une liste, avec ce qui demande une action.
+5. Ordinateur : API dans le menu de gauche ; en haut sur téléphone, barre claire et logo sombre.
+API n'est pas encore relié à une intelligence artificielle : la feuille l'annonce (« Bientôt »).
+
 ## v5.0 · en recette · plusieurs exploitations et invitations
 À vérifier sur https://apidoo.github.io/recette/ :
 1. Créer son compte (adresse autorisée) et confirmer l'e-mail : on arrive sur « Rucher de démonstration (recette) ».
