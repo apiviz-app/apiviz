@@ -1,0 +1,18 @@
+# Évite la mise en pause du projet Supabase gratuit (après 7 jours sans activité).
+# Appelle chaque jour la fonction ping() de la base.
+name: Réveil Supabase
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # chaque jour vers 7 h 17 (heure de Paris en hiver)
+  workflow_dispatch:       # lancement manuel possible depuis l'onglet Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler la base
+        run: |
+          curl -fsS -X POST "https://xkucyqzlqfeyuomrtjbu.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_KiQ7LZ59QdgSEWe2LNAPfA_NZhK_Mad" \
+            -H "Content-Type: application/json" -d '{}'
