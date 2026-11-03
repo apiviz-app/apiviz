@@ -21,7 +21,7 @@
     contenu = open(dl.value.path(), encoding="utf-8-sig").read()
     verif("Produit test" in contenu and "LOT42" in contenu, "export Excel du registre")
     page.evaluate("ACT.go('plus')")
-    verif(page.locator(".menu >> text=Registre d’élevage").count() == 1, "entrée dans le menu Plus")
+    verif(page.locator(".n4-g >> text=Registre d’élevage").count() == 1, "entrée dans le menu Gestion")
     page.evaluate("ACT.go('registre')"); page.emulate_media(media="print")
     verif(not page.locator(".bottom").is_visible() and not page.locator(".head .actions").is_visible(), "impression sans menus ni boutons")
     page.screenshot(path="registre_print.png", full_page=True)

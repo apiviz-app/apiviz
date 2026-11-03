@@ -20,8 +20,8 @@
     # Barre du bas
     verif(page.locator(".bottom button").count() == 5 and page.locator(".bottom button[data-v=saisir]").count() == 1, "barre du bas à 5 boutons avec « Saisir »")
     verif(not page.locator(".fab").is_visible(), "plus de bouton flottant")
-    page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .quick")
-    verif(page.locator("#sheet .quick button").count() == 6, "« Saisir » ouvre le choix des saisies")
+    page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    verif(page.locator("#sheet .n4-tuile").count() == 6, "« Saisir » ouvre le choix des saisies")
     page.click("#sheet [data-act=closesheet]")
     # Accueil
     page.wait_for_selector("#uMeteo .u-meteo-t", timeout=5000)
@@ -38,7 +38,7 @@
     verif(page.locator(".card.u-trois b").first.inner_text().endswith(" j"), "chiffres clés de la ruche")
     page.wait_for_timeout(400); page.screenshot(path="v2/ruche.png", full_page=True)
     # Visite
-    page.click(".head .btn.main"); page.wait_for_selector(".u-visite-form")
+    page.click(".n4-rbarre .btn.honey"); page.wait_for_selector(".u-visite-form")
     verif(not page.locator(".bottom").is_visible() and page.locator(".u-barre .btn").is_visible(), "visite : barre d'enregistrement à la place du menu")
     page.click("details[data-sec=poids] summary"); page.fill("#v_poids", "41.5")
     page.click("[data-act=vset][data-k=activite][data-v=Forte]")
@@ -54,9 +54,9 @@
     # Ventes
     page.click(".bottom button[data-v=ventes]"); page.wait_for_selector(".u-vente")
     verif(page.evaluate("S.route") == "clients" and page.locator(".bottom button.on[data-v=ventes]").count() == 1, "« Miel » ouvre les ventes")
-    verif(page.locator(".u-vente").count() == 2 and page.locator(".u-du").count() == 1, "ventes en cartes, encart à encaisser")
+    verif(page.locator(".u-vente").count() == 2 and page.locator(".u-tuile").count() == 3, "ventes en cartes, tuiles stock / à encaisser / à livrer")
     page.wait_for_timeout(400); page.screenshot(path="v2/ventes.png", full_page=True)
-    page.click(".u-du .btn"); page.wait_for_selector("#sheet[open] #u_msg")
+    page.click("[data-act=uafiltre]"); page.click("[data-act=urelance]"); page.wait_for_selector("#sheet[open] #u_msg")
     msg = page.input_value("#u_msg")
     verif("Paul (bureau)" in msg and "4 pots de 250 g" in msg and "28 €" in msg and "espèces, chèque ou virement" in msg, "message de relance prérempli : " + msg.split("\n")[0][:60] + "…")
     verif(page.locator("[data-act=umsg][data-v=sms]").is_disabled() and "main" in page.locator("[data-act=umsg][data-v=mail]").get_attribute("class"), "sans téléphone : SMS grisé, e-mail proposé")
@@ -68,8 +68,9 @@
     verif(page.locator(".u-client").count() == 2 and page.locator(".u-client a[href^='tel:']").count() == 1, "onglet clients")
     # Carte
     page.evaluate("ACT.go('plus')")
-    verif(page.locator(".menu [data-v=pilotage]").count() == 1 and page.locator(".menu [data-v=carte]").count() == 1, "Pilotage et Carte dans Plus")
-    page.click(".menu [data-v=carte]"); page.wait_for_selector(".leaflet-container", timeout=10000)
+    verif(page.locator(".n4-g[data-v=pilotage]").count() == 1, "Bilan dans Gestion")
+    page.evaluate("ACT.go('ruches')"); verif(page.locator(".subtabs [data-v=carte]").count() == 1, "Carte dans les onglets de Ruchers")
+    page.click(".subtabs [data-v=carte]"); page.wait_for_selector(".leaflet-container", timeout=10000)
     verif(page.locator(".u-pin").count() == 1, "un repère pour le rucher placé")
     page.click("[data-act=uchoix][data-v='Bois']"); page.wait_for_selector("#uPanneau [data-act=uplacer]")
     page.click("#uPanneau [data-act=uplacer]")

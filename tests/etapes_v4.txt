@@ -133,7 +133,7 @@
     verif(page.locator("#v3res >> text=Mme Martin").count() == 1, "recherche sans accents ni majuscules")
     page.evaluate("ACT.go('activite')"); page.wait_for_selector(".v3-fil")
     verif(page.locator(".v3-fil >> text=Visite · Ruche 1").count() >= 1 and "ami" in page.locator(".v3-fil").inner_text(), "fil d'activité avec l'auteur")
-    page.evaluate("ACT.go('plus')"); page.click("[data-act=v3soleil]")
+    page.evaluate("ACT.n4compte()"); page.click("[data-act=n4soleil]")
     verif(page.evaluate("document.body.classList.contains('soleil')"), "mode plein soleil activé")
     shot("soleil")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

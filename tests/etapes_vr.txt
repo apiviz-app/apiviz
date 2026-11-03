@@ -2,7 +2,7 @@
     DATA["ruches"] += [{"id": R2, "nom": "Ruche 2", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""},
                        {"id": R3, "nom": "Ruche 3", "rucher": "Bois", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""}]
     page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
-    page.click(".head .btn.honey"); page.wait_for_selector("[data-act=vrmulti]")
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("[data-act=vrmulti]")
     page.click("[data-act=vrmulti]")
     page.click("[data-act=vrrucher][data-v='Verger']")
     verif("2 choisies" in page.locator(".field .t").first.inner_text(), "« Tout Verger » choisit 2 ruches")

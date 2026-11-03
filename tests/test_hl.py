@@ -116,7 +116,7 @@ with sync_playwright() as pw:
     verif("Hors ligne" in page.locator(".hl-band").inner_text(), "bandeau « Hors ligne » à l'ouverture sans réseau")
 
     # 3. Visite sans réseau.
-    page.click(".head .btn.honey"); page.wait_for_selector("text=Nouvelle visite")
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
     verif(page.locator("form[data-form=visite] .btn.main").inner_text().startswith("Enregistrer sur le"), "bouton « Enregistrer sur le téléphone »")
     page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
     page.locator("details[data-sec=photos]").evaluate("d => d.open = true"); page.fill("#v_note", "Visite test hors ligne")

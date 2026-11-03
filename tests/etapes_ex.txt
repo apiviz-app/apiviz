@@ -3,7 +3,10 @@
     verif(entetes["x-exploitation"] == {E1}, "chaque requête porte l'exploitation choisie")
     # B. Membres et invitations.
     page.evaluate("ACT.go('plus')")
-    verif(page.locator(".menu >> text=Exploitation et membres").count() == 1, "entrée « Exploitation et membres » dans Plus")
+    verif(page.locator(".n4-g[data-v=membres]").count() == 1, "entrée « Membres » dans Gestion")
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .n4-moi")
+    verif(page.locator("#sheet .n4-radio.on").count() == 1 and "Bee’s Brothers" in page.locator("#sheet").inner_text(), "exploitation choisie dans le menu du compte")
+    page.click("#sheet [data-act=closesheet]")
     page.evaluate("ACT.go('membres')"); page.wait_for_selector("text=Membres · 2", timeout=10000)
     verif(page.locator(".ex-row >> text=(vous)").count() == 1 and page.locator("[data-act=exretirer]").count() == 1, "liste des membres, retrait possible pour l'autre membre")
     page.click("[data-act=exlien]"); page.wait_for_selector(".ex-lien input")
