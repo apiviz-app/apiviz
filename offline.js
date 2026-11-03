@@ -54,13 +54,13 @@ const HL = (() => {
       await loadReseau();
       st.hors = false;
       memo("apidoo-membre", "1");
-      await kvMettre({ k: "donnees", d: S.d, at: Date.now() }).catch(() => {});
+      await kvMettre({ k: "donnees:" + (typeof EX != "undefined" ? EX.courante() : ""), d: S.d, at: Date.now() }).catch(() => {});
       st.depuis = Date.now();
       appliquer(S.d);
       if (st.file.length && !st.envoi && Date.now() - st.essai > 30000) setTimeout(envoyer, 300);
     } catch (e) {
       if (!reseau(e)) throw e;
-      const c = await kvLire("donnees").catch(() => null);
+      const c = await kvLire("donnees:" + (typeof EX != "undefined" ? EX.courante() : "")).catch(() => null);
       if (!c) throw new Error("Pas de réseau, et aucune donnée n’est encore gardée sur ce téléphone.");
       st.hors = true; st.depuis = c.at;
       S.d = c.d;
@@ -73,6 +73,7 @@ const HL = (() => {
   // Ajoute aux données affichées les saisies pas encore envoyées.
   function appliquer(d) {
     for (const it of st.file) {
+      if (it.ex && it.ex !== (typeof EX != "undefined" ? EX.courante() : "")) continue; // saisie d'une autre exploitation
       if (it.type === "rpc" && it.nom === "creer_visite") {
         const p = it.args.p;
         if (d.visites.some((v) => v.id === p.id)) continue;
@@ -105,7 +106,7 @@ const HL = (() => {
   }
 
   async function ajouter(it) {
-    it.id = it.id || nouvelId(); it.cree = Date.now();
+    it.id = it.id || nouvelId(); it.cree = Date.now(); it.ex = (typeof EX != "undefined" ? EX.courante() : "");
     await fileMettre(it).catch(() => memoire.file.set(it.id, it));
     st.file.push(it);
   }
@@ -180,6 +181,7 @@ const HL = (() => {
     try {
       await sb.auth.getSession(); // renouvelle la connexion si besoin
       for (const it of [...st.file]) {
+        if (it.ex && it.ex !== (typeof EX != "undefined" ? EX.courante() : "")) continue; // partira quand cette exploitation sera ouverte
         const r = it.type === "rpc"
           ? await sb.rpc(it.nom, it.args)
           : await sb.from(it.table).upsert(it.lignes, { onConflict: "id", ignoreDuplicates: true });
@@ -255,6 +257,7 @@ const HL = (() => {
   return {
     reseau, rpc, write, sessionLocale, membre, envoyer, bandeau, section,
     horsLigne: () => st.hors,
+    nb: () => st.file.length,
     enAttente: (id) => !!saisieDe(id),
   };
 })();

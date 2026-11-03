@@ -1,0 +1,37 @@
+    R2, R3 = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["ruches"] += [{"id": R2, "nom": "Ruche 2", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""},
+                       {"id": R3, "nom": "Ruche 3", "rucher": "Bois", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""}]
+    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    page.click(".head .btn.honey"); page.wait_for_selector("[data-act=vrmulti]")
+    page.click("[data-act=vrmulti]")
+    page.click("[data-act=vrrucher][data-v='Verger']")
+    verif("2 choisies" in page.locator(".field .t").first.inner_text(), "« Tout Verger » choisit 2 ruches")
+    page.click("[data-act=vstep][data-v='0.5']")
+    page.fill("#v_trt", "Produit test"); page.fill("#v_retrait", "2026-12-14"); page.fill("#v_note", "Groupe")
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=2 visites enregistrées", timeout=10000)
+    vis = [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
+    verif(len(vis) == 2 and {v["ruche_id"] for v in vis} == {R1, R2} and vis[0]["id"] != vis[1]["id"], "une visite par ruche, identifiants distincts")
+    verif(all(v["note"] == "Groupe" and v["traitement"] == "Produit test" and v["intrants"] == [{"article_id": A1, "quantite": 0.5}] for v in vis), "mêmes observations, traitement et intrants")
+    verif(all("multi" not in v and "ruches" not in v for v in vis), "pas de champs parasites envoyés")
+    taches = [x for x in recu["upsert"] if x[0] == "taches"]
+    verif(len(taches) == 1 and "Ruche 1, Ruche 2" in taches[0][2][0]["titre"] and taches[0][2][0]["ruche_id"] is None, "une seule tâche de retrait pour le groupe")
+    # Stock insuffisant : rien n'est enregistré
+    DATA["articles"][0]["stock"] = 0.5
+    page.evaluate("refresh()"); page.wait_for_timeout(300)
+    page.evaluate("ACT.newvisite()"); page.click("[data-act=vrmulti]"); page.click("[data-act=vrtoggle][data-v='%s']" % R3)
+    page.click("[data-act=vstep][data-v='0.5']")
+    avant = len(recu["rpc"])
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast.err >> text=Stock insuffisant", timeout=10000)
+    verif(len([1 for n, _ in recu["rpc"][avant:] if n == "creer_visite"]) == 0, "stock insuffisant : aucune visite enregistrée")
+    # Hors ligne
+    DATA["articles"][0]["stock"] = 5
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.newvisite()"); page.click("[data-act=vrmulti]"); page.click("[data-act=vrtoggle][data-v='%s']" % R2)
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=2 visites gardées sur le téléphone", timeout=10000)
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=saisies envoyées", timeout=20000)
+    verif(len([1 for n, _ in recu["rpc"] if n == "creer_visite"]) == 4, "hors ligne : les 2 visites partent au retour du réseau")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

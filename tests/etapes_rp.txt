@@ -1,0 +1,22 @@
+    DATA["taches"] = [
+      {"id": str(uuid.uuid4()), "titre": "Fin du traitement Produit, test; long titre pour vérifier le repli des lignes du calendrier", "echeance": "2026-12-14", "ruche_id": R1, "faite": False, "assigne": "Pierre"},
+      {"id": str(uuid.uuid4()), "titre": "Tâche en retard", "echeance": "2026-10-01", "ruche_id": None, "faite": False, "assigne": ""},
+      {"id": str(uuid.uuid4()), "titre": "Tâche faite", "echeance": "2026-12-20", "ruche_id": None, "faite": True, "assigne": ""},
+    ]
+    page.add_init_script("window.__badge=null; navigator.setAppBadge=(n)=>{window.__badge=n;return Promise.resolve()}; navigator.clearAppBadge=()=>{window.__badge=0;return Promise.resolve()}")
+    page.goto(url); page.wait_for_selector("text=Bonjour", timeout=15000)
+    verif(page.evaluate("window.__badge") == 1, "pastille : 1 point à surveiller (tâche en retard)")
+    page.evaluate("ACT.go('agenda')"); page.wait_for_selector("h1 >> text=Agenda")
+    verif(page.locator("[data-act=rpics]").count() == 1, "bouton « Mettre dans mon agenda »")
+    with page.expect_download() as dl:
+        page.click("[data-act=rpics]")
+    brut = open(dl.value.path(), "rb").read()
+    txt = brut.decode("utf-8")
+    lignes = txt.split("\r\n")
+    verif(txt.startswith("BEGIN:VCALENDAR\r\n") and txt.endswith("END:VCALENDAR\r\n"), "fichier calendrier bien formé")
+    verif(txt.count("BEGIN:VEVENT") == 1, "seules les tâches à venir non faites sont exportées")
+    verif("DTSTART:20261214T090000" in txt and "TRIGGER:PT0M" in txt, "rendez-vous à 9 h avec alerte")
+    verif(all(len(l.encode()) <= 75 for l in lignes), "lignes repliées à 75 octets")
+    deplie = txt.replace("\r\n ", "")
+    verif("Produit\\, test\\; long titre" in deplie and "Ruche : Ruche 1" in deplie and "Qui : Pierre" in deplie, "titre, ruche et personne dans l'événement")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
