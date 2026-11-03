@@ -72,10 +72,18 @@ const PH = (() => {
   }
 
   // ---------- Chargement ----------
+  const memoPret = (v) => { try { if (v === undefined) return localStorage.getItem("apidoo-photos-pret"); localStorage.setItem("apidoo-photos-pret", v); } catch { return null; } };
   async function load() {
     const { data, error } = await sb.from("visite_photos").select("*").order("created_at");
-    st.pret = !error;
-    S.d.photos = error ? [] : data;
+    if (error && typeof HL != "undefined" && HL.reseau(error)) {
+      // Sans réseau : on garde les photos déjà connues et l'état de la base.
+      st.pret = memoPret() === "1";
+      S.d.photos = S.d.photos || [];
+    } else {
+      st.pret = !error;
+      S.d.photos = error ? [] : data;
+      memoPret(st.pret ? "1" : "0");
+    }
     const att = await qTous().catch(() => []);
     st.attente.forEach((p) => p.apercu && URL.revokeObjectURL(p.apercu));
     st.attente = att.map((p) => ({ ...p, apercu: URL.createObjectURL(p.blob) }));
@@ -154,6 +162,7 @@ const PH = (() => {
     let ok = 0, echec = 0;
     try {
       for (const p of [...st.attente]) {
+        if (typeof HL != "undefined" && HL.enAttente(p.visite_id)) continue; // la visite part d’abord
         const chemin = `${p.visite_id}/${p.id}.jpg`;
         const up = await sb.storage.from(BUCKET).upload(chemin, p.blob, { contentType: "image/jpeg", upsert: true });
         if (up.error) { echec++; break; }
