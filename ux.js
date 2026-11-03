@@ -13,6 +13,11 @@ const UX = (() => {
   SIDE.splice(iR + 1, 0, ["carte", "Carte"]);
   ACT.go = (v) => (v === "saisir" ? quickSheet() : v === "ventes" ? go("clients") : go(v));
 
+  // Un seul démarrage à la fois (le signal de connexion de Supabase en relançait un second en parallèle).
+  const bootAvant = window.boot;
+  let bootEnCours = null;
+  window.boot = () => bootEnCours || (bootEnCours = Promise.resolve().then(bootAvant).finally(() => { bootEnCours = null; }));
+
   const renderAvant = window.render;
   window.render = function () {
     if (S.route === "carte" && S.session && S.d && S.member !== false && !S.recovery) {
