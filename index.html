@@ -710,6 +710,84 @@ body[data-route=ruches] .u-deux{margin-top:6px}
 .subtabs button.on{background:none;box-shadow:none;color:var(--ink);font-weight:700;border-bottom-color:var(--honey)}
 .head.hero-head .u-meteo-lien{color:var(--good)!important}
 .al-carte .u-hexes{justify-content:flex-start}
+
+/* ---------- Piste A : barre du haut sur ordinateur, ruchers en colonnes, météo par rucher ---------- */
+@media (min-width:801px){
+  .shell{flex-direction:column}
+  .side{position:sticky;top:0;z-index:20;flex-direction:row;align-items:center;gap:6px;width:auto;height:auto;min-height:68px;padding:8px 32px;overflow:visible;background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+  .side .brand{padding:0 22px 0 0}
+  .side .nav{width:auto;min-height:44px;padding:0 14px;gap:0;border-radius:11px;color:var(--muted)}
+  .side .nav svg{display:none}
+  .side .nav:hover{background:var(--ground)}
+  .side .nav.on{background:var(--honeysoft);color:var(--ink);font-weight:700}
+  .side .nav[data-v=saisir]{margin-left:auto;gap:8px;color:var(--ink);font-weight:600}
+  .side .nav[data-v=saisir] svg{display:block}
+  .side .me{margin:0 0 0 8px;padding:0}
+  .side .me .mail,.side .me .link{display:none}
+  main{padding:30px 32px 40px}
+  .wrap{max-width:1240px}
+  .al-grille{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+}
+.head.hero-head{display:block}
+.head.hero-head h1{max-width:760px}
+@media (min-width:801px){.head.hero-head h1{font-size:34px}}
+.al-carte{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.al-carte>.al-cle{grid-column:1/-1}
+.al-col{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.al-col.alerte{border-color:var(--crit)}
+.al-col h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;letter-spacing:-.01em}
+.al-carte .al-col .u-entete{margin:0;justify-content:space-between}
+.al-carte .u-hexes{padding:0 0 32px;row-gap:34px}
+.al-wx{display:flex;flex-direction:column;gap:9px}
+.al-temps{display:flex;align-items:center;gap:10px}
+.al-temps svg,.al-jour svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.al-temps svg{width:30px;height:30px;flex:none}
+.al-temps>b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.al-temps span{display:flex;flex-direction:column;font-size:13px;line-height:1.25;color:var(--muted)}
+.al-temps strong{font-size:14px;font-weight:600;color:var(--ink)}
+.al-jours{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.al-jours.n5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.al-jour{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:11px;background:#EDF0E8;font-size:13px;font-variant-numeric:tabular-nums;text-transform:capitalize}
+.al-jour svg{width:20px;height:20px}
+.al-jour.ok{background:#DFEDE4;color:#1F5239;font-weight:600}
+.al-creneau{margin:0;font-size:14px;color:var(--muted)}
+.al-creneau b{font-weight:600;color:#1F5239}
+.al-deux{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px 36px;align-items:start}
+.al-grille{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.al-grille .card{display:flex;flex-direction:column;gap:10px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:18px}
+body[data-route=ruches] .al-grille .card{background:#fff;border:1px solid var(--line);padding:16px}
+.al-titre{padding:0;border:0;background:none;font:inherit;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2);min-height:32px}
+.al-liens{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+.al-liens button{display:flex;flex-direction:column;gap:1px;min-height:60px;padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;color:var(--ink);text-align:left}
+.al-fiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;align-items:start}
+.al-ruches h2{margin:0 0 6px;font-size:18px;font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.al-ligne{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:0 10px;width:100%;min-height:58px;padding:8px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:var(--ink);text-align:left}
+.al-ligne .n4-hex{grid-row:1/3}
+.al-ligne .al-kg{grid-row:1/3;grid-column:3}
+.al-opt{display:none}
+@media (min-width:801px){
+  .al-ligne{grid-template-columns:34px 1.2fr 1fr 1fr 1fr 1fr 1fr}
+  .al-ligne .n4-hex,.al-ligne .al-kg{grid-row:auto;grid-column:auto}
+  .al-opt{display:block;font-size:14px}
+}
+@media (max-width:800px){
+  .al-carte .al-jours{display:none}
+  .al-carte{gap:12px}
+}
+.al-carte{display:flex;flex-wrap:wrap;gap:16px}
+.al-carte>.al-col{flex:1 1 300px;display:flex;padding:16px;border:1px solid var(--line)}
+.al-carte>.al-col.alerte{border-color:var(--crit)}
+.al-carte>.al-cle{flex:0 0 100%}
+.al-col>.btn{width:100%}
+.subtabs button{flex:0 0 auto!important;padding:0 2px}
+@media (min-width:801px){
+  .al-grille{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  body[data-route=plus] .wrap{max-width:720px}
+}
+.al-carte>.al-col{align-items:stretch;text-align:left}
+.al-carte>.al-col>.u-entete{display:flex;width:100%;justify-content:space-between;align-items:center}
+.al-carte>.al-col>.u-hexes{justify-content:flex-start}
+.al-carte>.al-col .al-temps{justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -728,6 +806,7 @@ body[data-route=ruches] .u-deux{margin-top:6px}
 <script src="./offline.js"></script>
 <script src="./v3.js"></script>
 <script src="./nav4.js"></script>
+<script src="./meteo.js"></script>
 <script src="./alveoles.js"></script>
 </body>
 </html>
