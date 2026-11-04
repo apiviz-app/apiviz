@@ -1,0 +1,28 @@
+    # Installation sur téléphone : manifeste, icônes adaptatives et mode d'emploi.
+    import json, pathlib
+    racine = pathlib.Path(sys.argv[1])
+    m = json.loads((racine / "manifest.webmanifest").read_text(encoding="utf-8"))
+    adapt = [i for i in m["icons"] if i.get("purpose") == "maskable"]
+    verif(m["display"] == "standalone" and m.get("id") and m.get("scope"), "manifeste : identité et portée définies")
+    verif({i["sizes"] for i in adapt} == {"192x192", "512x512"}, "manifeste : icônes adaptatives 192 et 512")
+    verif(all((racine / i["src"]).exists() for i in m["icons"]), "manifeste : tous les fichiers d'icône existent")
+    sw = (racine / "sw.js").read_text(encoding="utf-8")
+    verif(all(("./" + i["src"]) in sw for i in adapt), "icônes adaptatives gardées pour le hors ligne")
+
+    # Sur iPhone : le mode d'emploi passe par Safari.
+    page.add_init_script("Object.defineProperty(navigator,'userAgent',{get:()=>'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Safari/604.1'})")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("[data-act=n4installer]")
+    page.click("[data-act=n4installer]"); page.wait_for_selector(".n4-installer")
+    txt = page.locator(".n4-installer").inner_text()
+    verif(page.locator(".n4-installer li").count() == 3 and "Safari" in txt and "Partager" in txt, "iPhone : trois étapes, avec Safari et Partager")
+    page.click(".n4-installer ~ [data-act=n4compte]"); page.wait_for_selector("[data-act=n4installer]")
+    verif(True, "retour au menu du compte")
+    page.evaluate("document.querySelector('#sheet, dialog[open]')?.close?.()")
+
+    # Déjà installée : la ligne disparaît.
+    page.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true})")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector(".n4-moi")
+    verif(page.locator("[data-act=n4installer]").count() == 0, "application installée : plus de proposition d'installer")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

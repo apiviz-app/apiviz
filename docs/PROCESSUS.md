@@ -32,4 +32,4 @@ Revenir à une version antérieure en passant par le même circuit (revert, rece
 
 - Web sur GitHub Pages (Gladoo : Cloudflare, avec son nom de domaine).
 - Migrations appliquées à la main dans Supabase (Gladoo : par la mise en ligne, avec la CLI Supabase).
-- Pas d'application mobile compilée : Apidoo s'installe depuis le site (Gladoo : Expo).
+- Pas d'application mobile compilée : Apidoo s'installe depuis le site (Gladoo : Expo). Le choix et la suite sont dans `MOBILE.md`.

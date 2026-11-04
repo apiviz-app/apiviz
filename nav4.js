@@ -210,6 +210,18 @@ const N4 = (() => {
   const soleil = () => { try { return localStorage.getItem("apidoo-soleil") === "1"; } catch { return false; } };
   let installer = null;
   addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installer = e; });
+  addEventListener("appinstalled", () => { installer = null; });
+  const installee = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const appareil = () => {
+    const ua = navigator.userAgent;
+    if (/iphone|ipod|ipad/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+    return /android/i.test(ua) ? "android" : "ordinateur";
+  };
+  const ETAPES_INSTALLATION = {
+    ios: ["Ouvre Apidoo dans Safari. Si tu viens d’un lien reçu par e-mail ou message, choisis d’abord « Ouvrir dans Safari ».", "Touche le bouton Partager, le carré avec une flèche vers le haut.", "Choisis « Sur l’écran d’accueil », puis « Ajouter »."],
+    android: ["Ouvre Apidoo dans Chrome.", "Touche le menu ⋮, en haut à droite.", "Choisis « Installer l’application » ou « Ajouter à l’écran d’accueil »."],
+    ordinateur: ["Ouvre Apidoo dans Chrome ou Edge.", "Clique sur l’icône d’installation, à droite de la barre d’adresse.", "Confirme avec « Installer »."],
+  };
   ACT.n4compte = () => {
     const mail = S.session?.user?.email || "";
     const ex = typeof EX != "undefined" && EX.liste ? EX.liste() : [];
@@ -221,7 +233,7 @@ const N4 = (() => {
       <section class="n4-bloc">
         <button type="button" class="n4-ligne" data-act="n4soleil" aria-pressed="${soleil()}"><span class="u-todo-t"><b>Mode plein soleil</b><span class="small">Plus de contraste dehors</span></span><span class="n4-inter ${soleil() ? "on" : ""}" aria-hidden="true"></span></button>
         <button type="button" class="n4-ligne" data-act="n4q" data-v="go" data-k="reglages"><span class="u-todo-t"><b>Réglages, exports et sauvegarde</b></span><span aria-hidden="true">›</span></button>
-        <button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>Installer sur l’écran d’accueil</b></span><span aria-hidden="true">›</span></button>
+        ${installee() ? "" : `<button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>Installer sur l’écran d’accueil</b></span><span aria-hidden="true">›</span></button>`}
       </section>
       <button type="button" class="btn n4-sortir" data-act="logout">Se déconnecter</button>`;
     if (!$sheet.open) $sheet.showModal();
@@ -230,8 +242,12 @@ const N4 = (() => {
   ACT.n4expl = async (id) => { $sheet.close(); await EX.ouvrir(id); };
   ACT.n4installer = async () => {
     if (installer) { installer.prompt(); installer = null; return; }
-    const ios = /iphone|ipad/i.test(navigator.userAgent);
-    toast(ios ? "Dans Safari : bouton Partager, puis « Sur l’écran d’accueil »" : "Dans Chrome : menu ⋮, puis « Installer l’application » ou « Ajouter à l’écran d’accueil »");
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    $sheetForm.innerHTML = `<section class="n4-bloc n4-installer"><h3>Installer Apidoo</h3>
+      <ol>${ETAPES_INSTALLATION[appareil()].map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+      <p class="small">Apidoo s’ouvre ensuite depuis son icône, en plein écran, et reste utilisable sans réseau. Tu n’as rien à télécharger depuis un store.</p></section>
+      <button type="button" class="btn" data-act="n4compte">Retour</button>`;
+    if (!$sheet.open) $sheet.showModal();
   };
 
   // ---------- Supprimer, avec « Annuler » pendant 5 secondes ----------

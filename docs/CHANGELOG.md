@@ -1,5 +1,18 @@
 # Notes de version
 
+## v5.12 · à essayer en recette · installation sur téléphone
+Aucune migration. L'ancienne version reste compatible avec la base.
+
+- **Installation :** le menu du compte affiche un vrai mode d'emploi selon l'appareil, et ne propose plus d'installer une application déjà installée.
+- **Icône :** Android découpe maintenant une icône prévue pour, sans rogner le symbole.
+- **Couleur :** la barre du téléphone reprend le miel doux du bandeau dans l'application installée.
+- **Documentation :** `docs/MOBILE.md` fixe l'architecture web et mobile, et les étapes vers les stores.
+
+**À vérifier**
+- iPhone, dans Safari, sans l'application installée : Compte › Installer, suivre les trois étapes, puis ouvrir Apidoo depuis son icône.
+- Android, dans Chrome : même parcours, la fenêtre d'installation doit s'ouvrir directement si Chrome le propose, et l'icône ne doit pas être coupée.
+- Application installée : la ligne « Installer » a disparu du menu du compte.
+
 ## v5.11 · à essayer en recette · tournée en parcours
 Aucune migration. L'ancienne version reste compatible avec la base.
 
