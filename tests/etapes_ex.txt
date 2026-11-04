@@ -18,9 +18,9 @@
     # C. Inscription sans exploitation : écran de création.
     EXPL["miennes"].clear()
     page.evaluate("localStorage.removeItem('apidoo-exploitation')")
-    page.reload(); page.wait_for_selector("form[data-form=exploitation]", timeout=15000)
-    page.fill("form[data-form=exploitation] input[name=nom]", "Le rucher des Tilleuls")
-    page.click("form[data-form=exploitation] .btn.main")
+    page.reload(); page.wait_for_selector("[data-act=dmprofil]", timeout=15000)
+    page.click("[data-act=dmprofil][data-v=deja]"); page.fill("#dm_nom", "Le rucher des Tilleuls"); page.click("[data-act=dmsuite]")
+    page.fill("#dm_rucher", "Le Verger"); page.click("[data-act=dmcreer]")
     page.wait_for_selector(".toast >> text=Exploitation créée", timeout=10000)
     E2 = EXPL["miennes"][0]["id"]
     verif(page.evaluate("EX.courante()") == E2 and page.locator("text=/Bonjour|Bonsoir/").count() >= 1, "exploitation créée puis ouverte")
