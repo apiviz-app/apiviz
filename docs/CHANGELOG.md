@@ -1,5 +1,18 @@
 # Notes de version
 
+## v5.11 · à essayer en recette · tournée en parcours
+Aucune migration. L'ancienne version reste compatible avec la base.
+
+À vérifier sur téléphone :
+1. « Faire la tournée » : phrase du jour, ruches par priorité, trois modes, dernier mode retenu, plus de menu du bas.
+2. Je parle librement : dire « Ruche 2… Ruche 1… », la ruche en cours suit, chaque ruche se remplit. Sur iPhone installé, utiliser le micro du clavier dans la zone de texte.
+3. API me pose les questions : réponse au doigt et à voix haute, question sur les œufs si la reine n'est pas vue, Passer.
+4. Je remplis moi-même : tout tient sur l'écran, reine jamais présumée, Note, Photo et Plus ouvrent le formulaire complet.
+5. Vérification : points signalés par « ? », Modifier, tâches proposées à garder ou retirer. Rien n'est enregistré avant la validation.
+6. Quitter en cours, rouvrir : la tournée reprend, « Recommencer la tournée » repart de zéro.
+7. Sans réseau : saisie gardée sur le téléphone, envoyée au retour du réseau.
+8. Ordinateur : trois colonnes, onglets de mode, formulaire de visite sur toute la largeur.
+
 ## v5.10 · à essayer en recette · fonctionnalités essentielles
 Migration à lancer d'abord sur `apidoo-test` : `migrations/010-registre-factures.sql`. Sans elle, déplacements, interventions et factures échouent, le reste fonctionne.
 
