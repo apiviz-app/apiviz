@@ -245,8 +245,34 @@ const AL = (() => {
   const rucheAvant = window.viewRuche;
   window.viewRuche = function () {
     rucheAvant();
-    [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"))?.setAttribute("open", "");
+    const pli = [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"));
+    pli?.setAttribute("open", "");
+    const r = byId(S.d.ruches, S.ruche) || byId(S.d.ruchesSorties || [], S.ruche), hex = document.querySelector(".u-gros-hex");
+    if (r && hex) hex.textContent = String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3) + (r.etat === "Critique" ? "!" : "");
+    // La courbe se dessine quand on arrive sur la ruche, pas à chaque changement d'onglet.
+    if (S.alCourbe !== S.ruche) pli?.querySelector("polyline")?.classList.add("al-trace");
+    pli?.querySelector("polyline")?.setAttribute("pathLength", "1");
+    S.alCourbe = S.ruche;
   };
+
+  // ---------- Transitions : l'alvéole touchée devient l'en-tête de la fiche ----------
+  const fluide = () => document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches;
+  function transition(action, source) {
+    if (!fluide()) return action();
+    if (source) source.style.viewTransitionName = "al-hex";
+    document.startViewTransition(() => {
+      if (source) source.style.viewTransitionName = "";
+      action();
+      document.querySelector(".u-gros-hex")?.style.setProperty("view-transition-name", "al-hex");
+    });
+  }
+  const versRuche = ACT.ruche;
+  ACT.ruche = (id) => {
+    const b = [...document.querySelectorAll('[data-act="ruche"]')].find((x) => x.dataset.v === id);
+    transition(() => versRuche(id), document.querySelector(".u-gros-hex") || b?.querySelector(".n4-hex") || (b?.classList.contains("u-hex") ? b : null));
+  };
+  const allerA = ACT.go;
+  ACT.go = (v) => (S.route === "ruche" || S.route === "rucher" ? transition(() => allerA(v)) : allerA(v));
 
   return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
 })();

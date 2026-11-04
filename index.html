@@ -680,6 +680,16 @@ body[data-route=dash] .wrap,body[data-route=ruches] .wrap{gap:24px}
 .al-cle i.al-niv{background:linear-gradient(to top,var(--honey) var(--niv),#E9ECE4 var(--niv))}
 .al-entree .u-hex{animation:al-hx .46s var(--sortie) backwards;animation-delay:calc(var(--i,0)*34ms)}
 @keyframes al-hx{from{opacity:0;scale:.55}}
+.u-gros-hex{width:72px;height:62px;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:24px;color:#fff;font-variant-numeric:tabular-nums}
+.u-gros-hex.bg-watch{color:var(--ink)}
+.al-trace{stroke-dasharray:1;stroke-dashoffset:1;animation:al-trace 1s var(--sortie) .2s forwards}
+@keyframes al-trace{to{stroke-dashoffset:0}}
+::view-transition-group(al-hex){animation-duration:.44s;animation-timing-function:var(--sortie)}
+::view-transition-old(root){animation:.16s ease both al-sort}
+::view-transition-new(root){animation:.3s var(--sortie) .05s both al-ent}
+@keyframes al-sort{to{opacity:0}}
+@keyframes al-ent{from{opacity:0;transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){.al-trace{animation:none;stroke-dasharray:none;stroke-dashoffset:0}}
 @media (prefers-reduced-motion:reduce){.al-entree .u-hex{animation:none}.al-carte .u-hex,.lent{transition:none}}
 .al-carte .u-rucher .u-entete{margin:0;flex-wrap:wrap;gap:0 8px}
 .al-carte .u-hexes{display:flex;flex-wrap:wrap;padding:4px 0 34px;gap:0}

@@ -7,6 +7,12 @@
 3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
 4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
 
+## v5.5 · à essayer en recette · fiche ruche et transitions
+À vérifier :
+1. Toucher une alvéole : elle glisse et grandit pour devenir l'en-tête de la fiche. Sans animation sur un vieux téléphone, la fiche s'ouvre normalement.
+2. La courbe de poids se dessine à l'arrivée, pas en changeant d'onglet.
+3. Ruche voisine et retour : transition douce, rien ne saute.
+
 ## v5.4 · à essayer en recette · accueil et lentilles
 À vérifier :
 1. Accueil : les alvéoles arrivent en cascade à l'ouverture, pas à chaque retour d'état.
