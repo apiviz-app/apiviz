@@ -147,7 +147,7 @@ const ES = (() => {
       ${b("", "Factures", num, "Prochain numéro", `<span class="small">${esc(c.mention_tva ? "Mention de TVA renseignée" : "Mention de TVA à renseigner")}, paiement à ${esc(c.delai_paiement || "réception")}</span>`, "", "errgfact")}
       ${b("", "Météo", `${s.ouvrir} °C`, "Seuil pour ouvrir une ruche", `<span class="small">Vent ${s.vent} km/h, pluie ${s.pluie} %, de ${s.debut} h à ${s.fin} h</span>`, "", "errgmeteo")}
       ${b("", "Apparence", BANDEAUX[bandeau()][0], "Couleur du bandeau sur cet appareil", `<span class="er-pastilles" aria-hidden="true">${Object.entries(BANDEAUX).map(([k, [, v]]) => `<i class="${k === bandeau() ? "on" : ""}" style="background:${v["--bandeau"] || "#FBEFC9"}"></i>`).join("")}</span>`, "", "errgcouleur")}
-      ${b("rappels", "Rappels", U.pluriel(nouveaux().length, "rappel"), "Notifications et sujets suivis")}
+      ${b("rappels", "Rappels", nouveaux().length ? U.pluriel(nouveaux().length, "rappel") : "À jour", "Notifications et sujets suivis")}
       ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
     </div>`);
   };
@@ -171,12 +171,174 @@ const ES = (() => {
     sheet({ title: "Apparence", fields: [{ name: "bandeau", label: "Couleur du bandeau", type: "select", options: Object.entries(BANDEAUX).map(([k, [t]]) => [k, t]), value: bandeau() }], submit: async (v) => { memo("apidoo-bandeau", v.bandeau); appliquerBandeau(); render(); } });
   };
 
+  // ---------- 4. Registre complet et déplacements ----------
+  const ONGLETS = [["traitements", "Traitements"], ["mouvements", "Mouvements"], ["interventions", "Interventions"], ["exploitation", "Exploitation"]];
+  const MVT = { installation: "Entrée", division: "Division", essaimage: "Essaimage", reunion: "Réunion", sortie: "Sortie", reactivation: "Remise en service", deplacement: "Déplacement" };
+  const evenements = (types, an) => (S.d.evenements || []).filter((e) => types.includes(e.type) && yr(e.date_evenement) === an);
+  const nomRuche = (id) => byId(S.d.ruches, id)?.nom || S.d.toutes?.find?.((r) => r.id === id)?.nom || "Ruche retirée";
+  VUES.registre = function () {
+    const tab = S.rgTab || "traitements", an = S.annee, c = cfg();
+    RG.vue();
+    const haut = document.querySelector(".wrap > .head");
+    if (!haut) return;
+    const sans = S.d.visites.filter((v) => v.traitement && yr(v.date_visite) === an && !v.ordonnance).length;
+    const manque = !c.napi ? "Il manque ton NAPI." : sans ? `${U.pluriel(sans, "traitement")} sans ordonnance notée.` : "";
+    haut.insertAdjacentHTML("afterend", `${manque ? `<p class="notice">${esc(manque)}</p>` : ""}<div class="er-onglets" role="group" aria-label="Parties du registre">${ONGLETS.map(([k, t]) => `<button type="button" class="${k === tab ? "on" : ""}" aria-pressed="${k === tab}" data-act="errgtab" data-v="${k}">${t}</button>`).join("")}</div>`);
+    if (tab === "traitements") return;
+    const garde = [...document.querySelectorAll(".wrap > *")], i = garde.findIndex((x) => x.classList.contains("er-onglets"));
+    garde.slice(i + 1).forEach((x) => x.remove());
+    const wrap = document.querySelector(".wrap");
+    if (tab === "mouvements") {
+      const l = evenements(Object.keys(MVT), an);
+      const lignes = l.map((e) => `<tr><td>${dfr(e.date_evenement)}</td><td>${esc(nomRuche(e.ruche_id))}</td><td>${esc(MVT[e.type])}</td><td>${esc(e.detail) || "–"}</td></tr>`);
+      wrap.insertAdjacentHTML("beforeend", `<div class="actions er-act"><button type="button" class="btn main" data-act="erdeplacer">Déplacer des ruches</button><button type="button" class="btn" data-act="exp" data-v="mouvements">Fichier Excel</button></div>
+        ${l.length ? `<section class="card tbl er-tb">${table(["Date", "Ruche", "Mouvement", "Détail"], lignes, "")}</section>` : `<p class="small">Aucun mouvement noté en ${an}.</p>`}
+        <p class="small">Un transport hors du département se déclare à la direction départementale de destination. Vérifie la démarche auprès de ton GDS.</p>`);
+    } else if (tab === "interventions") {
+      const l = evenements(["intervention"], an);
+      const lignes = l.map((e) => `<tr><td>${dfr(e.date_evenement)}</td><td>${esc(nomRuche(e.ruche_id))}</td><td>${esc(e.detail) || "–"}</td></tr>`);
+      wrap.insertAdjacentHTML("beforeend", `<div class="actions er-act"><button type="button" class="btn main" data-act="erintervention">Noter une intervention</button></div>
+        ${l.length ? `<section class="card tbl er-tb">${table(["Date", "Ruche", "Intervention"], lignes, "")}</section>` : `<p class="small">Aucune intervention notée en ${an}.</p>`}`);
+    } else {
+      wrap.insertAdjacentHTML("beforeend", `<section class="card er-fiche-c"><dl class="er-dl"><dt>Nom</dt><dd>${esc(c.nom)}</dd><dt>NAPI</dt><dd>${esc(c.napi) || "–"}</dd><dt>SIRET</dt><dd>${esc(c.siret) || "–"}</dd><dt>Adresse</dt><dd>${esc(c.adresse) || "–"}</dd><dt>Ruchers</dt><dd>${esc(U.ruchers().map(([k, rs]) => `${U.nomRucher(k)} (${rs.length})`).join(", ")) || "–"}</dd></dl><button type="button" class="btn" data-act="errgexpl">Modifier</button></section>
+        <p class="small">Le registre se garde au moins 5 ans. Apidoo ne supprime rien automatiquement : pense aux exports.</p>`);
+    }
+  };
+  ACT.errgtab = (k) => { S.rgTab = k; render(); };
+  EXP.mouvements = () => csv(`mouvements-${S.annee}`, ["Date", "Ruche", "Mouvement", "Détail"], evenements(Object.keys(MVT), S.annee).map((e) => [e.date_evenement, nomRuche(e.ruche_id), MVT[e.type], e.detail]));
+  ACT.erdeplacer = () => {
+    const rs = U.ruchers(), choix = [...rs.map(([k, l]) => [`r:${k}`, `Tout ${U.nomRucher(k)} (${l.length})`]), ...S.d.ruches.map((r) => [r.id, r.nom])];
+    sheet({ title: "Déplacer des ruches", label: "Déplacer", fields: [{ name: "quoi", label: "Ruches", type: "select", options: choix }, { name: "vers", label: "Vers le rucher", required: !0, list: rs.map(([k]) => k).filter(Boolean) }, { name: "date", label: "Date", type: "date", required: !0, value: today() }, { name: "note", label: "Note", value: "" }],
+      submit: async (v) => {
+        const ids = v.quoi.startsWith("r:") ? (rs.find(([k]) => `r:${k}` === v.quoi)?.[1] || []).map((r) => r.id) : [v.quoi];
+        const dest = rs.find(([k]) => k === v.vers)?.[1] || [], lieu = MT.lieu(dest);
+        const lignes = ids.map((id) => ({ ruche_id: id, type: "deplacement", date_evenement: v.date, detail: [`${U.nomRucher(byId(S.d.ruches, id)?.rucher)} vers ${U.nomRucher(v.vers)}`, v.note].filter(Boolean).join(", ") }));
+        const { error } = await sb.from("ruche_evenements").insert(lignes);
+        if (error) throw error;
+        await write(sb.from("ruches").update({ rucher: v.vers, ...(lieu ? { lat: lieu.lat, lng: lieu.lng } : {}) }).in("id", ids), "Déplacement noté au registre");
+      } });
+  };
+  ACT.erintervention = () => {
+    sheet({ title: "Noter une intervention", fields: [{ name: "ruche_id", label: "Ruche", type: "select", options: S.d.ruches.map((r) => [r.id, r.nom]) }, { name: "date_evenement", label: "Date", type: "date", required: !0, value: today() }, { name: "detail", label: "Intervention (qui, quoi)", required: !0, value: "" }],
+      submit: (v) => write(sb.from("ruche_evenements").insert({ ...v, type: "intervention" }), "Intervention notée") });
+  };
+
+  // ---------- 5. Traçabilité des lots ----------
+  ACT.erlot = (id) => { S.lotId = id; go("lot"); };
+  const mielAvant = window.viewMiel;
+  window.viewMiel = function () {
+    mielAvant();
+    document.querySelectorAll('.wrap td button[data-act="editlot"]').forEach((b) => b.insertAdjacentHTML("afterend", ` <button type="button" class="link er-fiche" data-act="erlot" data-v="${b.dataset.v}" aria-label="Fiche du lot">Fiche</button>`));
+  };
+  VUES.lot = function () {
+    const d = S.d, l = byId(d.lots, S.lotId), c = cfg();
+    if (!l) { S.route = "miel"; return render(); }
+    const recoltes = l.extraction ? d.recoltes.filter((x) => x.extraction === l.extraction) : [];
+    const kg = sum(recoltes, (x) => x.kg), ruches = [...new Set(recoltes.map((x) => x.ruche_id).filter(Boolean))].map(nomRuche), debut = recoltes[0]?.date_recolte;
+    const lignes = d.lignes.filter((x) => x.lot_id === l.id), parClient = new Map();
+    lignes.forEach((x) => { const v = byId(d.ventes, x.vente_id), cl = byId(d.clients, v?.client_id); const k = cl?.id || "?"; const e = parClient.get(k) || { c: cl, q: 0, date: v?.date_vente }; e.q += x.quantite; if (v?.date_vente > e.date) e.date = v.date_vente; parClient.set(k, e); });
+    const vendus = sum(lignes, (x) => x.quantite), ca = sum(lignes, (x) => x.quantite * x.prix_unitaire);
+    const ids = new Set(recoltes.map((x) => x.ruche_id)), soins = d.visites.filter((v) => v.traitement && ids.has(v.ruche_id) && yr(v.date_visite) === yr(debut || today()));
+    const etape = (t, g, s) => `<div class="er-etape"><span class="small">${t}</span><b>${esc(g)}</b><span class="small">${esc(s)}</span></div>`;
+    const ctl = [["Dénomination, poids net, origine", l.miel && l.format_g && c.origine !== ""], ["DDM et numéro de lot", l.ddm && l.code], ["Adresse de l’exploitation", c.adresse]];
+    const clients = [...parClient.values()], mails = clients.map((x) => x.c?.email).filter(Boolean);
+    shell(`Lot ${l.code}`, `${l.miel}, ${n(l.format_g, 0)} g, ${c.origine || "France"}`, `<button type="button" class="btn" data-act="editlot" data-v="${l.id}">Modifier</button><button type="button" class="btn main" data-act="etiq" data-v="${l.id}">Imprimer les étiquettes</button>${mails.length ? `<a class="btn u-lienbtn" href="mailto:?bcc=${encodeURIComponent(mails.join(","))}&amp;subject=${encodeURIComponent("Lot de miel " + l.code)}">Prévenir les clients du lot</a>` : ""}`,
+      `<section class="er-fil" aria-label="Du rucher au client">
+        ${etape("Récolte", recoltes.length ? `${n(kg)} kg` : "Non reliée", recoltes.length ? dfr(debut) : "Lot sans extraction")}
+        ${etape("Ruches d’origine", ruches.length ? ruches.join(", ") : "Toutes", soins.length ? U.pluriel(soins.length, "traitement") + " la même année" : "Aucun traitement noté")}
+        ${etape("Mise en pots", U.pluriel(l.pots_initiaux, "pot"), [l.date_mise_en_pot && dfr(l.date_mise_en_pot), l.ddm && "DDM " + dfr(l.ddm)].filter(Boolean).join(", ") || "Dates à renseigner")}
+        ${etape("Ventes", U.pluriel(vendus, "pot"), `${U.pluriel(clients.length, "client")}, ${eur(ca)}`)}
+      </section>
+      <div class="er-deux2"><section class="card u-liste"><h2>Clients de ce lot</h2>${clients.map((x) => `<button type="button" class="u-todo" ${x.c ? `data-act="editclient" data-v="${x.c.id}"` : "disabled"}><span class="u-todo-t"><b>${esc(x.c?.nom || "?")}</b><span class="small">${esc(U.quand(x.date))}</span></span><b>${esc(U.pluriel(x.q, "pot"))}</b></button>`).join("") || '<p class="small">Aucune vente pour ce lot.</p>'}</section>
+      <section class="card u-liste"><h2>Étiquette du lot</h2>${ctl.map(([t, ok]) => `<div class="er-rang"><span class="u-todo-t"><b>${t}</b></span><span class="u-chip ${ok ? "good" : "watch"}">${ok ? "Complet" : "À renseigner"}</span></div>`).join("")}</section></div>`);
+    retour("go", "miel", "Miel");
+    phrase(`Lot ${l.code} : ${U.pluriel(l.pots_restants ?? l.pots_initiaux - vendus, "pot")} en stock, ${vendus} vendu${vendus > 1 ? "s" : ""}.`);
+  };
+
+  // ---------- 6. Factures ----------
+  const numero = (v) => `F-${v.facture_annee}-${String(v.facture_num).padStart(4, "0")}`;
+  ACT.erfacture = async (id) => {
+    const v = byId(S.d.ventes, id);
+    if ($sheet.open) $sheet.close();
+    if (!v.facture_num) {
+      const { data, error } = await sb.rpc("numeroter_facture", { p_vente: id });
+      if (error) return toast(navigator.onLine === false ? "La facture demande une connexion" : "Impossible de créer la facture pour l’instant", true);
+      Object.assign(v, data);
+    }
+    S.factId = id; go("facture");
+  };
+  const venteOuverte = ACT.uvente;
+  ACT.uvente = (id) => {
+    venteOuverte(id);
+    const v = byId(S.d.ventes, id);
+    $sheetForm.querySelector(".u-deux")?.insertAdjacentHTML("afterend", `<button type="button" class="btn" data-act="erfacture" data-v="${id}">${v.facture_num ? `Voir la facture ${numero(v)}` : "Créer la facture"}</button>`);
+  };
+  VUES.facture = function () {
+    const d = S.d, v = byId(d.ventes, S.factId), c = cfg();
+    if (!v?.facture_num) { S.route = "clients"; return render(); }
+    const cl = byId(d.clients, v.client_id), l = d.lignes.filter((x) => x.vente_id === v.id), a = (x, t) => (x ? esc(x) : `<span class="er-manque">[${t}]</span>`);
+    const lignes = l.map((x) => { const lot = byId(d.lots, x.lot_id); return `<tr><td>Miel ${esc(lot?.miel?.toLowerCase() || "")}, ${n(lot?.format_g, 0)} g</td><td>${esc(lot?.code || "–")}</td><td class="m">${x.quantite}</td><td class="m">${esc(eur(x.prix_unitaire))}</td><td class="m">${esc(eur(x.quantite * x.prix_unitaire))}</td></tr>`; }).join("");
+    const mail = cl?.email ? `<a class="btn u-lienbtn" href="mailto:${esc(cl.email)}?subject=${encodeURIComponent(`Facture ${numero(v)}`)}&amp;body=${encodeURIComponent(`Bonjour,\n\nVoici la facture ${numero(v)} de ${eur(venteTotal(v))}.\n\n${c.nom}`)}">Écrire au client</a>` : "";
+    shell(`Facture ${numero(v)}`, `${cl?.nom || "Client"}, ${v.paye ? "payée" : "à encaisser"}`, `<button type="button" class="btn" data-act="uvente" data-v="${v.id}">Voir la vente</button>${mail}<button type="button" class="btn main" data-act="erimprimer">Imprimer ou PDF</button>`,
+      `<article class="er-feuille" aria-label="Facture">
+        <div class="er-f-t"><h2>${esc(c.nom)}</h2><div><h2>Facture ${numero(v)}</h2><p class="small">Émise le ${dfr(v.facture_date)}, vente du ${dfr(v.date_vente)}</p></div></div>
+        <div class="er-f-t"><p>${a(c.adresse, "Adresse")}<br>SIRET : ${a(c.siret, "à renseigner")}${c.telephone ? `<br>${esc(c.telephone)}` : ""}</p><p class="er-d"><b>${esc(cl?.nom || "Client")}</b>${cl?.adresse ? `<br>${esc(cl.adresse)}` : ""}${cl?.email ? `<br>${esc(cl.email)}` : ""}</p></div>
+        <table><thead><tr><th>Produit</th><th>Lot</th><th class="m">Quantité</th><th class="m">Prix</th><th class="m">Total</th></tr></thead><tbody>${lignes}</tbody></table>
+        <p class="er-f-total"><span>Total</span><span>${esc(eur(venteTotal(v)))}</span></p>
+        <p class="small">${v.paye ? `Payée${v.mode ? ", " + esc(v.mode) : ""}.` : `Règlement à ${esc(c.delai_paiement || "réception")}.`} ${a(c.mention_tva, "Mention de TVA selon ton statut")}</p>
+      </article>`);
+    retour("go", "clients", "Ventes");
+  };
+  ACT.erimprimer = () => { document.body.classList.add("print-facture"); window.print(); };
+  addEventListener("afterprint", () => document.body.classList.remove("print-facture"));
+
+  // ---------- 7. Ce mois-ci au rucher ----------
+  // Repères généraux pour un rucher en France métropolitaine, à adapter au climat local. Rien sur les doses : vétérinaire ou GDS.
+  const CONSEILS = [
+    ["Laisser les colonies au calme", [["Soupeser les ruches sans ouvrir", "Repérer celles qui manquent de provisions"], ["Préparer cadres et hausses", "Nettoyer et réparer à l’atelier"], ["Commander pots et étiquettes", "Avant la saison"]]],
+    ["Surveiller les provisions", [["Soupeser les ruches", "La consommation reprend avec le couvain"], ["Contrôler les entrées", "Abeilles mortes, trou de vol dégagé"], ["Préparer le matériel de printemps", "Cadres, cire, nourrisseurs"]]],
+    ["Première visite si le temps s’y prête", [["Visite rapide par temps doux", "Reine, couvain, provisions"], ["Nettoyer les plateaux", "Retirer les débris"], ["Noter les colonies faibles", "À suivre ou à réunir"]]],
+    ["La colonie se développe", [["Visiter toutes les ruches", "Couvain, place disponible"], ["Poser les premières hausses", "Selon la miellée locale"], ["Surveiller l’essaimage", "Chercher les cellules royales"]]],
+    ["Essaimage et miellée", [["Visiter régulièrement", "Cellules royales et place dans les hausses"], ["Préparer les divisions", "Si tu veux augmenter le cheptel"], ["Ajouter des hausses", "Selon les rentrées"]]],
+    ["Pleine saison", [["Suivre le remplissage des hausses", "Ne pas manquer de place"], ["Prévoir la récolte", "Miel operculé, humidité à contrôler"], ["Garder de l’eau à proximité", "Surtout par forte chaleur"]]],
+    ["Récolte", [["Récolter les hausses operculées", "Noter le code d’extraction pour la traçabilité"], ["Mettre en pots", "Lot, DDM et étiquettes"], ["Compter le varroa", "Demande conseil à ton GDS ou ton vétérinaire"]]],
+    ["Préparer l’hivernage", [["Faire le point varroa", "Traitement selon l’avis du GDS ou du vétérinaire"], ["Évaluer les provisions", "Nourrir si nécessaire"], ["Réduire les entrées", "Limiter le pillage"]]],
+    ["Constituer les réserves", [["Peser les ruches", "Vérifier les réserves pour l’hiver"], ["Contrôler la reine et le couvain", "Réunir les colonies faibles"], ["Ouvrir la déclaration de ruches", "Du 1er septembre au 31 décembre"]]],
+    ["Fin de saison", [["Dernières visites par temps doux", "Provisions et état de la colonie"], ["Protéger du vent et de l’humidité", "Toits et supports"], ["Ranger les hausses", "À l’abri de la fausse teigne"]]],
+    ["Protéger, peser, déclarer", [["Soupeser chaque ruche", "Repérer les colonies légères"], ["Poser les grilles d’entrée", "Contre les souris"], ["Vérifier toits et supports", "Vent et humidité"], ["Déclarer les ruches", "Obligation, avant le 31 décembre"]]],
+    ["Repos hivernal", [["Limiter les ouvertures", "Laisser les colonies en grappe"], ["Faire le bilan de l’année", "Exports, registre, comptes"], ["Finaliser la déclaration", "Avant le 31 décembre"]]],
+  ];
+  const NOMS_MOIS = ["Janv.", "Févr.", "Mars", "Avr.", "Mai", "Juin", "Juil.", "Août", "Sept.", "Oct.", "Nov.", "Déc."];
+  const MOIS_LONGS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+  const moyennePoids = (an, m) => { const l = S.d.visites.filter((v) => v.poids_kg && new Date(v.date_visite).getFullYear() === an && new Date(v.date_visite).getMonth() === m); return l.length ? sum(l, (v) => v.poids_kg) / l.length : null; };
+  VUES.saison = function () {
+    const auj = new Date(), m = S.saisonMois ?? auj.getMonth(), [titre, items] = CONSEILS[m], an = auj.getFullYear(), d = S.d;
+    const finMois = new Date(Date.UTC(m < auj.getMonth() ? an + 1 : an, m + 1, 0)).toISOString().slice(0, 10);
+    const deja = (t) => d.taches.some((x) => x.titre === t && !x.faite);
+    const ligne = ([t, s]) => `<div class="er-rang"><span class="u-todo-t"><b>${esc(t)}</b><span class="small">${esc(s)}</span></span>${deja(t) ? '<span class="u-chip good">Dans l’agenda</span>' : `<button type="button" class="link" data-act="ersaison" data-v="${esc(t)}" data-k="${finMois}">Ajouter</button>`}</div>`;
+    const a = moyennePoids(an, m), b = moyennePoids(an - 1, m), derniere = d.visites[0];
+    const comp = a != null && b != null ? `<p>Poids moyen : ${n(a)} kg, contre ${n(b)} kg l’an dernier.</p>` : "";
+    shell("Ce mois-ci", "Repères généraux, à adapter à ton climat et à ta région", `<button type="button" class="btn" data-act="ersaisontout" data-k="${finMois}">Tout ajouter à l’agenda</button>`,
+      `<div class="er-mois" role="group" aria-label="Choisir un mois">${NOMS_MOIS.map((x, i) => `<button type="button" class="${i === m ? "on" : ""}" aria-pressed="${i === m}" data-act="ermois" data-v="${i}">${x}</button>`).join("")}</div>
+      <div class="er-deux"><section class="card"><h2>À prévoir</h2>${items.map(ligne).join("")}</section>
+      <section class="card"><h2>Tes ruches</h2><p>${esc(U.pluriel(d.ruches.length, "ruche"))}, ${d.ruches.filter((r) => r.etat === "Bonne").length} en forme.</p>${derniere ? `<p class="small">Dernière visite : ${esc(U.quand(derniere.date_visite).toLowerCase())}</p>` : ""}${comp}</section></div>`);
+    retour("go", "dash", "Accueil");
+    phrase(`${MOIS_LONGS[m]} : ${titre.toLowerCase()}.`);
+  };
+  ACT.ermois = (i) => { S.saisonMois = Number(i); render(); };
+  ACT.ersaison = (t, fin) => write(sb.from("taches").insert({ titre: t, echeance: fin }), "Ajouté à l’agenda");
+  ACT.ersaisontout = async (_v, fin) => {
+    const l = CONSEILS[S.saisonMois ?? new Date().getMonth()][1].map(([t]) => t).filter((t) => !S.d.taches.some((x) => x.titre === t && !x.faite));
+    if (l.length) await write(sb.from("taches").insert(l.map((titre) => ({ titre, echeance: fin }))), "Ajouté à l’agenda");
+  };
+
   // ---------- Après chaque écran ----------
   const shellAvant = window.shell;
   window.shell = function (...a) {
     shellAvant(...a);
     Object.assign(MT.SEUILS, cfg().meteo || {});
     cloche();
+    if (S.route === "dash") document.querySelector(".u-liste .u-entete")?.insertAdjacentHTML("beforeend", '<button type="button" class="link" data-act="go" data-v="saison">Ce mois-ci</button>');
     appliquerBandeau();
     prevenir().catch(() => {});
   };
@@ -186,8 +348,9 @@ const ES = (() => {
   window.render = function () {
     if (S.route !== "reglages") S.rgForm = false;
     const v = VUES[S.route];
-    if (!v || !S.session || !S.d || S.member === false || S.recovery) return renderAvant();
+    if (!v || !S.session || !S.d || S.member === false || S.recovery) { renderAvant(); return appliquerBandeau(); }
     v();
+    appliquerBandeau();
     if (S.lastRoute !== S.route) window.scrollTo?.(0, 0);
     S.lastRoute = S.route;
     document.body.dataset.route = S.route;

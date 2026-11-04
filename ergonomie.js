@@ -238,7 +238,7 @@ const ER = (() => {
     i.addEventListener("input", () => { requete = i.value; actif = true; afficher(); });
     i.addEventListener("keydown", (e) => {
       const l = [...document.querySelectorAll("#erRes .er-r")], c = l.findIndex((x) => x.classList.contains("sel"));
-      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fermer(); return; }
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); requete = ""; i.value = ""; fermer(); return; }
       if (e.key === "Enter") { e.preventDefault(); l[Math.max(c, 0)]?.click(); return; }
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp" || !l.length) return;
       e.preventDefault();

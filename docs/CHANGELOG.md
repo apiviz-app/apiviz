@@ -1,5 +1,17 @@
 # Notes de version
 
+## v5.10 · à essayer en recette · fonctionnalités essentielles
+Migration à lancer d'abord sur `apidoo-test` : `migrations/010-registre-factures.sql`. Sans elle, déplacements, interventions et factures échouent, le reste fonctionne.
+
+À vérifier :
+1. Météo : « Voir heure par heure » depuis un rucher, cinq jours, Prévoir une visite. Téléphone : liste verticale.
+2. Rappels : cloche, écran Rappels, sujets à couper, Tout marquer comme vu, notifications quand Apidoo est ouverte.
+3. Réglages : six blocs, SIRET, seuils météo, couleur du bandeau, listes et exports.
+4. Registre : onglets, Déplacer des ruches, Noter une intervention, fichier Excel des mouvements.
+5. Miel : lien Fiche sur un lot, récolte, ruches, ventes, clients, contrôle de l'étiquette.
+6. Vente : Créer la facture, numéro qui ne change plus, Imprimer ou PDF.
+7. Accueil : Ce mois-ci, mois à choisir, ajout à l'agenda.
+
 ## v5.9 · à essayer en recette · Gestion en blocs et ergonomie
 À vérifier :
 1. Gestion : six blocs cliquables, phrase du jour, « Ajouter une dépense ». Dépenses : fil d'Ariane, chiffres, filtre par poste.
