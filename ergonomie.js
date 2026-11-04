@@ -12,7 +12,7 @@ const ER = (() => {
 
   // ---------- Gestion en blocs ----------
   const chevron = '<svg class="g-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-  const bloc = (route, titre, valeur, sous, bas = "", cl = "") => `<button type="button" class="n4-g g-bloc" data-act="go" data-v="${route}">
+  const bloc = (route, titre, valeur, sous, bas = "", cl = "", act = "go") => `<button type="button" class="n4-g g-bloc" data-act="${act}" data-v="${route}">
     <span class="g-t">${esc(titre)}${chevron}</span><b class="g-val ${cl}">${esc(valeur)}</b><span class="small">${esc(sous)}</span><span class="g-bas">${bas}</span></button>`;
   const jauge = (pct, cl = "") => `<span class="g-jauge" aria-hidden="true"><i class="${cl}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></span>`;
   function barresMois() {
@@ -290,5 +290,5 @@ const ER = (() => {
     if (revient && hauteurs.get(S.route)) requestAnimationFrame(() => window.scrollTo(0, hauteurs.get(S.route)));
   };
 
-  return { fermerDoux };
+  return { fermerDoux, bloc, jauge };
 })();

@@ -54,3 +54,9 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(enCache(req).then((r) => r || fetch(req).then((x) => garder(req, x))));
   }
 });
+
+// Un clic sur une notification rouvre Apidoo sur les rappels.
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((l) => (l[0] ? l[0].focus() : self.clients.openWindow("./"))));
+});

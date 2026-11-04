@@ -38,7 +38,7 @@ const ET = (() => {
   ACT.etiq = (id) => {
     const lot = byId(S.d.lots, id), c = cfg();
     if (!lot) return;
-    if (!String(c.adresse || "").trim()) { toast("Ajoutez d’abord votre adresse dans Réglages : elle doit figurer sur l’étiquette", true); return go("reglages"); }
+    if (!String(c.adresse || "").trim()) { toast("Ajoutez d’abord votre adresse dans Réglages : elle doit figurer sur l’étiquette", true); return (S.rgForm = true, go("reglages")); }
     sheet({
       title: "Étiquettes · lot " + lot.code,
       intro: "Planche A4 de 21 étiquettes 63,5 × 38,1 mm. Imprimez à 100 %, sans mise à l’échelle.",

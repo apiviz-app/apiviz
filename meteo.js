@@ -138,5 +138,11 @@ const MT = (() => {
     return a.creneau?.n === 2 && a.creneau.jour === a.auj ? a.creneau : null;
   }
 
-  return { SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
+  // Meilleur créneau connu d'un rucher, sans lancer de chargement.
+  function creneauConnu(cle, rs) {
+    const l = lieu(rs), e = cache.get(cle);
+    return l && e?.data && e.lat === l.lat && e.lng === l.lng ? analyse(e.data).creneau : null;
+  }
+
+  return { creneauConnu, SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
 })();
