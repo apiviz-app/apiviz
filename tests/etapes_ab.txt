@@ -1,0 +1,48 @@
+    import datetime, os
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne", 47.2), ("Ruche 2", "Verger", "À surveiller", 47.2), ("Ruche 3", "Verger", "Bonne", 47.2),
+            ("Ruche 4", "Bois", "Bonne", None), ("Ruche 5", "Bois", "Critique", None), ("Ruche 6", "Bois", "Bonne", None)]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "type_ruche": "Dadant 10 cadres", "annee_reine": 2025, "notes": "", "lat": l, "lng": -1.5 if l else None} for a, b, c, l in noms]
+    R5 = DATA["ruches"][4]["id"]
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R5, "date_visite": J(d), "activite": "Faible", "provisions": "Faibles", "reine": "Vue", "couvain": "Réduit",
+        "poids_kg": k, "varroa": None, "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False, "auteur": "johan@apidoo.fr"} for d, k in ((21, 38), (42, 41))]
+    DATA["lots_stock"] = [{"id": str(uuid.uuid4()), "format_g": 250, "pots_restants": 12, "pots_initiaux": 20, "prix": 6, "code": "L26-02", "miel": "Toutes fleurs"}, {"id": str(uuid.uuid4()), "format_g": 500, "code": "L26-01", "miel": "Toutes fleurs", "pots_restants": 17, "pots_initiaux": 20, "prix": 10}]
+    def meteo(route):
+        auj = datetime.date.today(); jours = [(auj + datetime.timedelta(days=i)).isoformat() for i in range(6)]
+        h = [f"{j}T{x:02d}:00" for j in jours for x in range(24)]
+        route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*"}, json={
+            "current": {"time": f"{jours[0]}T11:00", "temperature_2m": 9, "wind_speed_10m": 15, "precipitation": 1, "weather_code": 61},
+            "hourly": {"time": h, "temperature_2m": [16] * len(h), "precipitation_probability": [0] * len(h), "precipitation": [0] * len(h), "wind_speed_10m": [5] * len(h)},
+            "daily": {"time": jours, "temperature_2m_max": [12] * 6, "weather_code": [61] * 6}})
+    ctx.route("https://api.open-meteo.com/**", meteo)
+    # Téléphone : l'accueil ne change pas
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.locator(".al-carte").count() == 1 and page.locator(".ab").count() == 0, "téléphone : carte des alvéoles")
+    # Ordinateur : vue d'ensemble
+    page.set_viewport_size({"width": 1440, "height": 900}); page.wait_for_selector(".ab")
+    verif(page.locator(".al-carte").count() == 0, "ordinateur : la carte laisse la place à la vue d'ensemble")
+    verif(page.locator(".ab-actions .btn.main").inner_text() == "Voir Ruche 5", "action de la priorité du jour")
+    verif(page.locator(".ab-actions .btn").nth(1).inner_text() == "Faire la tournée", "tournée du rucher concerné")
+    ch = page.locator(".ab-chiffre").all_inner_texts()
+    verif(len(ch) == 4 and "4 en forme, 1 à surveiller, 1 critique" in ch[0], "chiffre des ruches : %s" % ch[0])
+    verif("29" in ch[1] and "12 de 250 g, 17 de 500 g" in ch[1], "pots par format : %s" % ch[1])
+    verif("NaN" not in " ".join(ch) and "Ventes moins dépenses" in ch[3], "bilan calculé : %s" % ch[3])
+    verif(page.locator(".ab-rucher").count() == 2 and "1 critique" in page.locator(".ab-rucher", has_text="Bois").inner_text(), "un rucher par ligne")
+    page.wait_for_selector(".ab-rucher:has-text('Verger') .al-temps.court")
+    verif("9°" in page.locator(".ab-rucher", has_text="Verger").inner_text(), "météo du rucher")
+    verif("Meilleur créneau" in page.locator(".ab-rucher", has_text="Verger").inner_text(), "créneau du rucher")
+    verif("Placer sur la carte" in page.locator(".ab-rucher", has_text="Bois").inner_text(), "rucher non placé : invitation à le placer")
+    verif("Visite · Ruche 5" in page.locator(".ab-activite").inner_text(), "activité récente")
+    verif(page.locator(".ab .u-liste").count() == 1, "À faire entre ruchers et activité")
+    fond = page.evaluate("getComputedStyle(document.querySelector('.side')).backgroundColor")
+    verif(fond == "rgb(251, 239, 201)", "bandeau miel doux : %s" % fond)
+    if os.environ.get("APIDOO_CAPTURE"):
+        page.screenshot(path=os.environ["APIDOO_CAPTURE"], full_page=True)
+    verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
+    page.click(".ab-rucher-t >> nth=0"); page.wait_for_function("S.route === 'rucher'")
+    verif(True, "le rucher s'ouvre")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ab")
+    page.set_viewport_size({"width": 390, "height": 844}); page.wait_for_selector(".al-carte")
+    verif(page.locator(".ab").count() == 0, "retour au téléphone sans recharger")
+    if os.environ.get("APIDOO_CAPTURE"):
+        page.screenshot(path=os.environ["APIDOO_CAPTURE"] + ".tel.png")

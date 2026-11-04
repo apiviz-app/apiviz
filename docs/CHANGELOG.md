@@ -1,5 +1,13 @@
 # Notes de version
 
+## v5.8 · à essayer en recette · accueil sur ordinateur et bandeau miel doux
+À vérifier :
+1. Bandeau miel doux sur ordinateur et téléphone, texte bien lisible, recette reconnaissable à sa seule étiquette.
+2. Sur ordinateur : la priorité du jour avec ses boutons, quatre chiffres cliquables, puis Mes ruchers, À faire et Activité récente.
+3. Chaque rucher a sa météo et son meilleur créneau. Un rucher non placé invite à le placer sur la carte.
+4. Avec un seul rucher, la page reste équilibrée.
+5. Sur téléphone, l'accueil ne change pas, à part la couleur du bandeau.
+
 ## v5.3 · à essayer en recette · charte graphique et API animé
 À vérifier :
 1. API respire et cligne des yeux dans la barre du bas. Il dit bonjour à l'ouverture de sa feuille.

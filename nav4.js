@@ -95,7 +95,7 @@ const N4 = (() => {
 
   // ---------- Chargement : cartes grisées ----------
   function squelette() {
-    $app.innerHTML = `<div class="shell n4-squelette" aria-busy="true" aria-label="Chargement"><header class="topbar"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="24"></header>
+    $app.innerHTML = `<div class="shell n4-squelette" aria-busy="true" aria-label="Chargement"><header class="topbar"><img src="logo-apidoo.svg" alt="Apidoo" height="24"></header>
       <main><div class="wrap"><div class="n4-gris" style="height:150px"></div><div class="n4-gris" style="height:220px"></div><div class="n4-gris" style="height:120px"></div></div></main></div>`;
   }
 

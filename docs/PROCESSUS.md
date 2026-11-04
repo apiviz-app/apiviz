@@ -7,7 +7,7 @@ Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en li
 | Adresse | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
 | Base | Supabase `apidoo-test` (données fictives) | Supabase `apidoo` (vraies données) |
 | Repère de version | étiquette git `recette` | étiquette git `deploiement` |
-| Reconnaissable | bandeau « RECETTE », barre orange | aucun |
+| Reconnaissable | étiquette « RECETTE » en haut de l'écran, mêmes couleurs que la production | aucun |
 
 Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) et le préfixe de `sw.js` diffèrent, appliqués par `scripts/assembler-site.sh`.
 

@@ -62,10 +62,11 @@ const AL = (() => {
   };
 
   // ---------- Accueil : la priorité en une phrase ----------
+  const prioritaire = () => S.d.ruches.find((x) => x.etat === "Critique") || S.d.ruches.find((x) => x.etat !== "Bonne");
   function phrase() {
     const d = S.d;
     if (!d.ruches.length) return "Ajoutez votre première ruche pour commencer.";
-    const r = d.ruches.find((x) => x.etat === "Critique") || d.ruches.find((x) => x.etat !== "Bonne");
+    const r = prioritaire();
     if (!r) return "Tout va bien au rucher.";
     const p = d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg);
     const perte = p.length > 1 ? Number(p[1].poids_kg) - Number(p[0].poids_kg) : 0;
@@ -107,9 +108,61 @@ const AL = (() => {
     }
     if (carte && afaire) afaire.before(carte);
     if (afaire && saison) { const deux = document.createElement("div"); deux.className = "al-deux"; afaire.before(deux); deux.append(afaire, saison); }
+    if (surOrdinateur.matches && S.d.ruches.length) accueilOrdinateur(tete);
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
   };
+  // ---------- Accueil sur ordinateur : la priorité, quatre chiffres, puis ruchers, à faire, activité ----------
+  const surOrdinateur = matchMedia("(min-width:801px)");
+  surOrdinateur.addEventListener("change", () => { if (S.route === "dash") window.viewDash(); });
+  function actionsDuJour() {
+    const r = prioritaire(), rs = U.ruchers(), cle = r ? r.rucher : rs.length === 1 ? rs[0][0] : undefined;
+    const voir = r ? `<button type="button" class="btn main" data-act="ruche" data-v="${r.id}">Voir ${esc(r.nom)}</button>` : "";
+    const groupe = rs.find(([k]) => k === cle)?.[1] || [];
+    const tournee = groupe.length > 1 ? `<button type="button" class="btn ${r ? "" : "main"}" data-act="v3tournee" data-v="${esc(cle)}">Faire la tournée</button>` : "";
+    return voir + tournee;
+  }
+  function chiffres() {
+    const d = S.d, s = stock(), an = new Date().getFullYear(), f = fin(an), nb = (e) => d.ruches.filter((r) => r.etat === e).length;
+    const bien = nb("Bonne"), crit = nb("Critique"), surv = d.ruches.length - bien - crit;
+    const etats = [[bien, "en forme"], [surv, "à surveiller"], [crit, "critique"]].filter(([c]) => c).map(([c, m]) => `${c} ${m}`).join(", ");
+    const formats = [...d.lots.reduce((m, l) => (l.pots_restants > 0 ? m.set(l.format_g, (m.get(l.format_g) || 0) + l.pots_restants) : m), new Map())]
+      .sort((a, b) => a[0] - b[0]).map(([g, p]) => `${p} de ${g} g`).join(", ");
+    const impayees = d.ventes.filter((v) => !v.paye && new Date(v.date_vente).getFullYear() === an).length, bilan = f.resultat;
+    const tuile = (act, v, lab, val, cl, sous) => `<button type="button" class="ab-chiffre" data-act="${act}" data-v="${v}"><span class="small">${lab}</span><b class="${cl}">${esc(val)}</b>${sous}</button>`;
+    return `<section class="ab-chiffres" aria-label="Chiffres clés">
+      ${tuile("go", "ruches", "Ruches", String(d.ruches.length), "", `<span class="ab-minis" aria-hidden="true">${d.ruches.map(miniHex).join("")}</span><span class="small">${esc(etats)}</span>`)}
+      ${tuile("go", "miel", "Pots en stock", String(s.pots), "", `<span class="small">${esc(formats || "Aucun pot pour le moment")}</span>`)}
+      ${tuile("uafiltre", "", "À encaisser", eur0(f.aEncaisser), f.aEncaisser > 0 ? "watch" : "", `<span class="small">${impayees ? U.pluriel(impayees, "vente") : "Tout est encaissé"}</span>`)}
+      ${tuile("go", "pilotage", `Bilan ${an}`, `${bilan > 0 ? "+" : ""}${eur0(bilan)}`, bilan > 0 ? "good" : "", '<span class="small">Ventes moins dépenses</span>')}
+    </section>`;
+  }
+  const miniHex = (r) => `<i class="ab-mini ${etatClass(r.etat)}"></i>`;
+  function ligneRucher([k, rs]) {
+    const dates = S.d.visites.filter((v) => rs.some((r) => r.id === v.ruche_id)).map((v) => v.date_visite).sort(), der = dates[dates.length - 1];
+    const a = rs.filter((r) => r.etat === "Critique").length, b = rs.filter((r) => r.etat !== "Bonne").length - a;
+    const etat = a ? `<span class="u-chip crit">${a} critique${a > 1 ? "s" : ""}</span>` : b ? `<span class="u-chip watch">${b} à surveiller</span>` : '<span class="u-chip good">En forme</span>';
+    return `<article class="ab-rucher"><button type="button" class="ab-rucher-t" data-act="alrucher" data-v="${esc(k)}"><span class="u-todo-t"><b>${esc(U.nomRucher(k))}</b><span class="small">${esc(U.pluriel(rs.length, "ruche"))}${der ? `, visité le ${esc(new Date(der + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))}` : ", pas encore visité"}</span></span>
+      <span class="ab-minis" role="img" aria-label="${esc(rs.map((r) => `${r.nom} ${r.etat}`).join(", "))}">${rs.map(miniHex).join("")}</span>${etat}</button>${zoneMeteo(k, 0)}</article>`;
+  }
+  function accueilOrdinateur(tete) {
+    const carte = document.querySelector(".al-carte"), deux = document.querySelector(".al-deux"), afaire = document.querySelector(".u-liste");
+    document.querySelector(".n4-prochaine")?.remove();
+    const actions = actionsDuJour();
+    if (actions) tete.insertAdjacentHTML("beforeend", `<div class="ab-actions">${actions}</div>`);
+    afaire?.querySelector('[data-v="activite"]')?.remove();
+    const fil = V3.fil(4);
+    const lignes = fil.map(([t, qui, titre, sous, act, v]) => `<button type="button" class="u-todo" ${v ? `data-act="${act}" data-v="${esc(v)}"` : "disabled"}><span class="u-todo-t"><b>${esc(titre)}</b><span class="small">${esc([U.dateCourte(String(t).slice(0, 10)), qui ? U.qui(qui) : "", sous].filter(Boolean).join(" · "))}</span></span></button>`).join("");
+    const bloc = document.createElement("div");
+    bloc.className = "ab";
+    bloc.innerHTML = `${chiffres()}<div class="ab-grille"><section class="card ab-ruchers"><div class="u-entete"><h2>Mes ruchers</h2><button type="button" class="link" data-act="go" data-v="carte">Voir la carte</button></div>${U.ruchers().map(ligneRucher).join("")}</section>
+      <div class="ab-place"></div>
+      <section class="card ab-activite"><div class="u-entete"><h2>Activité récente</h2><button type="button" class="link" data-act="go" data-v="activite">Tout voir</button></div>${lignes || '<p class="small u-vide">Rien pour le moment.</p>'}</section></div>`;
+    (carte || deux).before(bloc);
+    if (afaire) bloc.querySelector(".ab-place").replaceWith(afaire);
+    carte?.remove();
+    deux?.remove();
+  }
   // ---------- Lentilles : regarder toutes les ruches par un seul critère ----------
   const LENTILLES = [["etat", "État"], ["prov", "Provisions"], ["varroa", "Varroa"]];
   const NIVEAUX = { Bonnes: "85%", Moyennes: "52%", Faibles: "22%" };
