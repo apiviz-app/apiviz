@@ -7,6 +7,14 @@
 3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
 4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
 
+## v5.6 · à essayer en recette · visite à la voix
+À vérifier, au rucher sur un vrai téléphone :
+1. Nouvelle visite › « Visiter à la voix » : parler, par exemple « activité faible, reine vue, couvain réduit, provisions faibles, 38 kilos, c'est bon ».
+2. Les alvéoles se remplissent. En pause, les toucher corrige la valeur.
+3. Relecture : les écarts de poids sont signalés, puis « Enregistrer la visite ». En tournée, on passe à la ruche suivante.
+4. Sans réseau ou sans micro : API le dit, et les alvéoles restent utilisables au doigt.
+Le navigateur peut avoir besoin d'internet pour reconnaître la voix : à vérifier sur iPhone et Android.
+
 ## v5.5 · à essayer en recette · fiche ruche et transitions
 À vérifier :
 1. Toucher une alvéole : elle glisse et grandit pour devenir l'en-tête de la fiche. Sans animation sur un vieux téléphone, la fiche s'ouvre normalement.
