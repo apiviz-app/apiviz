@@ -413,6 +413,7 @@ const V3 = (() => {
   function suivante() {
     const T = S.tournee;
     if (!T) return;
+    if (typeof TN != "undefined" && TN.retour()) return;
     T.i++;
     if (T.i >= T.ids.length) {
       S.tournee = null; S.ruche = null; S.route = "dash"; render();
@@ -430,7 +431,7 @@ const V3 = (() => {
     };
   }
   ACT.v3passer = () => suivante();
-  ACT.v3finir = () => { const T = S.tournee; S.tournee = null; if (T?.faites) toast(`Tournée arrêtée · ${U.pluriel(T.faites, "visite")} enregistrée${T.faites > 1 ? "s" : ""}`); go("dash"); };
+  ACT.v3finir = () => { if (typeof TN != "undefined" && TN.retour()) return; const T = S.tournee; S.tournee = null; if (T?.faites) toast(`Tournée arrêtée · ${U.pluriel(T.faites, "visite")} enregistrée${T.faites > 1 ? "s" : ""}`); go("dash"); };
 
   // ---------- Dictée de la note ----------
   const Reco = window.SpeechRecognition || window.webkitSpeechRecognition;

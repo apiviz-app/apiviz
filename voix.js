@@ -21,9 +21,12 @@ const VX = (() => {
     const t = texte.toLowerCase().replace(/’/g, "'"), r = {};
     let m;
     if ((m = t.match(/activit[ée]\s+(?:est\s+)?(faible|normale|forte)/))) r.activite = m[1][0].toUpperCase() + m[1].slice(1);
+    else if (/(?:grosse|forte|belle)\s+activit[ée]/.test(t)) r.activite = "Forte";
+    else if (/(?:faible|petite)\s+activit[ée]|peu d'activit[ée]/.test(t)) r.activite = "Faible";
     if ((m = t.match(/couvain\s+(?:est\s+)?(r[ée]duit|normal|abondant)/))) r.couvain = { r: "Réduit", n: "Normal", a: "Abondant" }[m[1][0]];
+    else if (/couvain\s+compact/.test(t)) r.couvain = "Normal";
     if ((m = t.match(/provisions?\s+(?:sont\s+)?(faibles?|moyennes?|bonnes?)/) || t.match(/(faibles?|moyennes?|bonnes?)\s+provisions?/))) r.provisions = { f: "Faibles", m: "Moyennes", b: "Bonnes" }[m[1][0]];
-    if (/reine\s+(?:non|pas)\s+(?:vue|trouv)|pas vu (?:la|de) reine/.test(t)) r.reine = "Non vue";
+    if (/reine\s+(?:toujours\s+)?(?:non|pas)\s+(?:vue|trouv)|pas vu (?:la|de) reine/.test(t)) r.reine = "Non vue";
     else if (/reine\s+(?:non|pas)\s+cherch/.test(t)) r.reine = "Non cherchée";
     else if (/reine\s+vue|vu la reine/.test(t)) r.reine = "Vue";
     const k = kilos(t);

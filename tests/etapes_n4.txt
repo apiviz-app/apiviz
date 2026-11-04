@@ -23,9 +23,9 @@
     page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
     verif(page.locator("#sheet .n4-tuile").all_inner_texts() == ["Visite", "Tournée", "Récolte", "Vente", "Dépense", "Tâche"], "6 tuiles de saisie")
     page.click("#sheet .n4-tuile >> text=Tournée"); page.wait_for_selector("#sheet[open] >> text=Quel rucher ?")
-    page.click("#sheet [data-k=Bois]"); page.wait_for_selector(".v3-tournee")
-    verif("Tournée « Bois » · ruche 1 sur 3" in page.locator(".head").inner_text(), "tournée lancée depuis le bouton +")
-    page.click("[data-act=v3finir]")
+    page.click("#sheet [data-k=Bois]"); page.wait_for_selector(".tn-e-depart")
+    verif("Tournée « Bois »" in page.locator(".tn-haut").inner_text(), "tournée lancée depuis le bouton +")
+    page.click("[data-act=tnquitter]"); page.wait_for_selector(".bottom")
     # Brouillon de visite
     page.evaluate("ACT.newvisite()"); page.wait_for_selector(".u-visite-form")
     page.fill("#v_note", "Commencée puis interrompue"); page.evaluate("readVisitForm()")

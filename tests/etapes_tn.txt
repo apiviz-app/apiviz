@@ -1,0 +1,116 @@
+
+    import datetime, os
+    CAP = os.environ.get("APIDOO_CAPTURE")
+    shot = lambda nom: page.screenshot(path=f"{CAP}/{nom}.png") if CAP else None
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne"), ("Ruche 2", "Verger", "À surveiller"), ("Ruche 3", "Verger", "Bonne"), ("Ruche 4", "Bois", "Critique")]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "type_ruche": "Dadant", "annee_reine": 2025, "notes": ""} for a, b, c in noms]
+    R = [r["id"] for r in DATA["ruches"]]
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R[1], "date_visite": J(12), "activite": "Normale", "provisions": "Moyennes", "reine": "Non vue", "couvain": "Normal",
+        "poids_kg": 42, "varroa": None, "note": "A surveiller", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False}]
+    page.add_init_script("""
+      window.__recos = [];
+      window.SpeechRecognition = window.webkitSpeechRecognition = class { constructor() { window.__recos.push(this); } start() {} stop() { this.onend && this.onend(); } };
+      window.dire = (t) => { const r = window.__recos.at(-1); const res = [[{ transcript: t }]]; res[0].isFinal = true; res.length = 1; r.onresult({ resultIndex: 0, results: res }); };
+    """)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    plein = "(() => { const c = document.querySelector('.tn-corps'), d = [...c.children].at(-1).getBoundingClientRect(), p = c.getBoundingClientRect(); return { vide: Math.round(p.bottom - d.bottom), large: document.documentElement.scrollWidth <= innerWidth }; })()"
+
+    # Lecture de la dictée
+    d = page.evaluate("id => Object.fromEntries(TN.decouper('Ruche 2, reine vue. Ruche 1 : provisions bonnes. Ruche 3 faible activité', id).res)", R[:3])
+    verif(d[R[1]] == "reine vue." and "provisions bonnes" in d[R[0]] and "faible" in d[R[2]], "la dictée est rangée par ruche : %s" % d)
+    lu = page.evaluate("VX.lire('grosse activité, reine toujours pas vue, couvain compact')")
+    verif(lu == {"activite": "Forte", "reine": "Non vue", "couvain": "Normal"}, "tournures de terrain comprises : %s" % lu)
+
+    # Départ : priorité et trois modes, sans menu du bas
+    page.evaluate("ACT.v3tournee('Verger')"); page.wait_for_selector(".tn-e-depart")
+    verif(page.evaluate("S.tournee.ids[0]") == R[1], "la ruche à surveiller passe en premier")
+    verif("commence par Ruche 2" in page.locator(".tn-say").inner_text(), "phrase de départ")
+    verif(page.locator(".tn-mode").count() == 3 and page.locator(".bottom").count() == 0, "trois modes, écran de parcours")
+    verif(page.evaluate(plein)["large"], "pas de défilement horizontal")
+    shot("tn-depart")
+
+    # Mode libre
+    page.click(".tn-mode >> nth=0"); page.wait_for_selector(".tn-e-libre")
+    page.evaluate("dire('Ruche 2, reine toujours pas vue, provisions moyennes, 38 kilos, activité normale')")
+    page.evaluate("dire('Ruche 1, grosse activité, reine vue, couvain compact, faudra poser une hausse')")
+    verif("Ruche 1 en cours" in page.locator(".tn-suivi").inner_text(), "API suit la ruche dictée")
+    t = page.locator(".tn-compris").inner_text()
+    verif("Reine non vue" in t and "Activité forte" in t and "Provisions ?" in t, "chaque ruche se remplit, ce qui manque se voit")
+    shot("tn-libre")
+    verif(page.evaluate(plein)["vide"] <= 16, "dictée sans zone vide : %s" % page.evaluate(plein))
+    page.click("[data-act=tnverif]"); page.wait_for_selector(".tn-e-verif")
+    t = page.locator(".tn-corps").inner_text()
+    verif("2 ruches notées, 2 points à vérifier" in t, "points à vérifier : " + t[:60])
+    shot("tn-verif")
+    verif("Revoir la reine de Ruche 2" in t and "Poser une hausse (Ruche 1)" in t, "tâches proposées")
+    verif(not [b for nm, b in recu["rpc"] if nm == "creer_visite"], "rien n'est enregistré avant la validation")
+    # Modifier une ruche, retirer une tâche
+    page.click("[data-act=tnmodif] >> nth=1"); page.wait_for_selector(".tn-e-manuel")
+    page.click("[data-act=tnset][data-k=provisions][data-v=Bonnes]"); page.click("[data-act=tnsuivante]"); page.wait_for_selector(".tn-e-verif")
+    verif("1 point à vérifier" in page.locator(".tn-say").inner_text(), "un point corrigé")
+    page.click("[data-act=tngarder][data-v='Poser une hausse (Ruche 1)']")
+    verif(page.locator("[data-act=tngarder]").nth(1).inner_text() == "Retirée" or page.locator("[data-act=tngarder]").nth(0).inner_text() == "Retirée", "tâche retirée")
+    page.click("[data-act=tnenreg]"); page.wait_for_selector(".tn-e-bilan", timeout=10000)
+    vis = [b["p"] for nm, b in recu["rpc"] if nm == "creer_visite"]
+    verif(len(vis) == 2, "2 visites, Ruche 3 sans saisie reste de côté")
+    v2 = [v for v in vis if v["ruche_id"] == R[1]][0]
+    verif(v2["reine"] == "Non vue" and v2["poids_kg"] == 38 and "38 kilos" in v2["note"] and v2["intrants"] == [], "visite complète : %s" % v2)
+    taches = [x for x in recu["upsert"] if x[0] == "taches"] or []
+    verif(len(DATA["taches"]) + len(taches) >= 1, "tâche gardée créée")
+    verif("Ruche 2 reste à revoir" in page.locator(".tn-say").inner_text(), "bilan clair")
+    shot("tn-bilan")
+    verif(page.evaluate(plein)["vide"] <= 16, "bilan sans zone vide")
+    page.click("[data-act=tnaccueil]"); page.wait_for_selector(".bottom")
+
+    # Mode guidé : question adaptée, voix et doigt
+    page.evaluate("localStorage.setItem('apidoo-tournee-mode', 'guide'); ACT.v3tournee('Verger')"); page.wait_for_selector(".tn-e-depart")
+    verif("Commencer les questions" in page.locator(".tn-pied").inner_text(), "le dernier mode est retenu")
+    page.click(".tn-pied .tn-b"); page.wait_for_selector(".tn-e-guide")
+    verif("Question 1 sur" in page.locator(".tn-haut").inner_text(), "question numérotée")
+    page.click("[data-act=tnrep][data-v=Normale]"); page.wait_for_selector("text=Tu vois la reine")
+    page.click("[data-act=tnvoix]"); page.evaluate("dire('non je ne la vois pas')"); page.wait_for_selector("text=Vois-tu des œufs frais")
+    verif("Déjà noté" in page.locator(".tn-note").inner_text(), "réponse à voix haute, question suivante adaptée")
+    page.click("[data-act=tnvoix]")
+    page.click("[data-act=tnrep] >> text=Non, aucun"); page.wait_for_selector("text=Comment est le couvain")
+    shot("tn-guide")
+    verif(page.evaluate(plein)["vide"] <= 16, "question sans zone vide")
+    page.click("text=Passer cette question"); page.wait_for_selector("text=Et les provisions")
+    page.click("[data-act=tnrep][data-v=Bonnes]"); page.wait_for_selector("text=Quel poids")
+    page.click("[data-act=tnpas] >> nth=1"); page.click("text=Valider le poids"); page.wait_for_selector("text=Comment est l’activité")
+    verif(page.evaluate("S.tn.fiches[S.tournee.ids[0]].poids_kg") is not None, "poids gardé")
+    page.evaluate("ACT.tnquitter()"); page.wait_for_selector(".bottom")
+    verif(page.locator(".toast >> text=Tournée gardée").count() >= 1, "tournée gardée en quittant")
+
+    # Reprise après fermeture
+    page.evaluate("ACT.v3tournee('Verger')"); page.wait_for_selector(".tn-e-depart")
+    verif("déjà notée" in page.locator(".tn-say").inner_text() and "Reprendre" in page.locator(".tn-pied").inner_text(), "on reprend là où on en était")
+    page.click("[data-act=tnzero]")
+    page.wait_for_selector(".tn-e-depart")
+
+    # Mode manuel et formulaire complet
+    page.evaluate("ACT.tnmode('manuel')"); page.wait_for_selector(".tn-e-manuel")
+    verif(page.locator("[data-k=reine].on").inner_text() == "Non cherchée", "la reine n'est jamais présumée")
+    verif(page.locator("[data-k=provisions].on").inner_text() == "Moyennes", "le reste reprend la dernière visite")
+    shot("tn-manuel")
+    verif(page.evaluate(plein)["vide"] <= 16 and page.evaluate("document.documentElement.scrollHeight") <= 860, "le manuel tient sur l'écran : %s" % page.evaluate("document.documentElement.scrollHeight"))
+    page.evaluate("ACT.tnquitter()"); page.wait_for_selector(".bottom")
+
+    # Sans micro : la dictée reste possible au clavier
+    page.evaluate("delete window.SpeechRecognition; delete window.webkitSpeechRecognition; window.SpeechRecognition = window.webkitSpeechRecognition = undefined; ACT.v3tournee('Verger')"); page.wait_for_selector(".tn-e-depart")
+    page.click(".tn-mode >> nth=0"); page.wait_for_selector(".tn-e-libre")
+    verif("micro du clavier" in page.locator(".tn-alerte").inner_text(), "sans reconnaissance vocale, le clavier prend le relais")
+    page.fill("#tn_texte", "Ruche 3, reine vue, activité forte")
+    verif("Reine vue" in page.locator(".tn-compris").inner_text(), "le texte tapé est rangé pareil")
+
+    # Ordinateur : trois colonnes
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.wait_for_timeout(100)
+    verif(page.locator(".tn-cote:visible").count() == 2 and page.locator(".tn-onglets").is_visible(), "ordinateur : trois colonnes et onglets")
+    shot("tn-pc-libre")
+    page.click(".tn-onglets button >> nth=2"); page.wait_for_selector(".tn-e-manuel")
+    shot("tn-pc-manuel")
+    g = page.evaluate("(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return [r('.tn-m').width, r('.tn-pied').bottom, innerHeight]; })()")
+    verif(g[0] > 700 and g[1] >= 840, "colonne centrale pleine : %s" % g)
+    page.evaluate("ACT.tnquitter()"); page.wait_for_selector(".wrap")
