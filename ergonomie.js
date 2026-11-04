@@ -12,7 +12,7 @@ const ER = (() => {
 
   // ---------- Gestion en blocs ----------
   const chevron = '<svg class="g-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-  const bloc = (route, titre, valeur, sous, bas = "", cl = "") => `<button type="button" class="n4-g g-bloc" data-act="go" data-v="${route}">
+  const bloc = (route, titre, valeur, sous, bas = "", cl = "", act = "go") => `<button type="button" class="n4-g g-bloc" data-act="${act}" data-v="${route}">
     <span class="g-t">${esc(titre)}${chevron}</span><b class="g-val ${cl}">${esc(valeur)}</b><span class="small">${esc(sous)}</span><span class="g-bas">${bas}</span></button>`;
   const jauge = (pct, cl = "") => `<span class="g-jauge" aria-hidden="true"><i class="${cl}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></span>`;
   function barresMois() {
@@ -87,8 +87,10 @@ const ER = (() => {
     const fields = o.fields.map((c) => {
       const v = garde[c.name];
       const ok = RETENUS.includes(c.name) && v != null && v !== "" && (c.type !== "select" || c.options.some((x) => String(Array.isArray(x) ? x[0] : x) === String(v)));
-      return ok ? { ...c, value: v } : c;
+      const pre = cree && S.erPrefill && c.name in S.erPrefill;
+      return pre ? { ...c, value: S.erPrefill[c.name] } : ok ? { ...c, value: v } : c;
     });
+    S.erPrefill = null;
     const encore = cree && o.title === "Ajouter une dépense";
     sheetAvant({ ...o, fields, submit: async (valeurs) => {
       const b = $sheetForm.querySelector(".btn.main"), avant = b?.textContent;
@@ -236,7 +238,7 @@ const ER = (() => {
     i.addEventListener("input", () => { requete = i.value; actif = true; afficher(); });
     i.addEventListener("keydown", (e) => {
       const l = [...document.querySelectorAll("#erRes .er-r")], c = l.findIndex((x) => x.classList.contains("sel"));
-      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fermer(); return; }
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); requete = ""; i.value = ""; fermer(); return; }
       if (e.key === "Enter") { e.preventDefault(); l[Math.max(c, 0)]?.click(); return; }
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp" || !l.length) return;
       e.preventDefault();
@@ -288,5 +290,5 @@ const ER = (() => {
     if (revient && hauteurs.get(S.route)) requestAnimationFrame(() => window.scrollTo(0, hauteurs.get(S.route)));
   };
 
-  return { fermerDoux };
+  return { fermerDoux, bloc, jauge };
 })();

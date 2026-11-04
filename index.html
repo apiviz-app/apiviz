@@ -794,7 +794,7 @@ body[data-route=ruches] .u-deux{margin-top:6px}
   .side .nav{width:auto;min-height:44px;padding:0 14px;gap:0;border-radius:11px;color:var(--bandeau-lien)}
   .side .nav svg{display:none}
   .side .nav:hover{background:var(--bandeau-survol)}
-  .side .nav.on{background:var(--bandeau-actif);color:var(--bandeau-texte);font-weight:700}
+  .side .nav.on{background:var(--bandeau-actif);color:var(--bandeau-actif-texte,var(--bandeau-texte));font-weight:700}
   .side .nav[data-v=saisir]{margin-left:auto;gap:8px;color:var(--bandeau-texte);font-weight:600}
   .side .nav[data-v=saisir] svg{display:block}
   .side .me{margin:0 0 0 8px;padding:0}
@@ -972,6 +972,90 @@ tbody tr:has([data-act]){cursor:pointer}
 tbody tr:has([data-act]):hover{background:var(--ground)}
 tbody tr[hidden]{display:none}
 .btn[aria-busy=true]{opacity:.7}
+/* ---------- Météo heure par heure ---------- */
+.al-heures{align-self:flex-start;min-height:32px;font-size:14px}
+.eh-jours{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.eh-jours button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px;padding:6px;border:1px solid var(--line);border-radius:13px;background:#fff;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.eh-jours svg,.eh-table svg,.eh-h svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.eh-jours b{font-weight:600}
+.eh-jours button.bon{background:#DFEDE4;border-color:#DFEDE4;color:#1F5239}
+.eh-jours button.on{border:2px solid var(--pine)}
+.eh-table{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:18px}
+.eh-table table{width:100%;min-width:1040px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.eh-table th,.eh-table td{padding:10px 4px;text-align:center;font-size:14px;font-weight:400;border-bottom:1px solid var(--line);box-shadow:none}
+.eh-table tr:last-child th,.eh-table tr:last-child td{border-bottom:0}
+.eh-table tbody th{padding-left:20px;width:150px;text-align:left;color:var(--muted);font-size:13px;font-weight:600}
+.eh-table thead th{font-weight:600;color:var(--ink)}
+.eh-table thead th:first-child{padding-left:20px;text-align:left;color:var(--muted);font-size:13px}
+.eh-table td.ok{background:#DFEDE4;color:#1F5239}
+.eh-table td.court{background:var(--honeysoft);color:#7D5200}
+.eh-table td.fort{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:700}
+.eh-table td svg{display:block;margin:0 auto}
+.eh-etat{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:600}
+.ab-mini.w{background:linear-gradient(0deg,#E3A008 50%,#EBD9A6 50%)}
+.ab-mini.non{background:#C4CABD}
+.eh-liste{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.eh-h{display:grid;grid-template-columns:44px 24px 40px 1fr auto;align-items:center;gap:8px;min-height:50px;padding:0 12px;border-top:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.eh-h:first-child{border-top:0}
+.eh-h b{font-weight:600}
+.eh-h.ok{background:#DFEDE4}
+.eh-h.ok .small{color:#1F5239}
+.eh-h.court{background:var(--honeysoft)}
+@media (max-width:800px){.eh-table{display:none}.eh-liste{display:block}.eh-jours{display:flex;overflow-x:auto}.eh-jours button{flex:none;min-height:48px;padding:0 12px}}
+/* ---------- Rappels ---------- */
+.er-cloche{position:relative;flex:none;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:inherit;cursor:pointer}
+.er-cloche svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.er-cloche em{position:absolute;top:3px;right:2px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--crit);color:#fff;font-style:normal;font-size:12px;font-weight:700;line-height:18px;text-align:center}
+.side .er-cloche{margin-left:8px}
+.side .er-cloche+.nav[data-v=saisir]{margin-left:0}
+.topbar .er-cloche{margin-left:auto}
+.topbar .er-cloche+.avatar{margin-left:0}
+.er-deux{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+.er-pile{display:flex;flex-direction:column;gap:18px;min-width:0}
+body[data-route=rappels] .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:none;padding:18px 20px}
+.er-rang{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 0;border-top:1px solid var(--line)}
+.card h2+.er-rang{border-top:0}
+.er-bascule{flex:none;position:relative;width:44px;height:26px;padding:0;border:0;border-radius:13px;background:#C4CABD;cursor:pointer}
+.er-bascule::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left var(--duree-rapide,.15s) ease}
+.er-bascule.on{background:var(--good)}
+.er-bascule.on::after{left:21px}
+.u-todo.er-vu b{font-weight:400}
+.er-pastilles{display:flex;gap:8px}
+.er-pastilles i{width:28px;height:28px;border-radius:50%;border:2px solid #C4CABD}
+.er-pastilles i.on{border-color:var(--pine);box-shadow:0 0 0 2px var(--honey)}
+@media (max-width:1100px){.er-deux{grid-template-columns:minmax(0,1fr)}}
+/* ---------- Registre, lot, facture, saison ---------- */
+.er-onglets{display:inline-flex;flex-wrap:wrap;gap:6px;align-self:flex-start;background:#E7EAE1;border-radius:13px;padding:3px}
+.er-onglets button{min-height:42px;padding:0 14px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer}
+.er-onglets button.on{background:var(--pine);color:#fff;font-weight:600}
+.er-act{margin:0}
+.er-dl{display:grid;grid-template-columns:120px 1fr;gap:8px 16px;margin:0 0 14px}
+.er-dl dt{color:var(--muted);font-size:14px}.er-dl dd{margin:0}
+.er-fiche{margin-left:6px;font-size:13px}
+.er-fil{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.er-etape{display:flex;flex-direction:column;gap:4px;min-width:0;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.er-etape b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;letter-spacing:-.01em}
+.er-deux2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+body[data-route=lot] .card,body[data-route=saison] .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:none;padding:18px 20px}
+.er-feuille{display:flex;flex-direction:column;gap:16px;max-width:760px;width:100%;padding:32px 34px;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 10px 26px rgba(20,28,24,.12);font-size:14px}
+.er-feuille h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px}
+.er-f-t{display:flex;justify-content:space-between;gap:24px}
+.er-f-t p{margin:0}.er-f-t>div{text-align:right}.er-d{text-align:right}
+.er-feuille table{width:100%;border-collapse:collapse}
+.er-feuille th{padding:7px 0;text-align:left;font-size:13px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.er-feuille td{padding:8px 0;border-bottom:1px solid var(--line)}
+.er-feuille .m{text-align:right;font-variant-numeric:tabular-nums}
+.er-f-total{display:flex;justify-content:flex-end;gap:24px;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:700}
+.er-manque{color:#7D5200;font-weight:600}
+.er-mois{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}
+.er-mois button{min-height:44px;border:0;border-radius:10px;background:#EDF0E8;font:inherit;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.er-mois button.on{background:var(--pine);color:#fff;font-weight:700}
+@media print{
+  body.print-facture #sheet,body.print-facture .side,body.print-facture .topbar,body.print-facture .bottom,body.print-facture .head,body.print-facture .er-ariane,body.print-facture .toast,body.print-facture .er-brouillon{display:none!important}
+  body.print-facture{background:#fff}
+  body.print-facture .er-feuille{max-width:none;border:0;box-shadow:none;padding:0}
+}
+@media (max-width:800px){.er-fil,.er-deux2{grid-template-columns:minmax(0,1fr)}.er-mois{grid-template-columns:repeat(6,minmax(0,1fr))}.er-feuille{padding:18px}.er-f-t{flex-direction:column;gap:8px}.er-f-t>div,.er-d{text-align:left}}
 </style>
 </head>
 <body>
@@ -995,5 +1079,6 @@ tbody tr[hidden]{display:none}
 <script src="./alveoles.js"></script>
 <script src="./voix.js"></script>
 <script src="./ergonomie.js"></script>
+<script src="./essentiels.js"></script>
 </body>
 </html>

@@ -2,3 +2,4 @@
 # La mise en ligne en production refuse de partir sans la case « migrations faites » tant que cette liste n'est pas vide.
 # Retirer la ligne une fois la migration appliquée sur la base apidoo.
 008-exploitations.sql
+010-registre-factures.sql

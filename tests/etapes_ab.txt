@@ -39,6 +39,20 @@
     if os.environ.get("APIDOO_CAPTURE"):
         page.screenshot(path=os.environ["APIDOO_CAPTURE"], full_page=True)
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
+    # Météo heure par heure
+    page.click(".ab-rucher:has-text('Verger') .al-heures"); page.wait_for_selector(".eh-table")
+    verif(page.locator(".eh-jours button").count() == 5, "cinq jours")
+    verif(page.locator(".eh-table thead th").count() == 14, "treize heures, de 8 h à 20 h")
+    verif("Tu peux ouvrir" in page.locator(".wrap .head h1").inner_text(), "phrase : " + page.locator(".wrap .head h1").inner_text())
+    if os.environ.get("APIDOO_CAPTURE"):
+        page.screenshot(path=os.environ["APIDOO_CAPTURE"] + ".meteo.png", full_page=True)
+    page.locator(".eh-jours button").nth(2).click(); page.wait_for_selector(".eh-jours button.on >> nth=0")
+    verif(page.locator(".eh-jours button").nth(2).get_attribute("aria-pressed") == "true", "changer de jour")
+    page.click(".wrap .btn.main[data-act=ervisite]"); page.wait_for_selector("#sheet[open]")
+    verif("Visite du rucher Verger" in page.input_value("#sheet [name=titre]") and page.input_value("#sheet [name=echeance]") != "", "tâche préparée")
+    page.click("#sheet [data-act=closesheet]")
+    page.click(".u-retour"); page.wait_for_function("S.route === 'rucher'")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ab")
     page.click(".ab-rucher-t >> nth=0"); page.wait_for_function("S.route === 'rucher'")
     verif(True, "le rucher s'ouvre")
     page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ab")
