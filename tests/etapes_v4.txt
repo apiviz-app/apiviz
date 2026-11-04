@@ -130,7 +130,7 @@
 
     # Recherche, activité, plein soleil
     page.click(".topbar .v3-cherche"); page.fill("#v3q", "martin")
-    verif(page.locator("#v3res >> text=Mme Martin").count() == 1, "recherche sans accents ni majuscules")
+    verif(page.locator("#v3res >> text=Mme Martin").count() >= 1, "recherche sans accents ni majuscules")
     page.evaluate("ACT.go('activite')"); page.wait_for_selector(".v3-fil")
     verif(page.locator(".v3-fil >> text=Visite · Ruche 1").count() >= 1 and "ami" in page.locator(".v3-fil").inner_text(), "fil d'activité avec l'auteur")
     page.evaluate("ACT.n4compte()"); page.click("[data-act=n4soleil]")

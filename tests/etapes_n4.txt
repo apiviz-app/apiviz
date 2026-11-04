@@ -71,7 +71,7 @@
     verif(page.locator(".head h1").inner_text() == "Miel" and page.locator(".u-tuiles").count() == 1, "Stock et lots dans Miel, avec les récoltes")
     # Gestion
     page.click(".bottom button[data-v=plus]"); page.wait_for_selector(".n4-grille")
-    verif(page.locator(".n4-sect").all_inner_texts() == ["Comptes", "Matériel", "Équipe"] or [t.lower() for t in page.locator(".n4-sect").all_inner_texts()] == ["comptes", "matériel", "équipe"], "Gestion : comptes, matériel, équipe")
+    verif(page.locator(".g-bloc").count() >= 5 and page.locator(".n4-sect").count() == 0, "Gestion en blocs")
     verif("stock bas" in page.locator(".n4-g[data-v=materiel]").inner_text(), "état affiché sur la tuile Matériel")
     shot("gestion")
     page.click(".n4-g[data-v=pilotage]"); page.wait_for_selector(".u-retour >> text=Gestion")

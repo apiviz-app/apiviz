@@ -235,8 +235,8 @@ const N4 = (() => {
   };
 
   // ---------- Supprimer, avec « Annuler » pendant 5 secondes ----------
-  function plusTard(el, message, action) {
-    const carte = el?.closest("article, .card, tr");
+  function plusTard(el, message, action, cible) {
+    const carte = cible || el?.closest("article, .card, tr");
     if (carte) carte.style.display = "none";
     if ($sheet.open) $sheet.close();
     document.querySelectorAll(".toast").forEach((t) => t.remove());
@@ -256,5 +256,5 @@ const N4 = (() => {
   ACT.delvente = delVente;
   ACT.uvsuppr = delVente;
 
-  return { prochaine, navRuche, viewGestion };
+  return { prochaine, navRuche, viewGestion, plusTard };
 })();

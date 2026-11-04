@@ -142,7 +142,7 @@ const AL = (() => {
     const dates = S.d.visites.filter((v) => rs.some((r) => r.id === v.ruche_id)).map((v) => v.date_visite).sort(), der = dates[dates.length - 1];
     const a = rs.filter((r) => r.etat === "Critique").length, b = rs.filter((r) => r.etat !== "Bonne").length - a;
     const etat = a ? `<span class="u-chip crit">${a} critique${a > 1 ? "s" : ""}</span>` : b ? `<span class="u-chip watch">${b} à surveiller</span>` : '<span class="u-chip good">En forme</span>';
-    return `<article class="ab-rucher"><button type="button" class="ab-rucher-t" data-act="alrucher" data-v="${esc(k)}"><span class="u-todo-t"><b>${esc(U.nomRucher(k))}</b><span class="small">${esc(U.pluriel(rs.length, "ruche"))}${der ? `, visité le ${esc(new Date(der + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))}` : ", pas encore visité"}</span></span>
+    return `<article class="ab-rucher"><button type="button" class="ab-rucher-t" data-act="alrucher" data-v="${esc(k)}"><span class="u-todo-t"><b>${esc(U.nomRucher(k))}</b><span class="small">${esc(U.pluriel(rs.length, "ruche"))}${der ? `, visite : ${esc(U.quand(der).toLowerCase())}` : ", pas encore visité"}</span></span>
       <span class="ab-minis" role="img" aria-label="${esc(rs.map((r) => `${r.nom} ${r.etat}`).join(", "))}">${rs.map(miniHex).join("")}</span>${etat}</button>${zoneMeteo(k, 0)}</article>`;
   }
   function accueilOrdinateur(tete) {
@@ -152,7 +152,7 @@ const AL = (() => {
     if (actions) tete.insertAdjacentHTML("beforeend", `<div class="ab-actions">${actions}</div>`);
     afaire?.querySelector('[data-v="activite"]')?.remove();
     const fil = V3.fil(4);
-    const lignes = fil.map(([t, qui, titre, sous, act, v]) => `<button type="button" class="u-todo" ${v ? `data-act="${act}" data-v="${esc(v)}"` : "disabled"}><span class="u-todo-t"><b>${esc(titre)}</b><span class="small">${esc([U.dateCourte(String(t).slice(0, 10)), qui ? U.qui(qui) : "", sous].filter(Boolean).join(" · "))}</span></span></button>`).join("");
+    const lignes = fil.map(([t, qui, titre, sous, act, v]) => `<button type="button" class="u-todo" ${v ? `data-act="${act}" data-v="${esc(v)}"` : "disabled"}><span class="u-todo-t"><b>${esc(titre)}</b><span class="small">${esc([U.quand(t), qui ? U.qui(qui) : "", sous].filter(Boolean).join(" · "))}</span></span></button>`).join("");
     const bloc = document.createElement("div");
     bloc.className = "ab";
     bloc.innerHTML = `${chiffres()}<div class="ab-grille"><section class="card ab-ruchers"><div class="u-entete"><h2>Mes ruchers</h2><button type="button" class="link" data-act="go" data-v="carte">Voir la carte</button></div>${U.ruchers().map(ligneRucher).join("")}</section>
@@ -260,7 +260,7 @@ const AL = (() => {
       return `<button type="button" class="al-ligne" data-act="ruche" data-v="${r.id}"><span class="n4-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span><b>${esc(r.nom)}</b>
         <span class="small ${r.etat === "Bonne" ? "" : etatClass(r.etat)}">${esc(r.etat === "Bonne" ? "En forme" : r.etat)}</span>
         <span class="al-kg">${p ? esc(n(p.poids_kg)) + " kg" : "–"}</span><span class="al-opt">${tx !== null ? "Varroa " + esc(n(tx, 1)) + " %" : "–"}</span>
-        <span class="al-opt">${v ? esc(v.provisions) : "–"}</span><span class="al-opt">${v ? esc(U.dateCourte(v.date_visite)) : "Jamais visitée"}</span></button>`;
+        <span class="al-opt">${v ? esc(v.provisions) : "–"}</span><span class="al-opt">${v ? esc(U.quand(v.date_visite)) : "Jamais visitée"}</span></button>`;
     }).join("");
     const action = rs.length > 1 ? `<button class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>` : `<button class="btn main" data-act="newvisite" data-v="${rs[0].id}">Visiter</button>`;
     const route = l ? `<a class="btn u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${l.lat},${l.lng}" target="_blank" rel="noopener">Itinéraire</a>` : "";
@@ -278,20 +278,6 @@ const AL = (() => {
       if (S.lastRoute !== "rucher") window.scrollTo?.(0, 0);
       S.lastRoute = "rucher"; document.body.dataset.route = "rucher";
     } else renderAvant();
-  };
-
-  // ---------- Gestion : comptes, matériel, membres ----------
-  const gestionAvant = window.viewPlus;
-  window.viewPlus = function () {
-    gestionAvant();
-    document.querySelectorAll('.n4-g:is([data-v="agenda"],[data-v="activite"],[data-v="varroa"],[data-v="registre"],[data-v="declaration"])').forEach((x) => x.remove());
-    const titres = { Organisation: "Équipe", Argent: "Comptes" }, wrap = document.querySelector(".wrap");
-    document.querySelectorAll(".n4-sect").forEach((t) => {
-      const g = t.nextElementSibling;
-      if (!g?.children.length) { t.remove(); g?.remove(); return; }
-      t.textContent = titres[t.textContent] || t.textContent;
-      if (t.textContent === "Équipe") wrap.append(t, g);
-    });
   };
 
   // ---------- Fiche ruche : la courbe de poids reste visible ----------
