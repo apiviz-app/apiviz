@@ -972,6 +972,36 @@ tbody tr:has([data-act]){cursor:pointer}
 tbody tr:has([data-act]):hover{background:var(--ground)}
 tbody tr[hidden]{display:none}
 .btn[aria-busy=true]{opacity:.7}
+/* ---------- Météo heure par heure ---------- */
+.al-heures{align-self:flex-start;min-height:32px;font-size:14px}
+.eh-jours{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.eh-jours button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px;padding:6px;border:1px solid var(--line);border-radius:13px;background:#fff;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.eh-jours svg,.eh-table svg,.eh-h svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.eh-jours b{font-weight:600}
+.eh-jours button.bon{background:#DFEDE4;border-color:#DFEDE4;color:#1F5239}
+.eh-jours button.on{border:2px solid var(--pine)}
+.eh-table{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:18px}
+.eh-table table{width:100%;min-width:1040px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.eh-table th,.eh-table td{padding:10px 4px;text-align:center;font-size:14px;font-weight:400;border-bottom:1px solid var(--line);box-shadow:none}
+.eh-table tr:last-child th,.eh-table tr:last-child td{border-bottom:0}
+.eh-table tbody th{padding-left:20px;width:150px;text-align:left;color:var(--muted);font-size:13px;font-weight:600}
+.eh-table thead th{font-weight:600;color:var(--ink)}
+.eh-table thead th:first-child{padding-left:20px;text-align:left;color:var(--muted);font-size:13px}
+.eh-table td.ok{background:#DFEDE4;color:#1F5239}
+.eh-table td.court{background:var(--honeysoft);color:#7D5200}
+.eh-table td.fort{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:700}
+.eh-table td svg{display:block;margin:0 auto}
+.eh-etat{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:600}
+.ab-mini.w{background:linear-gradient(0deg,#E3A008 50%,#EBD9A6 50%)}
+.ab-mini.non{background:#C4CABD}
+.eh-liste{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.eh-h{display:grid;grid-template-columns:44px 24px 40px 1fr auto;align-items:center;gap:8px;min-height:50px;padding:0 12px;border-top:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.eh-h:first-child{border-top:0}
+.eh-h b{font-weight:600}
+.eh-h.ok{background:#DFEDE4}
+.eh-h.ok .small{color:#1F5239}
+.eh-h.court{background:var(--honeysoft)}
+@media (max-width:800px){.eh-table{display:none}.eh-liste{display:block}.eh-jours{display:flex;overflow-x:auto}.eh-jours button{flex:none;min-height:48px;padding:0 12px}}
 </style>
 </head>
 <body>
@@ -995,5 +1025,6 @@ tbody tr[hidden]{display:none}
 <script src="./alveoles.js"></script>
 <script src="./voix.js"></script>
 <script src="./ergonomie.js"></script>
+<script src="./essentiels.js"></script>
 </body>
 </html>

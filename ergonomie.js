@@ -87,8 +87,10 @@ const ER = (() => {
     const fields = o.fields.map((c) => {
       const v = garde[c.name];
       const ok = RETENUS.includes(c.name) && v != null && v !== "" && (c.type !== "select" || c.options.some((x) => String(Array.isArray(x) ? x[0] : x) === String(v)));
-      return ok ? { ...c, value: v } : c;
+      const pre = cree && S.erPrefill && c.name in S.erPrefill;
+      return pre ? { ...c, value: S.erPrefill[c.name] } : ok ? { ...c, value: v } : c;
     });
+    S.erPrefill = null;
     const encore = cree && o.title === "Ajouter une dépense";
     sheetAvant({ ...o, fields, submit: async (valeurs) => {
       const b = $sheetForm.querySelector(".btn.main"), avant = b?.textContent;

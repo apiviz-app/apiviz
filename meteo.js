@@ -76,10 +76,35 @@ const MT = (() => {
     if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return '<p class="small">Météo en cours de chargement…</p>'; }
     if (Date.now() - e.at > DUREE) charger(cle, l);
     const a = analyse(e.data);
-    if (nbJours === 0) return `<div class="al-temps court">${icone(a.code)}<b>${a.temp}°</b><strong>${esc(a.verdict)}</strong></div><p class="al-creneau">${phraseCreneau(a)}</p>`;
+    const lienHeures = `<button type="button" class="link al-heures" data-act="ermeteo" data-v="${esc(cle)}">Voir heure par heure</button>`;
+    if (nbJours === 0) return `<div class="al-temps court">${icone(a.code)}<b>${a.temp}°</b><strong>${esc(a.verdict)}</strong></div><p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
     return `<div class="al-temps">${icone(a.code)}<b>${a.temp}°</b><span><strong>${esc(a.verdict)}</strong>Vent ${a.vent} km/h</span></div>
       <div class="al-jours n${nbJours}">${a.jours.slice(0, nbJours).map((x) => `<span class="al-jour ${x.ok ? "ok" : ""}">${esc(nomJour(x.t))}${icone(x.code)}${x.max}°</span>`).join("")}</div>
-      <p class="al-creneau">${phraseCreneau(a)}</p>`;
+      <p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
+  }
+
+  // Détail par heure, de 8 h à 20 h, pour chaque jour connu.
+  function parHeure(cle, rs) {
+    const l = lieu(rs);
+    if (!l) return { sansLieu: true };
+    const e = cache.get(cle);
+    if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return null; }
+    const j = e.data, h = j.hourly || {}, d = j.daily || {}, a = analyse(j);
+    const maintenant = String(j.current?.time || "").slice(0, 13);
+    const jours = (d.time || []).filter((t) => t >= a.auj).slice(0, 5).map((t) => {
+      const i0 = d.time.indexOf(t), heures = [];
+      (h.time || []).forEach((x, i) => {
+        const hh = Number(String(x).slice(11, 13));
+        if (jourDe(x) !== t || hh < 8 || hh > 20) return;
+        const temp = h.temperature_2m?.[i] ?? -99, risque = h.precipitation_probability?.[i] ?? 0, vent = h.wind_speed_10m?.[i] ?? 0;
+        const dedans = hh >= SEUILS.debut && hh < SEUILS.fin;
+        heures.push({ h: hh, temp: Math.round(temp), risque: Math.round(risque), vent: Math.round(vent), rafales: h.wind_gusts_10m ? Math.round(h.wind_gusts_10m[i] ?? 0) : null,
+          hum: h.relative_humidity_2m ? Math.round(h.relative_humidity_2m[i] ?? 0) : null, code: h.weather_code?.[i] ?? 3,
+          n: dedans ? niveau(temp, risque, vent, h.precipitation?.[i] ?? 0) : null, passee: String(x).slice(0, 13) < maintenant });
+      });
+      return { t, max: Math.round(d.temperature_2m_max?.[i0] ?? 0), code: d.weather_code?.[i0] ?? 3, heures };
+    });
+    return { jours, creneau: a.creneau, auj: a.auj };
   }
 
   // Position moyenne des ruches placées du rucher.
@@ -94,7 +119,7 @@ const MT = (() => {
     const e = cache.get(cle);
     if (e?.enCours || navigator.onLine === false) return;
     cache.set(cle, { ...e, enCours: true });
-    const champs = "temperature_2m,precipitation_probability,precipitation,wind_speed_10m";
+    const champs = "temperature_2m,precipitation_probability,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,weather_code";
     fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code&hourly=${champs}&daily=temperature_2m_max,weather_code&forecast_days=6&timezone=auto`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data) => {
@@ -113,5 +138,5 @@ const MT = (() => {
     return a.creneau?.n === 2 && a.creneau.jour === a.auj ? a.creneau : null;
   }
 
-  return { SEUILS, niveau, analyse, html, lieu, creneauDuJour };
+  return { SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
 })();
