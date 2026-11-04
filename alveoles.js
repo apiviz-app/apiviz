@@ -36,6 +36,7 @@ const AL = (() => {
   const shellAvant = window.shell;
   window.shell = function (...a) {
     shellAvant(...a);
+    if (S.route !== "dash") S.alVu = false;
     document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
     document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
     document.querySelectorAll('.side [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
@@ -70,7 +71,9 @@ const AL = (() => {
     const perte = p.length > 1 ? Number(p[1].poids_kg) - Number(p[0].poids_kg) : 0;
     const constat = perte > 0 ? `${r.nom} a perdu ${n(perte)} kg depuis le ${new Date(p[1].date_visite + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}.`
       : `${r.nom} est ${r.etat === "Critique" ? "en état critique" : "à surveiller"}.`;
-    return `${constat} C’est la priorité du jour.`;
+    const cle = U.ruchers().find(([, rs]) => rs.includes(r))?.[0];
+    const c = cle === undefined ? null : MT.creneauDuJour(cle, ruchesDe(cle));
+    return c ? `Bon créneau vers ${c.h} h : ${U.nomRucher(cle)}. ${constat} Commence par elle.` : `${constat} C’est la priorité du jour.`;
   }
   function legende() {
     const l = S.d.ruches, nb = (e) => l.filter((r) => r.etat === e).length;
@@ -95,11 +98,66 @@ const AL = (() => {
     afaire?.querySelector('[data-v="agenda"]')?.insertAdjacentHTML("beforebegin", '<button type="button" class="link" data-act="go" data-v="activite">Activité</button>');
     if (ancien && S.d.ruches.length) ancien.outerHTML = `<section class="al-carte">${U.ruchers().map(([k, rs]) => colonne(k, rs)).join("")}${legende()}</section>`;
     const carte = document.querySelector(".al-carte");
+    if (carte) {
+      carte.querySelector(".u-rucher")?.insertAdjacentHTML("beforebegin", lentilles());
+      carte.querySelectorAll(".u-hex").forEach((h, i) => h.style.setProperty("--i", i));
+      if (!S.alVu) carte.classList.add("al-entree");
+      S.alVu = true;
+      appliquerLentille();
+    }
     if (carte && afaire) afaire.before(carte);
     if (afaire && saison) { const deux = document.createElement("div"); deux.className = "al-deux"; afaire.before(deux); deux.append(afaire, saison); }
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
   };
+  // ---------- Lentilles : regarder toutes les ruches par un seul critère ----------
+  const LENTILLES = [["etat", "État"], ["prov", "Provisions"], ["varroa", "Varroa"]];
+  const NIVEAUX = { Bonnes: "85%", Moyennes: "52%", Faibles: "22%" };
+  const lentilles = () => `<div class="al-lentilles" role="group" aria-label="Regarder les ruches par">${LENTILLES.map(([k, t]) =>
+    `<button type="button" class="lent ${(S.lentille || "etat") === k ? "on" : ""}" aria-pressed="${(S.lentille || "etat") === k}" data-act="allent" data-v="${k}">${t}</button>`).join("")}</div>`;
+  function regard(r, l) {
+    const visites = S.d.visites.filter((v) => v.ruche_id === r.id), num = String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3);
+    if (l === "prov") {
+      const p = visites.find((v) => v.provisions)?.provisions;
+      return p && NIVEAUX[p] ? { cl: "bg-niv", txt: num, niv: NIVEAUX[p], mot: `provisions ${p.toLowerCase()}` } : { cl: "bg-vide", txt: num, mot: "provisions pas encore notées" };
+    }
+    if (l === "varroa") {
+      const t = U.tauxVarroa(visites.find((v) => v.varroa != null)), s = U.seuilVarroa();
+      if (t === null) return { cl: "bg-vide", txt: num, mot: "varroa pas encore compté" };
+      return { cl: `al-txt bg-${t >= s ? "crit" : t >= s * 0.66 ? "watch" : "good"}`, txt: n(t, 1), mot: `varroa ${n(t, 1)} %` };
+    }
+    return { cl: `bg-${etatClass(r.etat)}`, txt: num, mot: `état ${r.etat}` };
+  }
+  function legendeLentille(l) {
+    const s = U.seuilVarroa();
+    if (l === "prov") return `<p class="al-cle"><span><i class="al-niv" style="--niv:85%"></i>Bonnes</span><span><i class="al-niv" style="--niv:52%"></i>Moyennes</span><span><i class="al-niv" style="--niv:22%"></i>Faibles</span></p>`;
+    if (l === "varroa") return `<p class="al-cle"><span><i class="bg-good"></i>Sous ${n(s * 0.66, 1)} %</span><span><i class="bg-watch"></i>À surveiller</span><span><i class="bg-crit"></i>À partir de ${n(s, 1)} %</span></p>`;
+    return legende();
+  }
+  function appliquerLentille() {
+    const l = S.lentille || "etat", carte = document.querySelector(".al-carte");
+    if (!carte) return;
+    carte.querySelectorAll(".lent").forEach((b) => { const on = b.dataset.v === l; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    carte.querySelectorAll(".u-hex").forEach((b) => {
+      const r = S.d.ruches.find((x) => x.id === b.dataset.v);
+      if (!r) return;
+      const v = regard(r, l);
+      b.className = `u-hex ${v.cl}`;
+      b.style.setProperty("--niv", v.niv || "0%");
+      b.querySelector("span").textContent = v.txt;
+      b.setAttribute("aria-label", `${r.nom}, ${v.mot}`);
+    });
+    carte.querySelector(".al-cle").outerHTML = legendeLentille(l);
+  }
+  ACT.allent = (k) => { S.lentille = k; appliquerLentille(); };
+  // Quand la météo arrive, la phrase d'accueil peut annoncer le créneau.
+  window.AL_meteoPrete = () => {
+    const h1 = document.querySelector(".hero-head h1");
+    if (S.route !== "dash" || !h1 || !S.d?.ruches.length) return;
+    const debut = h1.textContent.split(". ")[0], p = phrase();
+    h1.textContent = `${debut}. ${p}`;
+  };
+
   function colonne(k, rs) {
     const crit = rs.some((r) => r.etat === "Critique");
     const hex = rs.map((r) => `<button type="button" class="u-hex bg-${etatClass(r.etat)}" data-act="ruche" data-v="${r.id}" aria-label="${esc(r.nom)}, état ${esc(r.etat)}"><span>${esc(String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3))}</span></button>`).join("");
@@ -190,5 +248,5 @@ const AL = (() => {
     [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"))?.setAttribute("open", "");
   };
 
-  return { compagnon, phrase, ruchesDe };
+  return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
 })();

@@ -16,6 +16,16 @@
     verif("4 en forme" in page.locator(".al-cle").inner_text() and "1 critique" in page.locator(".al-cle").inner_text(), "légende de la carte")
     pos = page.evaluate("[...document.querySelectorAll('.al-carte, .u-liste')].map(e => e.className)")
     verif("al-carte" in pos[0], "la carte passe avant la liste À faire")
+    # Lentilles : la carte change de critère sans recharger l'écran
+
+    page.click(".lent[data-v=prov]"); page.wait_for_timeout(100)
+    verif(page.locator(".al-carte .u-hex.bg-niv").count() == 1 and "Faibles" in page.locator(".al-cle").inner_text(), "lentille Provisions")
+    verif(page.locator(".al-carte .u-hex.bg-vide").count() == 5, "ruche sans visite : alvéole neutre")
+    verif("provisions faibles" in page.locator(".u-hex.bg-niv").get_attribute("aria-label"), "description de l'alvéole")
+    page.click(".lent[data-v=varroa]"); page.wait_for_timeout(100)
+    verif(page.locator(".lent[data-v=varroa][aria-pressed=true]").count() == 1, "lentille Varroa")
+    page.click(".lent[data-v=etat]"); page.wait_for_timeout(100)
+    verif(page.locator(".al-carte .u-hex.bg-crit").count() == 1 and "1 critique" in page.locator(".al-cle").inner_text(), "retour à l'état")
     # Bouton API
     page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
     verif(page.locator("#sheet .al-tete .al-api").count() == 1 and page.locator("#sheet .n4-tuile").count() == 6, "feuille API : compagnon et 6 saisies")

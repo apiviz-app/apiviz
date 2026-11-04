@@ -7,6 +7,12 @@
 3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
 4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
 
+## v5.4 · à essayer en recette · accueil et lentilles
+À vérifier :
+1. Accueil : les alvéoles arrivent en cascade à l'ouverture, pas à chaque retour d'état.
+2. Lentilles État, Provisions, Varroa : les alvéoles changent sans recharger l'écran. Une ruche sans donnée reste neutre.
+3. Rucher placé sur la carte, avec un bon créneau aujourd'hui : la phrase d'accueil l'annonce.
+
 ## v5.2 · en recette · quatre rubriques, ruchers en colonnes, météo par rucher
 À vérifier sur https://apidoo.github.io/recette/ :
 1. Quatre rubriques partout : Accueil, Ruchers, Miel, Gestion, plus API. Sur ordinateur, le menu est une barre en haut.
