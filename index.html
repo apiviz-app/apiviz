@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F4F6F0">
+<meta name="theme-color" content="#FBEFC9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Apidoo">
 <title>Apidoo</title>
@@ -628,13 +628,12 @@ body.soleil .seg button.on{outline:2px solid #000}
 .n4-squelette main{padding-top:18px}
 .wrap>.subtabs{display:flex;width:100%;align-self:stretch}
 .wrap>.subtabs button{flex:1;padding:0 6px}
-html.recette .topbar,html.recette .side{background:#8A3F06}
 html.recette body::before{content:"RECETTE";position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;background:#E3A008;color:#1B2420;font:700 11px/1 sans-serif;letter-spacing:.1em;padding:4px 10px;border-radius:0 0 8px 8px;pointer-events:none}
 
 /* ---------- Interface Alvéoles : compagnon API, écrans allégés ---------- */
 @media (max-width:800px){
-  .topbar{background:var(--ground);color:var(--ink)}
-  .topbar .v3-cherche{color:var(--ink)}
+  .topbar{background:var(--bandeau);color:var(--bandeau-texte)}
+  .topbar .v3-cherche{color:var(--bandeau-texte)}
   .bottom{background:#fff;border-top:1px solid var(--line);box-shadow:none}
 }
 .bottom button[data-v=saisir] api-compagnon{margin-top:-30px}
@@ -784,16 +783,19 @@ body[data-route=ruches] .u-deux{margin-top:6px}
 .head.hero-head .u-meteo-lien{color:var(--good)!important}
 .al-carte .u-hexes{justify-content:flex-start}
 
+/* ---------- Bandeau : une seule couleur à changer, prête pour la personnalisation ---------- */
+:root{--bandeau:#FBEFC9;--bandeau-texte:#1B2420;--bandeau-lien:#3F4A44;--bandeau-actif:#fff;--bandeau-survol:rgba(255,255,255,.55)}
+
 /* ---------- Piste A : barre du haut sur ordinateur, ruchers en colonnes, météo par rucher ---------- */
 @media (min-width:801px){
   .shell{flex-direction:column}
-  .side{position:sticky;top:0;z-index:20;flex-direction:row;align-items:center;gap:6px;width:auto;height:auto;min-height:68px;padding:8px 32px;overflow:visible;background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+  .side{position:sticky;top:0;z-index:20;flex-direction:row;align-items:center;gap:6px;width:auto;height:auto;min-height:68px;padding:8px 32px;overflow:visible;background:var(--bandeau);color:var(--bandeau-texte)}
   .side .brand{padding:0 22px 0 0}
-  .side .nav{width:auto;min-height:44px;padding:0 14px;gap:0;border-radius:11px;color:var(--muted)}
+  .side .nav{width:auto;min-height:44px;padding:0 14px;gap:0;border-radius:11px;color:var(--bandeau-lien)}
   .side .nav svg{display:none}
-  .side .nav:hover{background:var(--ground)}
-  .side .nav.on{background:var(--honeysoft);color:var(--ink);font-weight:700}
-  .side .nav[data-v=saisir]{margin-left:auto;gap:8px;color:var(--ink);font-weight:600}
+  .side .nav:hover{background:var(--bandeau-survol)}
+  .side .nav.on{background:var(--bandeau-actif);color:var(--bandeau-texte);font-weight:700}
+  .side .nav[data-v=saisir]{margin-left:auto;gap:8px;color:var(--bandeau-texte);font-weight:600}
   .side .nav[data-v=saisir] svg{display:block}
   .side .me{margin:0 0 0 8px;padding:0}
   .side .me .mail,.side .me .link{display:none}
@@ -861,6 +863,38 @@ body[data-route=ruches] .al-grille .card{background:#fff;border:1px solid var(--
 .al-carte>.al-col>.u-entete{display:flex;width:100%;justify-content:space-between;align-items:center}
 .al-carte>.al-col>.u-hexes{justify-content:flex-start}
 .al-carte>.al-col .al-temps{justify-content:flex-start}
+/* ---------- Accueil sur ordinateur : vue d'ensemble ---------- */
+@media (min-width:801px){
+  .head.hero-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px}
+  .head.hero-head>div:first-child{flex:1 1 480px;min-width:0}
+  .ab-actions{display:flex;flex-wrap:wrap;gap:10px}
+  .ab-actions .btn{min-height:48px;white-space:nowrap}
+}
+.ab{display:flex;flex-direction:column;gap:26px;min-width:0}
+.ab-chiffres{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.ab-chiffre{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:16px 20px;border:0;border-left:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;transition:background var(--duree-rapide,.15s) ease}
+.ab-chiffre:first-child{border-left:0}
+.ab-chiffre:hover{background:var(--ground)}
+.ab-chiffre b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.ab-chiffre b.watch{color:#7D5200}
+.ab-chiffre b.good{color:var(--good)}
+.ab-minis{display:flex;flex:none;gap:2px}
+.ab-mini{display:block;width:22px;height:19px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:var(--good)}
+.ab-mini.watch{background:linear-gradient(0deg,#E3A008 50%,#EBD9A6 50%)}
+.ab-mini.crit{background:var(--crit)}
+.ab-grille{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:stretch}
+body[data-route=dash] .ab-grille>.card{display:flex;flex-direction:column;gap:6px;min-width:0;margin:0;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.ab-grille h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;letter-spacing:-.01em}
+.ab-grille .u-entete{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ab-rucher{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid var(--line)}
+.u-entete+.ab-rucher{border-top:0;padding-top:4px}
+.ab-rucher-t{display:flex;align-items:center;gap:12px;width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.al-temps.court{gap:7px;font-size:14px;color:var(--muted)}
+.al-temps.court svg{width:22px;height:22px}
+.al-temps.court>b{font-family:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.al-temps.court strong{font-weight:400;color:var(--muted)}
+.ab-ruchers .al-wx{gap:4px}
+@media (max-width:1100px){.ab-grille{grid-template-columns:minmax(0,1fr)}.ab-chiffres{grid-template-columns:repeat(2,minmax(0,1fr))}.ab-chiffre:nth-child(3){border-left:0}.ab-chiffre:nth-child(n+3){border-top:1px solid var(--line)}}
 </style>
 </head>
 <body>

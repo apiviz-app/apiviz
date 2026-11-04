@@ -516,15 +516,19 @@ const V3 = (() => {
   };
 
   // ---------- Activité récente ----------
-  function vueActivite() {
+  // Fil de ce qui s'est passé, du plus récent au plus ancien. Sert aussi à l'accueil sur ordinateur.
+  function fil(max = 50) {
     const d = S.d, R = (id) => rucheDe(id)?.nom || "ruche";
-    const items = [
+    return [
       ...d.visites.map((v) => [v.created_at || v.date_visite, v.auteur, `Visite · ${R(v.ruche_id)}`, v.note || "", "ruche", v.ruche_id]),
       ...d.ventes.map((v) => [v.created_at || v.date_vente, v.auteur, `Vente · ${byId(d.clients, v.client_id)?.nom || "client"}`, eur(venteTotal(v)) + (v.paye ? "" : " · à encaisser"), "uvente", v.id]),
       ...d.recoltes.map((x) => [x.created_at || x.date_recolte, "", `Récolte · ${n(x.kg)} kg`, x.ruche_id ? R(x.ruche_id) : "tout le rucher", "go", "miel"]),
       ...d.evenements.map((x) => [x.created_at || x.date_evenement, x.auteur, `${TYPES[x.type] || x.type} · ${R(x.ruche_id)}`, x.detail || "", "ruche", x.ruche_id]),
       ...(d.photos || []).map((p) => [p.created_at, p.auteur, "Photo ajoutée", R(byId(d.visites, p.visite_id)?.ruche_id), "ruche", byId(d.visites, p.visite_id)?.ruche_id]),
-    ].filter((x) => x[0]).sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 50);
+    ].filter((x) => x[0]).sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, max);
+  }
+  function vueActivite() {
+    const items = fil();
     let jour = "";
     const html = items.map(([t, qui, titre, sous, act, v]) => {
       const j = String(t).slice(0, 10), h = j !== jour ? `<h2 class="u-titre">${esc(j === today() ? "Aujourd’hui" : U.dateCourte(j))}</h2>` : "";
@@ -585,5 +589,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer };
+  return { fil, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer };
 })();

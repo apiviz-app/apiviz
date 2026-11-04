@@ -76,6 +76,7 @@ const MT = (() => {
     if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return '<p class="small">Météo en cours de chargement…</p>'; }
     if (Date.now() - e.at > DUREE) charger(cle, l);
     const a = analyse(e.data);
+    if (nbJours === 0) return `<div class="al-temps court">${icone(a.code)}<b>${a.temp}°</b><strong>${esc(a.verdict)}</strong></div><p class="al-creneau">${phraseCreneau(a)}</p>`;
     return `<div class="al-temps">${icone(a.code)}<b>${a.temp}°</b><span><strong>${esc(a.verdict)}</strong>Vent ${a.vent} km/h</span></div>
       <div class="al-jours n${nbJours}">${a.jours.slice(0, nbJours).map((x) => `<span class="al-jour ${x.ok ? "ok" : ""}">${esc(nomJour(x.t))}${icone(x.code)}${x.max}°</span>`).join("")}</div>
       <p class="al-creneau">${phraseCreneau(a)}</p>`;
@@ -98,7 +99,7 @@ const MT = (() => {
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data) => {
         cache.set(cle, { data, at: Date.now(), lat: l.lat, lng: l.lng });
-        document.querySelectorAll(".al-wx").forEach((el) => { if (el.dataset.k === cle) el.innerHTML = html(cle, AL.ruchesDe(cle), Number(el.dataset.jours) || 3); });
+        document.querySelectorAll(".al-wx").forEach((el) => { if (el.dataset.k === cle) el.innerHTML = html(cle, AL.ruchesDe(cle), Number(el.dataset.jours ?? 3)); });
         AL.meteoPrete?.();
       })
       .catch(() => cache.set(cle, { ...cache.get(cle), enCours: false }));
