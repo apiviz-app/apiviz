@@ -1,5 +1,12 @@
 # Notes de version
 
+## v5.3 · à essayer en recette · charte graphique et API animé
+À vérifier :
+1. API respire et cligne des yeux dans la barre du bas. Il dit bonjour à l'ouverture de sa feuille.
+2. Après une saisie enregistrée, il saute. En coupant le réseau, il passe au gris et s'endort.
+3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
+4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
+
 ## v5.2 · en recette · quatre rubriques, ruchers en colonnes, météo par rucher
 À vérifier sur https://apidoo.github.io/recette/ :
 1. Quatre rubriques partout : Accueil, Ruchers, Miel, Gestion, plus API. Sur ordinateur, le menu est une barre en haut.

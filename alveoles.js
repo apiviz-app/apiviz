@@ -7,21 +7,21 @@ const AL = (() => {
   const U = UX;
 
   // ---------- Le compagnon ----------
-  const CORPS = "M108 68L84 30H36L12 68l24 38h48z";
-  const HUMEURS = {
-    repos: { ant: "M47 27C45 16 40 11 33 9M73 27C75 16 80 11 87 9", b: [[32, 9], [88, 9]],
-      yeux: '<ellipse cx="48" cy="64" rx="7" ry="10" fill="#1E2B24"/><ellipse cx="72" cy="64" rx="7" ry="10" fill="#1E2B24"/>' },
-    horsligne: { ant: "M47 27C44 21 37 20 30 23M73 27C76 21 83 20 90 23", b: [[29, 24], [91, 24]], fond: "#C4CABD", trait: "#55605A",
-      yeux: '<path d="M39 63q9 8 18 0M63 63q9 8 18 0" fill="none" stroke="#1E2B24" stroke-width="6" stroke-linecap="round"/>' },
-  };
-  function compagnon(humeur = "repos", taille = 62) {
-    const h = HUMEURS[humeur] || HUMEURS.repos, fond = h.fond || "#E3A008", trait = h.trait || "#1E2B24";
-    return `<svg class="al-api" data-humeur="${humeur}" viewBox="0 0 120 120" width="${taille}" height="${taille}" aria-hidden="true">
-      <path d="${h.ant}" fill="none" stroke="${trait}" stroke-width="5" stroke-linecap="round"/>
-      ${h.b.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="${trait}"/>`).join("")}
-      <path d="${CORPS}" fill="${fond}" stroke="${fond}" stroke-width="10" stroke-linejoin="round"/>${h.yeux}</svg>`;
-  }
+  // Dessin et animations : api-compagnon.js, repris tel quel de la charte.
+  const compagnon = (humeur = "repos", taille = 62) =>
+    Apidoo.compagnon(humeur, taille).replace("<api-compagnon ", `<api-compagnon class="al-api" data-humeur="${humeur}" muet `);
   const humeur = () => (typeof HL != "undefined" && HL.horsLigne() ? "horsligne" : "repos");
+
+  // API réagit : il saute quand une saisie aboutit, s'endort quand le réseau part.
+  const barre = () => document.querySelector('.bottom api-compagnon, .side api-compagnon');
+  const toastAvant = window.toast;
+  window.toast = function (m, ...r) {
+    toastAvant(m, ...r);
+    if (/enregistr|ajout|noté|encaiss/i.test(m) && !/impossible|erreur|échec/i.test(m)) barre()?.jouer?.("fait", humeur());
+  };
+  ["online", "offline"].forEach((ev) => addEventListener(ev, () => {
+    document.querySelectorAll(".bottom api-compagnon, .side api-compagnon").forEach((c) => { c.setAttribute("etat", humeur()); c.dataset.humeur = humeur(); });
+  }));
 
   // ---------- Navigation ----------
   const central = BOTTOM.find(([k]) => k === "saisir");
@@ -37,8 +37,8 @@ const AL = (() => {
   window.shell = function (...a) {
     shellAvant(...a);
     document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
-    document.querySelectorAll('.bottom [data-v="saisir"] svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
-    document.querySelectorAll('.side [data-v="saisir"] svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
+    document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
+    document.querySelectorAll('.side [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
     document.querySelectorAll('.side .brand img').forEach((i) => { i.src = "logo-apidoo.svg"; });
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
@@ -55,7 +55,7 @@ const AL = (() => {
   window.quickSheet = function () {
     feuilleAvant();
     const titre = $sheetForm.querySelector(".u-entete h2");
-    if (titre) { titre.textContent = "Que veux-tu faire ?"; titre.insertAdjacentHTML("beforebegin", compagnon(humeur(), 52)); titre.parentElement.classList.add("al-tete"); }
+    if (titre) { titre.textContent = "Que veux-tu faire ?"; titre.insertAdjacentHTML("beforebegin", compagnon(humeur() === "repos" ? "bonjour" : humeur(), 52)); titre.parentElement.classList.add("al-tete"); }
     $sheetForm.querySelector(".n4-tuiles")?.insertAdjacentHTML("beforebegin", `<button type="button" class="al-cherche" data-act="n4q" data-v="go" data-k="recherche">Rechercher une ruche, un client…</button>`);
     $sheetForm.querySelector("p.small:last-of-type")?.insertAdjacentHTML("afterend", '<p class="small al-bientot">Bientôt, API répondra à tes questions et lira tes factures.</p>');
   };
