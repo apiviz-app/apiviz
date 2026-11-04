@@ -1,5 +1,38 @@
 # Notes de version
 
+## v5.3 · à essayer en recette · charte graphique et API animé
+À vérifier :
+1. API respire et cligne des yeux dans la barre du bas. Il dit bonjour à l'ouverture de sa feuille.
+2. Après une saisie enregistrée, il saute. En coupant le réseau, il passe au gris et s'endort.
+3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
+4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
+
+## v5.7 · à essayer en recette · Miel
+À vérifier :
+1. Miel : un pot par format, rempli selon le stock. Le toucher ouvre une vente.
+2. Après une vente, le pot baisse et les chiffres défilent.
+3. Vente : les 3 clients récents se choisissent d'un geste.
+
+## v5.6 · à essayer en recette · visite à la voix
+À vérifier, au rucher sur un vrai téléphone :
+1. Nouvelle visite › « Visiter à la voix » : parler, par exemple « activité faible, reine vue, couvain réduit, provisions faibles, 38 kilos, c'est bon ».
+2. Les alvéoles se remplissent. En pause, les toucher corrige la valeur.
+3. Relecture : les écarts de poids sont signalés, puis « Enregistrer la visite ». En tournée, on passe à la ruche suivante.
+4. Sans réseau ou sans micro : API le dit, et les alvéoles restent utilisables au doigt.
+Le navigateur peut avoir besoin d'internet pour reconnaître la voix : à vérifier sur iPhone et Android.
+
+## v5.5 · à essayer en recette · fiche ruche et transitions
+À vérifier :
+1. Toucher une alvéole : elle glisse et grandit pour devenir l'en-tête de la fiche. Sans animation sur un vieux téléphone, la fiche s'ouvre normalement.
+2. La courbe de poids se dessine à l'arrivée, pas en changeant d'onglet.
+3. Ruche voisine et retour : transition douce, rien ne saute.
+
+## v5.4 · à essayer en recette · accueil et lentilles
+À vérifier :
+1. Accueil : les alvéoles arrivent en cascade à l'ouverture, pas à chaque retour d'état.
+2. Lentilles État, Provisions, Varroa : les alvéoles changent sans recharger l'écran. Une ruche sans donnée reste neutre.
+3. Rucher placé sur la carte, avec un bon créneau aujourd'hui : la phrase d'accueil l'annonce.
+
 ## v5.2 · en recette · quatre rubriques, ruchers en colonnes, météo par rucher
 À vérifier sur https://apidoo.github.io/recette/ :
 1. Quatre rubriques partout : Accueil, Ruchers, Miel, Gestion, plus API. Sur ordinateur, le menu est une barre en haut.

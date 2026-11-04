@@ -1,0 +1,43 @@
+    import datetime
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne"), ("Ruche 2", "Verger", "À surveiller"), ("Ruche 3", "Verger", "Bonne"),
+            ("Ruche 4", "Bois", "Bonne"), ("Ruche 5", "Bois", "Critique"), ("Ruche 6", "Bois", "Bonne")]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "type_ruche": "Dadant 10 cadres", "annee_reine": 2025, "notes": ""} for a, b, c in noms]
+    R5 = DATA["ruches"][4]["id"]
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R5, "date_visite": J(d), "activite": "Faible", "provisions": "Faibles", "reine": "Vue", "couvain": "Réduit",
+        "poids_kg": k, "varroa": None, "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False} for d, k in ((21, 38), (42, 41))]
+
+    page.add_init_script("""
+      window.__recos = [];
+      window.SpeechRecognition = window.webkitSpeechRecognition = class { constructor() { window.__recos.push(this); } start() {} stop() { this.onend && this.onend(); } };
+      window.dire = (t, fin = true) => { const r = window.__recos.at(-1); const res = [[{ transcript: t }]]; res[0].isFinal = fin; res.length = 1; r.onresult({ resultIndex: 0, results: res }); };
+    """)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Lecture d'une dictée
+    lu = page.evaluate("VX.lire('Activité faible, peu d’entrées. Reine vue. Couvain réduit, provisions faibles. Trente-huit kilos.')")
+    verif(lu == {"activite": "Faible", "couvain": "Réduit", "provisions": "Faibles", "reine": "Vue", "poids_kg": 38}, "dictée comprise : %s" % lu)
+    verif(page.evaluate("VX.lire('provisions moyennes, 41,5 kg, pas vu la reine')") == {"provisions": "Moyennes", "reine": "Non vue", "poids_kg": 41.5}, "autre tournure")
+    verif(page.evaluate("VX.lire('elle va plutôt bien')") == {}, "rien n'est inventé")
+    # Parcours complet
+    R5 = DATA["ruches"][4]["id"]
+    page.evaluate("id => ACT.newvisite(id)", R5); page.wait_for_selector(".vx-entree")
+    page.click(".vx-entree"); page.wait_for_selector("#alVoix[open] .vx-c")
+    verif(page.locator("#alVoix svg.api[data-etat=ecoute]").count() == 1 and page.locator(".vx-c.on").count() == 0, "API écoute, alvéoles vides")
+    page.evaluate("dire('Activité faible, provisions faibles.')")
+    verif(page.locator(".vx-c.on").count() == 2, "les alvéoles se remplissent")
+    page.click("button[data-v=reine]")
+    verif(page.locator(".vx-c.on").count() == 3, "une alvéole se corrige au doigt")
+    page.evaluate("dire('Couvain réduit. 35 kilos. C’est bon.')")
+    page.wait_for_selector("text=Vérifie avant d’enregistrer", timeout=4000)
+    verif(page.locator(".vx-l.alerte").count() == 1 and "À vérifier" in page.locator(".vx-l.alerte").inner_text(), "un écart de poids est signalé")
+    page.click("[data-act=vxenreg]"); page.wait_for_selector("#alVoix:not([open])", state="attached")
+    page.wait_for_function("!document.querySelector('form[data-form=visite]')", timeout=5000)
+    page.wait_for_timeout(300)
+    verif(any(n == "creer_visite" and float(b["p"]["poids_kg"]) == 35 and b["p"]["provisions"] == "Faibles" and b["p"]["couvain"] == "Réduit" for n, b in recu["rpc"]), "visite enregistrée avec les valeurs dictées")
+    # Micro refusé et réseau absent
+    page.evaluate("id => ACT.newvisite(id)", R5); page.wait_for_selector(".vx-entree")
+    page.click(".vx-entree"); page.wait_for_selector("#alVoix[open]")
+    page.evaluate("__recos.at(-1).onerror({ error: 'not-allowed' })")
+    verif("Autorise le micro" in page.locator(".vx-aide").inner_text(), "micro refusé : message clair")
+    page.click("[data-act=vxquitter]"); page.wait_for_selector("form[data-form=visite]")
+    verif(page.locator("#alVoix[open]").count() == 0, "on peut quitter la dictée")

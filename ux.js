@@ -465,7 +465,7 @@ const UX = (() => {
     carteMap = m;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(m);
     const places = ls.filter((l) => l.lat != null);
-    const couleur = { good: "#1F7350", watch: "#B9500A", crit: "#A61B1B" };
+    const couleur = { good: "#2F6B4F", watch: "#E3A008", crit: "#A61B1B" };
     places.forEach((l) => {
       const ic = L.divIcon({ className: "u-pin", iconSize: [96, 58], iconAnchor: [48, 54],
         html: `<span class="u-pin-l">${esc(l.nom)} · ${l.rs.length}</span><span class="u-pin-h" style="background:${couleur[etatClass(l.etat)]}"></span>` });

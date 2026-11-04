@@ -99,9 +99,18 @@ const MT = (() => {
       .then((data) => {
         cache.set(cle, { data, at: Date.now(), lat: l.lat, lng: l.lng });
         document.querySelectorAll(".al-wx").forEach((el) => { if (el.dataset.k === cle) el.innerHTML = html(cle, AL.ruchesDe(cle), Number(el.dataset.jours) || 3); });
+        AL.meteoPrete?.();
       })
       .catch(() => cache.set(cle, { ...cache.get(cle), enCours: false }));
   }
 
-  return { SEUILS, niveau, analyse, html, lieu };
+  // Créneau du jour d'un rucher, si sa météo est déjà connue. Sert à la phrase d'accueil.
+  function creneauDuJour(cle, rs) {
+    const l = lieu(rs), e = cache.get(cle);
+    if (!l || !e?.data || e.lat !== l.lat || e.lng !== l.lng) return null;
+    const a = analyse(e.data);
+    return a.creneau?.n === 2 && a.creneau.jour === a.auj ? a.creneau : null;
+  }
+
+  return { SEUILS, niveau, analyse, html, lieu, creneauDuJour };
 })();

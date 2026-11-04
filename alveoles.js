@@ -7,21 +7,21 @@ const AL = (() => {
   const U = UX;
 
   // ---------- Le compagnon ----------
-  const CORPS = "M108 68L84 30H36L12 68l24 38h48z";
-  const HUMEURS = {
-    repos: { ant: "M47 27C45 16 40 11 33 9M73 27C75 16 80 11 87 9", b: [[32, 9], [88, 9]],
-      yeux: '<ellipse cx="48" cy="64" rx="7" ry="10" fill="#1E2B24"/><ellipse cx="72" cy="64" rx="7" ry="10" fill="#1E2B24"/>' },
-    horsligne: { ant: "M47 27C44 21 37 20 30 23M73 27C76 21 83 20 90 23", b: [[29, 24], [91, 24]], fond: "#C4CABD", trait: "#55605A",
-      yeux: '<path d="M39 63q9 8 18 0M63 63q9 8 18 0" fill="none" stroke="#1E2B24" stroke-width="6" stroke-linecap="round"/>' },
-  };
-  function compagnon(humeur = "repos", taille = 62) {
-    const h = HUMEURS[humeur] || HUMEURS.repos, fond = h.fond || "#E3A008", trait = h.trait || "#1E2B24";
-    return `<svg class="al-api" data-humeur="${humeur}" viewBox="0 0 120 120" width="${taille}" height="${taille}" aria-hidden="true">
-      <path d="${h.ant}" fill="none" stroke="${trait}" stroke-width="5" stroke-linecap="round"/>
-      ${h.b.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="${trait}"/>`).join("")}
-      <path d="${CORPS}" fill="${fond}" stroke="${fond}" stroke-width="10" stroke-linejoin="round"/>${h.yeux}</svg>`;
-  }
+  // Dessin et animations : api-compagnon.js, repris tel quel de la charte.
+  const compagnon = (humeur = "repos", taille = 62) =>
+    Apidoo.compagnon(humeur, taille).replace("<api-compagnon ", `<api-compagnon class="al-api" data-humeur="${humeur}" muet `);
   const humeur = () => (typeof HL != "undefined" && HL.horsLigne() ? "horsligne" : "repos");
+
+  // API réagit : il saute quand une saisie aboutit, s'endort quand le réseau part.
+  const barre = () => document.querySelector('.bottom api-compagnon, .side api-compagnon');
+  const toastAvant = window.toast;
+  window.toast = function (m, ...r) {
+    toastAvant(m, ...r);
+    if (/enregistr|ajout|noté|encaiss/i.test(m) && !/impossible|erreur|échec/i.test(m)) barre()?.jouer?.("fait", humeur());
+  };
+  ["online", "offline"].forEach((ev) => addEventListener(ev, () => {
+    document.querySelectorAll(".bottom api-compagnon, .side api-compagnon").forEach((c) => { c.setAttribute("etat", humeur()); c.dataset.humeur = humeur(); });
+  }));
 
   // ---------- Navigation ----------
   const central = BOTTOM.find(([k]) => k === "saisir");
@@ -36,9 +36,10 @@ const AL = (() => {
   const shellAvant = window.shell;
   window.shell = function (...a) {
     shellAvant(...a);
+    if (S.route !== "dash") S.alVu = false;
     document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
-    document.querySelectorAll('.bottom [data-v="saisir"] svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
-    document.querySelectorAll('.side [data-v="saisir"] svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
+    document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
+    document.querySelectorAll('.side [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
     document.querySelectorAll('.side .brand img').forEach((i) => { i.src = "logo-apidoo.svg"; });
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
@@ -55,7 +56,7 @@ const AL = (() => {
   window.quickSheet = function () {
     feuilleAvant();
     const titre = $sheetForm.querySelector(".u-entete h2");
-    if (titre) { titre.textContent = "Que veux-tu faire ?"; titre.insertAdjacentHTML("beforebegin", compagnon(humeur(), 52)); titre.parentElement.classList.add("al-tete"); }
+    if (titre) { titre.textContent = "Que veux-tu faire ?"; titre.insertAdjacentHTML("beforebegin", compagnon(humeur() === "repos" ? "bonjour" : humeur(), 52)); titre.parentElement.classList.add("al-tete"); }
     $sheetForm.querySelector(".n4-tuiles")?.insertAdjacentHTML("beforebegin", `<button type="button" class="al-cherche" data-act="n4q" data-v="go" data-k="recherche">Rechercher une ruche, un client…</button>`);
     $sheetForm.querySelector("p.small:last-of-type")?.insertAdjacentHTML("afterend", '<p class="small al-bientot">Bientôt, API répondra à tes questions et lira tes factures.</p>');
   };
@@ -70,7 +71,9 @@ const AL = (() => {
     const perte = p.length > 1 ? Number(p[1].poids_kg) - Number(p[0].poids_kg) : 0;
     const constat = perte > 0 ? `${r.nom} a perdu ${n(perte)} kg depuis le ${new Date(p[1].date_visite + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}.`
       : `${r.nom} est ${r.etat === "Critique" ? "en état critique" : "à surveiller"}.`;
-    return `${constat} C’est la priorité du jour.`;
+    const cle = U.ruchers().find(([, rs]) => rs.includes(r))?.[0];
+    const c = cle === undefined ? null : MT.creneauDuJour(cle, ruchesDe(cle));
+    return c ? `Bon créneau vers ${c.h} h : ${U.nomRucher(cle)}. ${constat} Commence par elle.` : `${constat} C’est la priorité du jour.`;
   }
   function legende() {
     const l = S.d.ruches, nb = (e) => l.filter((r) => r.etat === e).length;
@@ -95,11 +98,66 @@ const AL = (() => {
     afaire?.querySelector('[data-v="agenda"]')?.insertAdjacentHTML("beforebegin", '<button type="button" class="link" data-act="go" data-v="activite">Activité</button>');
     if (ancien && S.d.ruches.length) ancien.outerHTML = `<section class="al-carte">${U.ruchers().map(([k, rs]) => colonne(k, rs)).join("")}${legende()}</section>`;
     const carte = document.querySelector(".al-carte");
+    if (carte) {
+      carte.querySelector(".u-rucher")?.insertAdjacentHTML("beforebegin", lentilles());
+      carte.querySelectorAll(".u-hex").forEach((h, i) => h.style.setProperty("--i", i));
+      if (!S.alVu) carte.classList.add("al-entree");
+      S.alVu = true;
+      appliquerLentille();
+    }
     if (carte && afaire) afaire.before(carte);
     if (afaire && saison) { const deux = document.createElement("div"); deux.className = "al-deux"; afaire.before(deux); deux.append(afaire, saison); }
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
   };
+  // ---------- Lentilles : regarder toutes les ruches par un seul critère ----------
+  const LENTILLES = [["etat", "État"], ["prov", "Provisions"], ["varroa", "Varroa"]];
+  const NIVEAUX = { Bonnes: "85%", Moyennes: "52%", Faibles: "22%" };
+  const lentilles = () => `<div class="al-lentilles" role="group" aria-label="Regarder les ruches par">${LENTILLES.map(([k, t]) =>
+    `<button type="button" class="lent ${(S.lentille || "etat") === k ? "on" : ""}" aria-pressed="${(S.lentille || "etat") === k}" data-act="allent" data-v="${k}">${t}</button>`).join("")}</div>`;
+  function regard(r, l) {
+    const visites = S.d.visites.filter((v) => v.ruche_id === r.id), num = String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3);
+    if (l === "prov") {
+      const p = visites.find((v) => v.provisions)?.provisions;
+      return p && NIVEAUX[p] ? { cl: "bg-niv", txt: num, niv: NIVEAUX[p], mot: `provisions ${p.toLowerCase()}` } : { cl: "bg-vide", txt: num, mot: "provisions pas encore notées" };
+    }
+    if (l === "varroa") {
+      const t = U.tauxVarroa(visites.find((v) => v.varroa != null)), s = U.seuilVarroa();
+      if (t === null) return { cl: "bg-vide", txt: num, mot: "varroa pas encore compté" };
+      return { cl: `al-txt bg-${t >= s ? "crit" : t >= s * 0.66 ? "watch" : "good"}`, txt: n(t, 1), mot: `varroa ${n(t, 1)} %` };
+    }
+    return { cl: `bg-${etatClass(r.etat)}`, txt: num, mot: `état ${r.etat}` };
+  }
+  function legendeLentille(l) {
+    const s = U.seuilVarroa();
+    if (l === "prov") return `<p class="al-cle"><span><i class="al-niv" style="--niv:85%"></i>Bonnes</span><span><i class="al-niv" style="--niv:52%"></i>Moyennes</span><span><i class="al-niv" style="--niv:22%"></i>Faibles</span></p>`;
+    if (l === "varroa") return `<p class="al-cle"><span><i class="bg-good"></i>Sous ${n(s * 0.66, 1)} %</span><span><i class="bg-watch"></i>À surveiller</span><span><i class="bg-crit"></i>À partir de ${n(s, 1)} %</span></p>`;
+    return legende();
+  }
+  function appliquerLentille() {
+    const l = S.lentille || "etat", carte = document.querySelector(".al-carte");
+    if (!carte) return;
+    carte.querySelectorAll(".lent").forEach((b) => { const on = b.dataset.v === l; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    carte.querySelectorAll(".u-hex").forEach((b) => {
+      const r = S.d.ruches.find((x) => x.id === b.dataset.v);
+      if (!r) return;
+      const v = regard(r, l);
+      b.className = `u-hex ${v.cl}`;
+      b.style.setProperty("--niv", v.niv || "0%");
+      b.querySelector("span").textContent = v.txt;
+      b.setAttribute("aria-label", `${r.nom}, ${v.mot}`);
+    });
+    carte.querySelector(".al-cle").outerHTML = legendeLentille(l);
+  }
+  ACT.allent = (k) => { S.lentille = k; appliquerLentille(); };
+  // Quand la météo arrive, la phrase d'accueil peut annoncer le créneau.
+  window.AL_meteoPrete = () => {
+    const h1 = document.querySelector(".hero-head h1");
+    if (S.route !== "dash" || !h1 || !S.d?.ruches.length) return;
+    const debut = h1.textContent.split(". ")[0], p = phrase();
+    h1.textContent = `${debut}. ${p}`;
+  };
+
   function colonne(k, rs) {
     const crit = rs.some((r) => r.etat === "Critique");
     const hex = rs.map((r) => `<button type="button" class="u-hex bg-${etatClass(r.etat)}" data-act="ruche" data-v="${r.id}" aria-label="${esc(r.nom)}, état ${esc(r.etat)}"><span>${esc(String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3))}</span></button>`).join("");
@@ -187,8 +245,94 @@ const AL = (() => {
   const rucheAvant = window.viewRuche;
   window.viewRuche = function () {
     rucheAvant();
-    [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"))?.setAttribute("open", "");
+    const pli = [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"));
+    pli?.setAttribute("open", "");
+    const r = byId(S.d.ruches, S.ruche) || byId(S.d.ruchesSorties || [], S.ruche), hex = document.querySelector(".u-gros-hex");
+    if (r && hex) hex.textContent = String(r.nom).replace(/^Ruche\s*/i, "").slice(0, 3) + (r.etat === "Critique" ? "!" : "");
+    // La courbe se dessine quand on arrive sur la ruche, pas à chaque changement d'onglet.
+    if (S.alCourbe !== S.ruche) pli?.querySelector("polyline")?.classList.add("al-trace");
+    pli?.querySelector("polyline")?.setAttribute("pathLength", "1");
+    S.alCourbe = S.ruche;
   };
 
-  return { compagnon, phrase, ruchesDe };
+  // ---------- Transitions : l'alvéole touchée devient l'en-tête de la fiche ----------
+  const fluide = () => document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches;
+  function transition(action, source) {
+    if (!fluide()) return action();
+    if (source) source.style.viewTransitionName = "al-hex";
+    document.startViewTransition(() => {
+      if (source) source.style.viewTransitionName = "";
+      action();
+      document.querySelector(".u-gros-hex")?.style.setProperty("view-transition-name", "al-hex");
+    });
+  }
+  const versRuche = ACT.ruche;
+  ACT.ruche = (id) => {
+    const b = [...document.querySelectorAll('[data-act="ruche"]')].find((x) => x.dataset.v === id);
+    transition(() => versRuche(id), document.querySelector(".u-gros-hex") || b?.querySelector(".n4-hex") || (b?.classList.contains("u-hex") ? b : null));
+  };
+  const allerA = ACT.go;
+  ACT.go = (v) => (S.route === "ruche" || S.route === "rucher" ? transition(() => allerA(v)) : allerA(v));
+
+  // ---------- Miel : des pots qui se vident, des chiffres qui bougent ----------
+  const nbFr = (x) => x.toLocaleString("fr-FR");
+  function compter(el, de, vers, fin) {
+    if (de === vers || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+    const t0 = performance.now();
+    const pas = (t) => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, (t - t0) / 520), e = 1 - (1 - k) ** 3;
+      el.textContent = nbFr(Math.round(de + (vers - de) * e)) + fin;
+      if (k < 1) requestAnimationFrame(pas);
+    };
+    requestAnimationFrame(pas);
+  }
+  function potsParFormat() {
+    const f = new Map();
+    S.d.lots.forEach((l) => {
+      const x = f.get(l.format_g) || { g: l.format_g, reste: 0, total: 0, prix: l.prix };
+      x.reste += Number(l.pots_restants); x.total += Number(l.pots_initiaux || l.pots_restants); f.set(l.format_g, x);
+    });
+    return [...f.values()].filter((x) => x.total).sort((p, q) => q.g - p.g).slice(0, 3);
+  }
+  const clientsAvant = window.viewClients;
+  window.viewClients = function () {
+    clientsAvant();
+    const pots = potsParFormat(), wrap = document.querySelector(".wrap");
+    const prec = S.alMiel || {}, suite = {};
+    if (pots.length && wrap) {
+      wrap.querySelector(".u-tuiles")?.insertAdjacentHTML("beforebegin", `<section class="al-pots" aria-label="Pots à vendre">${pots.map((p) => {
+        const h = Math.round(p.reste / p.total * 100), av = prec["p" + p.g];
+        suite["p" + p.g] = h;
+        return `<button type="button" class="al-pot" data-act="newvente" aria-label="${p.reste} pots de ${p.g} g sur ${p.total}, nouvelle vente"><span class="al-couv"></span><span class="al-bocal"><i data-h="${h}" style="height:${av ?? 0}%"></i></span><b>${p.reste}</b><span class="small">${p.g} g, à ${esc(eur0(p.prix))}</span></button>`;
+      }).join("")}</section>`);
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll(".al-bocal i").forEach((i) => { i.style.height = i.dataset.h + "%"; })));
+    }
+    document.querySelectorAll(".u-tuile b").forEach((b, i) => {
+      const m = b.textContent.match(/^([\d\s\u202f\u00a0]+)(.*)$/);
+      if (!m) return;
+      const v = Number(m[1].replace(/\D/g, "")), fin = m[2];
+      suite["t" + i] = v;
+      if (prec["t" + i] !== undefined) compter(b, prec["t" + i], v, m[1].endsWith(" ") || m[1].endsWith("\u00a0") || m[1].endsWith("\u202f") ? "\u00a0" + fin : fin);
+    });
+    S.alMiel = suite;
+  };
+  // Vente : les clients récents à portée de pouce.
+  const venteAvant = window.viewVente;
+  window.viewVente = function () {
+    venteAvant();
+    const champ = document.getElementById("s_client");
+    if (!champ) return;
+    const ids = [...new Set(S.d.ventes.map((v) => v.client_id))].slice(0, 3);
+    const noms = ids.map((i) => byId(S.d.clients, i)).filter(Boolean);
+    if (noms.length < 3) S.d.clients.forEach((c) => { if (noms.length < 3 && !noms.includes(c)) noms.push(c); });
+    champ.closest("label").insertAdjacentHTML("beforebegin", `<div class="chips al-recents" role="group" aria-label="Clients récents">${noms.map((c) => `<button type="button" class="chip ${champ.value === c.id ? "on" : ""}" data-act="alclient" data-v="${c.id}">${esc(c.nom)}</button>`).join("")}</div>`);
+  };
+  ACT.alclient = (id) => {
+    const c = document.getElementById("s_client");
+    if (c) { c.value = id; c.dispatchEvent(new Event("change", { bubbles: true })); }
+    document.querySelectorAll(".al-recents .chip").forEach((b) => b.classList.toggle("on", b.dataset.v === id));
+  };
+
+  return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
 })();
