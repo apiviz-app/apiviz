@@ -1,6 +1,6 @@
 // Apidoo — service worker : garde l'application sur le téléphone pour l'ouvrir sans réseau.
 // Les données (Supabase) ne passent pas par ici : offline.js s'en occupe.
-const VERSION = "apidoo-2026-11-04-v5-demarrage";
+const VERSION = "apidoo-2026-11-04-v5-decouverte";
 const COQUILLE = [
   "./", "./index.html", "./app.js", "./photos.js", "./offline.js", "./registre.js", "./rappels.js", "./visites-groupees.js", "./etiquettes.js", "./exploitations.js", "./ux.js", "./v3.js", "./nav4.js", "./meteo.js", "./api-compagnon.js", "./alveoles.js", "./voix.js", "./ergonomie.js", "./essentiels.js", "./tournee.js", "./demarrage.js", "./config.js", "./manifest.webmanifest",
   "./logo-apidoo.svg", "./logo-apidoo-clair.svg", "./symbole-apidoo.svg", "./icone-apidoo.svg",

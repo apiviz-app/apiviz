@@ -1,5 +1,19 @@
 # Notes de version
 
+## v5.14 · à essayer en recette · prise en main, suite
+Migration facultative : `migrations/011-invitation-avant-connexion.sql`, d'abord sur `apidoo-test`. Sans elle, l'invitation dit « une exploitation », le reste fonctionne.
+
+- Rucher d'exemple, depuis la présentation ou la première question : rien n'est envoyé à la base.
+- Écran après l'inscription : renvoyer le lien, corriger l'adresse.
+- Première visite directement en mode guidé par API, installation proposée ensuite sur téléphone.
+- Trois astuces, une à la fois. Membre invité : carte d'arrivée. Ordinateur : code QR vers le téléphone.
+
+**À vérifier**
+1. Rucher d'exemple : saisir une visite affiche « rien n'est enregistré », Créer le mien ouvre l'inscription.
+2. Inscription : Renvoyer le lien, Corriger mon adresse.
+3. Lien d'invitation avec et sans la migration, lien expiré.
+4. Compte membre : carte d'arrivée, pas de Bien démarrer.
+
 ## v5.13 · à essayer en recette · prise en main
 Aucune migration. L'ancienne version reste compatible avec la base.
 

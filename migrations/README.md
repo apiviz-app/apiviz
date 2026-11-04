@@ -13,6 +13,7 @@ s'appliquent ensuite, dans l'ordre, dans Supabase > SQL Editor.
 | 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | Recette (apidoo-test) le 3 nov. 2026 · production : après validation |
 
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | À appliquer sur `apidoo-test`, puis `apidoo` |
+| 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | À appliquer sur `apidoo-test`, puis `apidoo` |
 
 Les migrations 001 à 003 ne sont pas dans ce dépôt : elles font partie de `schema.sql`
 ou ont été appliquées directement dans Supabase.
