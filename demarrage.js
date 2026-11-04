@@ -80,6 +80,7 @@
       if (a.error) throw a.error;
       memo(cle("profil"), q.profil);
       S.member = true; S.route = "dash"; render(); await loadAll(); render();
+      toast("Exploitation créée");
     } catch (e) { fail(e); }
   };
 
