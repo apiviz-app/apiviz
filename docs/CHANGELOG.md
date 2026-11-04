@@ -7,6 +7,12 @@
 3. Couleurs de la charte : vert, fonds et filets. « À surveiller » passe de l'orange au miel.
 4. Réglage « moins d'animations » du téléphone : API garde ses poses, sans mouvement.
 
+## v5.7 · à essayer en recette · Miel
+À vérifier :
+1. Miel : un pot par format, rempli selon le stock. Le toucher ouvre une vente.
+2. Après une vente, le pot baisse et les chiffres défilent.
+3. Vente : les 3 clients récents se choisissent d'un geste.
+
 ## v5.6 · à essayer en recette · visite à la voix
 À vérifier, au rucher sur un vrai téléphone :
 1. Nouvelle visite › « Visiter à la voix » : parler, par exemple « activité faible, reine vue, couvain réduit, provisions faibles, 38 kilos, c'est bon ».

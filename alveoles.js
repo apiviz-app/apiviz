@@ -274,5 +274,65 @@ const AL = (() => {
   const allerA = ACT.go;
   ACT.go = (v) => (S.route === "ruche" || S.route === "rucher" ? transition(() => allerA(v)) : allerA(v));
 
+  // ---------- Miel : des pots qui se vident, des chiffres qui bougent ----------
+  const nbFr = (x) => x.toLocaleString("fr-FR");
+  function compter(el, de, vers, fin) {
+    if (de === vers || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+    const t0 = performance.now();
+    const pas = (t) => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, (t - t0) / 520), e = 1 - (1 - k) ** 3;
+      el.textContent = nbFr(Math.round(de + (vers - de) * e)) + fin;
+      if (k < 1) requestAnimationFrame(pas);
+    };
+    requestAnimationFrame(pas);
+  }
+  function potsParFormat() {
+    const f = new Map();
+    S.d.lots.forEach((l) => {
+      const x = f.get(l.format_g) || { g: l.format_g, reste: 0, total: 0, prix: l.prix };
+      x.reste += Number(l.pots_restants); x.total += Number(l.pots_initiaux || l.pots_restants); f.set(l.format_g, x);
+    });
+    return [...f.values()].filter((x) => x.total).sort((p, q) => q.g - p.g).slice(0, 3);
+  }
+  const clientsAvant = window.viewClients;
+  window.viewClients = function () {
+    clientsAvant();
+    const pots = potsParFormat(), wrap = document.querySelector(".wrap");
+    const prec = S.alMiel || {}, suite = {};
+    if (pots.length && wrap) {
+      wrap.querySelector(".u-tuiles")?.insertAdjacentHTML("beforebegin", `<section class="al-pots" aria-label="Pots à vendre">${pots.map((p) => {
+        const h = Math.round(p.reste / p.total * 100), av = prec["p" + p.g];
+        suite["p" + p.g] = h;
+        return `<button type="button" class="al-pot" data-act="newvente" aria-label="${p.reste} pots de ${p.g} g sur ${p.total}, nouvelle vente"><span class="al-couv"></span><span class="al-bocal"><i data-h="${h}" style="height:${av ?? 0}%"></i></span><b>${p.reste}</b><span class="small">${p.g} g, à ${esc(eur0(p.prix))}</span></button>`;
+      }).join("")}</section>`);
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll(".al-bocal i").forEach((i) => { i.style.height = i.dataset.h + "%"; })));
+    }
+    document.querySelectorAll(".u-tuile b").forEach((b, i) => {
+      const m = b.textContent.match(/^([\d\s\u202f\u00a0]+)(.*)$/);
+      if (!m) return;
+      const v = Number(m[1].replace(/\D/g, "")), fin = m[2];
+      suite["t" + i] = v;
+      if (prec["t" + i] !== undefined) compter(b, prec["t" + i], v, m[1].endsWith(" ") || m[1].endsWith("\u00a0") || m[1].endsWith("\u202f") ? "\u00a0" + fin : fin);
+    });
+    S.alMiel = suite;
+  };
+  // Vente : les clients récents à portée de pouce.
+  const venteAvant = window.viewVente;
+  window.viewVente = function () {
+    venteAvant();
+    const champ = document.getElementById("s_client");
+    if (!champ) return;
+    const ids = [...new Set(S.d.ventes.map((v) => v.client_id))].slice(0, 3);
+    const noms = ids.map((i) => byId(S.d.clients, i)).filter(Boolean);
+    if (noms.length < 3) S.d.clients.forEach((c) => { if (noms.length < 3 && !noms.includes(c)) noms.push(c); });
+    champ.closest("label").insertAdjacentHTML("beforebegin", `<div class="chips al-recents" role="group" aria-label="Clients récents">${noms.map((c) => `<button type="button" class="chip ${champ.value === c.id ? "on" : ""}" data-act="alclient" data-v="${c.id}">${esc(c.nom)}</button>`).join("")}</div>`);
+  };
+  ACT.alclient = (id) => {
+    const c = document.getElementById("s_client");
+    if (c) { c.value = id; c.dispatchEvent(new Event("change", { bubbles: true })); }
+    document.querySelectorAll(".al-recents .chip").forEach((b) => b.classList.toggle("on", b.dataset.v === id));
+  };
+
   return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
 })();

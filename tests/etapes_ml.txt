@@ -1,0 +1,18 @@
+    import datetime
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne"), ("Ruche 2", "Verger", "À surveiller"), ("Ruche 3", "Verger", "Bonne"),
+            ("Ruche 4", "Bois", "Bonne"), ("Ruche 5", "Bois", "Critique"), ("Ruche 6", "Bois", "Bonne")]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "type_ruche": "Dadant 10 cadres", "annee_reine": 2025, "notes": ""} for a, b, c in noms]
+    R5 = DATA["ruches"][4]["id"]
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R5, "date_visite": J(d), "activite": "Faible", "provisions": "Faibles", "reine": "Vue", "couvain": "Réduit",
+        "poids_kg": k, "varroa": None, "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False} for d, k in ((21, 38), (42, 41))]
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.click(".bottom button[data-v=ventes]"); page.wait_for_selector(".al-pot")
+    verif(page.locator(".al-pot").count() == 1 and "500 g" in page.locator(".al-pot").inner_text(), "un pot par format")
+    page.wait_for_timeout(900)
+    h = page.evaluate("document.querySelector('.al-bocal i').style.height")
+    verif(h == "100%", "le pot se remplit selon le stock : %s" % h)
+    page.click(".al-pot"); page.wait_for_selector(".al-recents .chip")
+    page.click(".al-recents .chip")
+    verif(page.input_value("#s_client") == DATA["clients"][0]["id"] and page.locator(".al-recents .chip.on").count() == 1, "client choisi d'un geste")
