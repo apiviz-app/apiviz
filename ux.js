@@ -44,6 +44,12 @@ const UX = (() => {
     const x = new Date(d + "T12:00:00");
     return x.toLocaleDateString("fr-FR", { day: "numeric", month: "short", ...(x.getFullYear() !== new Date().getFullYear() ? { year: "numeric" } : {}) });
   };
+  // « Hier », « Il y a 3 jours » : plus parlant qu'une date pour le mois écoulé.
+  const quand = (d) => {
+    if (!d) return "–";
+    const j = Math.round((new Date(today() + "T12:00:00") - new Date(String(d).slice(0, 10) + "T12:00:00")) / 864e5);
+    return j === 0 ? "Aujourd’hui" : j === 1 ? "Hier" : j > 1 && j <= 30 ? `Il y a ${j} jours` : dateCourte(String(d).slice(0, 10));
+  };
   const qui = (email) => String(email || "").split("@")[0];
   const pluriel = (nb, mot) => `${nb} ${mot}${nb > 1 ? "s" : ""}`;
 
@@ -171,7 +177,7 @@ const UX = (() => {
     const intr = d.intrants.filter((i) => i.visite_id === v.id).map((i) => { const a = byId(d.articles, i.article_id); return `${a?.nom || "?"} ${n(i.quantite)} ${a?.unite || ""}`.trim(); }).join(", ");
     const trt = v.traitement ? [v.lot_produit && "lot " + v.lot_produit, v.traitement_dose, v.retrait_prevu && "fin prévue le " + dfr(v.retrait_prevu)].filter(Boolean).join(", ") : "";
     return `<article class="card u-visite">
-      <div class="u-visite-h"><b>${esc(dateCourte(v.date_visite))}</b><span class="small">${esc(qui(v.auteur))}</span></div>
+      <div class="u-visite-h"><b>${esc(quand(v.date_visite))}</b><span class="small">${esc(qui(v.auteur))}</span></div>
       <div class="u-chips">${chips}</div>
       ${v.note ? `<p class="u-note">${esc(v.note)}</p>` : ""}
       ${intr ? `<p class="small">Utilisé : ${esc(intr)}</p>` : ""}${trt ? `<p class="small">Traitement : ${esc(trt)}</p>` : ""}
@@ -605,7 +611,7 @@ const UX = (() => {
 
   Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
   return {
-    carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, chip, qui, pluriel, nomRucher, ruchers,
+    carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
     onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },
   };

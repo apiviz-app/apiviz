@@ -541,19 +541,29 @@ const V3 = (() => {
   // ---------- Recherche ----------
   let requete = "";
   const plat = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  function resultats(q) {
+  // Résultats par groupe : [titre, [{ t, s, act, v }]]. Sert à l'écran Rechercher et à la barre du haut.
+  function chercher(q) {
     const d = S.d, t = plat(q).trim();
-    if (t.length < 2) return '<p class="small">Tapez au moins 2 lettres : ruche, rucher, client, lot, mot d’une note…</p>';
+    if (t.length < 2 || !d) return [];
     const m = (...xs) => xs.some((x) => plat(x).includes(t));
-    const ligne = (titre, sous, act, v) => `<button type="button" class="u-todo" data-act="${act}" data-v="${esc(v)}"><span class="u-todo-t"><b>${esc(titre)}</b><span class="small">${esc(sous)}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`;
-    const groupes = [
-      ["Ruches", tousLesRuches().filter((r) => m(r.nom, r.rucher, r.notes)).map((r) => ligne(r.nom, [r.rucher, r.sortie || r.etat].filter(Boolean).join(" · "), "ruche", r.id))],
-      ["Clients", d.clients.filter((c) => m(c.nom, c.telephone, c.email, c.notes)).map((c) => ligne(c.nom, [c.cercle, c.telephone].filter(Boolean).join(" · "), "editclient", c.id))],
-      ["Lots", d.lots.filter((l) => m(l.code, l.miel, l.extraction)).map((l) => ligne(`Lot ${l.code}`, `${l.miel} · ${n(l.format_g, 0)} g · ${l.pots_restants} en stock`, "editlot", l.id))],
-      ["Notes de visite", d.visites.filter((v) => m(v.note, v.traitement)).slice(0, 15).map((v) => ligne(`${rucheDe(v.ruche_id)?.nom || "?"} · ${U.dateCourte(v.date_visite)}`, v.note || v.traitement, "ruche", v.ruche_id))],
-      ["Tâches", d.taches.filter((x) => m(x.titre)).map((x) => ligne(x.titre, x.faite ? "faite" : x.echeance ? "pour le " + dfr(x.echeance) : "à faire", "edittache", x.id))],
+    const L = (titre, sous, act, v) => ({ t: titre, s: sous, act, v });
+    return [
+      ["Ruches", tousLesRuches().filter((r) => m(r.nom, r.rucher, r.notes)).map((r) => L(r.nom, [r.rucher, r.sortie || r.etat].filter(Boolean).join(" · "), "ruche", r.id))],
+      ["Clients", d.clients.filter((c) => m(c.nom, c.telephone, c.email, c.notes)).map((c) => L(c.nom, [c.cercle, c.telephone].filter(Boolean).join(" · "), "editclient", c.id))],
+      ["Lots", d.lots.filter((l) => m(l.code, l.miel, l.extraction)).map((l) => L(`Lot ${l.code}`, `${l.miel} · ${n(l.format_g, 0)} g · ${l.pots_restants} en stock`, "editlot", l.id))],
+      ["Matériel", d.articles.filter((a) => m(a.nom, a.type)).map((a) => L(a.nom, `${n(a.stock)} ${a.unite}${Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil) ? " · stock bas" : ""}`, "editarticle", a.id))],
+      ["Fournisseurs", d.fournisseurs.filter((f) => m(f.nom, f.produits, f.contact, f.telephone)).map((f) => L(f.nom, f.produits || f.contact || "", "editfournisseur", f.id))],
+      ["Dépenses", d.depenses.filter((x) => m(x.libelle, x.categorie)).slice(0, 15).map((x) => L(x.libelle, `${U.dateCourte(x.date_depense)} · ${eur(x.montant)}`, "editdepense", x.id))],
+      ["Ventes", d.ventes.filter((v) => m(byId(d.clients, v.client_id)?.nom)).slice(0, 15).map((v) => L(`Vente · ${byId(d.clients, v.client_id)?.nom || "client"}`, `${U.dateCourte(v.date_vente)} · ${eur(venteTotal(v))}${v.paye ? "" : " · à encaisser"}`, "uvente", v.id))],
+      ["Notes de visite", d.visites.filter((v) => m(v.note, v.traitement)).slice(0, 15).map((v) => L(`${rucheDe(v.ruche_id)?.nom || "?"} · ${U.dateCourte(v.date_visite)}`, v.note || v.traitement, "ruche", v.ruche_id))],
+      ["Tâches", d.taches.filter((x) => m(x.titre)).map((x) => L(x.titre, x.faite ? "faite" : x.echeance ? "pour le " + dfr(x.echeance) : "à faire", "edittache", x.id))],
     ].filter(([, l]) => l.length);
-    return groupes.length ? groupes.map(([g, l]) => `<section class="card u-liste"><h2>${g}</h2>${l.join("")}</section>`).join("") : '<p class="small">Aucun résultat.</p>';
+  }
+  function resultats(q) {
+    if (plat(q).trim().length < 2) return '<p class="small">Tapez au moins 2 lettres : ruche, client, lot, matériel, dépense, mot d’une note…</p>';
+    const ligne = (x) => `<button type="button" class="u-todo" data-act="${x.act}" data-v="${esc(x.v)}"><span class="u-todo-t"><b>${esc(x.t)}</b><span class="small">${esc(x.s)}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`;
+    const groupes = chercher(q);
+    return groupes.length ? groupes.map(([g, l]) => `<section class="card u-liste"><h2>${g}</h2>${l.map(ligne).join("")}</section>`).join("") : '<p class="small">Aucun résultat.</p>';
   }
   function vueRecherche() {
     shell("Rechercher", "", "", `<form data-form="v3cherche" class="form"><label>Rechercher<input type="search" id="v3q" value="${esc(requete)}" autocomplete="off" enterkeyhint="search" placeholder="Ruche 3, Durand, L26-02, essaim…"></label></form><div id="v3res">${resultats(requete)}</div>`);
@@ -589,5 +599,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { fil, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer };
+  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer };
 })();
