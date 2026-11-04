@@ -1,5 +1,17 @@
 # Notes de version
 
+## v5.13 · à essayer en recette · prise en main
+Aucune migration. L'ancienne version reste compatible avec la base.
+
+- Présentation avant le compte, puis création du rucher en trois questions, ruches créées d'un coup.
+- Accueil : Bien démarrer en haut, étapes selon le mois, bouton Masquer, plus de chiffres à zéro.
+- Première visite saluée sur l'accueil. Miel vide : trois points de départ. Tutoiement sur ces écrans.
+
+**À vérifier sur un vrai téléphone**
+1. Nouveau compte : présentation, e-mail, retour par le lien, trois questions, ruches créées.
+2. Position refusée : le rucher se crée quand même, l'étape carte reste à faire.
+3. Lien d'invitation : pas de questions, pas de guide pour un membre.
+
 ## v5.12 · à essayer en recette · installation sur téléphone
 Aucune migration. L'ancienne version reste compatible avec la base.
 
