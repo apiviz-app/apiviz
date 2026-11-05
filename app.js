@@ -909,14 +909,14 @@ function viewRuche() {
   );
 }
 function viewVisite() {
-  const e = S.visite,
-    t = S.d,
-    s = (a, o, l) =>
-      `<div class="field"><div class="t">${a}</div><div class="seg" style="grid-template-columns:repeat(${l.length},minmax(0,1fr))">${l.map((r) => `<button type="button" class="${e[o] === r ? "on" : ""}" aria-pressed="${e[o] === r}" data-act="vset" data-k="${o}" data-v="${r}">${r}</button>`).join("")}</div></div>`,
-    i = consommables()
-      .map((a) => {
-        const o = ["kg", "L"].includes(a.unite) ? 0.5 : 1;
-        return `<div class="stepper"><div><b>${esc(a.nom)}</b><div class="small">${n(a.stock)} ${esc(a.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${-o}">\u2212</button><span>${n(e.q[a.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(a.nom)}" data-act="vstep" data-k="${a.id}" data-v="${o}">+</button></div></div>`;
+  const visite = S.visite,
+    donnees = S.d,
+    choix = (titre, cle, options) =>
+      `<div class="field"><div class="t">${titre}</div><div class="seg" style="grid-template-columns:repeat(${options.length},minmax(0,1fr))">${options.map((option) => `<button type="button" class="${visite[cle] === option ? "on" : ""}" aria-pressed="${visite[cle] === option}" data-act="vset" data-k="${cle}" data-v="${option}">${option}</button>`).join("")}</div></div>`,
+    intrants = consommables()
+      .map((article) => {
+        const pas = ["kg", "L"].includes(article.unite) ? 0.5 : 1;
+        return `<div class="stepper"><div><b>${esc(article.nom)}</b><div class="small">${n(article.stock)} ${esc(article.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${-pas}">\u2212</button><span>${n(visite.q[article.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${pas}">+</button></div></div>`;
       })
       .join("");
   shell(
@@ -925,19 +925,19 @@ function viewVisite() {
     '<button class="btn" data-act="cancel">Annuler</button>',
     `
     <form data-form="visite" class="form">
-      ${typeof VR != "undefined" ? VR.pick(e) : `<div class="field"><div class="t">Ruche visit\xE9e</div><div class="pick">${t.ruches.map((a) => `<button type="button" class="${e.ruche_id === a.id ? "on" : ""}" aria-pressed="${e.ruche_id === a.id}" data-act="vset" data-k="ruche_id" data-v="${a.id}">${esc(a.nom)}</button>`).join("")}</div></div>`}
-      <label>Date<input type="date" id="v_date" value="${esc(e.date_visite)}" max="${today()}" required></label>
-      ${s("Activit\xE9 \xE0 l\u2019entr\xE9e", "activite", ["Faible", "Normale", "Forte"])}
-      ${s("Provisions", "provisions", ["Faibles", "Moyennes", "Bonnes"])}
-      ${s("Reine", "reine", ["Vue", "Non vue", "Non cherch\xE9e"])}
-      ${s("Couvain", "couvain", ["Non vu", "R\xE9duit", "Normal", "Abondant"])}
-      ${s("\xC9tat de la ruche apr\xE8s la visite", "etat", ETATS)}
-      <section class="card"><h2>Ce que vous avez utilis\xE9</h2>${i || '<p class="small">Ajoutez vos consommables dans Mat\xE9riel pour les suivre ici.</p>'}</section>
-      <div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(e.poids_kg)}"></label>
-      <label>Varroas compt\xE9s<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>
-      ${typeof RG != "undefined" ? RG.formSection(e) : ""}
+      ${typeof VR != "undefined" ? VR.pick(visite) : `<div class="field"><div class="t">Ruche visit\xE9e</div><div class="pick">${donnees.ruches.map((ruche) => `<button type="button" class="${visite.ruche_id === ruche.id ? "on" : ""}" aria-pressed="${visite.ruche_id === ruche.id}" data-act="vset" data-k="ruche_id" data-v="${ruche.id}">${esc(ruche.nom)}</button>`).join("")}</div></div>`}
+      <label>Date<input type="date" id="v_date" value="${esc(visite.date_visite)}" max="${today()}" required></label>
+      ${choix("Activit\xE9 \xE0 l\u2019entr\xE9e", "activite", ["Faible", "Normale", "Forte"])}
+      ${choix("Provisions", "provisions", ["Faibles", "Moyennes", "Bonnes"])}
+      ${choix("Reine", "reine", ["Vue", "Non vue", "Non cherch\xE9e"])}
+      ${choix("Couvain", "couvain", ["Non vu", "R\xE9duit", "Normal", "Abondant"])}
+      ${choix("\xC9tat de la ruche apr\xE8s la visite", "etat", ETATS)}
+      <section class="card"><h2>Ce que vous avez utilis\xE9</h2>${intrants || '<p class="small">Ajoutez vos consommables dans Mat\xE9riel pour les suivre ici.</p>'}</section>
+      <div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(visite.poids_kg)}"></label>
+      <label>Varroas compt\xE9s<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(visite.varroa)}"></label></div>
+      ${typeof RG != "undefined" ? RG.formSection(visite) : ""}
       ${typeof PH != "undefined" ? PH.formSection() : ""}
-      <label>Note<textarea id="v_note">${esc(e.note)}</textarea></label>
+      <label>Note<textarea id="v_note">${esc(visite.note)}</textarea></label>
       <button class="btn main block" ${S.busy ? "disabled" : ""}>${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le t\xE9l\xE9phone" : "Enregistrer la visite"}</button>
     </form>`,
   );
