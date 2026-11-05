@@ -1103,8 +1103,8 @@ function viewVente() {
   );
 }
 function viewFournisseurs() {
-  const e = S.d;
-  if (!e.fournisseurs.length)
+  const donnees = S.d;
+  if (!donnees.fournisseurs.length)
     return shell(
       "Fournisseurs",
       "",
@@ -1116,33 +1116,33 @@ function viewFournisseurs() {
         "newfournisseur",
       ),
     );
-  const t = e.fournisseurs.map((s) => {
-    const i = e.depenses.filter((a) => a.fournisseur_id === s.id);
-    return `<tr><td><button class="link" data-act="editfournisseur" data-v="${s.id}">${esc(s.nom)}</button></td><td>${esc(s.produits) || "\u2013"}</td><td>${s.telephone ? `<a href="tel:${esc(s.telephone)}">${esc(s.telephone)}</a>` : esc(s.contact) || "\u2013"}</td><td>${i[0] ? dfr(i[0].date_depense) : "\u2013"}</td><td class="num">${eur(sum(i, (a) => a.montant))}</td></tr>`;
+  const lignes = donnees.fournisseurs.map((fournisseur) => {
+    const achats = donnees.depenses.filter((depense) => depense.fournisseur_id === fournisseur.id);
+    return `<tr><td><button class="link" data-act="editfournisseur" data-v="${fournisseur.id}">${esc(fournisseur.nom)}</button></td><td>${esc(fournisseur.produits) || "\u2013"}</td><td>${fournisseur.telephone ? `<a href="tel:${esc(fournisseur.telephone)}">${esc(fournisseur.telephone)}</a>` : esc(fournisseur.contact) || "\u2013"}</td><td>${achats[0] ? dfr(achats[0].date_depense) : "\u2013"}</td><td class="num">${eur(sum(achats, (depense) => depense.montant))}</td></tr>`;
   });
   shell(
     "Fournisseurs",
-    e.fournisseurs.length + " fournisseur(s)",
+    donnees.fournisseurs.length + " fournisseur(s)",
     '<button class="btn main" data-act="newfournisseur">Ajouter un fournisseur</button>',
-    `<section class="card tbl">${table(["Fournisseur", "Produits", "Contact", "Dernier achat", "#Achats"], t, "")}</section>`,
+    `<section class="card tbl">${table(["Fournisseur", "Produits", "Contact", "Dernier achat", "#Achats"], lignes, "")}</section>`,
   );
 }
 const yearSel = () =>
   `<label class="yr">Ann\xE9e<select data-chg="annee">${years()
-    .map((e) => `<option ${e === S.annee ? "selected" : ""}>${e}</option>`)
+    .map((annee) => `<option ${annee === S.annee ? "selected" : ""}>${annee}</option>`)
     .join("")}</select></label>`;
 function viewCompta() {
-  const e = S.d,
-    t = fin(S.annee),
-    s = t.dep.map(
-      (i) =>
-        `<tr><td><button class="link" data-act="editdepense" data-v="${i.id}">${dfr(i.date_depense)}</button>${i._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(i.libelle)}</td><td>${esc(i.categorie)}</td><td>${esc(byId(e.fournisseurs, i.fournisseur_id)?.nom) || "\u2013"}</td><td class="num">${eur(i.montant)}</td></tr>`,
+  const donnees = S.d,
+    finances = fin(S.annee),
+    lignes = finances.dep.map(
+      (depense) =>
+        `<tr><td><button class="link" data-act="editdepense" data-v="${depense.id}">${dfr(depense.date_depense)}</button>${depense._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(depense.libelle)}</td><td>${esc(depense.categorie)}</td><td>${esc(byId(donnees.fournisseurs, depense.fournisseur_id)?.nom) || "\u2013"}</td><td class="num">${eur(depense.montant)}</td></tr>`,
     );
   shell(
     "D\xE9penses",
-    "Total " + S.annee + " : " + eur(t.charges),
+    "Total " + S.annee + " : " + eur(finances.charges),
     `${yearSel()}<button class="btn main" data-act="newdepense">Ajouter une d\xE9pense</button>`,
-    `<section class="card tbl">${table(["Date", "Libell\xE9", "Poste", "Fournisseur", "#Montant"], s, "Aucune d\xE9pense sur cette ann\xE9e.")}</section>`,
+    `<section class="card tbl">${table(["Date", "Libell\xE9", "Poste", "Fournisseur", "#Montant"], lignes, "Aucune d\xE9pense sur cette ann\xE9e.")}</section>`,
   );
 }
 function pilotFin() {
