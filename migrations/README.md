@@ -10,10 +10,11 @@ s'appliquent ensuite, dans l'ordre, dans Supabase > SQL Editor.
 | 006-hors-ligne.sql | `creer_visite` et `creer_vente` acceptent un identifiant fourni par le téléphone (pas de doublon au renvoi) | 3 nov. 2026 |
 | 007-registre.sql | Visites : dose, fin de traitement prévue, ordonnance gardée | 3 nov. 2026 |
 | 009-colonie-varroa-recolte-livraison.sql | Reine, hausses, équipement, événements de ruche, méthode varroa, récolte et traçabilité, note de livraison | 3 nov. 2026 |
-| 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | Recette (apidoo-test) le 3 nov. 2026 · production : après validation |
+| 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | Recette le 3 nov. 2026 · production : présente au relevé du 5 nov. 2026 (date exacte non notée) |
+| 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026, `apidoo-test` puis `apidoo` |
+| 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026, `apidoo-test` puis `apidoo` |
 
-| 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | À appliquer sur `apidoo-test`, puis `apidoo` |
-| 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | À appliquer sur `apidoo-test`, puis `apidoo` |
+Relevé du 5 nov. 2026 (lecture seule) : après application de 010 et 011, `apidoo` et `apidoo-test` ont la même structure et correspondent aux fichiers 000 à 011. Aucune migration en attente.
 
 Les migrations 001 à 003 ne sont pas dans ce dépôt : elles font partie de `schema.sql`
 ou ont été appliquées directement dans Supabase.

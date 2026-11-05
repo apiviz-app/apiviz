@@ -52,7 +52,7 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 | # | Décision | Pourquoi elle bloque | Avant |
 |---|---|---|---|
 | D-01 | La source non minifiée de `app.js` existe-t-elle (outil qui l'a produite) ? | Sinon, reconstitution par reformatage (plus long, IT-00) | IT-00 |
-| D-02 | Autoriser l'application de 010 et 011 en production | Déplacements, interventions, factures échouent en production | IT-02 |
+| D-02 | ~~Autoriser l'application de 010 et 011 en production~~ **Accordée et réalisée le 5 nov. 2026** | — | IT-02 |
 | D-03 | Où stocker les sauvegardes chiffrées (hors dépôt public) et qui détient la clé | Pas de sauvegarde automatique sur l'offre gratuite | IT-02 |
 | D-04 | Confirmer le tutoiement dans toute l'application | Charte de ton | IT-03 |
 | D-05 | Facturation électronique 2027 : export Factur-X, partenaire agréé, ou hors périmètre (Apidoo ne facture qu'aux particuliers) | Obligation d'émission pour les PME au 1er sept. 2027 | IT-21 |
