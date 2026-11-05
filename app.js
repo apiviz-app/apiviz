@@ -334,159 +334,176 @@ const ICON = {
     previsions: "plus",
     reglages: "plus",
   };
-function shell(e, t, s, i, a) {
-  const o = (S.session.user.email || "?")[0].toUpperCase(),
-    l = SIDE.map((m) =>
-      m
-        ? `<button class="nav ${S.route === m[0] || GROUP[S.route] === m[0] ? "on" : ""}" data-act="go" data-v="${m[0]}">${icon(m[0])}${m[1]}</button>`
+function shell(titre, sousTitre, boutons, contenu, surTitre) {
+  const initiale = (S.session.user.email || "?")[0].toUpperCase(),
+    menuLateral = SIDE.map((entree) =>
+      entree
+        ? `<button class="nav ${S.route === entree[0] || GROUP[S.route] === entree[0] ? "on" : ""}" data-act="go" data-v="${entree[0]}">${icon(entree[0])}${entree[1]}</button>`
         : '<div class="sep"></div>',
     ).join(""),
-    r = GROUP[S.route] || S.route,
-    b = BOTTOM.map(
-      ([m, $]) =>
-        `<button class="${r === m ? "on" : ""}" data-act="go" data-v="${m}">${icon(m)}<span>${$}</span></button>`,
+    rubrique = GROUP[S.route] || S.route,
+    menuBas = BOTTOM.map(
+      ([route, libelle]) =>
+        `<button class="${rubrique === route ? "on" : ""}" data-act="go" data-v="${route}">${icon(route)}<span>${libelle}</span></button>`,
     ).join("");
   $app.innerHTML = `<div class="shell">
     <nav class="side" aria-label="Navigation">
       <div class="brand"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="30"></div>
-      ${l}
-      <div class="me"><span class="avatar">${esc(o)}</span><span><span class="mail">${esc(S.session.user.email)}</span><button class="link" data-act="logout">Se d\xE9connecter</button></span></div>
+      ${menuLateral}
+      <div class="me"><span class="avatar">${esc(initiale)}</span><span><span class="mail">${esc(S.session.user.email)}</span><button class="link" data-act="logout">Se d\xE9connecter</button></span></div>
     </nav>
-    <header class="topbar"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="24"><button class="avatar" data-act="go" data-v="reglages" aria-label="R\xE9glages">${esc(o)}</button></header>
+    <header class="topbar"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="24"><button class="avatar" data-act="go" data-v="reglages" aria-label="R\xE9glages">${esc(initiale)}</button></header>
     <main>${typeof HL != "undefined" ? HL.bandeau() : ""}<div class="wrap">
-      <div class="head ${a ? "hero-head" : ""}"><div>${a ? `<p class="eyebrow">${esc(a)}</p>` : ""}<h1>${esc(e)}</h1>${t ? `<p class="sub">${esc(t)}</p>` : ""}</div><div class="actions">${s || ""}</div></div>
-      ${i}
+      <div class="head ${surTitre ? "hero-head" : ""}"><div>${surTitre ? `<p class="eyebrow">${esc(surTitre)}</p>` : ""}<h1>${esc(titre)}</h1>${sousTitre ? `<p class="sub">${esc(sousTitre)}</p>` : ""}</div><div class="actions">${boutons || ""}</div></div>
+      ${contenu}
     </div></main>
     <button class="fab" data-act="quick" aria-label="Ajouter rapidement">+</button>
-    <nav class="bottom" aria-label="Navigation">${b}</nav>
+    <nav class="bottom" aria-label="Navigation">${menuBas}</nav>
   </div>`;
 }
-const table = (e, t, s) =>
-    t.length
-      ? `<table><thead><tr>${e.map((i) => (i[0] === "#" ? `<th class="num">${esc(i.slice(1))}</th>` : `<th>${esc(i)}</th>`)).join("")}</tr></thead><tbody>${t.join("")}</tbody></table>`
-      : `<p class="empty">${esc(s)}</p>`,
-  emptyState = (e, t, s, i, a = "") =>
-    `<section class="card hero"><div class="hexdeco" aria-hidden="true"></div><h2>${esc(e)}</h2><p class="sub">${esc(t)}</p>${s ? `<button class="btn main" data-act="${i}">${esc(s)}</button>` : ""}${a}</section>`,
-  kpi = (e, t, s, i = "") =>
-    `<div class="card kpi"><div class="l">${esc(e)}</div><div class="big ${i}">${esc(t)}</div>${s ? `<div class="s">${esc(s)}</div>` : ""}</div>`,
-  subtabs = (e, t, s) =>
-    `<div class="subtabs" role="tablist">${e.map(([i, a]) => `<button role="tab" aria-selected="${i === t}" class="${i === t ? "on" : ""}" data-act="${s}" data-v="${i}">${esc(a)}</button>`).join("")}</div>`,
+const table = (colonnes, lignes, siVide) =>
+    lignes.length
+      ? `<table><thead><tr>${colonnes.map((colonne) => (colonne[0] === "#" ? `<th class="num">${esc(colonne.slice(1))}</th>` : `<th>${esc(colonne)}</th>`)).join("")}</tr></thead><tbody>${lignes.join("")}</tbody></table>`
+      : `<p class="empty">${esc(siVide)}</p>`,
+  emptyState = (titre, texte, bouton, action, extra = "") =>
+    `<section class="card hero"><div class="hexdeco" aria-hidden="true"></div><h2>${esc(titre)}</h2><p class="sub">${esc(texte)}</p>${bouton ? `<button class="btn main" data-act="${action}">${esc(bouton)}</button>` : ""}${extra}</section>`,
+  kpi = (libelle, valeur, detail, classe = "") =>
+    `<div class="card kpi"><div class="l">${esc(libelle)}</div><div class="big ${classe}">${esc(valeur)}</div>${detail ? `<div class="s">${esc(detail)}</div>` : ""}</div>`,
+  subtabs = (onglets, actif, action) =>
+    `<div class="subtabs" role="tablist">${onglets.map(([cle, libelle]) => `<button role="tab" aria-selected="${cle === actif}" class="${cle === actif ? "on" : ""}" data-act="${action}" data-v="${cle}">${esc(libelle)}</button>`).join("")}</div>`,
   chartW = () =>
     window.innerWidth <= 800
       ? Math.max(280, window.innerWidth - 66)
       : Math.min(1e3, window.innerWidth - 300);
-function niceMax(e) {
-  if (e <= 0) return 1;
-  const t = 10 ** Math.floor(Math.log10(e));
-  return [1, 2, 2.5, 5, 10].map((s) => s * t).find((s) => s >= e);
+function niceMax(valeur) {
+  if (valeur <= 0) return 1;
+  const puissance = 10 ** Math.floor(Math.log10(valeur));
+  return [1, 2, 2.5, 5, 10].map((palier) => palier * puissance).find((palier) => palier >= valeur);
 }
-const legend = (e) =>
-    e.length > 1
-      ? `<div class="legend">${e.map((t) => `<span><i style="background:${t.color}"></i>${esc(t.name)}</span>`).join("")}</div>`
+const legend = (series) =>
+    series.length > 1
+      ? `<div class="legend">${series.map((serie) => `<span><i style="background:${serie.color}"></i>${esc(serie.name)}</span>`).join("")}</div>`
       : "",
-  chartTable = (e, t, s) =>
-    `<details class="dt"><summary>Voir les chiffres</summary><div class="scroll"><table><thead><tr><th></th>${t.map((i) => `<th class="num">${esc(i.name)}</th>`).join("")}</tr></thead><tbody>${e.map((i, a) => `<tr><td>${esc(i)}</td>${t.map((o) => `<td class="num">${o.values[a] === null ? "\u2013" : esc(s(o.values[a]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`,
-  tipFor = (e, t, s, i) =>
+  chartTable = (libelles, series, format) =>
+    `<details class="dt"><summary>Voir les chiffres</summary><div class="scroll"><table><thead><tr><th></th>${series.map((libelle) => `<th class="num">${esc(libelle.name)}</th>`).join("")}</tr></thead><tbody>${libelles.map((libelle, index) => `<tr><td>${esc(libelle)}</td>${series.map((serie) => `<td class="num">${serie.values[index] === null ? "\u2013" : esc(format(serie.values[index]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`,
+  tipFor = (libelles, series, format, index) =>
     esc(
-      e[i] +
+      libelles[index] +
         `
 ` +
-        t.map((a) => `${a.name} : ${a.values[i] === null ? "\u2013" : s(a.values[i])}`).join(`
+        series.map(
+          (serie) =>
+            `${serie.name} : ${serie.values[index] === null ? "\u2013" : format(serie.values[index])}`,
+        ).join(`
 `),
     );
-function barChart({ labels: e, series: t, fmt: s = eur0, h: i = 210, title: a }) {
-  const o = chartW(),
-    l = { l: 46, r: 6, t: 12, b: 24 },
-    r = o - l.l - l.r,
-    b = i - l.t - l.b,
-    m = niceMax(Math.max(0, ...t.flatMap((u) => u.values.map(Number)))),
-    $ = (u) => l.t + b - (u / m) * b,
-    p = r / e.length,
-    v = Math.min(20, Math.max(4, (p - 6) / t.length - 2)),
-    f = [0, 0.5, 1]
+function barChart({
+  labels: libelles,
+  series: series,
+  fmt: format = eur0,
+  h: hauteur = 210,
+  title: titre,
+}) {
+  const largeur = chartW(),
+    marge = { l: 46, r: 6, t: 12, b: 24 },
+    largeurUtile = largeur - marge.l - marge.r,
+    hauteurUtile = hauteur - marge.t - marge.b,
+    maxi = niceMax(Math.max(0, ...series.flatMap((serie) => serie.values.map(Number)))),
+    yDe = (valeur) => marge.t + hauteurUtile - (valeur / maxi) * hauteurUtile,
+    pas = largeurUtile / libelles.length,
+    largeurBarre = Math.min(20, Math.max(4, (pas - 6) / series.length - 2)),
+    grille = [0, 0.5, 1]
       .map(
-        (u) =>
-          `<line x1="${l.l}" x2="${o - l.r}" y1="${$(m * u)}" y2="${$(m * u)}" class="gl"/><text x="${l.l - 6}" y="${$(m * u) + 4}" text-anchor="end" class="at">${esc(s(m * u))}</text>`,
+        (fraction) =>
+          `<line x1="${marge.l}" x2="${largeur - marge.r}" y1="${yDe(maxi * fraction)}" y2="${yDe(maxi * fraction)}" class="gl"/><text x="${marge.l - 6}" y="${yDe(maxi * fraction) + 4}" text-anchor="end" class="at">${esc(format(maxi * fraction))}</text>`,
       )
       .join(""),
-    g = e.length > 8 && o < 420 ? 2 : 1,
-    w = e
-      .map((u, c) => {
-        const y = l.l + c * p + (p - (v + 2) * t.length + 2) / 2,
-          k = t
-            .map((h, _) => {
-              const M = Number(h.values[c] || 0),
-                j = $(M);
-              return M > 0
-                ? `<rect x="${y + _ * (v + 2)}" y="${j}" width="${v}" height="${Math.max(1, l.t + b - j)}" rx="3" fill="${h.color}"/>`
+    saut = libelles.length > 8 && largeur < 420 ? 2 : 1,
+    barres = libelles
+      .map((libelle, index) => {
+        const x0 = marge.l + index * pas + (pas - (largeurBarre + 2) * series.length + 2) / 2,
+          rects = series
+            .map((serie, rang) => {
+              const valeur = Number(serie.values[index] || 0),
+                yBarre = yDe(valeur);
+              return valeur > 0
+                ? `<rect x="${x0 + rang * (largeurBarre + 2)}" y="${yBarre}" width="${largeurBarre}" height="${Math.max(1, marge.t + hauteurUtile - yBarre)}" rx="3" fill="${serie.color}"/>`
                 : "";
             })
             .join(""),
-          d =
-            c % g === 0
-              ? `<text x="${l.l + c * p + p / 2}" y="${i - 7}" text-anchor="middle" class="at">${esc(u)}</text>`
+          etiquette =
+            index % saut === 0
+              ? `<text x="${marge.l + index * pas + pas / 2}" y="${hauteur - 7}" text-anchor="middle" class="at">${esc(libelle)}</text>`
               : "";
-        return `${k}${d}<rect x="${l.l + c * p}" y="${l.t}" width="${p}" height="${b}" fill="transparent" data-tip="${tipFor(e, t, s, c)}"/>`;
+        return `${rects}${etiquette}<rect x="${marge.l + index * pas}" y="${marge.t}" width="${pas}" height="${hauteurUtile}" fill="transparent" data-tip="${tipFor(libelles, series, format, index)}"/>`;
       })
       .join("");
-  return `${legend(t)}<svg class="chart" viewBox="0 0 ${o} ${i}" role="img" aria-label="${esc(a || "Graphique")}">${f}${w}</svg>${chartTable(e, t, s)}`;
+  return `${legend(series)}<svg class="chart" viewBox="0 0 ${largeur} ${hauteur}" role="img" aria-label="${esc(titre || "Graphique")}">${grille}${barres}</svg>${chartTable(libelles, series, format)}`;
 }
-function lineChart({ labels: e, series: t, fmt: s = eur0, h: i = 210, title: a }) {
-  const o = chartW(),
-    l = { l: 46, r: 12, t: 12, b: 24 },
-    r = o - l.l - l.r,
-    b = i - l.t - l.b,
-    m = t
-      .flatMap((h) => h.values)
-      .filter((h) => h !== null)
+function lineChart({
+  labels: libelles,
+  series: series,
+  fmt: format = eur0,
+  h: hauteur = 210,
+  title: titre,
+}) {
+  const largeur = chartW(),
+    marge = { l: 46, r: 12, t: 12, b: 24 },
+    largeurUtile = largeur - marge.l - marge.r,
+    hauteurUtile = hauteur - marge.t - marge.b,
+    valeurs = series
+      .flatMap((serie) => serie.values)
+      .filter((valeur) => valeur !== null)
       .map(Number),
-    $ = Math.max(0, ...m),
-    p = $ > 0 ? niceMax($) : Math.min(0, ...m) < 0 ? 0 : 1,
-    v = Math.min(0, ...m) < 0 ? -niceMax(-Math.min(0, ...m)) : 0,
-    f = (h) => l.l + (e.length > 1 ? (h / (e.length - 1)) * r : r / 2),
-    g = (h) => l.t + b - ((h - v) / (p - v)) * b,
-    u = (v < 0 ? (p > 0 ? [v, 0, p] : [v, v / 2, 0]) : [0, p / 2, p])
+    plusGrande = Math.max(0, ...valeurs),
+    haut = plusGrande > 0 ? niceMax(plusGrande) : Math.min(0, ...valeurs) < 0 ? 0 : 1,
+    bas = Math.min(0, ...valeurs) < 0 ? -niceMax(-Math.min(0, ...valeurs)) : 0,
+    xDe = (index) =>
+      marge.l +
+      (libelles.length > 1 ? (index / (libelles.length - 1)) * largeurUtile : largeurUtile / 2),
+    yDe = (valeur) => marge.t + hauteurUtile - ((valeur - bas) / (haut - bas)) * hauteurUtile,
+    grille = (bas < 0 ? (haut > 0 ? [bas, 0, haut] : [bas, bas / 2, 0]) : [0, haut / 2, haut])
       .map(
-        (h) =>
-          `<line x1="${l.l}" x2="${o - l.r}" y1="${g(h)}" y2="${g(h)}" class="gl ${h === 0 ? "zero" : ""}"/><text x="${l.l - 6}" y="${g(h) + 4}" text-anchor="end" class="at">${esc(s(h))}</text>`,
+        (graduation) =>
+          `<line x1="${marge.l}" x2="${largeur - marge.r}" y1="${yDe(graduation)}" y2="${yDe(graduation)}" class="gl ${graduation === 0 ? "zero" : ""}"/><text x="${marge.l - 6}" y="${yDe(graduation) + 4}" text-anchor="end" class="at">${esc(format(graduation))}</text>`,
       )
       .join(""),
-    c = e.length > 8 && o < 420 ? 2 : 1,
-    y = e
-      .map((h, _) =>
-        _ % c === 0
-          ? `<text x="${f(_)}" y="${i - 7}" text-anchor="middle" class="at">${esc(h)}</text>`
+    saut = libelles.length > 8 && largeur < 420 ? 2 : 1,
+    etiquettes = libelles
+      .map((libelle, index) =>
+        index % saut === 0
+          ? `<text x="${xDe(index)}" y="${hauteur - 7}" text-anchor="middle" class="at">${esc(libelle)}</text>`
           : "",
       )
       .join(""),
-    k = t
-      .map((h) => {
-        const _ = h.values
-          .map((M, j) => (M === null ? null : [f(j), g(Number(M))]))
+    courbes = series
+      .map((serie) => {
+        const points = serie.values
+          .map((valeur, index) => (valeur === null ? null : [xDe(index), yDe(Number(valeur))]))
           .filter(Boolean);
-        return `<polyline fill="none" stroke="${h.color}" stroke-width="2" stroke-linejoin="round" points="${_.map((M) => M.join(",")).join(" ")}"/>${_.map((M) => `<circle cx="${M[0]}" cy="${M[1]}" r="3.500" fill="${h.color}" stroke="#fff" stroke-width="1.500"/>`).join("")}`;
+        return `<polyline fill="none" stroke="${serie.color}" stroke-width="2" stroke-linejoin="round" points="${points.map((point) => point.join(",")).join(" ")}"/>${points.map((point) => `<circle cx="${point[0]}" cy="${point[1]}" r="3.500" fill="${serie.color}" stroke="#fff" stroke-width="1.500"/>`).join("")}`;
       })
       .join(""),
-    d = e
+    zones = libelles
       .map(
-        (h, _) =>
-          `<rect x="${f(_) - r / Math.max(1, e.length) / 2}" y="${l.t}" width="${r / Math.max(1, e.length)}" height="${b}" fill="transparent" data-tip="${tipFor(e, t, s, _)}"/>`,
+        (libelle, index) =>
+          `<rect x="${xDe(index) - largeurUtile / Math.max(1, libelles.length) / 2}" y="${marge.t}" width="${largeurUtile / Math.max(1, libelles.length)}" height="${hauteurUtile}" fill="transparent" data-tip="${tipFor(libelles, series, format, index)}"/>`,
       )
       .join("");
-  return `${legend(t)}<svg class="chart" viewBox="0 0 ${o} ${i}" role="img" aria-label="${esc(a || "Graphique")}">${u}${y}${k}${d}</svg>${chartTable(e, t, s)}`;
+  return `${legend(series)}<svg class="chart" viewBox="0 0 ${largeur} ${hauteur}" role="img" aria-label="${esc(titre || "Graphique")}">${grille}${etiquettes}${courbes}${zones}</svg>${chartTable(libelles, series, format)}`;
 }
-function hbars(e, t = C.honey) {
-  if (!e.length) return '<p class="small">Pas encore de donn\xE9es.</p>';
-  const s = Math.max(1, ...e.map((i) => Number(i[1])));
-  return `<div class="bars">${e
+function hbars(lignes, couleur = C.honey) {
+  if (!lignes.length) return '<p class="small">Pas encore de donn\xE9es.</p>';
+  const maxi = Math.max(1, ...lignes.map((ligne) => Number(ligne[1])));
+  return `<div class="bars">${lignes
     .map(
-      ([i, a, o]) =>
+      ([libelle, valeur, texte]) =>
         `<div class="bar" data-tip="${esc(
-          i +
+          libelle +
             `
 ` +
-            o,
-        )}"><span>${esc(i)}</span><span class="t"><i style="width:${Math.round((a / s) * 100)}%;background:${t}"></i></span><span>${esc(o)}</span></div>`,
+            texte,
+        )}"><span>${esc(libelle)}</span><span class="t"><i style="width:${Math.round((valeur / maxi) * 100)}%;background:${couleur}"></i></span><span>${esc(texte)}</span></div>`,
     )
     .join("")}</div>`;
 }
