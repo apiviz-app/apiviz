@@ -1146,151 +1146,177 @@ function viewCompta() {
   );
 }
 function pilotFin() {
-  const e = S.d,
-    t = S.annee,
-    s = fin(t),
-    i = cfg(),
-    a = stock(),
-    o = fin(t - 1),
-    l = o.ca
-      ? ` (${s.ca >= o.ca ? "+" : ""}${n(((s.ca - o.ca) / o.ca) * 100, 0)} % sur ${t - 1})`
+  const donnees = S.d,
+    annee = S.annee,
+    finances = fin(annee),
+    reglages = cfg(),
+    stockMiel = stock(),
+    anneePrecedente = fin(annee - 1),
+    evolution = anneePrecedente.ca
+      ? ` (${finances.ca >= anneePrecedente.ca ? "+" : ""}${n(((finances.ca - anneePrecedente.ca) / anneePrecedente.ca) * 100, 0)} % sur ${annee - 1})`
       : "",
-    b = [...new Set([...i.postes, ...s.dep.map((u) => u.categorie)])]
-      .map((u) => [
-        u,
+    parPoste = [
+      ...new Set([...reglages.postes, ...finances.dep.map((depense) => depense.categorie)]),
+    ]
+      .map((poste) => [
+        poste,
         sum(
-          s.dep.filter((c) => c.categorie === u),
-          (c) => c.montant,
+          finances.dep.filter((depense) => depense.categorie === poste),
+          (depense) => depense.montant,
         ),
       ])
-      .filter((u) => u[1] > 0)
-      .sort((u, c) => c[1] - u[1])
-      .map(([u, c]) => [u, c, eur0(c)]),
-    m = {};
-  s.lignes.forEach((u) => {
-    const c = n(byId(e.lots, u.lot_id)?.format_g, 0) + " g";
-    ((m[c] = m[c] || { v: 0, p: 0 }),
-      (m[c].v += u.quantite * u.prix_unitaire),
-      (m[c].p += u.quantite));
+      .filter((ligne) => ligne[1] > 0)
+      .sort((un, deux) => deux[1] - un[1])
+      .map(([poste, montant]) => [poste, montant, eur0(montant)]),
+    parFormat = {};
+  finances.lignes.forEach((ligne) => {
+    const format = n(byId(donnees.lots, ligne.lot_id)?.format_g, 0) + " g";
+    ((parFormat[format] = parFormat[format] || { v: 0, p: 0 }),
+      (parFormat[format].v += ligne.quantite * ligne.prix_unitaire),
+      (parFormat[format].p += ligne.quantite));
   });
-  const $ = Object.entries(m).map(([u, c]) => [u, c.v, `${eur0(c.v)}`]),
-    p = {};
-  s.ventes.forEach((u) => {
-    const c = byId(e.clients, u.client_id)?.cercle || "Autre";
-    p[c] = (p[c] || 0) + venteTotal(u);
+  const ventesParFormat = Object.entries(parFormat).map(([format, totaux]) => [
+      format,
+      totaux.v,
+      `${eur0(totaux.v)}`,
+    ]),
+    parCercle = {};
+  finances.ventes.forEach((vente) => {
+    const cercle = byId(donnees.clients, vente.client_id)?.cercle || "Autre";
+    parCercle[cercle] = (parCercle[cercle] || 0) + venteTotal(vente);
   });
-  const v = Object.entries(p)
-      .sort((u, c) => c[1] - u[1])
-      .map(([u, c]) => [u, c, eur0(c)]),
-    f = {};
-  s.ventes.forEach((u) => {
-    f[u.client_id] = (f[u.client_id] || 0) + venteTotal(u);
+  const ventesParCercle = Object.entries(parCercle)
+      .sort((un, deux) => deux[1] - un[1])
+      .map(([cercle, montant]) => [cercle, montant, eur0(montant)]),
+    parClient = {};
+  finances.ventes.forEach((vente) => {
+    parClient[vente.client_id] = (parClient[vente.client_id] || 0) + venteTotal(vente);
   });
-  const g = Object.entries(f)
-      .sort((u, c) => c[1] - u[1])
+  const meilleursClients = Object.entries(parClient)
+      .sort((un, deux) => deux[1] - un[1])
       .slice(0, 5)
-      .map(([u, c]) => [byId(e.clients, u)?.nom || "?", c, eur0(c)]),
-    w = s.charges - s.ca;
+      .map(([clientId, montant]) => [
+        byId(donnees.clients, clientId)?.nom || "?",
+        montant,
+        eur0(montant),
+      ]),
+    resteACouvrir = finances.charges - finances.ca;
   return `<div class="grid">
-    ${kpi("Chiffre d\u2019affaires", eur0(s.ca), s.ventes.length + " vente(s)" + l)}
-    ${kpi("D\xE9penses", eur0(s.charges), s.dep.length + " d\xE9pense(s)")}
-    ${kpi("R\xE9sultat", eur0(s.resultat), s.ca ? "Marge " + n((s.resultat / s.ca) * 100, 0) + " %" : "", s.resultat < 0 ? "crit" : "good")}
-    ${kpi("Tr\xE9sorerie fin de p\xE9riode", eur0(s.tresoFin), s.aEncaisser ? eur0(s.aEncaisser) + " \xE0 encaisser" : "Tout est encaiss\xE9")}
-    ${kpi("Prix de vente moyen", s.prixKg ? eur(s.prixKg) : "\u2013", "par kg vendu")}
-    ${kpi("Co\xFBt de revient", s.coutKg !== null ? eur(s.coutKg) : "\u2013", "par kg r\xE9colt\xE9")}
-    ${kpi("Stock \xE0 vendre", eur0(a.valeur), "R\xE9sultat potentiel " + eur0(s.resultat + a.valeur))}
-    ${kpi("Seuil de rentabilit\xE9", w > 0 ? eur0(w) : "Atteint", w > 0 ? "de ventes restantes pour couvrir les d\xE9penses" : "les ventes couvrent les d\xE9penses")}
+    ${kpi("Chiffre d\u2019affaires", eur0(finances.ca), finances.ventes.length + " vente(s)" + evolution)}
+    ${kpi("D\xE9penses", eur0(finances.charges), finances.dep.length + " d\xE9pense(s)")}
+    ${kpi("R\xE9sultat", eur0(finances.resultat), finances.ca ? "Marge " + n((finances.resultat / finances.ca) * 100, 0) + " %" : "", finances.resultat < 0 ? "crit" : "good")}
+    ${kpi("Tr\xE9sorerie fin de p\xE9riode", eur0(finances.tresoFin), finances.aEncaisser ? eur0(finances.aEncaisser) + " \xE0 encaisser" : "Tout est encaiss\xE9")}
+    ${kpi("Prix de vente moyen", finances.prixKg ? eur(finances.prixKg) : "\u2013", "par kg vendu")}
+    ${kpi("Co\xFBt de revient", finances.coutKg !== null ? eur(finances.coutKg) : "\u2013", "par kg r\xE9colt\xE9")}
+    ${kpi("Stock \xE0 vendre", eur0(stockMiel.valeur), "R\xE9sultat potentiel " + eur0(finances.resultat + stockMiel.valeur))}
+    ${kpi("Seuil de rentabilit\xE9", resteACouvrir > 0 ? eur0(resteACouvrir) : "Atteint", resteACouvrir > 0 ? "de ventes restantes pour couvrir les d\xE9penses" : "les ventes couvrent les d\xE9penses")}
   </div>
   <section class="card"><h2>Ventes et d\xE9penses par mois</h2>${barChart({
     labels: MOIS,
     series: [
-      { name: "Ventes", color: C.honey, values: s.mCa },
-      { name: "D\xE9penses", color: C.blue, values: s.mDep },
+      { name: "Ventes", color: C.honey, values: finances.mCa },
+      { name: "D\xE9penses", color: C.blue, values: finances.mDep },
     ],
     title: "Ventes et d\xE9penses par mois",
   })}</section>
-  <section class="card"><h2>Tr\xE9sorerie cumul\xE9e</h2><p class="small">Argent encaiss\xE9 moins d\xE9penses, depuis le d\xE9but.</p>${lineChart({ labels: MOIS, series: [{ name: "Tr\xE9sorerie", color: C.green, values: s.treso }], title: "Tr\xE9sorerie cumul\xE9e" })}</section>
+  <section class="card"><h2>Tr\xE9sorerie cumul\xE9e</h2><p class="small">Argent encaiss\xE9 moins d\xE9penses, depuis le d\xE9but.</p>${lineChart({ labels: MOIS, series: [{ name: "Tr\xE9sorerie", color: C.green, values: finances.treso }], title: "Tr\xE9sorerie cumul\xE9e" })}</section>
   <div class="grid2">
-    <section class="card"><h2>D\xE9penses par poste</h2>${hbars(b, C.blue)}</section>
-    <section class="card"><h2>Ventes par format</h2>${hbars($)}</section>
-    <section class="card"><h2>Ventes par cercle</h2>${hbars(v)}</section>
-    <section class="card"><h2>Meilleurs clients</h2>${hbars(g)}</section>
+    <section class="card"><h2>D\xE9penses par poste</h2>${hbars(parPoste, C.blue)}</section>
+    <section class="card"><h2>Ventes par format</h2>${hbars(ventesParFormat)}</section>
+    <section class="card"><h2>Ventes par cercle</h2>${hbars(ventesParCercle)}</section>
+    <section class="card"><h2>Meilleurs clients</h2>${hbars(meilleursClients)}</section>
   </div>`;
 }
 function pilotOps() {
-  const e = S.d,
-    t = S.annee,
-    s = rythme(),
-    i = e.recoltes.filter((c) => yr(c.date_recolte) === t),
-    a = e.visites.filter((c) => yr(c.date_visite) === t),
-    o = sum(i, (c) => c.kg),
-    l = e.ruches.length,
-    r = Array(12).fill(0);
-  a.forEach((c) => r[mo(c.date_visite)]++);
-  const b = fin(t),
-    m = new Set(a.map((c) => c.id)),
-    $ = e.intrants.filter((c) => m.has(c.visite_id)),
-    p = e.ruches
-      .map((c) => [
-        c.nom,
+  const donnees = S.d,
+    annee = S.annee,
+    rythmeVentes = rythme(),
+    recoltes = donnees.recoltes.filter((recolte) => yr(recolte.date_recolte) === annee),
+    visites = donnees.visites.filter((visite) => yr(visite.date_visite) === annee),
+    kgRecoltes = sum(recoltes, (recolte) => recolte.kg),
+    nbRuches = donnees.ruches.length,
+    visitesParMois = Array(12).fill(0);
+  visites.forEach((visite) => visitesParMois[mo(visite.date_visite)]++);
+  const finances = fin(annee),
+    idsVisites = new Set(visites.map((visite) => visite.id)),
+    intrants = donnees.intrants.filter((intrant) => idsVisites.has(intrant.visite_id)),
+    rendements = donnees.ruches
+      .map((ruche) => [
+        ruche.nom,
         sum(
-          i.filter((y) => y.ruche_id === c.id),
-          (y) => y.kg,
+          recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
+          (recolte) => recolte.kg,
         ),
       ])
-      .filter((c) => c[1] > 0)
-      .sort((c, y) => y[1] - c[1])
-      .map(([c, y]) => [c, y, n(y) + " kg"]),
-    f = [...new Set($.map((c) => c.article_id))].map((c) => {
-      const y = byId(e.articles, c),
-        k = sum(
-          $.filter((d) => d.article_id === c),
-          (d) => d.quantite,
-        );
-      return [y?.nom || "?", k, n(k) + " " + (y?.unite || "")];
-    }),
-    g = consommables()
-      .map((c) => {
-        const y = new Date(Date.now() - 15552e6).toISOString().slice(0, 10),
-          k = new Set(e.visites.filter((h) => h.date_visite >= y).map((h) => h.id)),
-          d =
+      .filter((ligne) => ligne[1] > 0)
+      .sort((un, deux) => deux[1] - un[1])
+      .map(([nom, kg]) => [nom, kg, n(kg) + " kg"]),
+    intrantsUtilises = [...new Set(intrants.map((intrant) => intrant.article_id))].map(
+      (articleId) => {
+        const article = byId(donnees.articles, articleId),
+          quantite = sum(
+            intrants.filter((intrant) => intrant.article_id === articleId),
+            (intrant) => intrant.quantite,
+          );
+        return [article?.nom || "?", quantite, n(quantite) + " " + (article?.unite || "")];
+      },
+    ),
+    autonomie = consommables()
+      .map((article) => {
+        const depuis = new Date(Date.now() - 15552e6).toISOString().slice(0, 10),
+          idsVisitesRecentes = new Set(
+            donnees.visites
+              .filter((visite) => visite.date_visite >= depuis)
+              .map((visite) => visite.id),
+          ),
+          consoMois =
             sum(
-              e.intrants.filter((h) => h.article_id === c.id && k.has(h.visite_id)),
-              (h) => h.quantite,
+              donnees.intrants.filter(
+                (intrant) =>
+                  intrant.article_id === article.id && idsVisitesRecentes.has(intrant.visite_id),
+              ),
+              (intrant) => intrant.quantite,
             ) / 6;
-        return { a: c, cons: d, mois: d > 0 ? Number(c.stock) / d : null };
+        return {
+          a: article,
+          cons: consoMois,
+          mois: consoMois > 0 ? Number(article.stock) / consoMois : null,
+        };
       })
-      .filter((c) => c.cons > 0),
-    w = ETATS.map((c) => [c, e.ruches.filter((y) => y.etat === c).length]),
-    u = e.ruches.map((c) => {
-      const y = lastVisit(c.id),
-        k = sum(
-          i.filter((h) => h.ruche_id === c.id),
-          (h) => h.kg,
+      .filter((ligne) => ligne.cons > 0),
+    parEtat = ETATS.map((etat) => [
+      etat,
+      donnees.ruches.filter((ruche) => ruche.etat === etat).length,
+    ]),
+    lignesRuches = donnees.ruches.map((ruche) => {
+      const derniere = lastVisit(ruche.id),
+        kg = sum(
+          recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
+          (recolte) => recolte.kg,
         ),
-        d = e.visites.find((h) => h.ruche_id === c.id && h.poids_kg);
-      return `<tr><td><button class="link" data-act="ruche" data-v="${c.id}">${esc(c.nom)}</button></td><td><span class="tag ${etatClass(c.etat)}">${esc(c.etat)}</span></td><td class="num">${y ? days(y.date_visite) + " j" : "\u2013"}</td><td>${y ? esc(y.provisions) : "\u2013"}</td><td class="num">${d ? n(d.poids_kg) + " kg" : "\u2013"}</td><td class="num">${n(k)} kg</td></tr>`;
+        pesee = donnees.visites.find((visite) => visite.ruche_id === ruche.id && visite.poids_kg);
+      return `<tr><td><button class="link" data-act="ruche" data-v="${ruche.id}">${esc(ruche.nom)}</button></td><td><span class="tag ${etatClass(ruche.etat)}">${esc(ruche.etat)}</span></td><td class="num">${derniere ? days(derniere.date_visite) + " j" : "\u2013"}</td><td>${derniere ? esc(derniere.provisions) : "\u2013"}</td><td class="num">${pesee ? n(pesee.poids_kg) + " kg" : "\u2013"}</td><td class="num">${n(kg)} kg</td></tr>`;
     });
   return `<div class="grid">
-    ${kpi("Miel r\xE9colt\xE9", n(o) + " kg", l ? n(o / l) + " kg par ruche" : "")}
-    ${kpi("Visites", a.length, l ? n(a.length / l) + " par ruche" : "")}
-    ${kpi("Ruches \xE0 surveiller", w[1][1] + w[2][1], "sur " + l)}
-    ${kpi("Pots vendus par mois", n(s.mois, 0), s.moisRestants !== null ? "Stock pour " + n(s.moisRestants, 0) + " mois \xE0 ce rythme" : "sur les 3 derniers mois")}
+    ${kpi("Miel r\xE9colt\xE9", n(kgRecoltes) + " kg", nbRuches ? n(kgRecoltes / nbRuches) + " kg par ruche" : "")}
+    ${kpi("Visites", visites.length, nbRuches ? n(visites.length / nbRuches) + " par ruche" : "")}
+    ${kpi("Ruches \xE0 surveiller", parEtat[1][1] + parEtat[2][1], "sur " + nbRuches)}
+    ${kpi("Pots vendus par mois", n(rythmeVentes.mois, 0), rythmeVentes.moisRestants !== null ? "Stock pour " + n(rythmeVentes.moisRestants, 0) + " mois \xE0 ce rythme" : "sur les 3 derniers mois")}
   </div>
-  <section class="card tbl"><h2>Tableau des ruches</h2>${table(["Ruche", "\xC9tat", "#Derni\xE8re visite", "Provisions", "#Poids", "#Miel " + t], u, "Aucune ruche.")}</section>
+  <section class="card tbl"><h2>Tableau des ruches</h2>${table(["Ruche", "\xC9tat", "#Derni\xE8re visite", "Provisions", "#Poids", "#Miel " + annee], lignesRuches, "Aucune ruche.")}</section>
   <div class="grid2">
-    <section class="card"><h2>Rendement par ruche</h2>${hbars(p)}</section>
-    <section class="card"><h2>Intrants utilis\xE9s</h2>${hbars(f, C.green)}</section>
+    <section class="card"><h2>Rendement par ruche</h2>${hbars(rendements)}</section>
+    <section class="card"><h2>Intrants utilis\xE9s</h2>${hbars(intrantsUtilises, C.green)}</section>
   </div>
-  <section class="card"><h2>Visites par mois</h2>${barChart({ labels: MOIS, series: [{ name: "Visites", color: C.green, values: r }], fmt: (c) => n(c, 1), h: 170, title: "Visites par mois" })}</section>
-  <section class="card"><h2>Pots vendus par mois</h2>${barChart({ labels: MOIS, series: [{ name: "Pots", color: C.honey, values: b.mPots }], fmt: (c) => n(c, 1), h: 170, title: "Pots vendus par mois" })}</section>
+  <section class="card"><h2>Visites par mois</h2>${barChart({ labels: MOIS, series: [{ name: "Visites", color: C.green, values: visitesParMois }], fmt: (valeur) => n(valeur, 1), h: 170, title: "Visites par mois" })}</section>
+  <section class="card"><h2>Pots vendus par mois</h2>${barChart({ labels: MOIS, series: [{ name: "Pots", color: C.honey, values: finances.mPots }], fmt: (valeur) => n(valeur, 1), h: 170, title: "Pots vendus par mois" })}</section>
   ${
-    g.length
+    autonomie.length
       ? `<section class="card tbl"><h2>Autonomie des consommables</h2>${table(
           ["Article", "#Stock", "#Conso/mois", "#Autonomie"],
-          g.map(
-            (c) =>
-              `<tr><td>${esc(c.a.nom)}</td><td class="num">${n(c.a.stock)} ${esc(c.a.unite)}</td><td class="num">${n(c.cons)} ${esc(c.a.unite)}</td><td class="num">${n(c.mois)} mois</td></tr>`,
+          autonomie.map(
+            (ligne) =>
+              `<tr><td>${esc(ligne.a.nom)}</td><td class="num">${n(ligne.a.stock)} ${esc(ligne.a.unite)}</td><td class="num">${n(ligne.cons)} ${esc(ligne.a.unite)}</td><td class="num">${n(ligne.mois)} mois</td></tr>`,
           ),
           "",
         )}</section>`
@@ -1298,7 +1324,7 @@ function pilotOps() {
   }`;
 }
 function viewPilotage() {
-  const e =
+  const vide =
     !S.d.ventes.length && !S.d.depenses.length && !S.d.recoltes.length && !S.d.visites.length;
   shell(
     "Pilotage",
@@ -1312,7 +1338,7 @@ function viewPilotage() {
       S.tab,
       "ptab",
     ) +
-      (e
+      (vide
         ? '<p class="notice">Les graphiques se rempliront avec vos r\xE9coltes, ventes, d\xE9penses et visites.</p>'
         : "") +
       (S.tab === "fin" ? pilotFin() : pilotOps()),
