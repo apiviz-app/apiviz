@@ -1,3 +1,22 @@
+// Apidoo — cœur de l'application (app.js).
+//
+// Provenance : la source d'origine de ce fichier n'existe plus (décision D-01, 6 nov. 2026).
+// Cette version lisible a été reconstituée en novembre 2026 (IT-00) à partir du fichier minifié publié
+// (main, commit 965d24e) :
+//   1. formatage par Prettier (réglages : .prettierrc) ;
+//   2. renommage des variables LOCALES d'une lettre, écran par écran, par analyse des portées
+//      (jamais par recherche de texte).
+// Chaque étape a été contrôlée par comparaison automatique des arbres syntaxiques
+// (scripts/comparer-ast.js) et par les 18 tests de bout en bout : le comportement est inchangé.
+//
+// À respecter en modifiant ce fichier :
+// - Les modules chargés après lui (voir index.html et docs/TECHNIQUE.md) remplacent des fonctions par
+//   « window.<nom> = … » (render, shell, view*, loadAll…). Cela ne marche que parce qu'elles sont
+//   déclarées ici par « function <nom>() » au premier niveau. Ne jamais les transformer en const,
+//   ni les renommer.
+// - Les autres noms de premier niveau (S, sb, ACT, esc, n, eur, byId, sum, toast, fail…) sont utilisés
+//   par ces modules : ne pas les renommer.
+// - L'ordre des déclarations compte (écouteurs, bulle d'aide, boot() en dernier).
 const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
   $app = document.getElementById("app"),
   $sheet = document.getElementById("sheet"),
