@@ -508,175 +508,209 @@ function hbars(lignes, couleur = C.honey) {
     .join("")}</div>`;
 }
 function stock() {
-  const e = S.d;
+  const donnees = S.d;
   return {
-    pots: sum(e.lots, (t) => t.pots_restants),
-    kg: sum(e.lots, (t) => (t.pots_restants * t.format_g) / 1e3),
-    kgPots: sum(e.lots, (t) => (t.pots_initiaux * t.format_g) / 1e3),
-    valeur: sum(e.lots, (t) => t.pots_restants * t.prix),
+    pots: sum(donnees.lots, (lot) => lot.pots_restants),
+    kg: sum(donnees.lots, (lot) => (lot.pots_restants * lot.format_g) / 1e3),
+    kgPots: sum(donnees.lots, (lot) => (lot.pots_initiaux * lot.format_g) / 1e3),
+    valeur: sum(donnees.lots, (lot) => lot.pots_restants * lot.prix),
   };
 }
-const venteTotal = (e) =>
+const venteTotal = (vente) =>
     sum(
-      S.d.lignes.filter((t) => t.vente_id === e.id),
-      (t) => t.quantite * t.prix_unitaire,
+      S.d.lignes.filter((ligne) => ligne.vente_id === vente.id),
+      (ligne) => ligne.quantite * ligne.prix_unitaire,
     ),
-  lastVisit = (e) => S.d.visites.find((t) => t.ruche_id === e),
+  lastVisit = (rucheId) => S.d.visites.find((visite) => visite.ruche_id === rucheId),
   years = () => {
-    const e = S.d,
-      t = new Set([new Date().getFullYear()]);
+    const donnees = S.d,
+      annees = new Set([new Date().getFullYear()]);
     return (
-      e.ventes.forEach((s) => t.add(yr(s.date_vente))),
-      e.depenses.forEach((s) => t.add(yr(s.date_depense))),
-      e.recoltes.forEach((s) => t.add(yr(s.date_recolte))),
-      e.visites.forEach((s) => t.add(yr(s.date_visite))),
-      [...t].sort((s, i) => i - s)
+      donnees.ventes.forEach((vente) => annees.add(yr(vente.date_vente))),
+      donnees.depenses.forEach((depense) => annees.add(yr(depense.date_depense))),
+      donnees.recoltes.forEach((recolte) => annees.add(yr(recolte.date_recolte))),
+      donnees.visites.forEach((visite) => annees.add(yr(visite.date_visite))),
+      [...annees].sort((a, b) => b - a)
     );
   };
-function fin(e) {
-  const t = S.d,
-    s = t.ventes.filter((d) => yr(d.date_vente) === e),
-    i = t.depenses.filter((d) => yr(d.date_depense) === e),
-    a = t.recoltes.filter((d) => yr(d.date_recolte) === e),
-    o = new Set(s.map((d) => d.id)),
-    l = t.lignes.filter((d) => o.has(d.vente_id)),
-    r = sum(l, (d) => d.quantite * d.prix_unitaire),
-    b = sum(
-      s.filter((d) => d.paye),
+function fin(annee) {
+  const donnees = S.d,
+    ventes = donnees.ventes.filter((vente) => yr(vente.date_vente) === annee),
+    depenses = donnees.depenses.filter((depense) => yr(depense.date_depense) === annee),
+    recoltes = donnees.recoltes.filter((recolte) => yr(recolte.date_recolte) === annee),
+    idsVentes = new Set(ventes.map((vente) => vente.id)),
+    lignes = donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
+    ca = sum(lignes, (ligne) => ligne.quantite * ligne.prix_unitaire),
+    encaisse = sum(
+      ventes.filter((vente) => vente.paye),
       venteTotal,
     ),
-    m = sum(i, (d) => d.montant),
-    $ = sum(a, (d) => d.kg),
-    p = sum(l, (d) => (d.quantite * (byId(t.lots, d.lot_id)?.format_g || 0)) / 1e3),
-    v = Array(12).fill(0),
-    f = Array(12).fill(0),
-    g = Array(12).fill(0),
-    w = Array(12).fill(0);
-  (s.forEach((d) => {
-    const h = venteTotal(d);
-    ((v[mo(d.date_vente)] += h),
-      d.paye && (f[mo(d.date_vente)] += h),
-      (w[mo(d.date_vente)] += sum(
-        t.lignes.filter((_) => _.vente_id === d.id),
-        (_) => _.quantite,
+    charges = sum(depenses, (depense) => depense.montant),
+    kgRecolte = sum(recoltes, (recolte) => recolte.kg),
+    kgVendu = sum(
+      lignes,
+      (ligne) => (ligne.quantite * (byId(donnees.lots, ligne.lot_id)?.format_g || 0)) / 1e3,
+    ),
+    moisCa = Array(12).fill(0),
+    moisEncaisse = Array(12).fill(0),
+    moisDepenses = Array(12).fill(0),
+    moisPots = Array(12).fill(0);
+  (ventes.forEach((vente) => {
+    const total = venteTotal(vente);
+    ((moisCa[mo(vente.date_vente)] += total),
+      vente.paye && (moisEncaisse[mo(vente.date_vente)] += total),
+      (moisPots[mo(vente.date_vente)] += sum(
+        donnees.lignes.filter((ligne) => ligne.vente_id === vente.id),
+        (ligne) => ligne.quantite,
       )));
   }),
-    i.forEach((d) => {
-      g[mo(d.date_depense)] += Number(d.montant);
+    depenses.forEach((depense) => {
+      moisDepenses[mo(depense.date_depense)] += Number(depense.montant);
     }));
-  const u =
+  const report =
     sum(
-      t.ventes.filter((d) => yr(d.date_vente) < e && d.paye),
+      donnees.ventes.filter((vente) => yr(vente.date_vente) < annee && vente.paye),
       venteTotal,
     ) -
     sum(
-      t.depenses.filter((d) => yr(d.date_depense) < e),
-      (d) => d.montant,
+      donnees.depenses.filter((depense) => yr(depense.date_depense) < annee),
+      (depense) => depense.montant,
     );
-  let c = u;
-  const y =
-      new Date().getFullYear() === e
+  let cumul = report;
+  const dernierMois =
+      new Date().getFullYear() === annee
         ? new Date().getMonth()
-        : e > new Date().getFullYear()
+        : annee > new Date().getFullYear()
           ? -1
           : 11,
-    k = f.map((d, h) => ((c += d - g[h]), h <= y ? c : null));
+    tresorerie = moisEncaisse.map(
+      (encaisse, mois) => (
+        (cumul += encaisse - moisDepenses[mois]),
+        mois <= dernierMois ? cumul : null
+      ),
+    );
   return {
-    ventes: s,
-    dep: i,
-    lignes: l,
-    ca: r,
-    encaisse: b,
-    aEncaisser: r - b,
-    charges: m,
-    resultat: r - m,
-    kgRec: $,
-    kgVendu: p,
-    mCa: v,
-    mEnc: f,
-    mDep: g,
-    mPots: w,
-    treso: k,
-    report: u,
-    tresoFin: u + b - m,
-    coutKg: $ ? m / $ : null,
-    prixKg: p ? r / p : null,
+    ventes: ventes,
+    dep: depenses,
+    lignes: lignes,
+    ca: ca,
+    encaisse: encaisse,
+    aEncaisser: ca - encaisse,
+    charges: charges,
+    resultat: ca - charges,
+    kgRec: kgRecolte,
+    kgVendu: kgVendu,
+    mCa: moisCa,
+    mEnc: moisEncaisse,
+    mDep: moisDepenses,
+    mPots: moisPots,
+    treso: tresorerie,
+    report: report,
+    tresoFin: report + encaisse - charges,
+    coutKg: kgRecolte ? charges / kgRecolte : null,
+    prixKg: kgVendu ? ca / kgVendu : null,
   };
 }
 function rythme() {
-  const e = S.d,
-    t = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10),
-    s = new Set(e.ventes.filter((l) => l.date_vente >= t).map((l) => l.id)),
-    a =
+  const donnees = S.d,
+    depuis = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10),
+    idsVentes = new Set(
+      donnees.ventes.filter((vente) => vente.date_vente >= depuis).map((vente) => vente.id),
+    ),
+    potsParMois =
       sum(
-        e.lignes.filter((l) => s.has(l.vente_id)),
-        (l) => l.quantite,
+        donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
+        (ligne) => ligne.quantite,
       ) / 3,
-    o = stock().pots;
-  return { mois: a, moisRestants: a > 0 ? o / a : null };
+    pots = stock().pots;
+  return { mois: potsParMois, moisRestants: potsParMois > 0 ? pots / potsParMois : null };
 }
 function todos() {
-  const e = S.d,
-    t = [];
-  (e.taches
-    .filter((a) => !a.faite && a.echeance && a.echeance < today())
-    .forEach((a) =>
-      t.push(["En retard", "crit", a.titre + " (" + dshort(a.echeance) + ")", "agenda"]),
+  const donnees = S.d,
+    liste = [];
+  (donnees.taches
+    .filter((tache) => !tache.faite && tache.echeance && tache.echeance < today())
+    .forEach((tache) =>
+      liste.push([
+        "En retard",
+        "crit",
+        tache.titre + " (" + dshort(tache.echeance) + ")",
+        "agenda",
+      ]),
     ),
-    e.articles
+    donnees.articles
       .filter(
-        (a) =>
-          a.type !== "\xC9quipement" && Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil),
+        (article) =>
+          article.type !== "\xC9quipement" &&
+          Number(article.seuil) > 0 &&
+          Number(article.stock) <= Number(article.seuil),
       )
-      .forEach((a) =>
-        t.push([
+      .forEach((article) =>
+        liste.push([
           "Stock bas",
           "watch",
-          `${a.nom} : ${n(a.stock)} ${a.unite} (seuil ${n(a.seuil)})`,
+          `${article.nom} : ${n(article.stock)} ${article.unite} (seuil ${n(article.seuil)})`,
           "materiel",
         ]),
       ),
-    e.ruches
-      .filter((a) => a.etat !== "Bonne")
-      .forEach((a) => t.push([a.nom, etatClass(a.etat), `\xC9tat : ${a.etat}`, "ruche:" + a.id])),
-    e.ruches.forEach((a) => {
-      const o = lastVisit(a.id);
-      o &&
-        days(o.date_visite) > 30 &&
-        t.push([
-          a.nom,
+    donnees.ruches
+      .filter((ruche) => ruche.etat !== "Bonne")
+      .forEach((ruche) =>
+        liste.push([
+          ruche.nom,
+          etatClass(ruche.etat),
+          `\xC9tat : ${ruche.etat}`,
+          "ruche:" + ruche.id,
+        ]),
+      ),
+    donnees.ruches.forEach((ruche) => {
+      const derniere = lastVisit(ruche.id);
+      derniere &&
+        days(derniere.date_visite) > 30 &&
+        liste.push([
+          ruche.nom,
           "watch",
-          `Pas de visite depuis ${days(o.date_visite)} jours`,
-          "ruche:" + a.id,
+          `Pas de visite depuis ${days(derniere.date_visite)} jours`,
+          "ruche:" + ruche.id,
         ]);
     }));
-  const s = e.ventes.filter((a) => !a.paye);
-  s.length &&
-    t.push([
+  const impayees = donnees.ventes.filter((vente) => !vente.paye);
+  impayees.length &&
+    liste.push([
       "\xC0 encaisser",
       "watch",
-      `${s.length} vente(s) non pay\xE9e(s) : ${eur(sum(s, venteTotal))}`,
+      `${impayees.length} vente(s) non pay\xE9e(s) : ${eur(sum(impayees, venteTotal))}`,
       "clients",
     ]);
-  const i = sum(e.recoltes, (a) => a.kg) - stock().kgPots;
+  const aMettreEnPots = sum(donnees.recoltes, (recolte) => recolte.kg) - stock().kgPots;
   return (
-    i > 0.05 &&
-      t.push(["Miel", "good", `${n(i)} kg r\xE9colt\xE9s pas encore mis en pots`, "miel"]),
+    aMettreEnPots > 0.05 &&
+      liste.push([
+        "Miel",
+        "good",
+        `${n(aMettreEnPots)} kg r\xE9colt\xE9s pas encore mis en pots`,
+        "miel",
+      ]),
     new Date().getMonth() >= 8 &&
-      e.ruches.length &&
-      t.push([
+      donnees.ruches.length &&
+      liste.push([
         "Obligation",
         "good",
         `D\xE9clarer les ruches avant le 31 d\xE9cembre ${new Date().getFullYear()}`,
         "agenda",
       ]),
-    e.taches
-      .filter((a) => !a.faite && (!a.echeance || a.echeance >= today()))
+    donnees.taches
+      .filter((tache) => !tache.faite && (!tache.echeance || tache.echeance >= today()))
       .slice(0, 4)
-      .forEach((a) =>
-        t.push([a.echeance ? dshort(a.echeance) : "\xC0 faire", "good", a.titre, "agenda"]),
+      .forEach((tache) =>
+        liste.push([
+          tache.echeance ? dshort(tache.echeance) : "\xC0 faire",
+          "good",
+          tache.titre,
+          "agenda",
+        ]),
       ),
-    t
+    liste
   );
 }
 function honeycomb(e) {
