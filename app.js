@@ -1483,29 +1483,29 @@ function viewPrevisions() {
     <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
   );
 }
-function taskRow(e) {
-  const t = !e.faite && e.echeance && e.echeance < today(),
-    s = e.ruche_id ? byId(S.d.ruches, e.ruche_id)?.nom : "";
-  return `<div class="task ${e.faite ? "done" : ""}"><button class="check" role="checkbox" aria-checked="${e.faite}" aria-label="Marquer ${esc(e.titre)}" data-act="toggletache" data-v="${e.id}">${e.faite ? "\u2713" : ""}</button><button class="tmain" data-act="edittache" data-v="${e.id}"><b>${esc(e.titre)}</b><span class="small ${t ? "crit" : ""}">${[e.echeance ? dfr(e.echeance) : "Sans date", s, e.assigne].filter(Boolean).map(esc).join(" \xB7 ")}</span></button></div>`;
+function taskRow(tache) {
+  const enRetard = !tache.faite && tache.echeance && tache.echeance < today(),
+    nomRuche = tache.ruche_id ? byId(S.d.ruches, tache.ruche_id)?.nom : "";
+  return `<div class="task ${tache.faite ? "done" : ""}"><button class="check" role="checkbox" aria-checked="${tache.faite}" aria-label="Marquer ${esc(tache.titre)}" data-act="toggletache" data-v="${tache.id}">${tache.faite ? "\u2713" : ""}</button><button class="tmain" data-act="edittache" data-v="${tache.id}"><b>${esc(tache.titre)}</b><span class="small ${enRetard ? "crit" : ""}">${[tache.echeance ? dfr(tache.echeance) : "Sans date", nomRuche, tache.assigne].filter(Boolean).map(esc).join(" \xB7 ")}</span></button></div>`;
 }
 function viewAgenda() {
-  const e = S.d,
-    t = e.taches
-      .filter((l) => !l.faite)
-      .sort((l, r) => (l.echeance || "9").localeCompare(r.echeance || "9")),
-    s = e.taches.filter((l) => l.faite).slice(0, 8),
-    i = new Set(t.map((l) => l.titre)),
-    a = new Date().getMonth(),
-    o = SAISON[a].filter((l) => !i.has(l));
+  const donnees = S.d,
+    aFaire = donnees.taches
+      .filter((tache) => !tache.faite)
+      .sort((un, deux) => (un.echeance || "9").localeCompare(deux.echeance || "9")),
+    terminees = donnees.taches.filter((tache) => tache.faite).slice(0, 8),
+    titres = new Set(aFaire.map((tache) => tache.titre)),
+    mois = new Date().getMonth(),
+    idees = SAISON[mois].filter((idee) => !titres.has(idee));
   shell(
     "Agenda",
     "T\xE2ches \xE0 faire et id\xE9es de saison",
     '<button class="btn main" data-act="newtache">Ajouter une t\xE2che</button>' +
       (typeof RP != "undefined" ? RP.bouton() : ""),
     `
-    <section class="card"><h2>\xC0 faire</h2>${t.map(taskRow).join("") || '<p class="small">Aucune t\xE2che pr\xE9vue.</p>'}</section>
-    ${o.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 votre r\xE9gion et \xE0 vos protocoles.</p><div class="chips">${o.map((l) => `<button data-act="addsug" data-v="${esc(l)}">+ ${esc(l)}</button>`).join("")}</div></section>` : ""}
-    ${s.length ? `<section class="card"><h2>Termin\xE9es</h2>${s.map(taskRow).join("")}</section>` : ""}`,
+    <section class="card"><h2>\xC0 faire</h2>${aFaire.map(taskRow).join("") || '<p class="small">Aucune t\xE2che pr\xE9vue.</p>'}</section>
+    ${idees.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 votre r\xE9gion et \xE0 vos protocoles.</p><div class="chips">${idees.map((idee) => `<button data-act="addsug" data-v="${esc(idee)}">+ ${esc(idee)}</button>`).join("")}</div></section>` : ""}
+    ${terminees.length ? `<section class="card"><h2>Termin\xE9es</h2>${terminees.map(taskRow).join("")}</section>` : ""}`,
   );
 }
 function viewReglages() {
