@@ -1,14 +1,65 @@
 # Documentation technique
 
-- **Application** : PWA en JavaScript sans framework, publiée par GitHub Pages. `index.html` (styles), `app.js` (cœur),
-  puis des modules qui remplacent ou complètent ses écrans, dans cet ordre : `photos.js` (PH), `registre.js` (RG),
-  `rappels.js` (RP), `visites-groupees.js` (VR), `etiquettes.js` (ET), `ux.js` (UX, interface v2), `offline.js` (HL, hors ligne),
-  `v3.js` (V3, colonie, varroa, récolte…), `nav4.js` (N4, navigation v4), `meteo.js` (MT, météo par rucher), `alveoles.js` (AL, interface Alvéoles, rubriques, fiche rucher, compagnon API). `sw.js` garde l'app sur le téléphone.
+- **Application** : PWA en JavaScript sans framework ni étape de compilation, publiée par GitHub Pages.
+  `index.html` (styles), `config.js`, puis `app.js` (cœur) et 19 modules qui complètent ou remplacent ses écrans.
+  Ordre de chargement (celui de `index.html`, qui compte) :
+
+  | # | Fichier | Objet global | Rôle |
+  |---|---|---|---|
+  | 1 | `app.js` | — (`S`, `sb`, `ACT`…) | Cœur : données, écrans d'origine, formulaires, actions |
+  | 2 | `photos.js` | `PH` | Photos de visite, réduction, envoi différé |
+  | 3 | `registre.js` | `RG` | Registre d'élevage, impression, export |
+  | 4 | `rappels.js` | `RP` | Rappels |
+  | 5 | `visites-groupees.js` | `VR` | Visite de plusieurs ruches d'un coup |
+  | 6 | `etiquettes.js` | `ET` | Étiquettes de pots |
+  | 7 | `exploitations.js` | `EX` | Plusieurs exploitations, membres, invitations |
+  | 8 | `ux.js` | `UX` | Interface v2 |
+  | 9 | `offline.js` | `HL` | Hors ligne et file d'envoi |
+  | 10 | `v3.js` | `V3` | Colonie, varroa, récolte, livraison |
+  | 11 | `nav4.js` | `N4` | Navigation v4 |
+  | 12 | `meteo.js` | `MT` | Météo et créneaux de visite par rucher |
+  | 13 | `api-compagnon.js` | `<api-compagnon>` | Le compagnon API (élément graphique, sans dépendance) |
+  | 14 | `alveoles.js` | `AL` | Interface Alvéoles, rubriques, fiche rucher |
+  | 15 | `voix.js` | `VX` | Visite à la voix |
+  | 16 | `ergonomie.js` | `ER` | Gestion en blocs, recherche, brouillons, annulation, raccourcis |
+  | 17 | `essentiels.js` | `ES` | Météo par heure, réglages en blocs, registre complet, factures, conseils du mois |
+  | 18 | `tournee.js` | `TN` | Tournée en parcours |
+  | 19 | `demarrage.js` | — | Prise en main, premier rucher, guide de démarrage |
+
+  `sw.js` garde l'application sur le téléphone ; sa `VERSION` change à chaque version publiée.
+- **Surcharges** : les modules remplacent des fonctions de `app.js` par `window.<nom> = …` ; la dernière chargée gagne.
+  Cela ne fonctionne que parce que ces fonctions sont déclarées dans `app.js` par `function <nom>()` au premier niveau :
+  ne jamais les y transformer en `const` ni les renommer. Relevé du 6 nov. 2026 :
+
+  | Fonction de `app.js` | Remplacée successivement par |
+  |---|---|
+  | `render` | rappels, ux, v3, nav4, alveoles, ergonomie, essentiels |
+  | `shell` | v3, nav4, alveoles, ergonomie, essentiels |
+  | `viewRuches` | v3, nav4, alveoles |
+  | `viewDash` | alveoles, demarrage |
+  | `viewVente` | v3, alveoles |
+  | `viewMiel` | nav4, essentiels |
+  | `viewPlus` | nav4, ergonomie |
+  | `loadAll` | offline, v3 |
+  | `viewRuche`, `viewClients`, `toast` | alveoles |
+  | `viewVisite` | voix |
+  | `sheet`, `viewCompta` | ergonomie |
+  | `viewReglages` | essentiels |
+  | `boot` | ux |
+  | `lotForm`, `todos`, `readVisitForm`, `readSaleForm` | v3 |
+
+  Actions redéfinies : `ACT.go` (ux, v3, alveoles), `uvsuppr` (ux, nav4), `uronglet` et `utout` (ux, alveoles),
+  `uvente` (ux, essentiels), `v3tournee` (v3, tournee), `delvisite`, `delvente`, `cancel` (app, nav4).
+- **Source de `app.js`** : la source d'origine n'existe plus. La version lisible a été reconstituée en novembre 2026
+  (IT-00) par formatage Prettier (`.prettierrc`) puis renommage des variables locales, chaque étape vérifiée par
+  `scripts/comparer-ast.js` (même arbre syntaxique) et par les 18 tests.
 - **Mobile** : un seul code pour le web et le téléphone, installé depuis le site. Choix et étapes vers les stores : `MOBILE.md`.
 - **Configuration** : `config.js` (adresse et clé publique Supabase, environnement).
-- **Données** : Supabase (Postgres + Auth + Storage). Accès réservé aux adresses de la table `membres` (`est_membre()`),
-  règles RLS sur chaque table. Créations atomiques par `creer_visite` et `creer_vente`.
-- **Migrations** : `migrations/`, numérotées, uniquement additives ; état d'application dans `migrations/README.md`.
+- **Données** : Supabase (Postgres + Auth + Storage). Depuis la migration 008, chaque donnée porte un `exploitation_id` ;
+  la RLS de chaque table compare cette colonne à `exploitation_courante()` (exploitation choisie dans l'en-tête
+  `x-exploitation`, dont l'utilisateur doit être membre). Créations atomiques par `creer_visite` et `creer_vente`.
+  L'API renvoie au plus 1 000 lignes par requête (« Max rows ») ; détail dans `migrations/README.md`.
+- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 011, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
 - **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette.
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
