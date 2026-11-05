@@ -1559,7 +1559,7 @@ function render() {
       '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apidoo.svg" alt=""></div>';
     return;
   }
-  const e = {
+  const vues = {
     dash: viewDash,
     plus: viewPlus,
     agenda: viewAgenda,
@@ -1578,58 +1578,61 @@ function render() {
     registre: () => RG.vue(),
     membres: () => EX.vue(),
   }[S.route];
-  (e(),
+  (vues(),
     S.lastRoute !== S.route &&
       (window.scrollTo?.(0, 0), document.querySelector(".wrap")?.classList.add("enter")),
     (S.lastRoute = S.route));
 }
 function sheet({
-  title: e,
-  intro: t,
-  fields: s,
-  submit: i,
-  label: a = "Enregistrer",
-  del: o,
-  delLabel: l,
+  title: titre,
+  intro: intro,
+  fields: champs,
+  submit: enregistrer,
+  label: libelle = "Enregistrer",
+  del: supprimer,
+  delLabel: libelleSuppr,
 }) {
-  (($sheetForm.innerHTML = `<h2>${esc(e)}</h2>${t ? `<p class="small">${esc(t)}</p>` : ""}${s
-    .map((r) => {
-      const b = `name="${r.name}" ${r.required ? "required" : ""} ${r.step ? `step="${r.step}"` : ""} ${r.min !== void 0 ? `min="${r.min}"` : ""} ${r.list ? `list="dl_${r.name}"` : ""}`;
-      let m;
-      r.type === "select"
-        ? (m = `<select ${b}>${r.options
-            .map((p) => {
-              const [v, f] = Array.isArray(p) ? p : [p, p];
-              return `<option value="${esc(v)}" ${String(r.value ?? "") === String(v) ? "selected" : ""}>${esc(f)}</option>`;
+  (($sheetForm.innerHTML = `<h2>${esc(titre)}</h2>${intro ? `<p class="small">${esc(intro)}</p>` : ""}${champs
+    .map((champ) => {
+      const attributs = `name="${champ.name}" ${champ.required ? "required" : ""} ${champ.step ? `step="${champ.step}"` : ""} ${champ.min !== void 0 ? `min="${champ.min}"` : ""} ${champ.list ? `list="dl_${champ.name}"` : ""}`;
+      let controle;
+      champ.type === "select"
+        ? (controle = `<select ${attributs}>${champ.options
+            .map((option) => {
+              const [valeur, texte] = Array.isArray(option) ? option : [option, option];
+              return `<option value="${esc(valeur)}" ${String(champ.value ?? "") === String(valeur) ? "selected" : ""}>${esc(texte)}</option>`;
             })
             .join("")}</select>`)
-        : r.type === "textarea"
-          ? (m = `<textarea ${b}>${esc(r.value)}</textarea>`)
-          : (m = `<input type="${r.type || "text"}" ${b} value="${esc(r.value)}" ${r.type === "number" ? 'inputmode="decimal"' : ""} autocomplete="off">`);
-      const $ = r.list
-        ? `<datalist id="dl_${r.name}">${r.list.map((p) => `<option value="${esc(p)}">`).join("")}</datalist>`
+        : champ.type === "textarea"
+          ? (controle = `<textarea ${attributs}>${esc(champ.value)}</textarea>`)
+          : (controle = `<input type="${champ.type || "text"}" ${attributs} value="${esc(champ.value)}" ${champ.type === "number" ? 'inputmode="decimal"' : ""} autocomplete="off">`);
+      const $ = champ.list
+        ? `<datalist id="dl_${champ.name}">${champ.list.map((suggestion) => `<option value="${esc(suggestion)}">`).join("")}</datalist>`
         : "";
-      return `<label>${esc(r.label)}${m}${$}</label>`;
+      return `<label>${esc(champ.label)}${controle}${$}</label>`;
     })
     .join("")}
-  <div class="actions"><button class="btn main" style="flex:1">${esc(a)}</button><button type="button" class="btn" data-act="closesheet">Annuler</button></div>
-  ${o ? `<button type="button" class="link crit" data-act="sheetdel">${esc(l || "Supprimer")}</button>` : ""}`),
-    ($sheetForm.onsubmit = async (r) => {
-      r.preventDefault();
-      const b = $sheetForm.querySelector(".btn.main");
-      b.disabled = !0;
+  <div class="actions"><button class="btn main" style="flex:1">${esc(libelle)}</button><button type="button" class="btn" data-act="closesheet">Annuler</button></div>
+  ${supprimer ? `<button type="button" class="link crit" data-act="sheetdel">${esc(libelleSuppr || "Supprimer")}</button>` : ""}`),
+    ($sheetForm.onsubmit = async (evt) => {
+      evt.preventDefault();
+      const bouton = $sheetForm.querySelector(".btn.main");
+      bouton.disabled = !0;
       try {
-        (await i(Object.fromEntries(new FormData($sheetForm))), $sheet.close());
-      } catch (m) {
-        (fail(m), (b.disabled = !1));
+        (await enregistrer(Object.fromEntries(new FormData($sheetForm))), $sheet.close());
+      } catch (erreur) {
+        (fail(erreur), (bouton.disabled = !1));
       }
     }),
-    (sheet.del = o),
+    (sheet.del = supprimer),
     $sheet.showModal());
 }
-const ruchers = () => [...new Set(S.d.ruches.map((e) => e.rucher).filter(Boolean))],
-  fournOpts = () => [["", "Aucun"]].concat(S.d.fournisseurs.map((e) => [e.id, e.nom])),
-  del = (e, t, s) => () => write(sb.from(e).delete().eq("id", t), s);
+const ruchers = () => [...new Set(S.d.ruches.map((ruche) => ruche.rucher).filter(Boolean))],
+  fournOpts = () =>
+    [["", "Aucun"]].concat(
+      S.d.fournisseurs.map((fournisseur) => [fournisseur.id, fournisseur.nom]),
+    ),
+  del = (nomTable, id, message) => () => write(sb.from(nomTable).delete().eq("id", id), message);
 function ruchesForm() {
   sheet({
     title: "Ajouter des ruches",
@@ -1652,75 +1655,85 @@ function ruchesForm() {
         list: ["Dadant 10 cadres", "Dadant 12 cadres", "Langstroth", "Warr\xE9"],
       },
     ],
-    submit: (e) => {
-      const t = Math.min(200, Number(e.nombre)),
-        s = new Set(S.d.ruches.map((o) => o.nom)),
-        i = [];
-      let a = 1;
-      for (; i.length < t;) {
-        const o = t === 1 && !s.has(e.prefixe) ? e.prefixe : `${e.prefixe} ${a}`;
-        (s.has(o) || (i.push({ nom: o, rucher: e.rucher, type_ruche: e.type_ruche }), s.add(o)),
-          a++);
+    submit: (saisie) => {
+      const nombre = Math.min(200, Number(saisie.nombre)),
+        nomsPris = new Set(S.d.ruches.map((ruche) => ruche.nom)),
+        nouvelles = [];
+      let numero = 1;
+      for (; nouvelles.length < nombre;) {
+        const nom =
+          nombre === 1 && !nomsPris.has(saisie.prefixe)
+            ? saisie.prefixe
+            : `${saisie.prefixe} ${numero}`;
+        (nomsPris.has(nom) ||
+          (nouvelles.push({ nom: nom, rucher: saisie.rucher, type_ruche: saisie.type_ruche }),
+          nomsPris.add(nom)),
+          numero++);
       }
       return write(
-        sb.from("ruches").insert(i),
-        t > 1 ? t + " ruches ajout\xE9es" : "Ruche ajout\xE9e",
+        sb.from("ruches").insert(nouvelles),
+        nombre > 1 ? nombre + " ruches ajout\xE9es" : "Ruche ajout\xE9e",
       );
     },
   });
 }
-function rucheForm(e) {
+function rucheForm(ruche) {
   sheet({
     title: "Modifier la ruche",
     fields: [
-      { name: "nom", label: "Nom", required: !0, value: e.nom },
-      { name: "rucher", label: "Rucher", value: e.rucher, list: ruchers() },
+      { name: "nom", label: "Nom", required: !0, value: ruche.nom },
+      { name: "rucher", label: "Rucher", value: ruche.rucher, list: ruchers() },
       {
         name: "type_ruche",
         label: "Type de ruche",
-        value: e.type_ruche,
+        value: ruche.type_ruche,
         list: ["Dadant 10 cadres", "Dadant 12 cadres", "Langstroth", "Warr\xE9"],
       },
-      { name: "annee_reine", label: "Ann\xE9e de la reine", type: "number", value: e.annee_reine },
+      {
+        name: "annee_reine",
+        label: "Ann\xE9e de la reine",
+        type: "number",
+        value: ruche.annee_reine,
+      },
       {
         name: "date_installation",
         label: "Date d\u2019installation",
         type: "date",
-        value: e.date_installation,
+        value: ruche.date_installation,
       },
-      { name: "etat", label: "\xC9tat", type: "select", options: ETATS, value: e.etat },
-      { name: "notes", label: "Notes", type: "textarea", value: e.notes },
+      { name: "etat", label: "\xC9tat", type: "select", options: ETATS, value: ruche.etat },
+      { name: "notes", label: "Notes", type: "textarea", value: ruche.notes },
     ],
-    submit: (t) =>
+    submit: (saisie) =>
       write(
         sb
           .from("ruches")
           .update({
-            ...t,
-            annee_reine: num(t.annee_reine),
-            date_installation: orNull(t.date_installation),
+            ...saisie,
+            annee_reine: num(saisie.annee_reine),
+            date_installation: orNull(saisie.date_installation),
           })
-          .eq("id", e.id),
+          .eq("id", ruche.id),
         "Ruche enregistr\xE9e",
       ),
     del: async () => {
-      ((S.route = "ruches"), await del("ruches", e.id, "Ruche supprim\xE9e")());
+      ((S.route = "ruches"), await del("ruches", ruche.id, "Ruche supprim\xE9e")());
     },
     delLabel: "Supprimer la ruche et ses visites",
   });
 }
-function lotForm(e) {
-  const t = String(new Date().getFullYear()).slice(2);
+function lotForm(lot) {
+  const an = String(new Date().getFullYear()).slice(2);
   sheet({
-    title: e ? "Modifier le lot" : "Nouveau lot",
+    title: lot ? "Modifier le lot" : "Nouveau lot",
     fields: [
       {
         name: "code",
         label: "Num\xE9ro de lot",
         required: !0,
-        value: e?.code || `L${t}-${String(S.d.lots.length + 1).padStart(2, "0")}`,
+        value: lot?.code || `L${an}-${String(S.d.lots.length + 1).padStart(2, "0")}`,
       },
-      { name: "miel", label: "Miel", required: !0, value: e?.miel || "Toutes fleurs" },
+      { name: "miel", label: "Miel", required: !0, value: lot?.miel || "Toutes fleurs" },
       {
         name: "format_g",
         label: "Format du pot (g)",
@@ -1728,7 +1741,7 @@ function lotForm(e) {
         step: "1",
         min: 1,
         required: !0,
-        value: e?.format_g || 500,
+        value: lot?.format_g || 500,
         list: [125, 250, 500, 1e3],
       },
       {
@@ -1738,61 +1751,61 @@ function lotForm(e) {
         step: "0.01",
         min: 0,
         required: !0,
-        value: e?.prix,
+        value: lot?.prix,
       },
       {
         name: "pots_initiaux",
         label: "Nombre de pots remplis",
         type: "number",
         step: "1",
-        min: e?.pots_vendus || 0,
+        min: lot?.pots_vendus || 0,
         required: !0,
-        value: e?.pots_initiaux,
+        value: lot?.pots_initiaux,
       },
       {
         name: "date_mise_en_pot",
         label: "Mise en pot",
         type: "date",
-        value: e?.date_mise_en_pot || today(),
+        value: lot?.date_mise_en_pot || today(),
       },
-      { name: "ddm", label: "Date de durabilit\xE9 minimale (DDM)", type: "date", value: e?.ddm },
+      { name: "ddm", label: "Date de durabilit\xE9 minimale (DDM)", type: "date", value: lot?.ddm },
     ],
-    submit: (s) => {
-      const i = {
-        ...s,
-        format_g: num(s.format_g),
-        prix: num(s.prix),
-        pots_initiaux: num(s.pots_initiaux),
-        date_mise_en_pot: orNull(s.date_mise_en_pot),
-        ddm: orNull(s.ddm),
+    submit: (saisie) => {
+      const ligne = {
+        ...saisie,
+        format_g: num(saisie.format_g),
+        prix: num(saisie.prix),
+        pots_initiaux: num(saisie.pots_initiaux),
+        date_mise_en_pot: orNull(saisie.date_mise_en_pot),
+        ddm: orNull(saisie.ddm),
       };
       return write(
-        e ? sb.from("lots").update(i).eq("id", e.id) : sb.from("lots").insert(i),
+        lot ? sb.from("lots").update(ligne).eq("id", lot.id) : sb.from("lots").insert(ligne),
         "Lot enregistr\xE9",
       );
     },
-    del: e ? del("lots", e.id, "Lot supprim\xE9") : null,
+    del: lot ? del("lots", lot.id, "Lot supprim\xE9") : null,
   });
 }
-function articleForm(e, t) {
-  const s = e?.type || t || "Consommable",
-    i = !!e?.id;
+function articleForm(article, typeParDefaut) {
+  const type = article?.type || typeParDefaut || "Consommable",
+    existe = !!article?.id;
   sheet({
-    title: i ? "Modifier l\u2019article" : "Ajouter un article",
+    title: existe ? "Modifier l\u2019article" : "Ajouter un article",
     fields: [
-      { name: "nom", label: "Nom", required: !0, value: e?.nom },
+      { name: "nom", label: "Nom", required: !0, value: article?.nom },
       {
         name: "type",
         label: "Type",
         type: "select",
         options: ["Consommable", "\xC9quipement"],
-        value: s,
+        value: type,
       },
       {
         name: "unite",
         label: "Unit\xE9",
         required: !0,
-        value: e?.unite || "unit\xE9",
+        value: article?.unite || "unit\xE9",
         list: ["kg", "L", "unit\xE9", "feuille", "bo\xEEte"],
       },
       {
@@ -1802,7 +1815,7 @@ function articleForm(e, t) {
         step: "0.01",
         min: 0,
         required: !0,
-        value: e?.stock ?? 0,
+        value: article?.stock ?? 0,
       },
       {
         name: "seuil",
@@ -1811,7 +1824,7 @@ function articleForm(e, t) {
         step: "0.01",
         min: 0,
         required: !0,
-        value: e?.seuil ?? 0,
+        value: article?.seuil ?? 0,
       },
       {
         name: "valeur",
@@ -1819,89 +1832,105 @@ function articleForm(e, t) {
         type: "number",
         step: "0.01",
         min: 0,
-        value: e?.valeur,
+        value: article?.valeur,
       },
       {
         name: "fournisseur_id",
         label: "Fournisseur",
         type: "select",
         options: fournOpts(),
-        value: e?.fournisseur_id || "",
+        value: article?.fournisseur_id || "",
       },
     ],
-    submit: (a) => {
-      const o = {
-        ...a,
-        stock: num(a.stock),
-        seuil: num(a.seuil),
-        valeur: num(a.valeur),
-        fournisseur_id: orNull(a.fournisseur_id),
+    submit: (saisie) => {
+      const ligne = {
+        ...saisie,
+        stock: num(saisie.stock),
+        seuil: num(saisie.seuil),
+        valeur: num(saisie.valeur),
+        fournisseur_id: orNull(saisie.fournisseur_id),
       };
       return write(
-        i ? sb.from("articles").update(o).eq("id", e.id) : sb.from("articles").insert(o),
+        existe
+          ? sb.from("articles").update(ligne).eq("id", article.id)
+          : sb.from("articles").insert(ligne),
         "Article enregistr\xE9",
       );
     },
-    del: i ? del("articles", e.id, "Article supprim\xE9") : null,
+    del: existe ? del("articles", article.id, "Article supprim\xE9") : null,
   });
 }
-function clientForm(e) {
-  const t = S.route === "vente";
+function clientForm(client) {
+  const depuisVente = S.route === "vente";
   sheet({
-    title: e ? "Modifier le client" : "Ajouter un client",
+    title: client ? "Modifier le client" : "Ajouter un client",
     fields: [
-      { name: "nom", label: "Nom", required: !0, value: e?.nom },
+      { name: "nom", label: "Nom", required: !0, value: client?.nom },
       {
         name: "cercle",
         label: "Cercle",
         type: "select",
         options: cfg().cercles,
-        value: e?.cercle || cfg().cercles[0],
+        value: client?.cercle || cfg().cercles[0],
       },
-      { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: e?.telephone },
-      { name: "email", label: "E-mail", type: "email", value: e?.email },
-      { name: "notes", label: "Notes", type: "textarea", value: e?.notes },
+      { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: client?.telephone },
+      { name: "email", label: "E-mail", type: "email", value: client?.email },
+      { name: "notes", label: "Notes", type: "textarea", value: client?.notes },
     ],
-    submit: async (s) => {
-      if (e) return write(sb.from("clients").update(s).eq("id", e.id), "Client enregistr\xE9");
-      const { data: i, error: a } = await sb.from("clients").insert(s).select().single();
-      if (a) throw a;
-      (t && (S.vente.client_id = i.id), await refresh(), toast("Client enregistr\xE9"));
+    submit: async (saisie) => {
+      if (client)
+        return write(sb.from("clients").update(saisie).eq("id", client.id), "Client enregistr\xE9");
+      const { data: cree, error: erreur } = await sb
+        .from("clients")
+        .insert(saisie)
+        .select()
+        .single();
+      if (erreur) throw erreur;
+      (depuisVente && (S.vente.client_id = cree.id),
+        await refresh(),
+        toast("Client enregistr\xE9"));
     },
-    del: e ? del("clients", e.id, "Client supprim\xE9") : null,
+    del: client ? del("clients", client.id, "Client supprim\xE9") : null,
   });
 }
-function fournisseurForm(e) {
+function fournisseurForm(fournisseur) {
   sheet({
-    title: e ? "Modifier le fournisseur" : "Ajouter un fournisseur",
+    title: fournisseur ? "Modifier le fournisseur" : "Ajouter un fournisseur",
     fields: [
-      { name: "nom", label: "Nom", required: !0, value: e?.nom },
-      { name: "produits", label: "Produits", value: e?.produits },
-      { name: "contact", label: "Contact", value: e?.contact },
-      { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: e?.telephone },
-      { name: "email", label: "E-mail", type: "email", value: e?.email },
-      { name: "notes", label: "Notes", type: "textarea", value: e?.notes },
+      { name: "nom", label: "Nom", required: !0, value: fournisseur?.nom },
+      { name: "produits", label: "Produits", value: fournisseur?.produits },
+      { name: "contact", label: "Contact", value: fournisseur?.contact },
+      { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: fournisseur?.telephone },
+      { name: "email", label: "E-mail", type: "email", value: fournisseur?.email },
+      { name: "notes", label: "Notes", type: "textarea", value: fournisseur?.notes },
     ],
-    submit: (t) =>
+    submit: (saisie) =>
       write(
-        e ? sb.from("fournisseurs").update(t).eq("id", e.id) : sb.from("fournisseurs").insert(t),
+        fournisseur
+          ? sb.from("fournisseurs").update(saisie).eq("id", fournisseur.id)
+          : sb.from("fournisseurs").insert(saisie),
         "Fournisseur enregistr\xE9",
       ),
-    del: e ? del("fournisseurs", e.id, "Fournisseur supprim\xE9") : null,
+    del: fournisseur ? del("fournisseurs", fournisseur.id, "Fournisseur supprim\xE9") : null,
   });
 }
-function depenseForm(e, t = {}) {
-  const s = cfg();
+function depenseForm(depense, prerempli = {}) {
+  const reglages = cfg();
   sheet({
-    title: e ? "Modifier la d\xE9pense" : "Ajouter une d\xE9pense",
+    title: depense ? "Modifier la d\xE9pense" : "Ajouter une d\xE9pense",
     fields: [
-      { name: "libelle", label: "Libell\xE9", required: !0, value: e?.libelle ?? t.libelle },
+      {
+        name: "libelle",
+        label: "Libell\xE9",
+        required: !0,
+        value: depense?.libelle ?? prerempli.libelle,
+      },
       {
         name: "categorie",
         label: "Poste",
         type: "select",
-        options: [...new Set([...s.postes, ...(e ? [e.categorie] : [])])],
-        value: e?.categorie ?? s.postes[0],
+        options: [...new Set([...reglages.postes, ...(depense ? [depense.categorie] : [])])],
+        value: depense?.categorie ?? reglages.postes[0],
       },
       {
         name: "montant",
@@ -1910,68 +1939,82 @@ function depenseForm(e, t = {}) {
         step: "0.01",
         min: 0,
         required: !0,
-        value: e?.montant,
+        value: depense?.montant,
       },
       {
         name: "date_depense",
         label: "Date",
         type: "date",
         required: !0,
-        value: e?.date_depense || today(),
+        value: depense?.date_depense || today(),
       },
       {
         name: "fournisseur_id",
         label: "Fournisseur",
         type: "select",
         options: fournOpts(),
-        value: e?.fournisseur_id ?? t.fournisseur_id ?? "",
+        value: depense?.fournisseur_id ?? prerempli.fournisseur_id ?? "",
       },
     ],
-    submit: (i) => {
-      const a = { ...i, montant: num(i.montant), fournisseur_id: orNull(i.fournisseur_id) };
+    submit: (saisie) => {
+      const ligne = {
+        ...saisie,
+        montant: num(saisie.montant),
+        fournisseur_id: orNull(saisie.fournisseur_id),
+      };
       return write(
-        e ? sb.from("depenses").update(a).eq("id", e.id) : sb.from("depenses").insert(a),
+        depense
+          ? sb.from("depenses").update(ligne).eq("id", depense.id)
+          : sb.from("depenses").insert(ligne),
         "D\xE9pense enregistr\xE9e",
       );
     },
-    del: e ? del("depenses", e.id, "D\xE9pense supprim\xE9e") : null,
+    del: depense ? del("depenses", depense.id, "D\xE9pense supprim\xE9e") : null,
   });
 }
-function tacheForm(e, t) {
+function tacheForm(tache, rucheId) {
   sheet({
-    title: e ? "Modifier la t\xE2che" : "Ajouter une t\xE2che",
+    title: tache ? "Modifier la t\xE2che" : "Ajouter une t\xE2che",
     fields: [
-      { name: "titre", label: "T\xE2che", required: !0, value: e?.titre },
-      { name: "echeance", label: "\xC9ch\xE9ance", type: "date", value: e?.echeance },
+      { name: "titre", label: "T\xE2che", required: !0, value: tache?.titre },
+      { name: "echeance", label: "\xC9ch\xE9ance", type: "date", value: tache?.echeance },
       {
         name: "ruche_id",
         label: "Ruche",
         type: "select",
-        options: [["", "Toutes"]].concat(S.d.ruches.map((s) => [s.id, s.nom])),
-        value: e?.ruche_id ?? t ?? "",
+        options: [["", "Toutes"]].concat(S.d.ruches.map((ruche) => [ruche.id, ruche.nom])),
+        value: tache?.ruche_id ?? rucheId ?? "",
       },
-      { name: "assigne", label: "Qui s\u2019en occupe", value: e?.assigne },
+      { name: "assigne", label: "Qui s\u2019en occupe", value: tache?.assigne },
     ],
-    submit: (s) => {
-      const i = { ...s, echeance: orNull(s.echeance), ruche_id: orNull(s.ruche_id) };
+    submit: (saisie) => {
+      const ligne = {
+        ...saisie,
+        echeance: orNull(saisie.echeance),
+        ruche_id: orNull(saisie.ruche_id),
+      };
       return write(
-        e ? sb.from("taches").update(i).eq("id", e.id) : sb.from("taches").insert(i),
+        tache
+          ? sb.from("taches").update(ligne).eq("id", tache.id)
+          : sb.from("taches").insert(ligne),
         "T\xE2che enregistr\xE9e",
       );
     },
-    del: e ? del("taches", e.id, "T\xE2che supprim\xE9e") : null,
+    del: tache ? del("taches", tache.id, "T\xE2che supprim\xE9e") : null,
   });
 }
-function recolteForm(e) {
+function recolteForm(recolte) {
   sheet({
-    title: e ? "Modifier la r\xE9colte" : "Saisir une r\xE9colte",
+    title: recolte ? "Modifier la r\xE9colte" : "Saisir une r\xE9colte",
     fields: [
       {
         name: "ruche_id",
         label: "Origine",
         type: "select",
-        options: [["", "Toutes les ruches"]].concat(S.d.ruches.map((t) => [t.id, t.nom])),
-        value: e?.ruche_id ?? "",
+        options: [["", "Toutes les ruches"]].concat(
+          S.d.ruches.map((ruche) => [ruche.id, ruche.nom]),
+        ),
+        value: recolte?.ruche_id ?? "",
       },
       {
         name: "kg",
@@ -1980,24 +2023,26 @@ function recolteForm(e) {
         step: "0.1",
         min: 0.1,
         required: !0,
-        value: e?.kg,
+        value: recolte?.kg,
       },
       {
         name: "date_recolte",
         label: "Date",
         type: "date",
         required: !0,
-        value: e?.date_recolte || today(),
+        value: recolte?.date_recolte || today(),
       },
     ],
-    submit: (t) => {
-      const s = { ...t, ruche_id: orNull(t.ruche_id), kg: num(t.kg) };
+    submit: (saisie) => {
+      const ligne = { ...saisie, ruche_id: orNull(saisie.ruche_id), kg: num(saisie.kg) };
       return write(
-        e ? sb.from("recoltes").update(s).eq("id", e.id) : sb.from("recoltes").insert(s),
+        recolte
+          ? sb.from("recoltes").update(ligne).eq("id", recolte.id)
+          : sb.from("recoltes").insert(ligne),
         "R\xE9colte enregistr\xE9e",
       );
     },
-    del: e ? del("recoltes", e.id, "R\xE9colte supprim\xE9e") : null,
+    del: recolte ? del("recoltes", recolte.id, "R\xE9colte supprim\xE9e") : null,
   });
 }
 function download(nomFichier, contenu, type) {
