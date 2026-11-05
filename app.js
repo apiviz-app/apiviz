@@ -1019,20 +1019,22 @@ function viewMateriel() {
   );
 }
 function viewClients() {
-  const e = S.d,
-    t = e.ventes.filter((o) => S.venteFiltre === "toutes" || !o.paye),
-    s = e.clients.map((o) => {
-      const l = e.ventes.filter((r) => r.client_id === o.id);
-      return `<tr><td><button class="link" data-act="editclient" data-v="${o.id}">${esc(o.nom)}</button></td><td>${esc(o.cercle)}</td><td>${o.telephone ? `<a href="tel:${esc(o.telephone)}">${esc(o.telephone)}</a>` : "\u2013"}</td><td class="num">${eur(sum(l, venteTotal))}</td><td>${l[0] ? dfr(l[0].date_vente) : "Jamais"}</td></tr>`;
+  const donnees = S.d,
+    ventesAffichees = donnees.ventes.filter((vente) => S.venteFiltre === "toutes" || !vente.paye),
+    lignesClients = donnees.clients.map((client) => {
+      const ventesClient = donnees.ventes.filter((vente) => vente.client_id === client.id);
+      return `<tr><td><button class="link" data-act="editclient" data-v="${client.id}">${esc(client.nom)}</button></td><td>${esc(client.cercle)}</td><td>${client.telephone ? `<a href="tel:${esc(client.telephone)}">${esc(client.telephone)}</a>` : "\u2013"}</td><td class="num">${eur(sum(ventesClient, venteTotal))}</td><td>${ventesClient[0] ? dfr(ventesClient[0].date_vente) : "Jamais"}</td></tr>`;
     }),
-    i = t.slice(0, 25).map((o) => {
-      const l = e.lignes
-        .filter((r) => r.vente_id === o.id)
-        .map((r) => `${r.quantite} \xD7 ${n(byId(e.lots, r.lot_id)?.format_g, 0)} g`)
+    lignesVentes = ventesAffichees.slice(0, 25).map((vente) => {
+      const pots = donnees.lignes
+        .filter((ligne) => ligne.vente_id === vente.id)
+        .map(
+          (ligne) => `${ligne.quantite} \xD7 ${n(byId(donnees.lots, ligne.lot_id)?.format_g, 0)} g`,
+        )
         .join(", ");
-      return `<tr><td>${dfr(o.date_vente)}${o._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(byId(e.clients, o.client_id)?.nom)}</td><td>${esc(l)}</td><td class="num">${eur(venteTotal(o))}</td><td><button class="link ${o.paye ? "" : "watch"}" data-act="togglepaye" data-v="${o.id}">${o.paye ? "Pay\xE9e" + (o.mode ? " \xB7 " + esc(o.mode) : "") : "\xC0 encaisser"}</button></td><td class="num"><button class="link" data-act="delvente" data-v="${o.id}">Supprimer</button></td></tr>`;
+      return `<tr><td>${dfr(vente.date_vente)}${vente._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(byId(donnees.clients, vente.client_id)?.nom)}</td><td>${esc(pots)}</td><td class="num">${eur(venteTotal(vente))}</td><td><button class="link ${vente.paye ? "" : "watch"}" data-act="togglepaye" data-v="${vente.id}">${vente.paye ? "Pay\xE9e" + (vente.mode ? " \xB7 " + esc(vente.mode) : "") : "\xC0 encaisser"}</button></td><td class="num"><button class="link" data-act="delvente" data-v="${vente.id}">Supprimer</button></td></tr>`;
     });
-  if (!e.clients.length)
+  if (!donnees.clients.length)
     return shell(
       "Clients & ventes",
       "",
@@ -1044,16 +1046,18 @@ function viewClients() {
         "newclient",
       ),
     );
-  const a = sum(
-    e.ventes.filter((o) => !o.paye),
+  const aEncaisser = sum(
+    donnees.ventes.filter((vente) => !vente.paye),
     venteTotal,
   );
   shell(
     "Clients & ventes",
-    e.clients.length + " client(s)" + (a ? " \xB7 " + eur(a) + " \xE0 encaisser" : ""),
+    donnees.clients.length +
+      " client(s)" +
+      (aEncaisser ? " \xB7 " + eur(aEncaisser) + " \xE0 encaisser" : ""),
     '<button class="btn main" data-act="newvente">Nouvelle vente</button><button class="btn" data-act="newclient">Ajouter un client</button>',
     `
-    <section class="card tbl">${table(["Client", "Cercle", "T\xE9l\xE9phone", "#Total", "Dernier achat"], s, "Aucun client.")}</section>
+    <section class="card tbl">${table(["Client", "Cercle", "T\xE9l\xE9phone", "#Total", "Dernier achat"], lignesClients, "Aucun client.")}</section>
     <section class="card tbl"><h2>Ventes</h2><div class="pad">${subtabs(
       [
         ["toutes", "Toutes"],
@@ -1061,25 +1065,25 @@ function viewClients() {
       ],
       S.venteFiltre,
       "vfiltre",
-    )}</div>${table(["Date", "Client", "Pots", "#Montant", "Paiement", "#"], i, "Aucune vente.")}</section>`,
+    )}</div>${table(["Date", "Client", "Pots", "#Montant", "Paiement", "#"], lignesVentes, "Aucune vente.")}</section>`,
   );
 }
 function viewVente() {
-  const e = S.vente,
-    t = S.d,
-    s = cfg(),
-    i = t.lots.filter((r) => r.pots_restants > 0),
-    a = sum(i, (r) => (e.q[r.id] || 0) * r.prix),
-    o = i
+  const vente = S.vente,
+    donnees = S.d,
+    reglages = cfg(),
+    lotsDispo = donnees.lots.filter((lot) => lot.pots_restants > 0),
+    total = sum(lotsDispo, (lot) => (vente.q[lot.id] || 0) * lot.prix),
+    lignesLots = lotsDispo
       .map(
-        (r) =>
-          `<div class="stepper"><div><b>${n(r.format_g, 0)} g \xB7 ${esc(r.code)}</b><div class="small">${eur(r.prix)} \xB7 ${r.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="Retirer un pot ${r.format_g} g" data-act="sstep" data-k="${r.id}" data-v="-1">\u2212</button><span>${e.q[r.id] || 0}</span><button type="button" aria-label="Ajouter un pot ${r.format_g} g" data-act="sstep" data-k="${r.id}" data-v="1">+</button></div></div>`,
+        (lot) =>
+          `<div class="stepper"><div><b>${n(lot.format_g, 0)} g \xB7 ${esc(lot.code)}</b><div class="small">${eur(lot.prix)} \xB7 ${lot.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="Retirer un pot ${lot.format_g} g" data-act="sstep" data-k="${lot.id}" data-v="-1">\u2212</button><span>${vente.q[lot.id] || 0}</span><button type="button" aria-label="Ajouter un pot ${lot.format_g} g" data-act="sstep" data-k="${lot.id}" data-v="1">+</button></div></div>`,
       )
       .join(""),
-    l = t.clients
+    optionsClients = donnees.clients
       .map(
-        (r) =>
-          `<option value="${r.id}" ${e.client_id === r.id ? "selected" : ""}>${esc(r.nom)}</option>`,
+        (client) =>
+          `<option value="${client.id}" ${vente.client_id === client.id ? "selected" : ""}>${esc(client.nom)}</option>`,
       )
       .join("");
   shell(
@@ -1088,13 +1092,13 @@ function viewVente() {
     '<button class="btn" data-act="cancel">Annuler</button>',
     `
     <form data-form="vente" class="form">
-      ${t.clients.length ? `<label>Client<select id="s_client" required><option value="">Choisir\u2026</option>${l}</select></label>` : ""}
+      ${donnees.clients.length ? `<label>Client<select id="s_client" required><option value="">Choisir\u2026</option>${optionsClients}</select></label>` : ""}
       <button type="button" class="link" data-act="newclient">Ajouter un client</button>
-      <label>Date<input type="date" id="s_date" value="${esc(e.date_vente)}" max="${today()}" required></label>
-      <section class="card"><h2>Pots vendus</h2>${o || '<p class="small">Aucun pot en stock. Cr\xE9ez d\u2019abord un lot dans Stocks.</p>'}</section>
-      <div class="field"><div class="t">Paiement</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${e.paye ? "on" : ""}" data-act="spaye" data-v="1">Pay\xE9e</button><button type="button" class="${e.paye ? "" : "on"}" data-act="spaye" data-v="0">\xC0 encaisser</button></div></div>
-      ${e.paye ? `<label>Mode de paiement<select id="s_mode">${s.modes.map((r) => `<option ${e.mode === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>` : ""}
-      <button class="btn main block" ${S.busy ? "disabled" : ""}>Enregistrer \xB7 ${eur(a)}</button>
+      <label>Date<input type="date" id="s_date" value="${esc(vente.date_vente)}" max="${today()}" required></label>
+      <section class="card"><h2>Pots vendus</h2>${lignesLots || '<p class="small">Aucun pot en stock. Cr\xE9ez d\u2019abord un lot dans Stocks.</p>'}</section>
+      <div class="field"><div class="t">Paiement</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${vente.paye ? "on" : ""}" data-act="spaye" data-v="1">Pay\xE9e</button><button type="button" class="${vente.paye ? "" : "on"}" data-act="spaye" data-v="0">\xC0 encaisser</button></div></div>
+      ${vente.paye ? `<label>Mode de paiement<select id="s_mode">${reglages.modes.map((mode) => `<option ${vente.mode === mode ? "selected" : ""}>${esc(mode)}</option>`).join("")}</select></label>` : ""}
+      <button class="btn main block" ${S.busy ? "disabled" : ""}>Enregistrer \xB7 ${eur(total)}</button>
     </form>`,
   );
 }
