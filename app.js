@@ -1345,113 +1345,127 @@ function viewPilotage() {
   );
 }
 function simDefaults() {
-  const e = S.d,
-    t = cfg(),
-    s = fin(new Date().getFullYear()),
-    i = e.ruches.length || 1,
-    a = (l) => e.lots.find((r) => r.format_g === l),
-    o = sum(e.lots, (l) => l.pots_initiaux) || 0;
+  const donnees = S.d,
+    reglages = cfg(),
+    finances = fin(new Date().getFullYear()),
+    nbRuches = donnees.ruches.length || 1,
+    lotDuFormat = (format) => donnees.lots.find((lot) => lot.format_g === format),
+    potsRemplis = sum(donnees.lots, (lot) => lot.pots_initiaux) || 0;
   return {
-    ruches: i,
+    ruches: nbRuches,
     ajout: 0,
-    rendement: s.kgRec && e.ruches.length ? Math.round((s.kgRec / i) * 10) / 10 : 12,
+    rendement:
+      finances.kgRec && donnees.ruches.length
+        ? Math.round((finances.kgRec / nbRuches) * 10) / 10
+        : 12,
     part500: 50,
-    prix500: Number(a(500)?.prix) || 14,
-    prix250: Number(a(250)?.prix) || 8,
+    prix500: Number(lotDuFormat(500)?.prix) || 14,
+    prix250: Number(lotDuFormat(250)?.prix) || 8,
     vendu: 100,
-    coutRuche: s.charges && e.ruches.length && o === 0 ? Math.round(s.charges / i) : 50,
+    coutRuche:
+      finances.charges && donnees.ruches.length && potsRemplis === 0
+        ? Math.round(finances.charges / nbRuches)
+        : 50,
     coutPot: 0.6,
     coutNouvelle: 200,
-    ...(t.sim || {}),
+    ...(reglages.sim || {}),
   };
 }
-function simCalc(e) {
-  const t = [0, 1, 2, 3].map((l) => {
-    const r = e.ruches + l * e.ajout,
-      b = r * e.rendement,
-      m = (b * e.vendu) / 100,
-      $ = (m * e.part500) / 100,
-      p = m - $,
-      v = $ / 0.5,
-      f = p / 0.25,
-      g = v * e.prix500 + f * e.prix250,
-      w = r * e.coutRuche + (v + f) * e.coutPot + (l > 0 ? e.ajout * e.coutNouvelle : 0);
+function simCalc(hyp) {
+  const lignes = [0, 1, 2, 3].map((rang) => {
+    const ruches = hyp.ruches + rang * hyp.ajout,
+      kg = ruches * hyp.rendement,
+      kgVendus = (kg * hyp.vendu) / 100,
+      kg500 = (kgVendus * hyp.part500) / 100,
+      kg250 = kgVendus - kg500,
+      pots500 = kg500 / 0.5,
+      pots250 = kg250 / 0.25,
+      ca = pots500 * hyp.prix500 + pots250 * hyp.prix250,
+      charges =
+        ruches * hyp.coutRuche +
+        (pots500 + pots250) * hyp.coutPot +
+        (rang > 0 ? hyp.ajout * hyp.coutNouvelle : 0);
     return {
-      an: new Date().getFullYear() + 1 + l,
-      ruches: r,
-      kg: b,
-      pots: v + f,
-      pots5: v,
-      pots2: f,
-      ca: g,
-      charges: w,
-      res: g - w,
+      an: new Date().getFullYear() + 1 + rang,
+      ruches: ruches,
+      kg: kg,
+      pots: pots500 + pots250,
+      pots5: pots500,
+      pots2: pots250,
+      ca: ca,
+      charges: charges,
+      res: ca - charges,
     };
   });
-  let s = 0;
-  t.forEach((l) => {
-    ((s += l.res), (l.cum = s));
+  let cumul = 0;
+  lignes.forEach((ligne) => {
+    ((cumul += ligne.res), (ligne.cum = cumul));
   });
-  const i = t[0],
-    a = i.ruches ? i.res / i.ruches : 0,
-    o = i.ca > 0 ? i.charges / i.ca : null;
-  return { rows: t, parRuche: a, seuil: o };
+  const premiere = lignes[0],
+    parRuche = premiere.ruches ? premiere.res / premiere.ruches : 0,
+    seuil = premiere.ca > 0 ? premiere.charges / premiere.ca : null;
+  return { rows: lignes, parRuche: parRuche, seuil: seuil };
 }
 function simOut() {
-  const e = S.sim,
-    t = cfg(),
-    s = simCalc(e),
-    i = s.rows[0],
-    a = Number(t.objectif) || 0,
-    o = a > 0 && s.parRuche > 0 ? Math.ceil(a / s.parRuche) : null,
-    l = s.rows.map(
-      (r) =>
-        `<tr><td>${r.an}</td><td class="num">${n(r.ruches, 0)}</td><td class="num">${n(r.kg, 0)} kg</td><td class="num">${n(r.pots, 0)}</td><td class="num">${eur0(r.ca)}</td><td class="num">${eur0(r.charges)}</td><td class="num"><b>${eur0(r.res)}</b></td></tr>`,
+  const hyp = S.sim,
+    reglages = cfg(),
+    calcul = simCalc(hyp),
+    premiere = calcul.rows[0],
+    objectif = Number(reglages.objectif) || 0,
+    ruchesPourObjectif =
+      objectif > 0 && calcul.parRuche > 0 ? Math.ceil(objectif / calcul.parRuche) : null,
+    lignes = calcul.rows.map(
+      (ligne) =>
+        `<tr><td>${ligne.an}</td><td class="num">${n(ligne.ruches, 0)}</td><td class="num">${n(ligne.kg, 0)} kg</td><td class="num">${n(ligne.pots, 0)}</td><td class="num">${eur0(ligne.ca)}</td><td class="num">${eur0(ligne.charges)}</td><td class="num"><b>${eur0(ligne.res)}</b></td></tr>`,
     );
   return `<div class="grid">
-    ${kpi("Miel pr\xE9vu", n(i.kg, 0) + " kg", `${n(i.pots5, 0)} pots 500 g \xB7 ${n(i.pots2, 0)} pots 250 g`)}
-    ${kpi("Ventes pr\xE9vues", eur0(i.ca), "")}
-    ${kpi("R\xE9sultat pr\xE9vu", eur0(i.res), eur0(s.parRuche) + " par ruche", i.res < 0 ? "crit" : "good")}
-    ${kpi("Point mort", s.seuil !== null ? n(s.seuil * 100, 0) + " %" : "\u2013", "des ventes pr\xE9vues pour couvrir les co\xFBts")}
-    ${o !== null ? kpi("Pour viser " + eur0(a), o + " ruches", "avec ces hypoth\xE8ses") : ""}
+    ${kpi("Miel pr\xE9vu", n(premiere.kg, 0) + " kg", `${n(premiere.pots5, 0)} pots 500 g \xB7 ${n(premiere.pots2, 0)} pots 250 g`)}
+    ${kpi("Ventes pr\xE9vues", eur0(premiere.ca), "")}
+    ${kpi("R\xE9sultat pr\xE9vu", eur0(premiere.res), eur0(calcul.parRuche) + " par ruche", premiere.res < 0 ? "crit" : "good")}
+    ${kpi("Point mort", calcul.seuil !== null ? n(calcul.seuil * 100, 0) + " %" : "\u2013", "des ventes pr\xE9vues pour couvrir les co\xFBts")}
+    ${ruchesPourObjectif !== null ? kpi("Pour viser " + eur0(objectif), ruchesPourObjectif + " ruches", "avec ces hypoth\xE8ses") : ""}
   </div>
   <section class="card"><h2>Projection sur 4 ans</h2>${barChart({
-    labels: s.rows.map((r) => String(r.an)),
+    labels: calcul.rows.map((ligne) => String(ligne.an)),
     series: [
-      { name: "Ventes", color: C.honey, values: s.rows.map((r) => r.ca) },
-      { name: "Co\xFBts", color: C.blue, values: s.rows.map((r) => r.charges) },
+      { name: "Ventes", color: C.honey, values: calcul.rows.map((ligne) => ligne.ca) },
+      { name: "Co\xFBts", color: C.blue, values: calcul.rows.map((ligne) => ligne.charges) },
     ],
     title: "Projection des ventes et co\xFBts",
     h: 190,
   })}</section>
-  <section class="card tbl">${table(["Ann\xE9e", "#Ruches", "#Miel", "#Pots", "#Ventes", "#Co\xFBts", "#R\xE9sultat"], l, "")}</section>`;
+  <section class="card tbl">${table(["Ann\xE9e", "#Ruches", "#Miel", "#Pots", "#Ventes", "#Co\xFBts", "#R\xE9sultat"], lignes, "")}</section>`;
 }
 function viewPrevisions() {
   S.sim = S.sim || simDefaults();
-  const e = S.d,
-    t = S.annee,
-    s = fin(t),
-    i = cfg(),
-    a = S.sim,
-    o = (p, v, f = "1", g = "") =>
-      `<label>${v}${g ? ` (${g})` : ""}<input type="number" step="${f}" min="0" inputmode="decimal" data-sim="${p}" value="${esc(a[p])}"></label>`,
-    l = ["Ventes de miel", ...i.postes],
-    r = (p) => Number(e.budgets.find((v) => v.annee === t && v.poste === p)?.montant || 0),
-    b = (p) =>
-      p === "Ventes de miel"
-        ? s.ca
+  const donnees = S.d,
+    annee = S.annee,
+    finances = fin(annee),
+    reglages = cfg(),
+    hyp = S.sim,
+    champ = (cle, libelle, pas = "1", unite = "") =>
+      `<label>${libelle}${unite ? ` (${unite})` : ""}<input type="number" step="${pas}" min="0" inputmode="decimal" data-sim="${cle}" value="${esc(hyp[cle])}"></label>`,
+    postes = ["Ventes de miel", ...reglages.postes],
+    budgetDe = (poste) =>
+      Number(
+        donnees.budgets.find((budget) => budget.annee === annee && budget.poste === poste)
+          ?.montant || 0,
+      ),
+    realiseDe = (poste) =>
+      poste === "Ventes de miel"
+        ? finances.ca
         : sum(
-            s.dep.filter((v) => v.categorie === p),
-            (v) => v.montant,
+            finances.dep.filter((depense) => depense.categorie === poste),
+            (depense) => depense.montant,
           ),
-    m = l.map((p) => {
-      const v = r(p),
-        f = b(p),
-        g = v ? Math.round((f / v) * 100) : 0,
-        w = p !== "Ventes de miel" && v && f > v;
-      return `<tr><td><button class="link" data-act="editbudget" data-v="${esc(p)}">${esc(p)}</button></td><td class="num">${v ? eur0(v) : "\xC0 d\xE9finir"}</td><td class="num">${eur0(f)}</td><td class="num ${w ? "crit" : ""}">${v ? g + " %" : "\u2013"}</td></tr>`;
+    lignesBudget = postes.map((poste) => {
+      const budget = budgetDe(poste),
+        realise = realiseDe(poste),
+        avancement = budget ? Math.round((realise / budget) * 100) : 0,
+        depasse = poste !== "Ventes de miel" && budget && realise > budget;
+      return `<tr><td><button class="link" data-act="editbudget" data-v="${esc(poste)}">${esc(poste)}</button></td><td class="num">${budget ? eur0(budget) : "\xC0 d\xE9finir"}</td><td class="num">${eur0(realise)}</td><td class="num ${depasse ? "crit" : ""}">${budget ? avancement + " %" : "\u2013"}</td></tr>`;
     }),
-    $ = sum(l.slice(1), r);
+    budgetDepenses = sum(postes.slice(1), budgetDe);
   shell(
     "Pr\xE9visions",
     "Testez vos hypoth\xE8ses et suivez votre budget",
@@ -1459,14 +1473,14 @@ function viewPrevisions() {
     `
     <section class="card"><h2>Simulateur</h2><p class="small">Changez une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que vos donn\xE9es sont incompl\xE8tes.</p>
       <div class="simgrid">
-        ${o("ruches", "Ruches")}${o("ajout", "Ruches ajout\xE9es par an")}${o("rendement", "Rendement", "0.5", "kg/ruche")}${o("vendu", "Part du miel vendue", "5", "%")}
-        ${o("part500", "Part en pots de 500 g", "5", "%")}${o("prix500", "Prix pot 500 g", "0.5", "\u20AC")}${o("prix250", "Prix pot 250 g", "0.5", "\u20AC")}
-        ${o("coutRuche", "Co\xFBt annuel par ruche", "5", "\u20AC")}${o("coutPot", "Co\xFBt par pot", "0.05", "\u20AC")}${o("coutNouvelle", "Co\xFBt d\u2019une nouvelle ruche", "10", "\u20AC")}
+        ${champ("ruches", "Ruches")}${champ("ajout", "Ruches ajout\xE9es par an")}${champ("rendement", "Rendement", "0.5", "kg/ruche")}${champ("vendu", "Part du miel vendue", "5", "%")}
+        ${champ("part500", "Part en pots de 500 g", "5", "%")}${champ("prix500", "Prix pot 500 g", "0.5", "\u20AC")}${champ("prix250", "Prix pot 250 g", "0.5", "\u20AC")}
+        ${champ("coutRuche", "Co\xFBt annuel par ruche", "5", "\u20AC")}${champ("coutPot", "Co\xFBt par pot", "0.05", "\u20AC")}${champ("coutNouvelle", "Co\xFBt d\u2019une nouvelle ruche", "10", "\u20AC")}
       </div>
       <div class="actions" style="margin-top:12px"><button class="btn" data-act="savesim">Enregistrer ces hypoth\xE8ses</button><button class="btn" data-act="resetsim">Revenir aux valeurs calcul\xE9es</button></div>
     </section>
     <div id="simOut" class="stack">${simOut()}</div>
-    <section class="card tbl"><h2>Budget ${t}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0($)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(r("Ventes de miel") - $)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], m, "")}</section>`,
+    <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
   );
 }
 function taskRow(e) {
