@@ -815,8 +815,8 @@ function viewPlus() {
   );
 }
 function viewRuches() {
-  const e = S.d;
-  if (!e.ruches.length)
+  const donnees = S.d;
+  if (!donnees.ruches.length)
     return shell(
       "Ruches",
       "",
@@ -828,83 +828,84 @@ function viewRuches() {
         "newruches",
       ),
     );
-  const t = {};
-  e.ruches.forEach((a) => {
-    (t[a.rucher || "Sans rucher"] = t[a.rucher || "Sans rucher"] || []).push(a);
+  const parRucher = {};
+  donnees.ruches.forEach((ruche) => {
+    (parRucher[ruche.rucher || "Sans rucher"] =
+      parRucher[ruche.rucher || "Sans rucher"] || []).push(ruche);
   });
-  const s = Object.keys(t)
+  const sections = Object.keys(parRucher)
       .sort()
       .map(
-        (a) =>
-          `<section class="card"><h2>${esc(a)} <span class="small">\xB7 ${t[a].length} ruche(s)</span></h2><div class="rlist">${t[
-            a
+        (rucher) =>
+          `<section class="card"><h2>${esc(rucher)} <span class="small">\xB7 ${parRucher[rucher].length} ruche(s)</span></h2><div class="rlist">${parRucher[
+            rucher
           ]
-            .map((o) => {
-              const l = lastVisit(o.id);
-              return `<button class="rcard" data-act="ruche" data-v="${o.id}"><span class="hex small-hex bg-${etatClass(o.etat)}"></span><span class="rmain"><b>${esc(o.nom)}</b><span class="small">${l ? "Visite il y a " + days(l.date_visite) + " j" : "Jamais visit\xE9e"}</span></span><span class="num"><b>${n(
+            .map((ruche) => {
+              const derniere = lastVisit(ruche.id);
+              return `<button class="rcard" data-act="ruche" data-v="${ruche.id}"><span class="hex small-hex bg-${etatClass(ruche.etat)}"></span><span class="rmain"><b>${esc(ruche.nom)}</b><span class="small">${derniere ? "Visite il y a " + days(derniere.date_visite) + " j" : "Jamais visit\xE9e"}</span></span><span class="num"><b>${n(
                 sum(
-                  e.recoltes.filter((r) => r.ruche_id === o.id),
-                  (r) => r.kg,
+                  donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
+                  (recolte) => recolte.kg,
                 ),
-              )} kg</b><span class="small tag ${etatClass(o.etat)}">${esc(o.etat)}</span></span></button>`;
+              )} kg</b><span class="small tag ${etatClass(ruche.etat)}">${esc(ruche.etat)}</span></span></button>`;
             })
             .join("")}</div></section>`,
       )
       .join(""),
-    i = e.recoltes.map(
-      (a) =>
-        `<tr><td><button class="link" data-act="editrecolte" data-v="${a.id}">${dfr(a.date_recolte)}</button>${a._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${a.ruche_id ? esc(byId(e.ruches, a.ruche_id)?.nom) : "Toutes les ruches"}</td><td class="num">${n(a.kg)} kg</td></tr>`,
+    lignesRecoltes = donnees.recoltes.map(
+      (recolte) =>
+        `<tr><td><button class="link" data-act="editrecolte" data-v="${recolte.id}">${dfr(recolte.date_recolte)}</button>${recolte._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${recolte.ruche_id ? esc(byId(donnees.ruches, recolte.ruche_id)?.nom) : "Toutes les ruches"}</td><td class="num">${n(recolte.kg)} kg</td></tr>`,
     );
   shell(
     "Ruches",
-    e.ruches.length + " ruche(s)",
+    donnees.ruches.length + " ruche(s)",
     '<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newrecolte">R\xE9colte</button><button class="btn" data-act="newruches">Ajouter</button>',
     `
-    ${s}
-    <section class="card tbl"><h2>R\xE9coltes</h2>${table(["Date", "Origine", "#Quantit\xE9"], i, "Aucune r\xE9colte saisie.")}</section>`,
+    ${sections}
+    <section class="card tbl"><h2>R\xE9coltes</h2>${table(["Date", "Origine", "#Quantit\xE9"], lignesRecoltes, "Aucune r\xE9colte saisie.")}</section>`,
   );
 }
 function viewRuche() {
-  const e = S.d,
-    t = byId(e.ruches, S.ruche);
-  if (!t) return ((S.route = "ruches"), render());
-  const s = e.visites.filter((r) => r.ruche_id === t.id),
-    i = s.map((r) => {
-      const b = e.intrants
-        .filter((m) => m.visite_id === r.id)
-        .map((m) => {
-          const $ = byId(e.articles, m.article_id);
-          return `${n(m.quantite)} ${esc($?.unite)} ${esc($?.nom)}`;
+  const donnees = S.d,
+    ruche = byId(donnees.ruches, S.ruche);
+  if (!ruche) return ((S.route = "ruches"), render());
+  const visites = donnees.visites.filter((visite) => visite.ruche_id === ruche.id),
+    journal = visites.map((visite) => {
+      const intrants = donnees.intrants
+        .filter((intrant) => intrant.visite_id === visite.id)
+        .map((intrant) => {
+          const article = byId(donnees.articles, intrant.article_id);
+          return `${n(intrant.quantite)} ${esc(article?.unite)} ${esc(article?.nom)}`;
         })
         .join(", ");
-      return `<tr><td>${dfr(r.date_visite)}${r._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>Activit\xE9 ${esc(r.activite.toLowerCase())}, provisions ${esc(r.provisions.toLowerCase())}, reine ${esc(r.reine.toLowerCase())}${r.couvain ? ", couvain " + esc(r.couvain.toLowerCase()) : ""}${r.poids_kg ? ", " + n(r.poids_kg) + " kg" : ""}${r.varroa !== null && r.varroa !== void 0 ? ", varroa " + r.varroa : ""}${r.note ? '<br><span class="small">' + esc(r.note) + "</span>" : ""}${typeof RG != "undefined" ? RG.journal(r) : ""}${typeof PH != "undefined" ? PH.vignettes(r.id) : ""}</td><td>${b || "\u2013"}</td><td class="num"><button class="link" data-act="delvisite" data-v="${r.id}">Supprimer</button></td></tr>`;
+      return `<tr><td>${dfr(visite.date_visite)}${visite._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>Activit\xE9 ${esc(visite.activite.toLowerCase())}, provisions ${esc(visite.provisions.toLowerCase())}, reine ${esc(visite.reine.toLowerCase())}${visite.couvain ? ", couvain " + esc(visite.couvain.toLowerCase()) : ""}${visite.poids_kg ? ", " + n(visite.poids_kg) + " kg" : ""}${visite.varroa !== null && visite.varroa !== void 0 ? ", varroa " + visite.varroa : ""}${visite.note ? '<br><span class="small">' + esc(visite.note) + "</span>" : ""}${typeof RG != "undefined" ? RG.journal(visite) : ""}${typeof PH != "undefined" ? PH.vignettes(visite.id) : ""}</td><td>${intrants || "\u2013"}</td><td class="num"><button class="link" data-act="delvisite" data-v="${visite.id}">Supprimer</button></td></tr>`;
     }),
-    a = sum(
-      e.recoltes.filter((r) => r.ruche_id === t.id),
-      (r) => r.kg,
+    kgRecoltes = sum(
+      donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
+      (recolte) => recolte.kg,
     ),
-    o = s
-      .filter((r) => r.poids_kg)
+    pesees = visites
+      .filter((visite) => visite.poids_kg)
       .slice()
       .reverse(),
-    l = e.taches.filter((r) => r.ruche_id === t.id && !r.faite);
+    taches = donnees.taches.filter((tache) => tache.ruche_id === ruche.id && !tache.faite);
   shell(
-    t.nom,
-    [t.rucher, t.type_ruche, t.annee_reine ? "reine " + t.annee_reine : ""]
+    ruche.nom,
+    [ruche.rucher, ruche.type_ruche, ruche.annee_reine ? "reine " + ruche.annee_reine : ""]
       .filter(Boolean)
       .join(" \xB7 ") || "Fiche de la ruche",
-    `<button class="btn main" data-act="newvisite" data-v="${t.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${t.id}">T\xE2che</button><button class="btn" data-act="editruche" data-v="${t.id}">Modifier</button>`,
+    `<button class="btn main" data-act="newvisite" data-v="${ruche.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${ruche.id}">T\xE2che</button><button class="btn" data-act="editruche" data-v="${ruche.id}">Modifier</button>`,
     `
     <div class="grid">
-      ${kpi("\xC9tat", t.etat, "", etatClass(t.etat))}
-      ${kpi("Miel r\xE9colt\xE9", n(a) + " kg", "")}
-      ${kpi("Derni\xE8re visite", s[0] ? "Il y a " + days(s[0].date_visite) + " j" : "\u2013", s[0] ? dfr(s[0].date_visite) : "Aucune visite")}
-      ${kpi("Visites", s.length, "")}
+      ${kpi("\xC9tat", ruche.etat, "", etatClass(ruche.etat))}
+      ${kpi("Miel r\xE9colt\xE9", n(kgRecoltes) + " kg", "")}
+      ${kpi("Derni\xE8re visite", visites[0] ? "Il y a " + days(visites[0].date_visite) + " j" : "\u2013", visites[0] ? dfr(visites[0].date_visite) : "Aucune visite")}
+      ${kpi("Visites", visites.length, "")}
     </div>
-    ${t.notes ? `<section class="card">${esc(t.notes)}</section>` : ""}
-    ${l.length ? `<section class="card"><h2>T\xE2ches pr\xE9vues</h2>${l.map(taskRow).join("")}</section>` : ""}
-    ${o.length > 1 ? `<section class="card"><h2>\xC9volution du poids</h2>${lineChart({ labels: o.map((r) => dshort(r.date_visite)), series: [{ name: "Poids", color: C.honey, values: o.map((r) => Number(r.poids_kg)) }], fmt: (r) => n(r) + " kg", title: "\xC9volution du poids de la ruche", h: 180 })}</section>` : ""}
-    <section class="card tbl"><h2>Journal des visites</h2>${table(["Date", "Observations", "Intrants", "#"], i, "Aucune visite enregistr\xE9e.")}</section>`,
+    ${ruche.notes ? `<section class="card">${esc(ruche.notes)}</section>` : ""}
+    ${taches.length ? `<section class="card"><h2>T\xE2ches pr\xE9vues</h2>${taches.map(taskRow).join("")}</section>` : ""}
+    ${pesees.length > 1 ? `<section class="card"><h2>\xC9volution du poids</h2>${lineChart({ labels: pesees.map((visite) => dshort(visite.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.map((visite) => Number(visite.poids_kg)) }], fmt: (visite) => n(visite) + " kg", title: "\xC9volution du poids de la ruche", h: 180 })}</section>` : ""}
+    <section class="card tbl"><h2>Journal des visites</h2>${table(["Date", "Observations", "Intrants", "#"], journal, "Aucune visite enregistr\xE9e.")}</section>`,
   );
 }
 function viewVisite() {
