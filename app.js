@@ -713,79 +713,80 @@ function todos() {
     liste
   );
 }
-function honeycomb(e) {
-  const t = window.innerWidth <= 800 ? 3 : 4,
-    s = [];
-  for (let o = 0; o < e.length; o += t) s.push(e.slice(o, o + t));
-  const i = (o) =>
-      `<button class="cell bg-${etatClass(o.etat)}" data-act="ruche" data-v="${o.id}" aria-label="Ouvrir ${esc(o.nom)}, \xE9tat ${esc(o.etat)}"><span>${esc(o.nom)}</span></button>`,
-    a = ETATS.map((o) => [o, e.filter((l) => l.etat === o).length])
-      .filter((o) => o[1])
+function honeycomb(ruches) {
+  const parLigne = window.innerWidth <= 800 ? 3 : 4,
+    rangees = [];
+  for (let debut = 0; debut < ruches.length; debut += parLigne)
+    rangees.push(ruches.slice(debut, debut + parLigne));
+  const cellule = (ruche) =>
+      `<button class="cell bg-${etatClass(ruche.etat)}" data-act="ruche" data-v="${ruche.id}" aria-label="Ouvrir ${esc(ruche.nom)}, \xE9tat ${esc(ruche.etat)}"><span>${esc(ruche.nom)}</span></button>`,
+    legende = ETATS.map((etat) => [etat, ruches.filter((ruche) => ruche.etat === etat).length])
+      .filter((compte) => compte[1])
       .map(
-        ([o, l]) =>
-          `<span class="tag ${etatClass(o)}">${l} ${o === "Bonne" ? "en bon \xE9tat" : esc(o.toLowerCase())}</span>`,
+        ([etat, nombre]) =>
+          `<span class="tag ${etatClass(etat)}">${nombre} ${etat === "Bonne" ? "en bon \xE9tat" : esc(etat.toLowerCase())}</span>`,
       )
       .join("");
-  return `<div class="comb">${s.map((o) => `<div class="comb-row">${o.map(i).join("")}</div>`).join("")}</div><div class="comb-legend">${a}</div>`;
+  return `<div class="comb">${rangees.map((rangee) => `<div class="comb-row">${rangee.map(cellule).join("")}</div>`).join("")}</div><div class="comb-legend">${legende}</div>`;
 }
 function viewDash() {
-  const e = S.d,
-    t = cfg(),
-    s = stock(),
-    i = new Date().getFullYear(),
-    a = fin(i),
-    o = [
-      [e.ruches.length > 0, "Ajouter vos ruches", "newruches"],
-      [e.articles.length > 0, "Renseigner votre mat\xE9riel", "gomateriel"],
-      [e.recoltes.length > 0, "Saisir une r\xE9colte", "newrecolte"],
-      [e.lots.length > 0, "Cr\xE9er vos lots de pots", "newlot"],
-      [e.clients.length > 0, "Ajouter un client", "newclient"],
-      [e.ventes.length > 0, "Enregistrer une vente", "newvente"],
+  const donnees = S.d,
+    reglages = cfg(),
+    stockMiel = stock(),
+    annee = new Date().getFullYear(),
+    finances = fin(annee),
+    etapes = [
+      [donnees.ruches.length > 0, "Ajouter vos ruches", "newruches"],
+      [donnees.articles.length > 0, "Renseigner votre mat\xE9riel", "gomateriel"],
+      [donnees.recoltes.length > 0, "Saisir une r\xE9colte", "newrecolte"],
+      [donnees.lots.length > 0, "Cr\xE9er vos lots de pots", "newlot"],
+      [donnees.clients.length > 0, "Ajouter un client", "newclient"],
+      [donnees.ventes.length > 0, "Enregistrer une vente", "newvente"],
     ],
-    l = o.filter((g) => g[0]).length,
-    r =
-      l < o.length
+    faites = etapes.filter((etape) => etape[0]).length,
+    demarrage =
+      faites < etapes.length
         ? `<section class="card">
-    <h2>Bien d\xE9marrer</h2><p class="small">${l} sur ${o.length} \xE9tapes termin\xE9es</p><div class="track"><i style="width:${Math.round((l / o.length) * 100)}%"></i></div>
-    <div class="steps">${o.map(([g, w, u]) => `<button class="step ${g ? "ok" : ""}" ${g ? "disabled" : `data-act="${u}"`}><span class="dot">${g ? "\u2713" : ""}</span>${esc(w)}</button>`).join("")}</div>
+    <h2>Bien d\xE9marrer</h2><p class="small">${faites} sur ${etapes.length} \xE9tapes termin\xE9es</p><div class="track"><i style="width:${Math.round((faites / etapes.length) * 100)}%"></i></div>
+    <div class="steps">${etapes.map(([fait, libelle, action]) => `<button class="step ${fait ? "ok" : ""}" ${fait ? "disabled" : `data-act="${action}"`}><span class="dot">${fait ? "\u2713" : ""}</span>${esc(libelle)}</button>`).join("")}</div>
   </section>`
         : "",
-    b = honeycomb(e.ruches),
-    m = todos()
+    rayon = honeycomb(donnees.ruches),
+    aFaire = todos()
       .slice(0, 7)
       .map(
-        ([g, w, u, c]) =>
-          `<button class="todo" data-act="${c.startsWith("ruche:") ? "ruche" : "go"}" data-v="${c.replace("ruche:", "")}"><b class="${w}">${esc(g)}</b><span>${esc(u)}</span></button>`,
+        ([titre, classe, texte, cible]) =>
+          `<button class="todo" data-act="${cible.startsWith("ruche:") ? "ruche" : "go"}" data-v="${cible.replace("ruche:", "")}"><b class="${classe}">${esc(titre)}</b><span>${esc(texte)}</span></button>`,
       )
       .join(""),
-    $ = e.taches.filter((g) => !g.faite).length,
-    p = e.ruches.filter((g) => g.etat !== "Bonne").length,
-    v = [
-      `${e.ruches.length} ruche${e.ruches.length > 1 ? "s" : ""}`,
-      p ? `${p} \xE0 surveiller` : "",
-      $ ? `${$} t\xE2che${$ > 1 ? "s" : ""} \xE0 faire` : "",
+    tachesOuvertes = donnees.taches.filter((tache) => !tache.faite).length,
+    aSurveiller = donnees.ruches.filter((ruche) => ruche.etat !== "Bonne").length,
+    resume = [
+      `${donnees.ruches.length} ruche${donnees.ruches.length > 1 ? "s" : ""}`,
+      aSurveiller ? `${aSurveiller} \xE0 surveiller` : "",
+      tachesOuvertes ? `${tachesOuvertes} t\xE2che${tachesOuvertes > 1 ? "s" : ""} \xE0 faire` : "",
     ]
       .filter(Boolean)
       .join(" \xB7 "),
-    f = new Date().getHours();
+    heure = new Date().getHours();
   shell(
-    f < 18 ? "Bonjour" : "Bonsoir",
-    v,
+    heure < 18 ? "Bonjour" : "Bonsoir",
+    resume,
     '<button class="btn honey" data-act="newvisite">Nouvelle visite</button><button class="btn ghost" data-act="newvente">Nouvelle vente</button>',
     `
-    ${r}
+    ${demarrage}
     ${typeof HL != "undefined" ? HL.section() : ""}
     <div class="grid">
-      ${kpi("Miel en stock", n(s.kg) + " kg", s.pots + " pots")}
-      ${kpi("Ventes " + i, eur0(a.ca), a.aEncaisser > 0 ? eur0(a.aEncaisser) + " \xE0 encaisser" : a.ventes.length + " vente(s)")}
-      ${kpi("R\xE9sultat " + i, eur0(a.resultat), "apr\xE8s " + eur0(a.charges) + " de d\xE9penses")}
-      ${kpi("Tr\xE9sorerie", eur0(a.tresoFin), "encaiss\xE9 moins d\xE9pens\xE9")}
+      ${kpi("Miel en stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
+      ${kpi("Ventes " + annee, eur0(finances.ca), finances.aEncaisser > 0 ? eur0(finances.aEncaisser) + " \xE0 encaisser" : finances.ventes.length + " vente(s)")}
+      ${kpi("R\xE9sultat " + annee, eur0(finances.resultat), "apr\xE8s " + eur0(finances.charges) + " de d\xE9penses")}
+      ${kpi("Tr\xE9sorerie", eur0(finances.tresoFin), "encaiss\xE9 moins d\xE9pens\xE9")}
     </div>
     <div class="grid2">
-      <section class="card"><h2>\xC9tat des ruches</h2>${e.ruches.length ? b : '<p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button>'}</section>
-      <section class="card"><h2>\xC0 faire</h2>${m || '<p class="small">Rien \xE0 signaler.</p>'}</section>
+      <section class="card"><h2>\xC9tat des ruches</h2>${donnees.ruches.length ? rayon : '<p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button>'}</section>
+      <section class="card"><h2>\xC0 faire</h2>${aFaire || '<p class="small">Rien \xE0 signaler.</p>'}</section>
     </div>`,
-    t.nom +
+    reglages.nom +
       " \xB7 " +
       new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }),
   );
@@ -804,7 +805,10 @@ function viewPlus() {
       ["fournisseurs", "Fournisseurs"],
       ["reglages", "R\xE9glages et exports"],
     ]
-      .map(([t, s]) => `<button data-act="go" data-v="${t}">${icon(t)}<span>${s}</span></button>`)
+      .map(
+        ([route, libelle]) =>
+          `<button data-act="go" data-v="${route}">${icon(route)}<span>${libelle}</span></button>`,
+      )
       .join(
         "",
       )}<button data-act="logout">${icon("plus")}<span>Se d\xE9connecter</span></button></section>`,
