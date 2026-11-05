@@ -1,5 +1,21 @@
 # Notes de version
 
+## v5.15 · à essayer en recette · mise à plat (IT-00)
+Aucune migration. Aucun changement visible : l'ancienne version et la nouvelle se comportent pareil.
+
+- `app.js` en source lisible : formatage Prettier puis noms des variables locales, écran par écran. Arbre syntaxique
+  vérifié identique à l'ancien fichier (au renommage près) et 18 tests verts à chaque étape.
+- `schema.sql` remplacé par un renvoi : on recrée la base avec 000 puis 004 à 011, **009 avant 008**.
+- `migrations/README.md` : relevé daté des deux bases (structure, règles d'accès, plafond de 1 000 lignes, inscriptions,
+  volumétrie) et écarts. Écart à corriger en recette : la méthode varroa et la note de livraison n'y sont pas
+  enregistrées (AP-BUG-008). La production n'est pas concernée.
+- `docs/TECHNIQUE.md` : les 19 modules dans l'ordre de chargement et les fonctions qu'ils remplacent.
+
+**À vérifier**
+1. Le téléphone reprend la nouvelle version (nouvelle `VERSION` de `sw.js`) : se connecter, l'accueil s'affiche.
+2. Parcours rapide sur un vrai téléphone : nouvelle visite avec photo, nouvelle vente, pilotage, export CSV.
+3. Hors ligne : couper le réseau, saisir une visite, remettre le réseau, la visite part.
+
 ## v5.14 · à essayer en recette · prise en main, suite
 Migration facultative : `migrations/011-invitation-avant-connexion.sql`, d'abord sur `apidoo-test`. Sans elle, l'invitation dit « une exploitation », le reste fonctionne.
 

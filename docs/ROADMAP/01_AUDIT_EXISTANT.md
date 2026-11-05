@@ -60,7 +60,9 @@ Fonctions de `app.js` redéfinies par les modules (relevé `grep`) :
 | `viewPlus` | nav4, ergonomie |
 | `ACT` (actions) | ≈ 180 actions ajoutées par 15 modules dans un même objet global |
 
-### 2.3 Base de données (d'après les fichiers, état réel À VÉRIFIER)
+### 2.3 Base de données
+
+> **Mise à jour du 6 nov. 2026 (IT-00).** 010 et 011 ont été appliquées le 5 nov. sur les deux bases. Relevé complet en lecture seule dans `migrations/README.md` : structure identique sur `apidoo` et `apidoo-test`, et identique à 000 + migrations rejouées (009 avant 008), sauf `creer_visite` et `creer_vente` en retard sur la recette (AP-BUG-008). Le tableau ci-dessous est l'état constaté le 5 nov. avant ces applications.
 
 Tables après la migration 011 : `exploitations`, `membres`, `membres_v1` (ancienne liste), `invitations`, `ruches`, `ruche_evenements`, `visites`, `visite_intrants`, `visite_photos`, `recoltes`, `lots` (+ vue `lots_stock`), `clients`, `ventes`, `vente_lignes`, `depenses`, `fournisseurs`, `articles`, `taches`, `budgets`, `reglages`.
 
@@ -138,21 +140,21 @@ Légende des colonnes : **Code** (présent dans le code), **Données** (modèle 
 
 - **Empilement de surcharges.** Chaque version a été livrée comme un fichier qui capture la fonction précédente (`const renderAvant = window.render`) et la remplace. Effets : comportement d'un écran réparti dans 3 à 5 fichiers, impossibilité de supprimer un module ancien sans casser les suivants, code mort probable (écrans de `app.js` et de `ux.js` entièrement recouverts). `ux.js` (« version 2 de l'interface ») et `nav4.js` (« version 4 ») contiennent des écrans déjà remplacés par `alveoles.js`.
 - **État global partagé** : `S`, `ACT`, `TABLES`, `ICON`, `GROUP` sont modifiés par tous les modules.
-- **Code minifié** : `app.js` compte 172 lignes dont 10 de plus de 2 000 caractères. Toute correction dans le cœur est risquée et illisible en revue.
+- **Code minifié** : `app.js` comptait 172 lignes dont 10 de plus de 2 000 caractères. Toute correction dans le cœur était risquée et illisible en revue. *Résolu par IT-00 (6 nov. 2026) : source lisible reconstituée, comportement vérifié identique.*
 - **Styles en couches** : 35 sections commentées dans `index.html`, 32 blocs `@media`, chaque version redéfinissant les règles précédentes.
 - **Doublons** : deux appels Open-Meteo (`ux.js` et `meteo.js`), deux implémentations d'IndexedDB (`photos.js` et `offline.js`), deux générateurs d'UUID.
 
 ### 4.2 Données et performance
 
 - `loadAll()` lit **toutes les lignes de 15 tables** à l'ouverture, puis `refresh()` relit tout **après chaque écriture**.
-- **Limite de lignes de l'API** : Supabase plafonne par défaut chaque réponse REST (paramètre « Max rows », 1 000 par défaut). Aucune requête n'est paginée. Au-delà, les visites les plus anciennes disparaîtraient silencieusement des écrans et des calculs (registre, rendements). Valeur réelle des deux projets **À VÉRIFIER**.
+- **Limite de lignes de l'API** : Supabase plafonne par défaut chaque réponse REST (paramètre « Max rows », 1 000 par défaut). Aucune requête n'est paginée. Au-delà, les visites les plus anciennes disparaîtraient silencieusement des écrans et des calculs (registre, rendements). Valeur réelle relevée le 6 nov. 2026 : **1 000 sur les deux projets** ; plus grosse table : 8 lignes.
 - Calculs côté navigateur (stocks, finances, tableaux) sur l'ensemble des données : acceptable à 10 ruches, lent à 300.
 
 ### 4.3 Cohérence SQL / JavaScript
 
-- `schema.sql` est **obsolète** (MVP : catégories de dépenses figées, formats 250/500 g seulement) et contredit la base réelle ; seul `000-structure-au-3-nov-2026.sql` est fidèle.
+- `schema.sql` était **obsolète** (MVP : catégories de dépenses figées, formats 250/500 g seulement) et contredisait la base réelle ; seul `000-structure-au-3-nov-2026.sql` est fidèle. *Résolu par IT-00 : `schema.sql` renvoie vers 000 + migrations.*
 - Numérotation inversée : 008 doit être lancée **après** 009 (elle référence `ruche_evenements`).
-- `migrations/README.md` et `a-appliquer-en-production.txt` divergent (011 absente de la liste d'attente).
+- `migrations/README.md` et `a-appliquer-en-production.txt` divergeaient (011 absente de la liste d'attente). *Résolu : plus aucune migration en attente, état daté par base dans `migrations/README.md`.*
 - La facture lit `client.adresse`, qui n'existe pas dans la table `clients`.
 - `reglages` est un document JSON réécrit en entier (lecture, fusion, écriture) : deux membres qui enregistrent en même temps s'écrasent.
 - Entrée de stock (`ACT.entree`) : nouveau stock calculé dans le navigateur (`stock + q`) puis écrit — perte de mise à jour possible à plusieurs.
@@ -233,6 +235,7 @@ Pas de refonte esthétique recommandée : l'identité « Alvéoles » est récen
 | R-18 | Faible | `voix.js` | Envoi de l'audio à un tiers non signalé | Information RGPD manquante | Mention à la première utilisation | AP-FEAT-021 |
 | R-19 | Faible | `app.js` `DEF` | Nom par défaut « Bee's Brothers » codé en dur | S'affiche chez un nouvel utilisateur si le réglage manque | Défaut neutre | AP-BUG-006 |
 | R-20 | Faible | Textes | Tutoiement et vouvoiement mélangés | Image moins professionnelle | Charte de ton unique | AP-FEAT-112 |
+| R-21 | Moyenne | base `apidoo-test`, 009 | `creer_visite` et `creer_vente` de la recette ne contiennent pas la section 6 de 009 (relevé IT-00) | Méthode varroa et livraison ignorées en recette : vérifications faussées | Relancer 009 sur `apidoo-test` ; comparer les empreintes des fonctions avant mise en ligne | AP-BUG-008 |
 
 ---
 
@@ -252,9 +255,9 @@ Pas de refonte esthétique recommandée : l'identité « Alvéoles » est récen
 
 | Élément | Pourquoi | Comment vérifier |
 |---|---|---|
-| Politiques RLS détaillées sur les bases réelles | Relevé limité aux tables, fonctions, contraintes clés | Relevé `pg_policies` en lecture (IT-00) |
-| Plafond « Max rows » des deux projets | Non exposé en SQL | Supabase › Settings › API |
-| Inscriptions ouvertes ou restreintes (« adresse autorisée » citée en v5.0) | Réglage Auth non lisible en SQL | Supabase › Authentication › Settings / hooks |
+| ~~Politiques RLS détaillées sur les bases réelles~~ | Fait le 6 nov. 2026 (IT-00) | `migrations/README.md` |
+| ~~Plafond « Max rows » des deux projets~~ | Fait le 6 nov. 2026 : 1 000 sur les deux | `migrations/README.md` |
+| ~~Inscriptions ouvertes ou restreintes~~ | Fait le 6 nov. 2026 : ouvertes sur les deux projets | `migrations/README.md`, points de vigilance |
 | Fonctionnement sur iPhone/Android (voix, HEIC, installation, notifications) | Pas d'appareil | Rubriques « À vérifier » du CHANGELOG |
-| Origine de `app.js` minifié | Historique git de 1 commit (clone superficiel) | Demander au responsable du projet (décision D-01) |
+| ~~Origine de `app.js` minifié~~ | D-01 (6 nov. 2026) : source d'origine introuvable, reconstituée en IT-00 | En-tête de `app.js` |
 | Mentions obligatoires des étiquettes et factures | Réglementaire | Sources officielles (doc 15 / module O) |
