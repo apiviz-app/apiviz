@@ -2173,45 +2173,45 @@ const EXP = {
         "application/json",
       ),
   },
-  go = (e) => {
-    ((S.route = e), render());
+  go = (route) => {
+    ((S.route = route), render());
   };
 function readVisitForm() {
-  const e = document.getElementById("v_date");
-  e &&
-    ((S.visite.date_visite = e.value),
+  const champDate = document.getElementById("v_date");
+  champDate &&
+    ((S.visite.date_visite = champDate.value),
     (S.visite.poids_kg = document.getElementById("v_poids").value),
     (S.visite.varroa = document.getElementById("v_varroa").value),
     (S.visite.note = document.getElementById("v_note").value),
     typeof RG != "undefined" && RG.lire());
 }
 function readSaleForm() {
-  const e = document.getElementById("s_client");
-  e && (S.vente.client_id = e.value);
-  const t = document.getElementById("s_date");
-  t && (S.vente.date_vente = t.value);
-  const s = document.getElementById("s_mode");
-  s && (S.vente.mode = s.value);
+  const champClient = document.getElementById("s_client");
+  champClient && (S.vente.client_id = champClient.value);
+  const champDate = document.getElementById("s_date");
+  champDate && (S.vente.date_vente = champDate.value);
+  const champMode = document.getElementById("s_mode");
+  champMode && (S.vente.mode = champMode.value);
 }
-const twoStep = async (e, t, s) => {
-  if (e.dataset.armed) {
-    e.disabled = !0;
+const twoStep = async (bouton, confirmation, action) => {
+  if (bouton.dataset.armed) {
+    bouton.disabled = !0;
     try {
-      await s();
-    } catch (a) {
-      (fail(a), (e.disabled = !1));
+      await action();
+    } catch (erreur) {
+      (fail(erreur), (bouton.disabled = !1));
     }
     return;
   }
-  const i = e.textContent;
-  ((e.dataset.armed = "1"),
-    (e.textContent = t),
+  const texte = bouton.textContent;
+  ((bouton.dataset.armed = "1"),
+    (bouton.textContent = confirmation),
     setTimeout(() => {
-      e.isConnected && (delete e.dataset.armed, (e.textContent = i));
+      bouton.isConnected && (delete bouton.dataset.armed, (bouton.textContent = texte));
     }, 4e3));
 };
 function quickSheet() {
-  const e = [
+  const choix = [
     ["newvisite", "Visite"],
     ["newvente", "Vente"],
     ["newrecolte", "R\xE9colte"],
@@ -2219,43 +2219,43 @@ function quickSheet() {
     ["newtache", "T\xE2che"],
     ["newclient", "Client"],
   ];
-  (($sheetForm.onsubmit = (t) => t.preventDefault()),
-    ($sheetForm.innerHTML = `<h2>Ajouter</h2><div class="quick">${e.map(([t, s]) => `<button type="button" class="btn" data-act="qk" data-v="${t}">${s}</button>`).join("")}</div><button type="button" class="btn" data-act="closesheet">Annuler</button>`),
+  (($sheetForm.onsubmit = (evt) => evt.preventDefault()),
+    ($sheetForm.innerHTML = `<h2>Ajouter</h2><div class="quick">${choix.map(([action, libelle]) => `<button type="button" class="btn" data-act="qk" data-v="${action}">${libelle}</button>`).join("")}</div><button type="button" class="btn" data-act="closesheet">Annuler</button>`),
     $sheet.showModal());
 }
 const ACT = {
-  go: (e) => go(e),
+  go: (valeur) => go(valeur),
   gomateriel: () => go("materiel"),
-  authmode: (e) => {
-    ((S.authMode = e), (S.authMsg = ""), authView());
+  authmode: (valeur) => {
+    ((S.authMode = valeur), (S.authMsg = ""), authView());
   },
   logout: async () => {
     await sb.auth.signOut();
   },
-  ruche: (e) => {
-    ((S.ruche = e), go("ruche"));
+  ruche: (valeur) => {
+    ((S.ruche = valeur), go("ruche"));
   },
   cancel: () => go("dash"),
   quick: () => quickSheet(),
-  qk: (e) => {
-    ($sheet.close(), ACT[e]());
+  qk: (valeur) => {
+    ($sheet.close(), ACT[valeur]());
   },
   closesheet: () => $sheet.close(),
-  sheetdel: (e, t, s) =>
-    twoStep(s, "Confirmer la suppression", async () => {
+  sheetdel: (valeur, cle, bouton) =>
+    twoStep(bouton, "Confirmer la suppression", async () => {
       (await sheet.del(), $sheet.close());
     }),
-  newvisite: (e) => {
+  newvisite: (valeur) => {
     if (!S.d.ruches.length) return (toast("Ajoutez d\u2019abord une ruche", !0), go("ruches"));
-    const t = e || (S.ruche && byId(S.d.ruches, S.ruche)?.id) || S.d.ruches[0].id;
+    const rucheId = valeur || (S.ruche && byId(S.d.ruches, S.ruche)?.id) || S.d.ruches[0].id;
     ((S.visite = {
-      ruche_id: t,
+      ruche_id: rucheId,
       date_visite: today(),
       activite: "Normale",
       provisions: "Moyennes",
       reine: "Non cherch\xE9e",
       couvain: "Non vu",
-      etat: byId(S.d.ruches, t).etat,
+      etat: byId(S.d.ruches, rucheId).etat,
       poids_kg: "",
       varroa: "",
       note: "",
@@ -2263,85 +2263,91 @@ const ACT = {
     }),
       go("visite"));
   },
-  vset: (e, t) => {
+  vset: (valeur, cle) => {
     (readVisitForm(),
-      (S.visite[t] = e),
-      t === "ruche_id" && (S.visite.etat = byId(S.d.ruches, e).etat),
+      (S.visite[cle] = valeur),
+      cle === "ruche_id" && (S.visite.etat = byId(S.d.ruches, valeur).etat),
       viewVisite());
   },
-  vstep: (e, t) => {
+  vstep: (valeur, cle) => {
     readVisitForm();
-    const s = byId(S.d.articles, t);
-    ((S.visite.q[t] = Math.max(0, Math.min(Number(s.stock), (S.visite.q[t] || 0) + Number(e)))),
+    const article = byId(S.d.articles, cle);
+    ((S.visite.q[cle] = Math.max(
+      0,
+      Math.min(Number(article.stock), (S.visite.q[cle] || 0) + Number(valeur)),
+    )),
       viewVisite());
   },
   newvente: () => {
     ((S.vente = { client_id: "", date_vente: today(), q: {}, paye: !0, mode: cfg().modes[0] }),
       go("vente"));
   },
-  sstep: (e, t) => {
+  sstep: (valeur, cle) => {
     readSaleForm();
-    const s = byId(S.d.lots, t);
-    ((S.vente.q[t] = Math.max(0, Math.min(s.pots_restants, (S.vente.q[t] || 0) + Number(e)))),
+    const lot = byId(S.d.lots, cle);
+    ((S.vente.q[cle] = Math.max(
+      0,
+      Math.min(lot.pots_restants, (S.vente.q[cle] || 0) + Number(valeur)),
+    )),
       viewVente());
   },
-  spaye: (e) => {
-    (readSaleForm(), (S.vente.paye = e === "1"), viewVente());
+  spaye: (valeur) => {
+    (readSaleForm(), (S.vente.paye = valeur === "1"), viewVente());
   },
-  vfiltre: (e) => {
-    ((S.venteFiltre = e), viewClients());
+  vfiltre: (valeur) => {
+    ((S.venteFiltre = valeur), viewClients());
   },
-  togglepaye: async (e) => {
-    const t = byId(S.d.ventes, e);
+  togglepaye: async (valeur) => {
+    const vente = byId(S.d.ventes, valeur);
     await write(
-      sb.from("ventes").update({ paye: !t.paye }).eq("id", e),
-      t.paye ? "Vente \xE0 encaisser" : "Vente pay\xE9e",
+      sb.from("ventes").update({ paye: !vente.paye }).eq("id", valeur),
+      vente.paye ? "Vente \xE0 encaisser" : "Vente pay\xE9e",
     );
   },
-  ptab: (e) => {
-    ((S.tab = e), viewPilotage());
+  ptab: (valeur) => {
+    ((S.tab = valeur), viewPilotage());
   },
   newruches: () => ruchesForm(),
-  editruche: (e) => rucheForm(byId(S.d.ruches, e)),
+  editruche: (valeur) => rucheForm(byId(S.d.ruches, valeur)),
   newlot: () => lotForm(),
-  editlot: (e) => lotForm(byId(S.d.lots, e)),
+  editlot: (valeur) => lotForm(byId(S.d.lots, valeur)),
   newarticle: () => articleForm(),
-  editarticle: (e) => articleForm(byId(S.d.articles, e)),
-  preset: (e, t) => {
-    const s = PRESETS[t].find((i) => i[0] === e);
-    return articleForm({ nom: s[0], unite: s[1], type: t, stock: 0, seuil: 0 });
+  editarticle: (valeur) => articleForm(byId(S.d.articles, valeur)),
+  preset: (valeur, cle) => {
+    const modele = PRESETS[cle].find((m) => m[0] === valeur);
+    return articleForm({ nom: modele[0], unite: modele[1], type: cle, stock: 0, seuil: 0 });
   },
   newclient: () => {
     (S.route === "vente" && readSaleForm(), clientForm());
   },
-  editclient: (e) => clientForm(byId(S.d.clients, e)),
+  editclient: (valeur) => clientForm(byId(S.d.clients, valeur)),
   newfournisseur: () => fournisseurForm(),
-  editfournisseur: (e) => fournisseurForm(byId(S.d.fournisseurs, e)),
+  editfournisseur: (valeur) => fournisseurForm(byId(S.d.fournisseurs, valeur)),
   newrecolte: () => recolteForm(),
-  editrecolte: (e) => recolteForm(byId(S.d.recoltes, e)),
+  editrecolte: (valeur) => recolteForm(byId(S.d.recoltes, valeur)),
   newdepense: () => depenseForm(),
-  editdepense: (e) => depenseForm(byId(S.d.depenses, e)),
-  newtache: (e) => tacheForm(null, e),
-  edittache: (e) => tacheForm(byId(S.d.taches, e)),
-  addsug: (e) => write(sb.from("taches").insert({ titre: e }), "T\xE2che ajout\xE9e"),
-  toggletache: (e) => {
-    const t = byId(S.d.taches, e);
+  editdepense: (valeur) => depenseForm(byId(S.d.depenses, valeur)),
+  newtache: (valeur) => tacheForm(null, valeur),
+  edittache: (valeur) => tacheForm(byId(S.d.taches, valeur)),
+  addsug: (valeur) => write(sb.from("taches").insert({ titre: valeur }), "T\xE2che ajout\xE9e"),
+  toggletache: (valeur) => {
+    const tache = byId(S.d.taches, valeur);
     return write(
       sb
         .from("taches")
-        .update({ faite: !t.faite, faite_le: t.faite ? null : today() })
-        .eq("id", e),
+        .update({ faite: !tache.faite, faite_le: tache.faite ? null : today() })
+        .eq("id", valeur),
     );
   },
-  entree: (e) => {
-    const t = byId(S.d.articles, e);
+  entree: (valeur) => {
+    const article = byId(S.d.articles, valeur);
     sheet({
-      title: "Entr\xE9e de stock : " + t.nom,
+      title: "Entr\xE9e de stock : " + article.nom,
       label: "Ajouter",
       fields: [
         {
           name: "q",
-          label: `Quantit\xE9 re\xE7ue (${t.unite})`,
+          label: `Quantit\xE9 re\xE7ue (${article.unite})`,
           type: "number",
           step: "0.01",
           min: 0.01,
@@ -2355,39 +2361,39 @@ const ACT = {
           min: 0,
         },
       ],
-      submit: async (s) => {
-        const { error: i } = await sb
+      submit: async (saisie) => {
+        const { error: erreur } = await sb
           .from("articles")
-          .update({ stock: Number(t.stock) + num(s.q) })
-          .eq("id", t.id);
-        if (i) throw i;
-        if (num(s.cout)) {
-          const a = cfg(),
-            o = /pot|couvercle|étiquette/i.test(t.nom)
+          .update({ stock: Number(article.stock) + num(saisie.q) })
+          .eq("id", article.id);
+        if (erreur) throw erreur;
+        if (num(saisie.cout)) {
+          const reglages = cfg(),
+            poste = /pot|couvercle|étiquette/i.test(article.nom)
               ? "Pots & \xE9tiquettes"
-              : /candy|sirop/i.test(t.nom)
+              : /candy|sirop/i.test(article.nom)
                 ? "Alimentation"
-                : /varroa/i.test(t.nom)
+                : /varroa/i.test(article.nom)
                   ? "Traitements"
                   : "Mat\xE9riel",
-            l = await sb.from("depenses").insert({
-              libelle: t.nom,
-              categorie: a.postes.includes(o) ? o : a.postes[0],
-              montant: num(s.cout),
+            ajout = await sb.from("depenses").insert({
+              libelle: article.nom,
+              categorie: reglages.postes.includes(poste) ? poste : reglages.postes[0],
+              montant: num(saisie.cout),
               date_depense: today(),
-              fournisseur_id: t.fournisseur_id,
+              fournisseur_id: article.fournisseur_id,
             });
-          if (l.error) throw l.error;
+          if (ajout.error) throw ajout.error;
         }
         (await refresh(), toast("Stock mis \xE0 jour"));
       },
     });
   },
-  editbudget: (e) => {
-    const t = S.annee,
-      s = S.d.budgets.find((i) => i.annee === t && i.poste === e);
+  editbudget: (valeur) => {
+    const annee = S.annee,
+      budget = S.d.budgets.find((b) => b.annee === annee && b.poste === valeur);
     sheet({
-      title: `${e} : budget ${t}`,
+      title: `${valeur} : budget ${annee}`,
       fields: [
         {
           name: "montant",
@@ -2396,168 +2402,173 @@ const ACT = {
           step: "1",
           min: 0,
           required: !0,
-          value: s?.montant,
+          value: budget?.montant,
         },
       ],
-      submit: (i) =>
+      submit: (saisie) =>
         write(
-          sb.from("budgets").upsert({ annee: t, poste: e, montant: num(i.montant) }),
+          sb.from("budgets").upsert({ annee: annee, poste: valeur, montant: num(saisie.montant) }),
           "Budget enregistr\xE9",
         ),
     });
   },
   savesim: () => saveCfg({ sim: S.sim }, "Hypoth\xE8ses enregistr\xE9es"),
   resetsim: async () => {
-    const e = { ...((S.d.reglages[0] || {}).data || {}) };
-    (delete e.sim,
+    const donnees = { ...((S.d.reglages[0] || {}).data || {}) };
+    (delete donnees.sim,
       (S.sim = null),
-      await write(sb.from("reglages").update({ data: e }).eq("id", 1), "Valeurs recalcul\xE9es"));
+      await write(
+        sb.from("reglages").update({ data: donnees }).eq("id", 1),
+        "Valeurs recalcul\xE9es",
+      ));
   },
-  exp: (e) => {
-    (EXP[e](), toast("Fichier pr\xE9par\xE9"));
+  exp: (valeur) => {
+    (EXP[valeur](), toast("Fichier pr\xE9par\xE9"));
   },
-  delvisite: (e, t, s) =>
+  delvisite: (valeur, cle, bouton) =>
     twoStep(
-      s,
+      bouton,
       "Confirmer",
       async () => (
-        typeof PH != "undefined" && (await PH.oterVisite(e)),
-        write(sb.from("visites").delete().eq("id", e), "Visite supprim\xE9e, stock r\xE9tabli")
+        typeof PH != "undefined" && (await PH.oterVisite(valeur)),
+        write(sb.from("visites").delete().eq("id", valeur), "Visite supprim\xE9e, stock r\xE9tabli")
       ),
     ),
-  delvente: (e, t, s) =>
-    twoStep(s, "Confirmer", () =>
-      write(sb.from("ventes").delete().eq("id", e), "Vente supprim\xE9e, stock r\xE9tabli"),
+  delvente: (valeur, cle, bouton) =>
+    twoStep(bouton, "Confirmer", () =>
+      write(sb.from("ventes").delete().eq("id", valeur), "Vente supprim\xE9e, stock r\xE9tabli"),
     ),
 };
-(document.addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-act]");
-  if (!(!t || t.disabled)) {
-    e.preventDefault();
+(document.addEventListener("click", async (evt) => {
+  const cible = evt.target.closest("[data-act]");
+  if (!(!cible || cible.disabled)) {
+    evt.preventDefault();
     try {
-      await ACT[t.dataset.act](t.dataset.v, t.dataset.k, t);
-    } catch (s) {
-      fail(s);
+      await ACT[cible.dataset.act](cible.dataset.v, cible.dataset.k, cible);
+    } catch (erreur) {
+      fail(erreur);
     }
   }
 }),
-  document.addEventListener("change", (e) => {
-    e.target.dataset.chg === "annee" && ((S.annee = Number(e.target.value)), render());
+  document.addEventListener("change", (evt) => {
+    evt.target.dataset.chg === "annee" && ((S.annee = Number(evt.target.value)), render());
   }),
-  document.addEventListener("input", (e) => {
-    const t = e.target.dataset.sim;
-    t &&
-      ((S.sim[t] = Number(e.target.value) || 0),
+  document.addEventListener("input", (evt) => {
+    const cible = evt.target.dataset.sim;
+    cible &&
+      ((S.sim[cible] = Number(evt.target.value) || 0),
       (document.getElementById("simOut").innerHTML = simOut()));
   }));
 const $tip = document.createElement("div");
 (($tip.className = "tip"), ($tip.hidden = !0), document.body.appendChild($tip));
-function showTip(e) {
-  const t = e.target.closest?.("[data-tip]");
-  if (!t) {
+function showTip(evt) {
+  const cible = evt.target.closest?.("[data-tip]");
+  if (!cible) {
     $tip.hidden = !0;
     return;
   }
-  (($tip.textContent = t.dataset.tip), ($tip.hidden = !1));
-  const s = Math.min(e.clientX + 12, window.innerWidth - $tip.offsetWidth - 8);
-  (($tip.style.left = Math.max(8, s) + "px"),
-    ($tip.style.top = Math.max(8, e.clientY - $tip.offsetHeight - 10) + "px"));
+  (($tip.textContent = cible.dataset.tip), ($tip.hidden = !1));
+  const gauche = Math.min(evt.clientX + 12, window.innerWidth - $tip.offsetWidth - 8);
+  (($tip.style.left = Math.max(8, gauche) + "px"),
+    ($tip.style.top = Math.max(8, evt.clientY - $tip.offsetHeight - 10) + "px"));
 }
 (document.addEventListener("pointermove", showTip),
   document.addEventListener("pointerdown", showTip),
-  document.addEventListener("submit", async (e) => {
-    const t = e.target.dataset.form;
-    if (t) {
-      if ((e.preventDefault(), t === "auth")) return submitAuth(e.target);
+  document.addEventListener("submit", async (evt) => {
+    const formulaire = evt.target.dataset.form;
+    if (formulaire) {
+      if ((evt.preventDefault(), formulaire === "auth")) return submitAuth(evt.target);
       if (!S.busy)
         try {
-          if (t === "visite" && typeof VR != "undefined") await VR.enregistrer();
-          else if (t === "visite") {
+          if (formulaire === "visite" && typeof VR != "undefined") await VR.enregistrer();
+          else if (formulaire === "visite") {
             readVisitForm();
-            const s = S.visite;
-            if (!s.ruche_id) throw new Error("Choisissez une ruche");
+            const visite = S.visite;
+            if (!visite.ruche_id) throw new Error("Choisissez une ruche");
             S.busy = !0;
-            const i = Object.entries(s.q)
-                .filter(([, o]) => o > 0)
-                .map(([o, l]) => ({ article_id: o, quantite: l })),
+            const intrants = Object.entries(visite.q)
+                .filter(([, quantite]) => quantite > 0)
+                .map(([articleId, quantite]) => ({ article_id: articleId, quantite: quantite })),
               {
                 data: vid,
-                error: a,
-                local: hl,
-              } = await (typeof HL != "undefined" ? HL.rpc : (x, y) => sb.rpc(x, y))(
+                error: erreur,
+                local: enAttente,
+              } = await (typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params))(
                 "creer_visite",
                 {
                   p: {
-                    ...s,
+                    ...visite,
                     q: void 0,
-                    couvain: s.couvain === "Non vu" ? "" : s.couvain,
-                    intrants: i,
+                    couvain: visite.couvain === "Non vu" ? "" : visite.couvain,
+                    intrants: intrants,
                   },
                 },
               );
-            if (a) throw a;
+            if (erreur) throw erreur;
             (typeof PH != "undefined" && (await PH.rattacher(vid)),
-              typeof RG != "undefined" && (await RG.apres(s)),
-              (S.ruche = s.ruche_id),
+              typeof RG != "undefined" && (await RG.apres(visite)),
+              (S.ruche = visite.ruche_id),
               (S.route = "ruche"),
               await refresh(),
-              toast(hl ? "Visite gard\xE9e sur le t\xE9l\xE9phone" : "Visite enregistr\xE9e"));
-          } else if (t === "vente") {
+              toast(
+                enAttente ? "Visite gard\xE9e sur le t\xE9l\xE9phone" : "Visite enregistr\xE9e",
+              ));
+          } else if (formulaire === "vente") {
             readSaleForm();
-            const s = S.vente;
-            if (!s.client_id) throw new Error("Choisissez un client");
-            const i = Object.entries(s.q)
-              .filter(([, o]) => o > 0)
-              .map(([o, l]) => ({ lot_id: o, quantite: l }));
-            if (!i.length) throw new Error("Ajoutez au moins un pot");
+            const vente = S.vente;
+            if (!vente.client_id) throw new Error("Choisissez un client");
+            const lignes = Object.entries(vente.q)
+              .filter(([, quantite]) => quantite > 0)
+              .map(([lotId, quantite]) => ({ lot_id: lotId, quantite: quantite }));
+            if (!lignes.length) throw new Error("Ajoutez au moins un pot");
             S.busy = !0;
-            const { error: a, local: hl } = await (
-              typeof HL != "undefined" ? HL.rpc : (x, y) => sb.rpc(x, y)
+            const { error: erreur, local: enAttente } = await (
+              typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params)
             )("creer_vente", {
               p: {
-                client_id: s.client_id,
-                date_vente: s.date_vente,
-                lignes: i,
-                paye: s.paye,
-                mode: s.paye ? s.mode : "",
+                client_id: vente.client_id,
+                date_vente: vente.date_vente,
+                lignes: lignes,
+                paye: vente.paye,
+                mode: vente.paye ? vente.mode : "",
               },
             });
-            if (a) throw a;
+            if (erreur) throw erreur;
             ((S.route = "clients"),
               await refresh(),
-              toast(hl ? "Vente gard\xE9e sur le t\xE9l\xE9phone" : "Vente enregistr\xE9e"));
-          } else if (t === "reglages") {
-            const s = e.target,
-              i = (r) =>
-                r.value
+              toast(enAttente ? "Vente gard\xE9e sur le t\xE9l\xE9phone" : "Vente enregistr\xE9e"));
+          } else if (formulaire === "reglages") {
+            const form = evt.target,
+              liste = (champ) =>
+                champ.value
                   .split(
                     `
 `,
                   )
-                  .map((b) => b.trim())
+                  .map((ligne) => ligne.trim())
                   .filter(Boolean),
-              a = i(s.postes),
-              o = i(s.cercles),
-              l = i(s.modes);
-            if (!a.length || !o.length || !l.length)
+              postes = liste(form.postes),
+              cercles = liste(form.cercles),
+              modes = liste(form.modes);
+            if (!postes.length || !cercles.length || !modes.length)
               throw new Error("Gardez au moins une valeur par liste");
             ((S.busy = !0),
               await saveCfg(
                 {
-                  nom: s.nom.value.trim(),
-                  napi: s.napi.value.trim(),
-                  adresse: (s.adresse?.value || "").trim(),
-                  origine: (s.origine?.value || "").trim() || "France",
-                  objectif: Number(s.objectif.value) || 0,
-                  postes: a,
-                  cercles: o,
-                  modes: l,
+                  nom: form.nom.value.trim(),
+                  napi: form.napi.value.trim(),
+                  adresse: (form.adresse?.value || "").trim(),
+                  origine: (form.origine?.value || "").trim() || "France",
+                  objectif: Number(form.objectif.value) || 0,
+                  postes: postes,
+                  cercles: cercles,
+                  modes: modes,
                 },
                 "R\xE9glages enregistr\xE9s",
               ));
           }
-        } catch (s) {
-          fail(s);
+        } catch (erreur) {
+          fail(erreur);
         } finally {
           S.busy = !1;
         }
@@ -2571,9 +2582,10 @@ function showTip(e) {
       refresh().catch(() => {});
   }));
 async function boot() {
-  const { data: e } = await sb.auth.getSession();
+  const { data: donnees } = await sb.auth.getSession();
   if (
-    ((S.session = e.session || (typeof HL != "undefined" ? HL.sessionLocale() : null)), !S.session)
+    ((S.session = donnees.session || (typeof HL != "undefined" ? HL.sessionLocale() : null)),
+    !S.session)
   )
     return ((S.d = null), (S.member = null), render());
   render();
@@ -2582,22 +2594,24 @@ async function boot() {
       typeof EX != "undefined"
         ? await EX.choisir()
         : await (async () => {
-            const t = await sb.rpc("est_membre");
-            return typeof HL != "undefined" && HL.reseau(t.error) ? HL.membre() : t.data === !0;
+            const reponse = await sb.rpc("est_membre");
+            return typeof HL != "undefined" && HL.reseau(reponse.error)
+              ? HL.membre()
+              : reponse.data === !0;
           })()),
       S.member && (await loadAll()));
-  } catch (t) {
-    fail(t);
+  } catch (erreur) {
+    fail(erreur);
   }
   render();
 }
-(sb.auth.onAuthStateChange((e) => {
-  if (e === "PASSWORD_RECOVERY") {
+(sb.auth.onAuthStateChange((evenement) => {
+  if (evenement === "PASSWORD_RECOVERY") {
     ((S.recovery = !0), render());
     return;
   }
-  (e === "SIGNED_IN" && S.session) ||
-    ((e === "SIGNED_IN" || e === "SIGNED_OUT") &&
+  (evenement === "SIGNED_IN" && S.session) ||
+    ((evenement === "SIGNED_IN" || evenement === "SIGNED_OUT") &&
       setTimeout(
         () =>
           document.readyState === "loading"
