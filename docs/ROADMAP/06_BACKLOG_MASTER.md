@@ -165,7 +165,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — 010 et 011 appliquées sur `apidoo-test` puis `apidoo` le 5 nov. 2026 (accord D-02) ; reste la correction du CHANGELOG et du GUIDE |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -190,7 +190,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 
 **Tâches techniques**
 
-- AP-TECH-013 — Appliquer 010 puis 011 sur apidoo-test, puis sur apidoo (accord du responsable).
+- AP-TECH-013 — Appliquer 010 puis 011 sur apidoo-test, puis sur apidoo (accord du responsable). **Fait le 5 nov. 2026.**
 - AP-TECH-014 — Corriger migrations/README.md, a-appliquer-en-production.txt et les statuts « à essayer en recette » du CHANGELOG.
 - AP-TECH-015 — Ajouter au workflow de mise en ligne un contrôle automatique de structure (IT-04).
 - AP-TECH-016 — Mettre à jour GUIDE.md (v5).
