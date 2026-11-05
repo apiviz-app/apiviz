@@ -137,83 +137,86 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     sim: null,
     venteFiltre: "toutes",
   },
-  esc = (e) =>
-    String(e ?? "").replace(
+  esc = (valeur) =>
+    String(valeur ?? "").replace(
       /[&<>"']/g,
-      (t) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[t],
+      (car) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[car],
     ),
-  n = (e, t = 1) => Number(e || 0).toLocaleString("fr-FR", { maximumFractionDigits: t }),
-  eur = (e) => n(e, 2) + " \u20AC",
-  eur0 = (e) => n(e, 0) + " \u20AC",
+  n = (valeur, decimales = 1) =>
+    Number(valeur || 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }),
+  eur = (montant) => n(montant, 2) + " \u20AC",
+  eur0 = (montant) => n(montant, 0) + " \u20AC",
   today = () => {
-    const e = new Date();
-    return new Date(e - e.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    const maintenant = new Date();
+    return new Date(maintenant - maintenant.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
   },
-  dfr = (e) => (e ? e.slice(8, 10) + "/" + e.slice(5, 7) + "/" + e.slice(0, 4) : "\u2013"),
-  dshort = (e) => (e ? e.slice(8, 10) + "/" + e.slice(5, 7) : "\u2013"),
-  byId = (e, t) => e.find((s) => s.id === t),
-  sum = (e, t) => e.reduce((s, i) => s + Number(t(i) || 0), 0),
-  days = (e) => Math.floor((new Date(today()) - new Date(e)) / 864e5),
-  yr = (e) => Number(String(e).slice(0, 4)),
-  mo = (e) => Number(String(e).slice(5, 7)) - 1,
-  num = (e) => (e === "" || e === void 0 || e === null ? null : Number(e)),
-  orNull = (e) => e || null,
-  etatClass = (e) => (e === "Bonne" ? "good" : e === "Critique" ? "crit" : "watch"),
+  dfr = (date) =>
+    date ? date.slice(8, 10) + "/" + date.slice(5, 7) + "/" + date.slice(0, 4) : "\u2013",
+  dshort = (date) => (date ? date.slice(8, 10) + "/" + date.slice(5, 7) : "\u2013"),
+  byId = (liste, id) => liste.find((element) => element.id === id),
+  sum = (liste, valeurDe) =>
+    liste.reduce((total, element) => total + Number(valeurDe(element) || 0), 0),
+  days = (date) => Math.floor((new Date(today()) - new Date(date)) / 864e5),
+  yr = (date) => Number(String(date).slice(0, 4)),
+  mo = (date) => Number(String(date).slice(5, 7)) - 1,
+  num = (valeur) => (valeur === "" || valeur === void 0 || valeur === null ? null : Number(valeur)),
+  orNull = (valeur) => valeur || null,
+  etatClass = (etat) => (etat === "Bonne" ? "good" : etat === "Critique" ? "crit" : "watch"),
   cfg = () => ({ ...DEF, ...((S.d?.reglages[0] || {}).data || {}) }),
-  consommables = () => S.d.articles.filter((e) => e.type !== "\xC9quipement"),
-  equipements = () => S.d.articles.filter((e) => e.type === "\xC9quipement");
-function toast(e, t) {
-  document.querySelectorAll(".toast").forEach((i) => i.remove());
-  const s = document.createElement("div");
-  ((s.className = "toast" + (t ? " err" : "")),
-    s.setAttribute("role", "status"),
-    (s.textContent = e),
-    document.body.appendChild(s),
-    setTimeout(() => s.remove(), t ? 6e3 : 3e3));
+  consommables = () => S.d.articles.filter((article) => article.type !== "\xC9quipement"),
+  equipements = () => S.d.articles.filter((article) => article.type === "\xC9quipement");
+function toast(message, erreur) {
+  document.querySelectorAll(".toast").forEach((ancienne) => ancienne.remove());
+  const bulle = document.createElement("div");
+  ((bulle.className = "toast" + (erreur ? " err" : "")),
+    bulle.setAttribute("role", "status"),
+    (bulle.textContent = message),
+    document.body.appendChild(bulle),
+    setTimeout(() => bulle.remove(), erreur ? 6e3 : 3e3));
 }
-function fail(e) {
-  console.error(e);
-  const t = e.message || "Une erreur est survenue";
-  if (/foreign key/.test(t))
+function fail(erreur) {
+  console.error(erreur);
+  const message = erreur.message || "Une erreur est survenue";
+  if (/foreign key/.test(message))
     return toast(
       "Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",
       !0,
     );
-  if (/unique|duplicate/.test(t)) return toast("Ce nom existe d\xE9j\xE0.", !0);
-  toast(t, !0);
+  if (/unique|duplicate/.test(message)) return toast("Ce nom existe d\xE9j\xE0.", !0);
+  toast(message, !0);
 }
 async function loadAll() {
-  const e = Object.keys(TABLES),
-    t = await Promise.all(
-      e.map((i) => {
-        const [a, o, l] = TABLES[i];
-        let r = sb.from(a).select("*");
-        return (o && (r = r.order(o, { ascending: l !== !1 })), r);
+  const cles = Object.keys(TABLES),
+    reponses = await Promise.all(
+      cles.map((cle) => {
+        const [nomTable, tri, croissant] = TABLES[cle];
+        let requete = sb.from(nomTable).select("*");
+        return (tri && (requete = requete.order(tri, { ascending: croissant !== !1 })), requete);
       }),
     ),
-    s = {};
-  (t.forEach((i, a) => {
-    if (i.error) throw i.error;
-    s[e[a]] = i.data;
+    donnees = {};
+  (reponses.forEach((reponse, index) => {
+    if (reponse.error) throw reponse.error;
+    donnees[cles[index]] = reponse.data;
   }),
-    (S.d = s),
+    (S.d = donnees),
     typeof PH != "undefined" && (await PH.load()));
 }
 async function refresh() {
   (await loadAll(), render());
 }
-async function write(e, t) {
-  if (typeof HL != "undefined") return HL.write(e, t);
-  const { error: s } = await e;
-  if (s) throw s;
-  (await refresh(), t && toast(t));
+async function write(requete, message) {
+  if (typeof HL != "undefined") return HL.write(requete, message);
+  const { error: erreur } = await requete;
+  if (erreur) throw erreur;
+  (await refresh(), message && toast(message));
 }
-async function saveCfg(e, t) {
-  const s = { ...((S.d.reglages[0] || {}).data || {}), ...e };
-  await write(sb.from("reglages").update({ data: s }).eq("id", 1), t);
+async function saveCfg(modifs, message) {
+  const donnees = { ...((S.d.reglages[0] || {}).data || {}), ...modifs };
+  await write(sb.from("reglages").update({ data: donnees }).eq("id", 1), message);
 }
 function authView() {
-  const e = S.authMode;
+  const mode = S.authMode;
   $app.innerHTML = `<div class="auth"><form data-form="auth">
     <div class="brand"><img src="logo-apidoo.svg" alt="Apidoo" height="38"></div>
     <p class="sub">Le carnet de bord de votre rucher</p>
@@ -223,11 +226,11 @@ function authView() {
       <button class="btn main block">Enregistrer</button>`
         : `
     <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
-    ${e === "reset" ? "" : `<label>Mot de passe<input name="password" type="password" minlength="8" required autocomplete="${e === "up" ? "new-password" : "current-password"}"></label>`}
-    <button class="btn main block">${e === "up" ? "Cr\xE9er mon compte" : e === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
+    ${mode === "reset" ? "" : `<label>Mot de passe<input name="password" type="password" minlength="8" required autocomplete="${mode === "up" ? "new-password" : "current-password"}"></label>`}
+    <button class="btn main block">${mode === "up" ? "Cr\xE9er mon compte" : mode === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
     <div class="actions" style="justify-content:space-between">
-      <button type="button" class="link" data-act="authmode" data-v="${e === "in" ? "up" : "in"}">${e === "in" ? "Cr\xE9er mon compte" : "J\u2019ai d\xE9j\xE0 un compte"}</button>
-      ${e === "in" ? '<button type="button" class="link" data-act="authmode" data-v="reset">Mot de passe oubli\xE9</button>' : ""}
+      <button type="button" class="link" data-act="authmode" data-v="${mode === "in" ? "up" : "in"}">${mode === "in" ? "Cr\xE9er mon compte" : "J\u2019ai d\xE9j\xE0 un compte"}</button>
+      ${mode === "in" ? '<button type="button" class="link" data-act="authmode" data-v="reset">Mot de passe oubli\xE9</button>' : ""}
     </div>`
     }
     ${S.authMsg ? `<p class="notice" role="status">${esc(S.authMsg)}</p>` : ""}
@@ -238,40 +241,42 @@ const AUTH_FR = {
   "Email not confirmed": "Confirme d\u2019abord ton adresse gr\xE2ce \xE0 l\u2019e-mail re\xE7u.",
   "User already registered": "Ce compte existe d\xE9j\xE0.",
 };
-async function submitAuth(e) {
-  const t = location.origin + location.pathname;
+async function submitAuth(formulaire) {
+  const retour = location.origin + location.pathname;
   S.authMsg = "";
   try {
     if (S.recovery) {
-      const { error: s } = await sb.auth.updateUser({ password: e.password.value });
-      if (s) throw s;
+      const { error: erreur } = await sb.auth.updateUser({ password: formulaire.password.value });
+      if (erreur) throw erreur;
       ((S.recovery = !1), await boot());
       return;
     }
     if (S.authMode === "reset") {
-      const { error: s } = await sb.auth.resetPasswordForEmail(e.email.value, { redirectTo: t });
-      if (s) throw s;
+      const { error: erreur } = await sb.auth.resetPasswordForEmail(formulaire.email.value, {
+        redirectTo: retour,
+      });
+      if (erreur) throw erreur;
       S.authMsg = "Si ce compte existe, un lien vient de partir par e-mail.";
     } else if (S.authMode === "up") {
-      const { error: s } = await sb.auth.signUp({
-        email: e.email.value,
-        password: e.password.value,
-        options: { emailRedirectTo: t },
+      const { error: erreur } = await sb.auth.signUp({
+        email: formulaire.email.value,
+        password: formulaire.password.value,
+        options: { emailRedirectTo: retour },
       });
-      if (s) throw s;
+      if (erreur) throw erreur;
       ((S.authMsg =
         "Compte cr\xE9\xE9. Ouvre l\u2019e-mail de confirmation, puis reviens te connecter."),
         (S.authMode = "in"));
     } else {
-      const { error: s } = await sb.auth.signInWithPassword({
-        email: e.email.value,
-        password: e.password.value,
+      const { error: erreur } = await sb.auth.signInWithPassword({
+        email: formulaire.email.value,
+        password: formulaire.password.value,
       });
-      if (s) throw s;
+      if (erreur) throw erreur;
       return;
     }
-  } catch (s) {
-    S.authMsg = AUTH_FR[s.message] || s.message;
+  } catch (erreur) {
+    S.authMsg = AUTH_FR[erreur.message] || erreur.message;
   }
   authView();
 }
@@ -291,8 +296,8 @@ const ICON = {
     reglages: "M4 7h10M18 7h2M4 17h2M10 17h10M16 5v4M8 15v4",
     plus: "M5 12h.01M12 12h.01M19 12h.01",
   },
-  icon = (e) =>
-    `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[e]}"/></svg>`,
+  icon = (nom) =>
+    `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[nom]}"/></svg>`,
   SIDE = [
     ["dash", "Accueil"],
     ["agenda", "Agenda"],
@@ -2213,15 +2218,13 @@ const ACT = {
                 : /varroa/i.test(t.nom)
                   ? "Traitements"
                   : "Mat\xE9riel",
-            l = await sb
-              .from("depenses")
-              .insert({
-                libelle: t.nom,
-                categorie: a.postes.includes(o) ? o : a.postes[0],
-                montant: num(s.cout),
-                date_depense: today(),
-                fournisseur_id: t.fournisseur_id,
-              });
+            l = await sb.from("depenses").insert({
+              libelle: t.nom,
+              categorie: a.postes.includes(o) ? o : a.postes[0],
+              montant: num(s.cout),
+              date_depense: today(),
+              fournisseur_id: t.fournisseur_id,
+            });
           if (l.error) throw l.error;
         }
         (await refresh(), toast("Stock mis \xE0 jour"));
