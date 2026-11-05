@@ -943,25 +943,25 @@ function viewVisite() {
   );
 }
 function viewMiel() {
-  const e = S.d,
-    t = stock(),
-    s = sum(e.recoltes, (r) => r.kg),
-    i = s - t.kgPots,
-    a = rythme(),
-    o = e.lots.map(
-      (r) =>
-        `<tr><td><button class="link" data-act="editlot" data-v="${r.id}">${esc(r.code)}</button></td><td>${esc(r.miel)}</td><td>${n(r.format_g, 0)} g</td><td class="num">${eur(r.prix)}</td><td class="num">${r.pots_restants} / ${r.pots_initiaux}</td><td>${dfr(r.ddm)}</td><td class="num">${typeof ET != "undefined" ? ET.bouton(r) : ""}</td></tr>`,
+  const donnees = S.d,
+    stockMiel = stock(),
+    kgRecoltes = sum(donnees.recoltes, (recolte) => recolte.kg),
+    resteAMettreEnPots = kgRecoltes - stockMiel.kgPots,
+    rythmeVentes = rythme(),
+    lignesLots = donnees.lots.map(
+      (lot) =>
+        `<tr><td><button class="link" data-act="editlot" data-v="${lot.id}">${esc(lot.code)}</button></td><td>${esc(lot.miel)}</td><td>${n(lot.format_g, 0)} g</td><td class="num">${eur(lot.prix)}</td><td class="num">${lot.pots_restants} / ${lot.pots_initiaux}</td><td>${dfr(lot.ddm)}</td><td class="num">${typeof ET != "undefined" ? ET.bouton(lot) : ""}</td></tr>`,
     ),
-    l =
-      e.lots.length || s
+    contenu =
+      donnees.lots.length || kgRecoltes
         ? `
     <div class="grid">
-      ${kpi("R\xE9colt\xE9", n(s) + " kg", "")}
-      ${kpi("Mis en pots", n(t.kgPots) + " kg", i > 0.05 ? n(i) + " kg \xE0 mettre en pots" : i < -0.05 ? "Plus que la r\xE9colte saisie" : "Tout est en pots")}
-      ${kpi("En stock", n(t.kg) + " kg", t.pots + " pots")}
-      ${kpi("Valeur \xE0 vendre", eur0(t.valeur), a.moisRestants !== null ? `Environ ${n(a.moisRestants, 0)} mois de ventes` : "")}
+      ${kpi("R\xE9colt\xE9", n(kgRecoltes) + " kg", "")}
+      ${kpi("Mis en pots", n(stockMiel.kgPots) + " kg", resteAMettreEnPots > 0.05 ? n(resteAMettreEnPots) + " kg \xE0 mettre en pots" : resteAMettreEnPots < -0.05 ? "Plus que la r\xE9colte saisie" : "Tout est en pots")}
+      ${kpi("En stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
+      ${kpi("Valeur \xE0 vendre", eur0(stockMiel.valeur), rythmeVentes.moisRestants !== null ? `Environ ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "")}
     </div>
-    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], o, "Aucun lot. Cr\xE9ez un lot par format de pot.")}</section>`
+    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9ez un lot par format de pot.")}</section>`
         : emptyState(
             "Votre stock de miel est vide",
             "Saisissez une r\xE9colte, puis cr\xE9ez un lot par format de pot.",
@@ -980,25 +980,26 @@ function viewMiel() {
       ],
       "miel",
       "go",
-    ) + l,
+    ) + contenu,
   );
 }
 function viewMateriel() {
-  const e = (a) => {
-      const o = new Set(S.d.articles.map((r) => r.nom)),
-        l = PRESETS[a].filter((r) => !o.has(r[0]));
-      return l.length
-        ? `<div class="chips"><span class="small">Ajouter vite :</span>${l.map((r) => `<button data-act="preset" data-v="${esc(r[0])}" data-k="${a}">+ ${esc(r[0])}</button>`).join("")}</div>`
+  const ajoutRapide = (type) => {
+      const dejaLa = new Set(S.d.articles.map((article) => article.nom)),
+        proposes = PRESETS[type].filter((modele) => !dejaLa.has(modele[0]));
+      return proposes.length
+        ? `<div class="chips"><span class="small">Ajouter vite :</span>${proposes.map((modele) => `<button data-act="preset" data-v="${esc(modele[0])}" data-k="${type}">+ ${esc(modele[0])}</button>`).join("")}</div>`
         : "";
     },
-    t = (a) => esc(byId(S.d.fournisseurs, a.fournisseur_id)?.nom) || "\u2013",
-    s = consommables().map((a) => {
-      const o = Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil);
-      return `<tr><td><button class="link" data-act="editarticle" data-v="${a.id}">${esc(a.nom)}</button></td><td class="num">${n(a.stock)} ${esc(a.unite)}</td><td class="num">${n(a.seuil)}</td><td><span class="tag ${o ? "watch" : "good"}">${o ? "\xC0 commander" : "OK"}</span></td><td class="num"><button class="btn sm" data-act="entree" data-v="${a.id}">+ Entr\xE9e</button></td></tr>`;
+    fournisseurDe = (article) =>
+      esc(byId(S.d.fournisseurs, article.fournisseur_id)?.nom) || "\u2013",
+    lignesConsommables = consommables().map((article) => {
+      const bas = Number(article.seuil) > 0 && Number(article.stock) <= Number(article.seuil);
+      return `<tr><td><button class="link" data-act="editarticle" data-v="${article.id}">${esc(article.nom)}</button></td><td class="num">${n(article.stock)} ${esc(article.unite)}</td><td class="num">${n(article.seuil)}</td><td><span class="tag ${bas ? "watch" : "good"}">${bas ? "\xC0 commander" : "OK"}</span></td><td class="num"><button class="btn sm" data-act="entree" data-v="${article.id}">+ Entr\xE9e</button></td></tr>`;
     }),
-    i = equipements().map(
-      (a) =>
-        `<tr><td><button class="link" data-act="editarticle" data-v="${a.id}">${esc(a.nom)}</button></td><td class="num">${n(a.stock)}</td><td class="num">${a.valeur ? eur(a.valeur * a.stock) : "\u2013"}</td><td>${t(a)}</td></tr>`,
+    lignesEquipements = equipements().map(
+      (article) =>
+        `<tr><td><button class="link" data-act="editarticle" data-v="${article.id}">${esc(article.nom)}</button></td><td class="num">${n(article.stock)}</td><td class="num">${article.valeur ? eur(article.valeur * article.stock) : "\u2013"}</td><td>${fournisseurDe(article)}</td></tr>`,
     );
   shell(
     "Stocks",
@@ -1013,8 +1014,8 @@ function viewMateriel() {
       "go",
     ) +
       `
-    <section class="card tbl"><h2>Consommables</h2>${table(["Article", "#Stock", "#Seuil", "\xC9tat", "#"], s, "Aucun consommable : candy, sirop, pots, \xE9tiquettes\u2026")}${e("Consommable")}</section>
-    <section class="card tbl"><h2>\xC9quipement</h2>${table(["\xC9quipement", "#Qt\xE9", "#Valeur", "Fournisseur"], i, "Aucun \xE9quipement enregistr\xE9.")}${e("\xC9quipement")}</section>`,
+    <section class="card tbl"><h2>Consommables</h2>${table(["Article", "#Stock", "#Seuil", "\xC9tat", "#"], lignesConsommables, "Aucun consommable : candy, sirop, pots, \xE9tiquettes\u2026")}${ajoutRapide("Consommable")}</section>
+    <section class="card tbl"><h2>\xC9quipement</h2>${table(["\xC9quipement", "#Qt\xE9", "#Valeur", "Fournisseur"], lignesEquipements, "Aucun \xE9quipement enregistr\xE9.")}${ajoutRapide("\xC9quipement")}</section>`,
   );
 }
 function viewClients() {
