@@ -1509,7 +1509,7 @@ function viewAgenda() {
   );
 }
 function viewReglages() {
-  const e = cfg();
+  const reglages = cfg();
   shell(
     "R\xE9glages",
     "Adaptez Apidoo \xE0 votre exploitation",
@@ -1518,24 +1518,24 @@ function viewReglages() {
     <form data-form="reglages" class="form">
       <section class="card stack">
         <h2>Votre exploitation</h2>${typeof EX != "undefined" ? '<button type="button" class="link" data-act="go" data-v="membres">Membres, invitations et autres exploitations</button>' : ""}
-        <label>Nom<input name="nom" value="${esc(e.nom)}" required></label>
-        <label>Num\xE9ro d\u2019apiculteur (NAPI)<input name="napi" value="${esc(e.napi)}"></label>
-        <label>Adresse (pour les \xE9tiquettes)<textarea name="adresse" rows="2" placeholder="Rue, code postal, commune">${esc(e.adresse || "")}</textarea></label>
-        <label>Origine du miel<input name="origine" value="${esc(e.origine || "France")}"></label>
-        <label>Objectif de r\xE9sultat annuel (\u20AC)<input name="objectif" type="number" min="0" step="10" value="${esc(e.objectif || "")}"></label>
+        <label>Nom<input name="nom" value="${esc(reglages.nom)}" required></label>
+        <label>Num\xE9ro d\u2019apiculteur (NAPI)<input name="napi" value="${esc(reglages.napi)}"></label>
+        <label>Adresse (pour les \xE9tiquettes)<textarea name="adresse" rows="2" placeholder="Rue, code postal, commune">${esc(reglages.adresse || "")}</textarea></label>
+        <label>Origine du miel<input name="origine" value="${esc(reglages.origine || "France")}"></label>
+        <label>Objectif de r\xE9sultat annuel (\u20AC)<input name="objectif" type="number" min="0" step="10" value="${esc(reglages.objectif || "")}"></label>
       </section>
       <section class="card stack">
         <h2>Vos listes</h2><p class="small">Une valeur par ligne.</p>
         <label>Postes de d\xE9pense<textarea name="postes" rows="5">${esc(
-          e.postes.join(`
+          reglages.postes.join(`
 `),
         )}</textarea></label>
         <label>Cercles de clients<textarea name="cercles" rows="4">${esc(
-          e.cercles.join(`
+          reglages.cercles.join(`
 `),
         )}</textarea></label>
         <label>Modes de paiement<textarea name="modes" rows="4">${esc(
-          e.modes.join(`
+          reglages.modes.join(`
 `),
         )}</textarea></label>
       </section>
@@ -2000,28 +2000,28 @@ function recolteForm(e) {
     del: e ? del("recoltes", e.id, "R\xE9colte supprim\xE9e") : null,
   });
 }
-function download(e, t, s) {
-  const i = document.createElement("a");
-  ((i.href = URL.createObjectURL(new Blob([t], { type: s }))),
-    (i.download = e),
-    document.body.appendChild(i),
-    i.click(),
-    i.remove(),
-    setTimeout(() => URL.revokeObjectURL(i.href), 2e3));
+function download(nomFichier, contenu, type) {
+  const lien = document.createElement("a");
+  ((lien.href = URL.createObjectURL(new Blob([contenu], { type: type }))),
+    (lien.download = nomFichier),
+    document.body.appendChild(lien),
+    lien.click(),
+    lien.remove(),
+    setTimeout(() => URL.revokeObjectURL(lien.href), 2e3));
 }
-function csv(e, t, s) {
-  const i = (a) => `"${String(a ?? "").replace(/"/g, '""')}"`;
+function csv(nom, entetes, lignes) {
+  const cellule = (valeur) => `"${String(valeur ?? "").replace(/"/g, '""')}"`;
   download(
-    `apidoo-${e}-${today()}.csv`,
+    `apidoo-${nom}-${today()}.csv`,
     "\uFEFF" +
-      [t, ...s].map((a) => a.map(i).join(";")).join(`\r
+      [entetes, ...lignes].map((ligne) => ligne.map(cellule).join(";")).join(`\r
 `),
     "text/csv;charset=utf-8",
   );
 }
 const EXP = {
     visites: () => {
-      const e = S.d;
+      const donnees = S.d;
       csv(
         "visites",
         [
@@ -2038,33 +2038,33 @@ const EXP = {
           "Note",
           "Auteur",
         ],
-        e.visites.map((t) => {
-          const s = byId(e.ruches, t.ruche_id);
+        donnees.visites.map((visite) => {
+          const ruche = byId(donnees.ruches, visite.ruche_id);
           return [
-            t.date_visite,
-            s?.nom,
-            s?.rucher,
-            t.activite,
-            t.provisions,
-            t.reine,
-            t.couvain,
-            t.poids_kg,
-            t.varroa,
-            e.intrants
-              .filter((i) => i.visite_id === t.id)
-              .map((i) => {
-                const a = byId(e.articles, i.article_id);
-                return `${i.quantite} ${a?.unite} ${a?.nom}`;
+            visite.date_visite,
+            ruche?.nom,
+            ruche?.rucher,
+            visite.activite,
+            visite.provisions,
+            visite.reine,
+            visite.couvain,
+            visite.poids_kg,
+            visite.varroa,
+            donnees.intrants
+              .filter((intrant) => intrant.visite_id === visite.id)
+              .map((intrant) => {
+                const article = byId(donnees.articles, intrant.article_id);
+                return `${intrant.quantite} ${article?.unite} ${article?.nom}`;
               })
               .join(", "),
-            t.note,
-            t.auteur,
+            visite.note,
+            visite.auteur,
           ];
         }),
       );
     },
     ventes: () => {
-      const e = S.d;
+      const donnees = S.d;
       csv(
         "ventes",
         [
@@ -2078,34 +2078,34 @@ const EXP = {
           "Pay\xE9e",
           "Mode",
         ],
-        e.lignes.map((t) => {
-          const s = byId(e.ventes, t.vente_id),
-            i = byId(e.lots, t.lot_id);
+        donnees.lignes.map((ligne) => {
+          const vente = byId(donnees.ventes, ligne.vente_id),
+            lot = byId(donnees.lots, ligne.lot_id);
           return [
-            s?.date_vente,
-            byId(e.clients, s?.client_id)?.nom,
-            i?.code,
-            i?.format_g,
-            t.quantite,
-            t.prix_unitaire,
-            t.quantite * t.prix_unitaire,
-            s?.paye ? "Oui" : "Non",
-            s?.mode,
+            vente?.date_vente,
+            byId(donnees.clients, vente?.client_id)?.nom,
+            lot?.code,
+            lot?.format_g,
+            ligne.quantite,
+            ligne.prix_unitaire,
+            ligne.quantite * ligne.prix_unitaire,
+            vente?.paye ? "Oui" : "Non",
+            vente?.mode,
           ];
         }),
       );
     },
     depenses: () => {
-      const e = S.d;
+      const donnees = S.d;
       csv(
         "depenses",
         ["Date", "Libell\xE9", "Poste", "Fournisseur", "Montant"],
-        e.depenses.map((t) => [
-          t.date_depense,
-          t.libelle,
-          t.categorie,
-          byId(e.fournisseurs, t.fournisseur_id)?.nom,
-          t.montant,
+        donnees.depenses.map((depense) => [
+          depense.date_depense,
+          depense.libelle,
+          depense.categorie,
+          byId(donnees.fournisseurs, depense.fournisseur_id)?.nom,
+          depense.montant,
         ]),
       );
     },
@@ -2113,7 +2113,13 @@ const EXP = {
       csv(
         "clients",
         ["Nom", "Cercle", "T\xE9l\xE9phone", "E-mail", "Notes"],
-        S.d.clients.map((e) => [e.nom, e.cercle, e.telephone, e.email, e.notes]),
+        S.d.clients.map((client) => [
+          client.nom,
+          client.cercle,
+          client.telephone,
+          client.email,
+          client.notes,
+        ]),
       ),
     json: () =>
       download(
