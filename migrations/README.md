@@ -15,10 +15,19 @@ Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations 
 - `schema.sql` (racine) n'est plus à utiliser : il décrit la toute première version et renvoie ici.
 - Ne jamais lancer 000 sur une base qui contient des données.
 
-Contrôle sans toucher aucune base : `node scripts/rejouer-migrations.mjs migrations/releves/structure-2026-11-06.json`
+Contrôle sans toucher aucune base : `node scripts/rejouer-migrations.mjs migrations/releves/<relevé>.json`
 (prérequis : `npm i @electric-sql/pglite@0.2` hors du dépôt). Le script rejoue 000 puis les migrations dans l'ordre
-ci-dessus sur une base Postgres vide en mémoire et compare la structure obtenue au relevé. Résultat du 6 nov. 2026 :
-**aucun écart** (tables, colonnes, vue, fonctions, politiques, espace de stockage).
+ci-dessus sur une base Postgres vide en mémoire, jusqu'à la `derniere_migration` indiquée dans le relevé, et compare la
+structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espace de stockage).
+**« Vérifier » le lance sur chaque relevé de `releves/`** à chaque pull request (IT-02, AP-TECH-015).
+
+| Relevé | Bases | Jusqu'à | Résultat |
+|---|---|---|---|
+| `structure-2026-11-06.json` | `apidoo` et `apidoo-test` | 011 | aucun écart |
+| `structure-2026-11-06-recette-apres-012.json` | `apidoo-test` | 012 | aucun écart |
+
+Après 012 en production : relever `apidoo` de la même façon, l'enregistrer dans `releves/`, et vérifier qu'il est
+identique au relevé de la recette après 012.
 
 ## État des migrations
 
@@ -34,6 +43,7 @@ ci-dessus sur une base Postgres vide en mémoire et compare la structure obtenue
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
 | 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | **à appliquer**, après accord |
+| (correction E5, sans fichier) | `revoke execute … from public` sur `creer_visite` et `creer_vente` : aligne la recette sur la production | 6 nov. 2026 (entrée d'historique `e5_retrait_execution_public`) | déjà dans cet état |
 
 En attente pour la production : `012-correctifs.sql` (voir `a-appliquer-en-production.txt`).
 
@@ -145,7 +155,8 @@ La plus grosse table compte aujourd'hui 8 lignes : aucun risque immédiat, voir 
   à la correction de E1 (droits conservés par `create or replace`). La production ne donne ce droit qu'à `authenticated`
   et `service_role`. Sans effet pratique (security invoker, aucune politique pour `anon`). Correction possible :
   `revoke execute on function public.creer_visite(jsonb), public.creer_vente(jsonb) from public;` sur `apidoo-test`
-  (accord requis). `maj_stock_achat`, `maj_stock_intrant` et `numeroter_facture` sont exécutables par tous sur les deux bases.
+  (accord requis). **Corrigé le 6 nov. 2026** (IT-02, accord du responsable) : vérifié ensuite, `anon` ne peut plus
+  les exécuter, `authenticated` et `service_role` oui, comme en production. `maj_stock_achat`, `maj_stock_intrant` et `numeroter_facture` sont exécutables par tous sur les deux bases.
 
 ### Points de vigilance (hors périmètre, à décider)
 

@@ -4,6 +4,7 @@
   "apidoo (xkucyqzlqfeyuomrtjbu)",
   "apidoo-test (zaaaiqyhxehvgowlgztx)"
  ],
+ "derniere_migration": "011-invitation-avant-connexion.sql",
  "note": "Relevé en lecture seule. Structure identique sur les deux bases (empreintes égales) ; seuls diffèrent les corps de creer_visite et creer_vente, voir migrations/README.md.",
  "tables": {
   "articles": [

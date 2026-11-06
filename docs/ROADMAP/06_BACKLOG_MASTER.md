@@ -200,7 +200,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | EN COURS — 010 et 011 appliquées sur `apidoo-test` puis `apidoo` le 5 nov. 2026 (accord D-02) ; reste la correction du CHANGELOG et du GUIDE |
+| Statut actuel | EN COURS — 010 et 011 sur les deux bases (5 nov. 2026) ; CHANGELOG, GUIDE, contrôle de structure et écart E5 faits en IT-02 (6 nov. 2026) ; reste 012 sur `apidoo`, relevé de la production et essai des parcours en production (accord du responsable) |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -226,9 +226,9 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 **Tâches techniques**
 
 - AP-TECH-013 — Appliquer 010 puis 011 sur apidoo-test, puis sur apidoo (accord du responsable). **Fait le 5 nov. 2026.**
-- AP-TECH-014 — Corriger migrations/README.md, a-appliquer-en-production.txt et les statuts « à essayer en recette » du CHANGELOG.
-- AP-TECH-015 — Ajouter au workflow de mise en ligne un contrôle automatique de structure (IT-04).
-- AP-TECH-016 — Mettre à jour GUIDE.md (v5).
+- AP-TECH-014 — Corriger migrations/README.md, a-appliquer-en-production.txt et les statuts « à essayer en recette » du CHANGELOG. **Fait le 6 nov. 2026 (IT-02)** ; la liste d'attente garde 012 jusqu'à son application sur `apidoo`.
+- AP-TECH-015 — Ajouter au workflow de mise en ligne un contrôle automatique de structure (IT-04). **Partiel, 6 nov. 2026 (IT-02)** : « Vérifier » rejoue les migrations et compare à chaque relevé de `migrations/releves/` ; la comparaison directe avec les bases réelles reste pour IT-04 (secret de connexion).
+- AP-TECH-016 — Mettre à jour GUIDE.md (v5). **Fait le 6 nov. 2026 (IT-02).**
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
 ## AP-EPIC-002 — Noyau applicatif et performance
@@ -551,7 +551,7 @@ Voir les erreurs et la santé du service en production.
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-036 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | REPORTÉ — décision du 6 nov. 2026 : pas de sauvegarde automatique ni de restauration pour le moment (D-03 non tranchée) |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |

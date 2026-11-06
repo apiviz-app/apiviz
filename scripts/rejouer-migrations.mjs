@@ -2,14 +2,16 @@
 // puis compare la structure obtenue au relevé des bases réelles (migrations/releves/structure-*.json).
 // Ne se connecte à aucune base Supabase.
 // Prérequis (hors dépôt) : npm i @electric-sql/pglite@0.2
-// Usage : node scripts/rejouer-migrations.mjs migrations/releves/structure-2026-11-06.json
+// Usage : node scripts/rejouer-migrations.mjs migrations/releves/<relevé>.json
+// Le relevé peut indiquer « derniere_migration » : le rejeu s'arrête alors à ce fichier (relevé pris avant une
+// migration plus récente). Sans ce champ, toutes les migrations de ORDRE sont rejouées.
 import { PGlite } from "@electric-sql/pglite";
 import fs from "node:fs";
 
 // Ordre réel d'application (009 a été appliquée avant 008 sur les deux bases).
 const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql", "005-securite-et-ping.sql",
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
-  "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql"];
+  "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql"];
 
 // Le strict minimum de ce que Supabase fournit (rôles, auth, storage), pour que les fichiers passent.
 const SUPABASE = `
@@ -26,9 +28,11 @@ create function storage.foldername(name text) returns text[] language sql immuta
 `;
 
 const releve = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const fin = releve.derniere_migration ? ORDRE.indexOf(releve.derniere_migration) : ORDRE.length - 1;
+if (fin < 0) { console.log("Migration inconnue dans le relevé : " + releve.derniere_migration); process.exit(1); }
 const db = new PGlite();
 await db.exec(SUPABASE);
-for (const f of ORDRE) {
+for (const f of ORDRE.slice(0, fin + 1)) {
   try { await db.exec(fs.readFileSync("migrations/" + f, "utf8")); console.log("appliquée  " + f); }
   catch (e) { console.log("ÉCHEC      " + f + " : " + e.message); process.exit(1); }
 }
