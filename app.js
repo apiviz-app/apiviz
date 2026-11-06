@@ -36,7 +36,10 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     taches: ["taches", "echeance"],
     budgets: ["budgets"],
     reglages: ["reglages"],
+    ruchers: ["ruchers", "nom"],
   },
+  // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
+  TABLES_FACULTATIVES = { ruchers: "015" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -305,7 +308,15 @@ async function lireTout(nomTable, tri, croissant) {
 }
 async function loadAll() {
   const cles = Object.keys(TABLES),
-    tables = await Promise.all(cles.map((cle) => lireTout(...TABLES[cle]))),
+    tables = await Promise.all(
+      cles.map((cle) =>
+        lireTout(...TABLES[cle]).catch((erreur) =>
+          TABLES_FACULTATIVES[cle] && /PGRST20[45]|42P01|does not exist|Could not find/.test(`${erreur?.code} ${erreur?.message}`)
+            ? []
+            : Promise.reject(erreur),
+        ),
+      ),
+    ),
     donnees = {};
   (tables.forEach((lignes, index) => (donnees[cles[index]] = lignes)),
     (S.d = donnees),
@@ -1381,13 +1392,18 @@ function sheet({
     (sheet.del = supprimer),
     $sheet.showModal());
 }
-const ruchers = () => [...new Set(S.d.ruches.map((ruche) => ruche.rucher).filter(Boolean))],
+// Noms proposés dans le champ Rucher : les ruchers de la table, non archivés (IT-05), sinon les textes des ruches.
+const ruchers = () =>
+    (S.d.ruchers || []).length
+      ? S.d.ruchers.filter((rucher) => !rucher.archive_le).map((rucher) => rucher.nom)
+      : [...new Set(S.d.ruches.map((ruche) => ruche.rucher).filter(Boolean))],
   fournOpts = () =>
     [["", "Aucun"]].concat(
       S.d.fournisseurs.map((fournisseur) => [fournisseur.id, fournisseur.nom]),
     ),
   del = (nomTable, id, message) => () => write(sb.from(nomTable).delete().eq("id", id), message);
-function ruchesForm() {
+// rucher : rucher déjà choisi (bouton « Ajouter des ruches ici » d'un rucher, IT-05).
+function ruchesForm(rucher = "") {
   sheet({
     title: "Ajouter des ruches",
     label: "Ajouter",
@@ -1402,7 +1418,7 @@ function ruchesForm() {
         value: 1,
       },
       { name: "prefixe", label: "Nom", required: !0, value: "Ruche" },
-      { name: "rucher", label: "Rucher (facultatif)", list: ruchers() },
+      { name: "rucher", label: "Rucher (facultatif)", value: rucher, list: ruchers() },
       {
         name: "type_ruche",
         label: "Type de ruche (facultatif)",

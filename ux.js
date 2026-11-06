@@ -32,6 +32,8 @@ const UX = (() => {
     return Object.entries(g).sort(([a], [b]) => (a || "~").localeCompare(b || "~", "fr"));
   };
   const nomRucher = (k) => k || "Sans rucher";
+  // Lieux de l'écran Ruchers et de la carte (IT-05) : un par rucher de la table, y compris sans colonie.
+  const lieux = (o) => Regles.ruchers.lieux(S.d.ruchers, S.d.ruches, o);
   const pire = (rs) => (rs.some((r) => r.etat === "Critique") ? "Critique" : rs.some((r) => r.etat === "À surveiller") ? "À surveiller" : "Bonne");
   const dateCourte = (d) => {
     if (!d) return "–";
@@ -49,9 +51,10 @@ const UX = (() => {
 
   // ---------- Météo du rucher (Open-Meteo, sans compte) ----------
   const meteo = { cle: "", data: null, at: 0, enCours: false };
+  // Accueil : le premier rucher placé qui a des colonies (position du rucher, IT-05).
   const lieu = () => {
-    const r = S.d.ruches.find((x) => x.lat != null && x.lng != null);
-    return r ? { lat: Number(r.lat), lng: Number(r.lng), nom: nomRucher(r.rucher) } : null;
+    const l = lieux().find((x) => x.lat != null && x.rs.length);
+    return l ? { lat: l.lat, lng: l.lng, nom: l.nom } : null;
   };
   function avis(m) {
     const t = Math.round(m.current.temperature_2m), v = Math.round(m.current.wind_speed_10m);
@@ -421,23 +424,22 @@ const UX = (() => {
     s.onerror = () => { promesseCarte = null; ko(new Error("La carte demande le réseau la première fois.")); };
     document.head.appendChild(s);
   }));
+  // Un repère par rucher (AP-TECH-097), position du rucher, couleur du pire état de ses colonies (AP-TECH-098).
   function infos() {
-    return ruchers().map(([k, rs]) => {
-      const places = rs.filter((r) => r.lat != null && r.lng != null);
-      const lat = places.length ? sum(places, (r) => r.lat) / places.length : null;
-      const lng = places.length ? sum(places, (r) => r.lng) / places.length : null;
-      const der = rs.map((r) => lastVisit(r.id)).filter(Boolean).sort((a, b) => b.date_visite.localeCompare(a.date_visite))[0];
-      return { cle: k, nom: nomRucher(k), rs, lat, lng, etat: pire(rs), der };
+    return lieux().map((l) => {
+      const der = l.rs.map((r) => lastVisit(r.id)).filter(Boolean).sort((a, b) => b.date_visite.localeCompare(a.date_visite))[0];
+      return { ...l, der };
     });
   }
   function panneau(l) {
     if (!l) return "";
     const pb = l.rs.filter((r) => r.etat !== "Bonne").length;
-    return `<section class="card u-panneau"><div class="u-entete"><div><h2>${esc(l.nom)}</h2><p class="small">${pluriel(l.rs.length, "ruche")}${l.der ? " · dernière visite il y a " + days(l.der.date_visite) + " j" : ""}</p></div>
-      ${pb ? `<span class="tag ${etatClass(l.etat)}">${pb} ${l.etat === "Critique" ? "critique" + (pb > 1 ? "s" : "") : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>'}</div>
-      <span class="u-hexes">${l.rs.map(hexMini).join("")}</span>
-      <div class="u-deux">${l.lat != null ? `<a class="btn main u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${l.lat},${l.lng}" target="_blank" rel="noopener">Itinéraire</a>` : ""}
-        <button type="button" class="btn ${l.lat == null ? "main" : ""}" data-act="uvisiterucher" data-v="${esc(l.cle)}">${typeof V3 != "undefined" && l.rs.length > 1 ? "Faire la tournée" : "Visiter ce rucher"}</button></div>
+    const vide = !l.rs.length;
+    return `<section class="card u-panneau"><div class="u-entete"><div><h2>${l.id || l.rs.length ? `<button type="button" class="al-titre" data-act="alrucher" data-v="${esc(l.cle)}">${esc(l.nom)}</button>` : esc(l.nom)}</h2><p class="small">${vide ? "Aucune colonie pour l’instant" : pluriel(l.rs.length, "colonie")}${l.der ? " · dernière visite il y a " + days(l.der.date_visite) + " j" : ""}</p></div>
+      ${vide ? "" : pb ? `<span class="tag ${etatClass(l.etat)}">${pb} ${l.etat === "Critique" ? "critique" + (pb > 1 ? "s" : "") : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>'}</div>
+      ${vide ? "" : `<span class="u-hexes">${l.rs.map(hexMini).join("")}</span>`}
+      <div class="u-deux">${l.lat != null ? `<a class="btn main u-lienbtn" href="${esc(Regles.ruchers.lienItineraire(l))}" target="_blank" rel="noopener">Itinéraire</a>` : ""}
+        ${vide ? "" : `<button type="button" class="btn ${l.lat == null ? "main" : ""}" data-act="uvisiterucher" data-v="${esc(l.cle)}">${typeof V3 != "undefined" && l.rs.length > 1 ? "Faire la tournée" : "Visiter ce rucher"}</button>`}</div>
       <div class="u-deux"><button type="button" class="btn" data-act="uplacermain" data-v="${esc(l.cle)}">${l.lat == null ? "Placer sur la carte" : "Déplacer sur la carte"}</button>
         <button type="button" class="btn" data-act="uplacer" data-v="${esc(l.cle)}">Ma position</button></div></section>`;
   }
@@ -445,14 +447,14 @@ const UX = (() => {
     const ls = infos(), aPlacer = ls.filter((l) => l.lat == null);
     if (choix !== null && !ls.some((l) => l.cle === choix)) choix = null;
     const liste = ls.map((l) => `<button type="button" class="u-todo" data-act="uchoix" data-v="${esc(l.cle)}"><span class="u-dot bg-${etatClass(l.etat)}" aria-hidden="true"></span>
-      <span class="u-todo-t"><b>${esc(l.nom)}</b><span class="small">${pluriel(l.rs.length, "ruche")}${l.lat == null ? " · pas encore placé" : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("");
+      <span class="u-todo-t"><b>${esc(l.nom)}</b><span class="small">${l.rs.length ? pluriel(l.rs.length, "colonie") : "aucune colonie"}${l.lat == null ? " · pas encore placé" : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("");
     shell("Carte des ruchers", aPlacer.length ? `${pluriel(aPlacer.length, "rucher")} à placer` : "", "",
-      S.d.ruches.length ? `<div id="uCarte" class="u-carte" role="region" aria-label="Carte des ruchers"><p class="small u-carte-msg">Chargement de la carte…</p></div>
+      ls.length ? `<div id="uCarte" class="u-carte" role="region" aria-label="Carte des ruchers"><p class="small u-carte-msg">Chargement de la carte…</p></div>
        <div id="uPanneau">${panneau(ls.find((l) => l.cle === choix))}</div>
        <section class="card u-liste"><h2>Ruchers</h2>${liste}</section>
        <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher : touche-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
         : emptyState("Aucune ruche", "Ajoute tes ruches pour les voir sur la carte.", "Ajouter des ruches", "newruches"));
-    if (S.d.ruches.length) monter(ls);
+    if (ls.length) monter(ls);
     if (visee) setTimeout(() => ACT.uplacermain(visee), 0);
   }
   async function monter(ls) {
@@ -469,7 +471,7 @@ const UX = (() => {
     const couleur = { good: "#2F6B4F", watch: "#E3A008", crit: "#A61B1B" };
     places.forEach((l) => {
       const ic = L.divIcon({ className: "u-pin", iconSize: [96, 58], iconAnchor: [48, 54],
-        html: `<span class="u-pin-l">${esc(l.nom)} · ${l.rs.length}</span><span class="u-pin-h" style="background:${couleur[etatClass(l.etat)]}"></span>` });
+        html: `<span class="u-pin-l">${esc(l.nom)} · ${l.rs.length}</span><span class="u-pin-h" style="background:${l.rs.length ? couleur[etatClass(l.etat)] : "#8A938C"}"></span>` });
       L.marker([l.lat, l.lng], { icon: ic, title: l.nom, keyboard: true }).addTo(m).on("click", () => ACT.uchoix(l.cle));
     });
     if (places.length === 1) m.setView([places[0].lat, places[0].lng], 14);
@@ -521,11 +523,25 @@ const UX = (() => {
     document.getElementById("uCarte")?.classList.remove("u-visee");
     ACT.uchoix(choix);
   };
+  // Placer un rucher (AP-US-029) : la position est celle du rucher, recopiée par la base sur ses colonies (015).
+  // Passe par la file d'envoi : « Ma position » se fait souvent au rucher, sans réseau. Base sans 015 : les ruches.
+  async function placer(cle, lat, lng) {
+    const r = Regles.ruchers.rucherParCle(S.d.ruchers, cle), msg = `« ${nomRucher(cle)} » placé sur la carte`;
+    lat = Math.round(lat * 1e6) / 1e6; lng = Math.round(lng * 1e6) / 1e6;
+    if (!r) return write(sb.from("ruches").update({ lat, lng }).eq("rucher", cle), msg);
+    const { error, local } = await (typeof HL != "undefined" ? HL.rpc : (n, a) => sb.rpc(n, a))("placer_rucher", { p: { id: r.id, lat, lng } });
+    if (error) throw error;
+    // Appliqué tout de suite sur le téléphone : le rucher et ses colonies (comme le fait la base).
+    Object.assign(r, { lat, lng });
+    S.d.ruches.forEach((x) => { if (x.rucher_id === r.id || Regles.ruchers.cle(x.rucher) === Regles.ruchers.cle(cle)) Object.assign(x, { lat, lng }); });
+    if (local) { typeof HL != "undefined" && HL.garderDonnees(); render(); toast("Gardé sur le téléphone : envoi au retour du réseau"); }
+    else { await refresh(); toast(msg); }
+  }
   ACT.uvalider = async (cle) => {
     if (!carteMap) return;
     const c = carteMap.getCenter();
     visee = null; choix = cle;
-    await write(sb.from("ruches").update({ lat: Math.round(c.lat * 1e6) / 1e6, lng: Math.round(c.lng * 1e6) / 1e6 }).eq("rucher", cle), `« ${nomRucher(cle)} » placé sur la carte`);
+    await placer(cle, c.lat, c.lng);
   };
   ACT.uplacer = (cle) => new Promise((ok) => {
     if (!navigator.geolocation) { toast("Ce téléphone ne donne pas sa position", true); return ok(); }
@@ -533,7 +549,7 @@ const UX = (() => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
         choix = cle;
-        await write(sb.from("ruches").update({ lat: pos.coords.latitude, lng: pos.coords.longitude }).eq("rucher", cle), `« ${nomRucher(cle)} » placé sur la carte`);
+        await placer(cle, pos.coords.latitude, pos.coords.longitude);
       } catch (e) { fail(e); }
       ok();
     }, () => { toast("Position indisponible : autorise la localisation pour Apidoo", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
@@ -595,7 +611,9 @@ const UX = (() => {
 
   return {
     ecrans: { accueil: viewDash, fiche: viewRuche, visite: viewVisite, clients: viewClients },
-    carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
+    carte, lieux, meteoHtml,
+    // Ouvrir la carte en mode « placer ce rucher » (bouton « Placer sur la carte » de l'écran Ruchers, IT-05).
+    viser: (cle) => { visee = cle; choix = cle; }, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
     onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },
   };

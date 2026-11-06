@@ -1,5 +1,6 @@
 // Apidoo — météo de chaque rucher (Open-Meteo, sans compte) et calcul du meilleur créneau pour ouvrir les ruches.
-// Chaque rucher utilise la position moyenne de ses ruches placées sur la carte. Chargé avant alveoles.js.
+// Chaque rucher utilise sa position (table ruchers, IT-05) ; à défaut, la moyenne de ses ruches placées sur la carte.
+// Chargé avant alveoles.js.
 //
 // Seuils : température d'après les repères publiés par les apiculteurs (détail et sources dans docs/TECHNIQUE.md).
 // Le vent et la pluie n'ont pas de chiffre établi : ce sont des choix d'Apidoo, à ajuster à l'usage.
@@ -40,7 +41,7 @@ const MT = (() => {
     : `Visite rapide possible : <b>${quand(a.creneau, a.auj)}</b>, ${a.creneau.temp}°`);
 
   function html(cle, rs, nbJours = 3) {
-    const l = lieu(rs);
+    const l = lieu(rs, cle);
     if (!l) return '<button type="button" class="link" data-act="go" data-v="carte">Placer sur la carte pour voir la météo</button>';
     const e = cache.get(cle);
     if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return '<p class="small">Météo en cours de chargement…</p>'; }
@@ -55,7 +56,7 @@ const MT = (() => {
 
   // Détail par heure, de 8 h à 20 h, pour chaque jour connu.
   function parHeure(cle, rs) {
-    const l = lieu(rs);
+    const l = lieu(rs, cle);
     if (!l) return { sansLieu: true };
     const e = cache.get(cle);
     if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return null; }
@@ -77,12 +78,13 @@ const MT = (() => {
     return { jours, creneau: a.creneau, auj: a.auj };
   }
 
-  // Position moyenne des ruches placées du rucher.
-  function lieu(rs) {
-    const p = rs.filter((r) => r.lat != null && r.lng != null);
-    if (!p.length) return null;
-    const moy = (f) => Math.round(p.reduce((s, r) => s + Number(f(r)), 0) / p.length * 100) / 100;
-    return { lat: moy((r) => r.lat), lng: moy((r) => r.lng) };
+  // Position du rucher (AP-US-029) : celle de la table ruchers, sinon la moyenne des ruches placées. Arrondie à
+  // 2 décimales (environ 1 km), ce qui suffit à la météo et partage le cache entre ruches voisines.
+  // `cle` : le rucher (texte ruches.rucher) quand on le connaît, pour un rucher sans colonie.
+  function lieu(rs, cle) {
+    const R = Regles.ruchers, liste = S.d?.ruchers || [];
+    const x = (cle != null ? R.rucherParCle(liste, cle) : null) || (rs?.length ? R.rucherDe(liste, rs[0]) : null);
+    return R.position(x, rs || [], 2);
   }
 
   function charger(cle, l) {
@@ -102,7 +104,7 @@ const MT = (() => {
 
   // Créneau du jour d'un rucher, si sa météo est déjà connue. Sert à la phrase d'accueil.
   function creneauDuJour(cle, rs) {
-    const l = lieu(rs), e = cache.get(cle);
+    const l = lieu(rs, cle), e = cache.get(cle);
     if (!l || !e?.data || e.lat !== l.lat || e.lng !== l.lng) return null;
     const a = analyse(e.data);
     return a.creneau?.n === 2 && a.creneau.jour === a.auj ? a.creneau : null;
@@ -110,7 +112,7 @@ const MT = (() => {
 
   // Meilleur créneau connu d'un rucher, sans lancer de chargement.
   function creneauConnu(cle, rs) {
-    const l = lieu(rs), e = cache.get(cle);
+    const l = lieu(rs, cle), e = cache.get(cle);
     return l && e?.data && e.lat === l.lat && e.lng === l.lng ? analyse(e.data).creneau : null;
   }
 

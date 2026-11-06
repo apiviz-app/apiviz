@@ -35,7 +35,7 @@
   après passe par des **crochets nommés** (`src/noyau/crochets.js`) : `avantRendu`, `apresRendu`, `avantCoquille`,
   `apresCoquille`. « avant » : du dernier module chargé au premier ; « après » : du premier au dernier (l'ordre des
   anciennes chaînes). Un écran ne se modifie qu'à un endroit : sa fonction de rendu.
-- **Règles pures** (AP-FEAT-013) : `src/noyau/format.js`, `src/domaines/{finances,sante,meteo,visites}/regles.js`, sans
+- **Règles pures** (AP-FEAT-013) : `src/noyau/format.js`, `src/domaines/{finances,sante,meteo,visites,ruchers}/regles.js`, sans
   navigateur ni base ; testées par `tests/unitaires/` (`npm test`, aussi dans « Vérifier »). Les scripts classiques les
   appellent par `window.Regles` (passerelle à retirer quand ils seront migrés).
 - **Assemblage** (`scripts/assembler-site.sh`) : copie le site (racine, `src/`, `styles/`), puis
@@ -58,7 +58,7 @@
   la RLS de chaque table compare cette colonne à `exploitation_courante()` (exploitation choisie dans l'en-tête
   `x-exploitation`, dont l'utilisateur doit être membre). Créations atomiques par `creer_visite` et `creer_vente`.
   L'API renvoie au plus 1 000 lignes par requête (« Max rows ») ; détail dans `migrations/README.md`.
-- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 014, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
+- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 015, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
 - **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette. Tests SQL des migrations (Postgres en mémoire) : `tests/sql/`, lancés par `tests/lancer.sh`. La base simulée
   rend au plus 1 000 lignes par requête, comme Supabase.
 - **Après une visite** (IT-03, AP-FEAT-014) : `creer_visite` puis mise à jour locale par
@@ -110,6 +110,25 @@
 - **Confidentialité** (IT-04, AP-FEAT-021) : `docs/CONFIDENTIALITE.md` (source) et `confidentialite.html` (page publiée,
   sans script) ; `tests/unitaires/confidentialite.test.mjs` échoue si un nouveau service tiers apparaît dans le code
   sans y être cité. Dictée : `VX.avantDictee()` montre l'information une fois (clé `apidoo-dictee-info`).
+- **Ruchers** (IT-05, migration 015) : table `ruchers` (position, accès, propriétaire, capacité, environnement,
+  ressources, point d'eau, notes, `archive_le`) et `ruches.rucher_id` (vide = « Sans rucher »). Le texte
+  `ruches.rucher` reste rempli : des déclencheurs le tiennent à jour dans les deux sens tant que l'ancienne version
+  existe (renommer un rucher réécrit ses colonies ; un texte saisi retrouve ou crée le rucher ; placer un rucher
+  recopie sa position sur ses colonies ; des colonies placées une à une recalculent la position du rucher). Côté
+  application, `U.ruchers()` garde sa clé texte pour les anciens modules ; l'écran Ruchers, la fiche et la carte
+  passent par `Regles.ruchers.lieux()` (table, avec repli sur le texte si la base n'a pas 015). Actions `rc*`
+  déclarées par l'écran « rucher » (`src/domaines/ruchers/ecrans.js`, enregistrées par `src/main.js` via
+  `noyau/actions.js`). `creer_rucher` et `placer_rucher` passent par la file d'envoi hors ligne. Renommer, modifier
+  les infos et archiver demandent le réseau (message clair sinon).
+- **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
+  <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
+  sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit
+  s'attendre à perdre l'accès à tout moment, et la page renvoie vers des fournisseurs payants. Exigences : HTTPS,
+  attribution visible (faite : « © OpenStreetMap » sur la carte et sous la carte), en-tête Referer valide pour le web,
+  User-Agent propre à l'application pour une application installée, respect du cache ; téléchargement en masse et
+  « carte hors ligne » interdits. Apidoo est conforme pour le site tant que l'usage reste modeste. **À trancher avant
+  les applications des stores (IT-30) et l'abonnement payant** : passer à un fournisseur de tuiles qui autorise
+  l'usage commercial (ou des tuiles hébergées), la vue web de Capacitor ne permettant pas un User-Agent propre simple.
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).

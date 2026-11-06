@@ -229,10 +229,10 @@ const AL = (() => {
       const v = S.d.visites.find((x) => x.ruche_id === b.dataset.v && x.poids_kg);
       if (v) b.querySelector(".u-chev")?.insertAdjacentHTML("beforebegin", `<span class="al-kg">${esc(n(v.poids_kg))} kg</span>`);
     });
+    // Clé du rucher posée par N4.ecranRuchers (data-k) : les ruchers sans colonie s'intercalent (IT-05).
     const cartes = [...document.querySelectorAll(".wrap > section.card")].filter((c) => c.querySelector(".n4-ruches"));
-    const noms = U.ruchers();
-    cartes.forEach((c, i) => {
-      const k = noms[i]?.[0];
+    cartes.forEach((c) => {
+      const k = c.dataset.k;
       if (k === undefined) return;
       c.querySelector(".u-entete")?.insertAdjacentHTML("afterend", zoneMeteo(k));
       const h2 = c.querySelector("h2");
@@ -247,8 +247,10 @@ const AL = (() => {
   // ---------- Fiche d'un rucher ----------
   function vueRucher() {
     const k = S.rucher, rs = ruchesDe(k), d = S.d;
-    if (!rs.length) { S.route = "ruches"; return render(); }
-    const ids = new Set(rs.map((r) => r.id)), l = MT.lieu(rs);
+    // Rucher de la table (IT-05) : sa fiche s'ouvre même sans colonie ou archivé.
+    const fiche = Regles.ruchers.rucherParCle(d.ruchers, k);
+    if (!rs.length && !fiche) { S.route = "ruches"; return render(); }
+    const ids = new Set(rs.map((r) => r.id)), l = Regles.ruchers.position(fiche, rs);
     const taches = d.taches.filter((t) => !t.faite && ids.has(t.ruche_id));
     const lignes = rs.map((r) => {
       const v = d.visites.find((x) => x.ruche_id === r.id), p = d.visites.find((x) => x.ruche_id === r.id && x.poids_kg);
@@ -258,9 +260,12 @@ const AL = (() => {
         <span class="al-kg">${p ? esc(n(p.poids_kg)) + " kg" : "–"}</span><span class="al-opt">${tx !== null ? "Varroa " + esc(n(tx, 1)) + " %" : "–"}</span>
         <span class="al-opt">${v ? esc(v.provisions) : "–"}</span><span class="al-opt">${v ? esc(U.quand(v.date_visite)) : "Jamais visitée"}</span></button>`;
     }).join("");
-    const action = rs.length > 1 ? `<button class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>` : `<button class="btn main" data-act="newvisite" data-v="${rs[0].id}">Visiter</button>`;
-    const route = l ? `<a class="btn u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${l.lat},${l.lng}" target="_blank" rel="noopener">Itinéraire</a>` : "";
-    shell(U.nomRucher(k), U.pluriel(rs.length, "ruche"), route + action, `
+    const action = fiche?.archive_le ? "" : rs.length > 1 ? `<button class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>`
+      : rs.length ? `<button class="btn main" data-act="newvisite" data-v="${rs[0].id}">Visiter</button>`
+      : `<button class="btn main" data-act="rcajouter" data-v="${esc(k)}">Ajouter des ruches ici</button>`;
+    const route = l ? `<a class="btn u-lienbtn" href="${esc(Regles.ruchers.lienItineraire(l))}" target="_blank" rel="noopener">Itinéraire</a>` : "";
+    const sous = fiche?.archive_le ? `Archivé le ${dfr(String(fiche.archive_le).slice(0, 10))}` : rs.length ? U.pluriel(rs.length, "ruche") : "Aucune colonie pour l’instant";
+    shell(fiche?.nom || U.nomRucher(k), sous, route + action, `
       <div class="al-fiche"><section class="al-col"><h2>Météo du rucher</h2>${zoneMeteo(k, 5)}</section>
       <section class="al-col"><h2>À faire ici</h2>${taches.length ? taches.map((t) => `<button type="button" class="u-todo" data-act="go" data-v="agenda"><span class="u-todo-t"><b>${esc(t.titre)}</b>${t.echeance ? `<span class="small">${esc(U.dateCourte(t.echeance))}</span>` : ""}</span></button>`).join("") : '<p class="small">Rien de prévu dans ce rucher.</p>'}</section></div>
       <section class="al-ruches"><h2>${esc(U.pluriel(rs.length, "ruche"))}</h2>${lignes}</section>`);

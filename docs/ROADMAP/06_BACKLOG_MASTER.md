@@ -1059,7 +1059,7 @@ Le rucher devient un objet à part entière, avec position et informations d'acc
 | Type | Fonctionnalité |
 | Domaine | D03 Ruchers et emplacements |
 | Epic parent | AP-EPIC-005 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-05-ruchers` (v5.19, migration 015 appliquée sur apidoo-test) : table ruchers, ruches.rucher_id, reprise normalisée, synchronisation du texte dans les deux sens, écrans Ruchers sur la table, rucher en 3 questions par creer_rucher() ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | M |
@@ -1098,7 +1098,7 @@ Le rucher devient un objet à part entière, avec position et informations d'acc
 | Type | Fonctionnalité |
 | Domaine | D03 Ruchers et emplacements |
 | Epic parent | AP-EPIC-005 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-05-ruchers` (v5.19) : fiche rucher (renommer, Infos repliée : accès, propriétaire avec appel, capacité, environnement, ressources, point d'eau, notes ; itinéraire ; archiver seulement vide, rouvrir) ; photos du rucher hors périmètre ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -1134,7 +1134,7 @@ Le rucher devient un objet à part entière, avec position et informations d'acc
 | Type | Fonctionnalité |
 | Domaine | D03 Ruchers et emplacements |
 | Epic parent | AP-EPIC-005 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-05-ruchers` (v5.19) : un repère par rucher (position du rucher, couleur du pire état, nombre de colonies), placement par placer_rucher() y compris hors ligne ; conditions des tuiles OSM notées dans docs/TECHNIQUE.md ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
