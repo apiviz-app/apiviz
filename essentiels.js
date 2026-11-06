@@ -132,7 +132,8 @@ const ES = (() => {
   }
   appliquerBandeau();
   const reglagesAvant = window.viewReglages;
-  window.viewReglages = function () {
+  // Écran « reglages » : enregistré dans le noyau (src/domaines/compte/ecrans.js, ES.ecranReglages).
+  function ecranReglages() {
     if (S.rgForm) {
       reglagesAvant();
       document.querySelector(".wrap .u-retour, .wrap .er-ariane")?.remove();
@@ -150,7 +151,8 @@ const ES = (() => {
       ${b("rappels", "Rappels", nouveaux().length ? U.pluriel(nouveaux().length, "rappel") : "À jour", "Notifications et sujets suivis")}
       ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
     </div>`);
-  };
+  }
+  window.viewReglages = ecranReglages; // ancien chemin (?ancien=1), retiré à la fin d'IT-03
   ACT.errgblocs = () => { S.rgForm = false; render(); };
   ACT.errgform = () => { S.rgForm = true; render(); window.scrollTo(0, 0); };
   ACT.errgexpl = () => {
@@ -225,11 +227,13 @@ const ES = (() => {
 
   // ---------- 5. Traçabilité des lots ----------
   ACT.erlot = (id) => { S.lotId = id; go("lot"); };
-  const mielAvant = window.viewMiel;
-  window.viewMiel = function () {
-    mielAvant();
+  // Écran « miel » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerMiel() {
     document.querySelectorAll('.wrap td button[data-act="editlot"]').forEach((b) => b.insertAdjacentHTML("afterend", ` <button type="button" class="link er-fiche" data-act="erlot" data-v="${b.dataset.v}" aria-label="Fiche du lot">Fiche</button>`));
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const mielAvant = window.viewMiel;
+  window.viewMiel = function () { mielAvant(); completerMiel(); };
   VUES.lot = function () {
     const d = S.d, l = byId(d.lots, S.lotId), c = cfg();
     if (!l) { S.route = "miel"; return render(); }
@@ -345,5 +349,5 @@ const ES = (() => {
   // Les écrans de VUES (météo, rappels, registre, lot, facture, saison) sont enregistrés dans le noyau :
   // src/domaines/*/ecrans.js.
 
-  return { VUES, memo, retour, phrase, jourLong };
+  return { VUES, memo, retour, phrase, jourLong, ecranReglages, completerMiel };
 })();

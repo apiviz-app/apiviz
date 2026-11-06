@@ -23,21 +23,21 @@ const VR = (() => {
   }
 
   Object.assign(ACT, {
-    vrmulti: () => { readVisitForm(); S.visite.multi = true; S.visite.ruches = [S.visite.ruche_id].filter(Boolean); viewVisite(); },
-    vrsolo: () => { readVisitForm(); S.visite.multi = false; S.visite.ruche_id = S.visite.ruches[0] || S.visite.ruche_id; viewVisite(); },
+    vrmulti: () => { readVisitForm(); S.visite.multi = true; S.visite.ruches = [S.visite.ruche_id].filter(Boolean); redessiner("visite"); },
+    vrsolo: () => { readVisitForm(); S.visite.multi = false; S.visite.ruche_id = S.visite.ruches[0] || S.visite.ruche_id; redessiner("visite"); },
     vrtoggle: (id) => {
       readVisitForm();
       const l = S.visite.ruches, i = l.indexOf(id);
       i >= 0 ? l.splice(i, 1) : l.push(id);
       S.visite.ruche_id = l[0] || "";
-      viewVisite();
+      redessiner("visite");
     },
     vrrucher: (nom) => {
       readVisitForm();
       S.visite.multi = true;
       S.visite.ruches = S.d.ruches.filter((r) => (r.rucher || "") === nom).map((r) => r.id);
       S.visite.ruche_id = S.visite.ruches[0];
-      viewVisite();
+      redessiner("visite");
     },
   });
 

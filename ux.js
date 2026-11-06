@@ -92,8 +92,8 @@ const UX = (() => {
 
   // ---------- 1. Accueil ----------
   let toutVoir = false, filtreTodo = "tout";
-  ACT.utout = () => { toutVoir = !toutVoir; viewDash(); };
-  ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; viewDash(); };
+  ACT.utout = () => { toutVoir = !toutVoir; redessiner("dash"); };
+  ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; redessiner("dash"); };
   const CATS = [["ruches", "Ruches"], ["miel", "Miel"], ["stock", "Stock"], ["agenda", "Agenda"]];
   const categorie = (cible) => (cible.startsWith("ruche:") ? "ruches" : ["clients", "livrer", "miel"].includes(cible) ? "miel" : cible === "materiel" ? "stock" : "agenda");
   function viewDash() {
@@ -215,7 +215,7 @@ const UX = (() => {
   }
 
   let ongletRuche = { id: null, v: "journal" };
-  ACT.uronglet = (v) => { ongletRuche.v = v; viewRuche(); };
+  ACT.uronglet = (v) => { ongletRuche.v = v; redessiner("ruche"); };
   function photosRuche(vis) {
     if (typeof PH == "undefined") return "";
     const blocs = vis.map((v) => [v, PH.vignettes(v.id)]).filter(([, h]) => h);
@@ -287,8 +287,8 @@ const UX = (() => {
 
   // ---------- 4. Ventes ----------
   let onglet = "ventes";
-  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? viewClients() : go("clients"); };
-  ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? viewClients() : go("clients"); };
+  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? redessiner("clients") : go("clients"); };
+  ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? redessiner("clients") : go("clients"); };
   // Tuiles et onglets communs aux écrans Miel (ventes, clients, stock).
   function enteteMiel(actif) {
     const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
@@ -346,7 +346,7 @@ const UX = (() => {
   ACT.urelancer = () => {
     const imp = S.d.ventes.filter((v) => !v.paye);
     if (imp.length === 1) return message(imp[0].id, "relance");
-    S.venteFiltre = "impayees"; onglet = "ventes"; viewClients();
+    S.venteFiltre = "impayees"; onglet = "ventes"; redessiner("clients");
     toast("Touchez « Relancer » sur chaque vente");
   };
   ACT.uvente = (id) => {
@@ -604,8 +604,10 @@ const UX = (() => {
       <button data-act="logout">${icon("plus")}<span>Se déconnecter</span></button></section>`);
   }
 
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03 ; le noyau appelle UX.ecrans.
   Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
   return {
+    ecrans: { accueil: viewDash, fiche: viewRuche, visite: viewVisite, clients: viewClients },
     carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
     onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },

@@ -134,7 +134,7 @@ const PH = (() => {
         b.push({ id: nouvelId(), ...r, apercu: URL.createObjectURL(r.blob) });
       } catch (err) { fail(err); }
     }
-    if (S.route === "visite") viewVisite();
+    if (S.route === "visite") redessiner("visite");
   });
 
   // Après l'enregistrement de la visite : les photos passent dans la file d'envoi.
@@ -243,7 +243,7 @@ const PH = (() => {
       readVisitForm();
       const b = brouillon(), i = b.findIndex((p) => p.id === id);
       if (i >= 0) { URL.revokeObjectURL(b[i].apercu); b.splice(i, 1); }
-      viewVisite();
+      redessiner("visite");
     },
     phvoir: (id) => voir(id),
     phfermer: () => $v.close(),

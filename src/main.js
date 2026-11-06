@@ -9,6 +9,7 @@ for (const def of ecrans) routeur.enregistrer(def);
 
 Object.assign(window.Noyau, {
   ecran: routeur.ecran,
+  ecranEnregistre: routeur.ecranEnregistre,
   ecrans: routeur.liste,
   ancien: routeur.ancien,
   proprietaireAction: actions.proprietaire,

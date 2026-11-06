@@ -21,7 +21,8 @@ const ER = (() => {
     return `<span class="g-barres" aria-hidden="true">${t.map((v, i) => `<i class="${i === 5 ? "on" : ""}" style="height:${Math.max(6, Math.round(v / max * 100))}%"></i>`).join("")}</span>`;
   }
   const signe = (v) => (v > 0 ? "+" : "") + eur0(v);
-  window.viewPlus = function () {
+  // Écran « plus » (Gestion) : enregistré dans le noyau (src/domaines/compte/ecrans.js, ER.ecranGestion).
+  function ecranGestion() {
     const d = S.d, an = new Date().getFullYear(), f = fin(an), bilan = f.resultat;
     const mois = today().slice(0, 7), depMois = sum(d.depenses.filter((x) => String(x.date_depense).startsWith(mois)), (x) => x.montant);
     const bas = d.articles.filter((a) => a.type !== "Équipement" && Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil));
@@ -47,7 +48,7 @@ const ER = (() => {
     const h1 = document.querySelector(".wrap > .head h1");
     if (h1) { h1.textContent = `${phraseBilan} ${phraseStock}`; h1.setAttribute("aria-label", `Gestion. ${phraseBilan} ${phraseStock}`); h1.closest(".head").classList.add("g-tete"); }
     if (typeof EX != "undefined") equipe();
-  };
+  }
   function equipe() {
     const montrer = () => {
       const b = document.getElementById("gEquipe"), m = EX.membres?.() || [];
@@ -60,9 +61,8 @@ const ER = (() => {
   }
 
   // ---------- Dépenses : chiffres et filtre par poste ----------
-  const comptaAvant = window.viewCompta;
-  window.viewCompta = function () {
-    comptaAvant();
+  // Écran « compta » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerDepenses() {
     const d = S.d, f = fin(S.annee), table = document.querySelector(".wrap .card.tbl");
     if (!table) return;
     const mois = today().slice(0, 7), depMois = sum(d.depenses.filter((x) => String(x.date_depense).startsWith(mois)), (x) => x.montant);
@@ -73,11 +73,14 @@ const ER = (() => {
     const puces = postes.length > 1 ? `<div class="u-puces er-puces" role="group" aria-label="Filtrer par poste">${["Tout", ...postes].map((p) => `<button type="button" class="${S.erDepense === p ? "on" : ""}" aria-pressed="${S.erDepense === p}" data-act="erposte" data-v="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : "";
     table.insertAdjacentHTML("beforebegin", `<section class="ab-chiffres er-c${chiffres.length}" aria-label="Chiffres des dépenses">${chiffres.map(([l, v]) => `<div class="ab-chiffre"><span class="small">${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</section>${puces}`);
     filtrerPostes();
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const comptaAvant = window.viewCompta;
+  window.viewCompta = function () { comptaAvant(); completerDepenses(); };
   function filtrerPostes() {
     document.querySelectorAll(".wrap .card.tbl tbody tr").forEach((tr) => { tr.hidden = S.erDepense !== "Tout" && tr.children[2]?.textContent !== S.erDepense; });
   }
-  ACT.erposte = (p) => { S.erDepense = p; window.viewCompta(); };
+  ACT.erposte = (p) => { S.erDepense = p; redessiner("compta"); };
 
   // ---------- Saisie : préremplissage, enregistrement visible, ajouter une autre ----------
   const RETENUS = ["categorie", "fournisseur_id", "mode", "rucher"];
@@ -292,5 +295,6 @@ const ER = (() => {
     revient = false;
   });
 
-  return { fermerDoux, bloc, jauge };
+  window.viewPlus = ecranGestion; // ancien chemin (?ancien=1), retiré à la fin d'IT-03
+  return { fermerDoux, bloc, jauge, ecranGestion, completerDepenses };
 })();

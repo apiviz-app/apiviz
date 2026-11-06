@@ -81,9 +81,8 @@ const AL = (() => {
     return `<p class="al-cle">${[[bien, "good", "en forme"], [surv, "watch", "à surveiller"], [crit, "crit", "critique"]].filter(([c]) => c)
       .map(([c, t, m]) => `<span><i class="bg-${t}"></i>${c} ${m}</span>`).join("")}</p>`;
   }
-  const dashAvant = window.viewDash;
-  window.viewDash = function () {
-    dashAvant();
+  // Écran « dash » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerAccueil() {
     const tete = document.querySelector(".hero-head");
     if (!tete) return;
     const h1 = tete.querySelector("h1");
@@ -110,10 +109,13 @@ const AL = (() => {
     if (surOrdinateur.matches && S.d.ruches.length) accueilOrdinateur(tete);
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const dashAvant = window.viewDash;
+  window.viewDash = function () { dashAvant(); completerAccueil(); };
   // ---------- Accueil sur ordinateur : la priorité, quatre chiffres, puis ruchers, à faire, activité ----------
   const surOrdinateur = matchMedia("(min-width:801px)");
-  surOrdinateur.addEventListener("change", () => { if (S.route === "dash") window.viewDash(); });
+  surOrdinateur.addEventListener("change", () => { if (S.route === "dash") redessiner("dash"); });
   function actionsDuJour() {
     const r = prioritaire(), rs = U.ruchers(), cle = r ? r.rucher : rs.length === 1 ? rs[0][0] : undefined;
     const voir = r ? `<button type="button" class="btn main" data-act="ruche" data-v="${r.id}">Voir ${esc(r.nom)}</button>` : "";
@@ -220,13 +222,11 @@ const AL = (() => {
   }
   ACT.alrucher = (k) => { S.rucher = k; go("rucher"); };
   // « Voir les autres » réaffiche l'accueil depuis ux.js : on repasse par cette version.
-  const toutAvant = ACT.utout;
-  ACT.utout = () => { toutAvant(); window.viewDash(); };
+  // « Tout voir » : ux.js redessine l'accueil complet par le noyau (redessiner), plus besoin de le refaire ici (IT-03).
 
   // ---------- Ruchers : le poids sur chaque ligne ----------
-  const ruchesAvant = window.viewRuches;
-  window.viewRuches = function () {
-    ruchesAvant();
+  // Écran « ruches » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerRuchers() {
     document.querySelectorAll(".n4-ruche").forEach((b) => {
       const v = S.d.visites.find((x) => x.ruche_id === b.dataset.v && x.poids_kg);
       if (v) b.querySelector(".u-chev")?.insertAdjacentHTML("beforebegin", `<span class="al-kg">${esc(n(v.poids_kg))} kg</span>`);
@@ -241,11 +241,13 @@ const AL = (() => {
       if (h2) h2.innerHTML = `<button type="button" class="al-titre" data-act="alrucher" data-v="${esc(k)}">${esc(U.nomRucher(k))}</button>`;
     });
     if (cartes.length) { const g = document.createElement("div"); g.className = "al-grille"; cartes[0].before(g); g.append(...cartes); }
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const ruchesAvant = window.viewRuches;
+  window.viewRuches = function () { ruchesAvant(); completerRuchers(); };
 
   // Changer d'onglet réaffiche la fiche depuis ux.js : on garde la courbe ouverte.
-  const ongletAvant = ACT.uronglet;
-  ACT.uronglet = (v) => { ongletAvant(v); window.viewRuche(); };
+  // Onglets de la fiche : ux.js redessine la fiche complète par le noyau (redessiner), plus besoin de le refaire ici (IT-03).
 
   // ---------- Fiche d'un rucher ----------
   function vueRucher() {
@@ -272,9 +274,8 @@ const AL = (() => {
   // Écran « rucher » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, AL.vueRucher).
 
   // ---------- Fiche ruche : la courbe de poids reste visible ----------
-  const rucheAvant = window.viewRuche;
-  window.viewRuche = function () {
-    rucheAvant();
+  // Écran « ruche » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerFiche() {
     const pli = [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"));
     pli?.setAttribute("open", "");
     const r = byId(S.d.ruches, S.ruche) || byId(S.d.ruchesSorties || [], S.ruche), hex = document.querySelector(".u-gros-hex");
@@ -283,7 +284,10 @@ const AL = (() => {
     if (S.alCourbe !== S.ruche) pli?.querySelector("polyline")?.classList.add("al-trace");
     pli?.querySelector("polyline")?.setAttribute("pathLength", "1");
     S.alCourbe = S.ruche;
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const rucheAvant = window.viewRuche;
+  window.viewRuche = function () { rucheAvant(); completerFiche(); };
 
   // ---------- Transitions : l'alvéole touchée devient l'en-tête de la fiche ----------
   const fluide = () => document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -325,9 +329,8 @@ const AL = (() => {
     });
     return [...f.values()].filter((x) => x.total).sort((p, q) => q.g - p.g).slice(0, 3);
   }
-  const clientsAvant = window.viewClients;
-  window.viewClients = function () {
-    clientsAvant();
+  // Écran « clients » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerClients() {
     const pots = potsParFormat(), wrap = document.querySelector(".wrap");
     const prec = S.alMiel || {}, suite = {};
     if (pots.length && wrap) {
@@ -346,23 +349,28 @@ const AL = (() => {
       if (prec["t" + i] !== undefined) compter(b, prec["t" + i], v, m[1].endsWith(" ") || m[1].endsWith("\u00a0") || m[1].endsWith("\u202f") ? "\u00a0" + fin : fin);
     });
     S.alMiel = suite;
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const clientsAvant = window.viewClients;
+  window.viewClients = function () { clientsAvant(); completerClients(); };
   // Vente : les clients récents à portée de pouce.
-  const venteAvant = window.viewVente;
-  window.viewVente = function () {
-    venteAvant();
+  // Écran « vente » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerVente() {
     const champ = document.getElementById("s_client");
     if (!champ) return;
     const ids = [...new Set(S.d.ventes.map((v) => v.client_id))].slice(0, 3);
     const noms = ids.map((i) => byId(S.d.clients, i)).filter(Boolean);
     if (noms.length < 3) S.d.clients.forEach((c) => { if (noms.length < 3 && !noms.includes(c)) noms.push(c); });
     champ.closest("label").insertAdjacentHTML("beforebegin", `<div class="chips al-recents" role="group" aria-label="Clients récents">${noms.map((c) => `<button type="button" class="chip ${champ.value === c.id ? "on" : ""}" data-act="alclient" data-v="${c.id}">${esc(c.nom)}</button>`).join("")}</div>`);
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const venteAvant = window.viewVente;
+  window.viewVente = function () { venteAvant(); completerVente(); };
   ACT.alclient = (id) => {
     const c = document.getElementById("s_client");
     if (c) { c.value = id; c.dispatchEvent(new Event("change", { bubbles: true })); }
     document.querySelectorAll(".al-recents .chip").forEach((b) => b.classList.toggle("on", b.dataset.v === id));
   };
 
-  return { compagnon, phrase, ruchesDe, vueRucher, meteoPrete: () => window.AL_meteoPrete() };
+  return { compagnon, phrase, ruchesDe, vueRucher, completerAccueil, completerRuchers, completerFiche, completerClients, completerVente, meteoPrete: () => window.AL_meteoPrete() };
 })();

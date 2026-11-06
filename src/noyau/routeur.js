@@ -29,6 +29,8 @@ export function ancien(recherche = globalThis.location?.search || "", memoire = 
 
 /** L'écran enregistré pour cette route, ou null (route inconnue, ou drapeau ?ancien=1). */
 export const ecran = (id) => (ancien() ? null : ecrans.get(id) || null);
+/** L'écran enregistré, même avec ?ancien=1 : pour les routes qui n'ont pas d'ancienne chaîne. */
+export const ecranEnregistre = (id) => ecrans.get(id) || null;
 /** Identifiants enregistrés, dans l'ordre d'enregistrement. */
 export const liste = () => [...ecrans.keys()];
 

@@ -191,7 +191,7 @@ const V3 = (() => {
     if (S.visite && !S.visite.varroa_methode) {
       S.visite.varroa_methode = S.d.visites.find((v) => v.varroa_methode)?.varroa_methode || "Sucre glace";
       S.visite.varroa_abeilles = "";
-      if (S.route === "visite") viewVisite();
+      if (S.route === "visite") redessiner("visite");
     }
   };
   const lireAvant = window.readVisitForm;
@@ -201,7 +201,7 @@ const V3 = (() => {
     const a = document.getElementById("v_abeilles");
     S.visite.varroa_abeilles = S.visite.varroa_methode === "Lange" ? "" : a ? a.value : S.visite.varroa_abeilles ?? "";
   };
-  ACT.v3compter = (id) => { ACT.newvisite(id); U.ouvrir("poids"); viewVisite(); document.getElementById("v_varroa")?.focus(); };
+  ACT.v3compter = (id) => { ACT.newvisite(id); U.ouvrir("poids"); redessiner("visite"); document.getElementById("v_varroa")?.focus(); };
 
   function vueVarroa() {
     const seuil = U.seuilVarroa();
@@ -357,22 +357,24 @@ const V3 = (() => {
   }
   ACT.v3livre = (id, k) => write(sb.from("ventes").update(k === "paye" ? { livre: true, paye: true, mode: byId(S.d.ventes, id)?.mode || cfg().modes[0] } : { livre: true }).eq("id", id), k === "paye" ? "Livrée et payée" : "Commande livrée");
 
-  const venteAvant = window.viewVente;
-  window.viewVente = function () {
-    venteAvant();
+  // Écran « vente » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerVente() {
     const e = S.vente, b = document.querySelector('form[data-form="vente"] > .btn.main.block');
     if (!e || !b) return;
     const livre = e.livre !== false;
     b.insertAdjacentHTML("beforebegin", `<div class="field"><div class="t">Remise des pots</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${livre ? "on" : ""}" aria-pressed="${livre}" data-act="v3remise" data-v="1">Remis maintenant</button><button type="button" class="${livre ? "" : "on"}" aria-pressed="${!livre}" data-act="v3remise" data-v="0">À livrer</button></div></div>
       ${livre ? "" : `<label>Où et quand (facultatif)<input id="s_livraison" value="${esc(e.livraison || "")}" placeholder="Ex. jeudi au bureau" autocomplete="off"></label>`}`);
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const venteAvant = window.viewVente;
+  window.viewVente = function () { venteAvant(); completerVente(); };
   const venteLire = window.readSaleForm;
   window.readSaleForm = function () {
     venteLire();
     const el = document.getElementById("s_livraison");
     if (el && S.vente) S.vente.livraison = el.value;
   };
-  ACT.v3remise = (v) => { readSaleForm(); S.vente.livre = v === "1"; viewVente(); };
+  ACT.v3remise = (v) => { readSaleForm(); S.vente.livre = v === "1"; redessiner("vente"); };
   if (typeof HL != "undefined") {
     const rpcAvant = HL.rpc;
     HL.rpc = (nom, args) => {
@@ -591,5 +593,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES };
+  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES, completerVente };
 })();

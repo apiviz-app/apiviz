@@ -516,7 +516,7 @@ const TN = (() => {
       Object.keys(DEFAUT).forEach((k) => { S.visite[k] = val(f, k); });
       S.visite.poids_kg = f.poids_kg ?? ""; S.visite.note = f.note;
       if (sec) U.ouvrir(sec);
-      viewVisite();
+      redessiner("visite");
     },
   });
   // Retour du formulaire complet vers le parcours. Renvoie vrai si la tournée reprend ici.

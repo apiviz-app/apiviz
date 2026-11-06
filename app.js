@@ -1581,6 +1581,11 @@ function render() {
   const C = window.Noyau?.crochets;
   (C?.lancer("avantRendu") || rendreEcran(), C?.lancer("apresRendu"));
 }
+// Redessine un écran par le même chemin que la navigation (IT-03, AP-US-007) : plus d'appel direct à view*(),
+// qui sautait les compléments de l'écran (Alvéoles, prise en main…) ou affichait un écran sous une autre route.
+function redessiner(route = S.route) {
+  route === S.route ? render() : go(route);
+}
 function rendreEcran() {
   if (S.recovery || !S.session) return authView();
   if (S.member === !1) {
@@ -1595,8 +1600,9 @@ function rendreEcran() {
   }
   // Écran enregistré dans le noyau (IT-03, src/domaines/…) : il remplace toute l'ancienne chaîne de cet écran.
   // Sinon, ou avec ?ancien=1, l'ancien chemin ci-dessous.
-  const migre = window.Noyau?.ecran?.(S.route);
-  const vues = migre ? migre.rendu : {
+  // Avec ?ancien=1, seuls les écrans qui ont encore une ancienne chaîne (liste ci-dessous) la reprennent ; les autres
+  // n'ont jamais eu qu'une implémentation, celle de la table.
+  const anciens = {
     dash: viewDash,
     plus: viewPlus,
     agenda: viewAgenda,
@@ -1612,9 +1618,10 @@ function rendreEcran() {
     pilotage: viewPilotage,
     previsions: viewPrevisions,
     reglages: viewReglages,
-    registre: () => RG.vue(),
     membres: () => EX.vue(),
-  }[S.route];
+  };
+  const migre = window.Noyau?.ecran?.(S.route) || (!(S.route in anciens) && window.Noyau?.ecranEnregistre?.(S.route)),
+    vues = migre ? migre.rendu : anciens[S.route];
   (vues(),
     S.lastRoute !== S.route &&
       (window.scrollTo?.(0, 0), document.querySelector(".wrap")?.classList.add("enter")),
@@ -2392,7 +2399,7 @@ const ACT = {
     (readVisitForm(),
       (S.visite[cle] = valeur),
       cle === "ruche_id" && (S.visite.etat = byId(S.d.ruches, valeur).etat),
-      viewVisite());
+      redessiner("visite"));
   },
   vstep: (valeur, cle) => {
     readVisitForm();
@@ -2401,7 +2408,7 @@ const ACT = {
       0,
       Math.min(Number(article.stock), (S.visite.q[cle] || 0) + Number(valeur)),
     )),
-      viewVisite());
+      redessiner("visite"));
   },
   newvente: () => {
     ((S.vente = { client_id: "", date_vente: today(), q: {}, paye: !0, mode: cfg().modes[0] }),
@@ -2414,13 +2421,13 @@ const ACT = {
       0,
       Math.min(lot.pots_restants, (S.vente.q[cle] || 0) + Number(valeur)),
     )),
-      viewVente());
+      redessiner("vente"));
   },
   spaye: (valeur) => {
-    (readSaleForm(), (S.vente.paye = valeur === "1"), viewVente());
+    (readSaleForm(), (S.vente.paye = valeur === "1"), redessiner("vente"));
   },
   vfiltre: (valeur) => {
-    ((S.venteFiltre = valeur), viewClients());
+    ((S.venteFiltre = valeur), redessiner("clients"));
   },
   togglepaye: async (valeur) => {
     const vente = byId(S.d.ventes, valeur);
@@ -2430,7 +2437,7 @@ const ACT = {
     );
   },
   ptab: (valeur) => {
-    ((S.tab = valeur), viewPilotage());
+    ((S.tab = valeur), redessiner("pilotage"));
   },
   newruches: () => ruchesForm(),
   editruche: (valeur) => rucheForm(byId(S.d.ruches, valeur)),
@@ -2756,6 +2763,9 @@ async function boot() {
   }
   render();
 }
+// Écrans d'app.js tels qu'écrits ici, pris avant que d'autres modules ne réaffectent window.view* (IT-03) :
+// le noyau (src/domaines/…) les appelle sans passer par les anciennes chaînes.
+const ECRANS_APP = Object.freeze({ viewAgenda, viewMiel, viewMateriel, viewVente, viewFournisseurs, viewCompta, viewPilotage, viewPrevisions });
 // Démarrage après tous les scripts (DOMContentLoaded) : avec « defer » (IT-03), readyState vaut déjà « interactive »
 // pendant l'exécution des scripts, il ne suffit plus à savoir s'ils sont tous chargés.
 let scriptsCharges = document.readyState === "complete";

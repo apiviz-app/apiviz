@@ -1,6 +1,6 @@
 // Apidoo — prise en main : présentation avant le compte, création du rucher en trois questions,
 // guide de démarrage selon la saison, premier succès, écrans vides utiles. Chargé en dernier.
-(() => {
+const DM = (() => {
   const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
   const cle = (k) => `apidoo-dm-${k}-${typeof EX != "undefined" ? EX.courante() : ""}`;
   const api = (etat, t) => (typeof Apidoo != "undefined" ? Apidoo.compagnon(etat, t) : "");
@@ -147,15 +147,14 @@
   ACT.dmdeclarer = () => go("declaration");
   ACT.dminviter = () => { memo(cle("invite"), "1"); go("membres"); };
   ACT.dminstaller = () => { memo(cle("installe"), "1"); ACT.n4installer(); };
-  ACT.dmmasquer = () => { memo(cle("masque"), "1"); viewDash(); };
+  ACT.dmmasquer = () => { memo(cle("masque"), "1"); redessiner("dash"); };
   ACT.dmbravo = () => {
-    memo(cle("bravo"), "1"); viewDash();
+    memo(cle("bravo"), "1"); redessiner("dash");
     if (matchMedia("(max-width:800px)").matches && !installee() && !memo(cle("installe"))) ACT.dminstaller();
   };
 
-  const dashAvant = window.viewDash;
-  window.viewDash = function () {
-    dashAvant();
+  // Écran « dash » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerAccueil() {
     const d = S.d, wrap = document.querySelector(".wrap");
     if (!d || !wrap) return;
     document.querySelector(".steps")?.closest("section")?.remove();
@@ -183,7 +182,10 @@
     const avant = wrap.querySelector(".dm-bravo") || (haut && wrap.contains(haut) ? haut : null);
     if (avant) avant.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
     if (matchMedia("(min-width:801px)").matches && !installee()) relais();
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const dashAvant = window.viewDash;
+  window.viewDash = function () { dashAvant(); completerAccueil(); };
   function arrivee(wrap) {
     if (memo(cle("arrivee"))) return;
     const d = S.d, lignes = d.visites.slice(0, 2).map((v) => `<li class="small">${esc(byId(d.ruches, v.ruche_id)?.nom || "Ruche")} visitée le ${esc(dshort(v.date_visite))}</li>`).join("");
@@ -193,7 +195,7 @@
       ${installee() ? "" : '<button type="button" class="btn block" data-act="dminstaller">Installer Apidoo sur ton téléphone</button>'}</section>`;
     if (haut) haut.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
   }
-  ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); viewDash(); };
+  ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); redessiner("dash"); };
   // Ordinateur : un code QR pour passer sur le téléphone.
   function relais() {
     const g = document.querySelector(".dm-guide"), lien = location.origin + location.pathname;
@@ -249,4 +251,5 @@
     const tu = { "Ajoutez votre première ruche": "Ajoute ta première ruche", "Ajoutez vos fournisseurs": "Ajoute tes fournisseurs", "Votre stock de miel est vide": "Ton stock de miel est vide" };
     return videAvant(tu[titre] || titre, texte.replace("Une par une ou plusieurs d’un coup. Vous pourrez les regrouper par rucher.", "Une par une ou plusieurs d’un coup. Tu pourras les regrouper par rucher."), bouton, act);
   };
+  return { completerAccueil };
 })();

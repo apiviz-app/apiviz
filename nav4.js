@@ -75,7 +75,7 @@ const N4 = (() => {
   };
   ACT.n4q = (a, k) => { $sheet.close(); ACT[a](k); };
   ACT.n4vocal = () => { ACT.newvisite(); setTimeout(() => { document.getElementById("v_note")?.scrollIntoView({ block: "center" }); ACT.v3dicter?.(); }, 50); };
-  ACT.n4photo = () => { ACT.newvisite(); U.ouvrir("photos"); viewVisite(); setTimeout(() => document.querySelector('details[data-sec="photos"] input[type=file], details[data-sec="photos"] [data-act^="ph"]')?.click(), 50); };
+  ACT.n4photo = () => { ACT.newvisite(); U.ouvrir("photos"); redessiner("visite"); setTimeout(() => document.querySelector('details[data-sec="photos"] input[type=file], details[data-sec="photos"] [data-act^="ph"]')?.click(), 50); };
 
   // Visite commencée puis quittée : on peut la reprendre depuis le bouton +.
   let brouillon = null, heure = "";
@@ -122,10 +122,11 @@ const N4 = (() => {
       <div class="n4-deux"><button type="button" class="btn honey" data-act="${plusieurs ? "v3tournee" : "newvisite"}" data-v="${esc(plusieurs ? c.k : c.rs[0].id)}">${plusieurs ? "Commencer la tournée" : "Commencer la visite"}</button>
       <button type="button" class="btn ghost" data-act="n4plustard">Plus tard</button></div></div>`;
   }
-  ACT.n4plustard = () => { memo("n4-plustard", today()); viewDash(); };
+  ACT.n4plustard = () => { memo("n4-plustard", today()); redessiner("dash"); };
 
   // ---------- Ruchers : liste ----------
-  window.viewRuches = function () {
+  // Écran « ruches » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, N4.ecranRuchers).
+  function ecranRuchers() {
     const d = S.d;
     if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoutez votre première ruche", "Une par une ou plusieurs d’un coup. Vous pourrez les regrouper par rucher.", "Ajouter des ruches", "newruches"));
     const seuil = U.seuilVarroa();
@@ -150,7 +151,7 @@ const N4 = (() => {
     const sorties = rr.length ? `<details class="card u-pli"><summary><h2>Ruches sorties · ${rr.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
       ${rr.map((r) => `<button type="button" class="u-todo" data-act="ruche" data-v="${r.id}"><span class="u-dot bg-crit" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
     shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(U.ruchers().length, "rucher")}`, '<button class="btn" data-act="newruches">Ajouter</button>', blocs + sorties);
-  };
+  }
 
   // ---------- Fiche ruche : passer d'une ruche à l'autre ----------
   const voisines = (r) => { const l = S.d.ruches.filter((x) => (x.rucher || "") === (r.rucher || "")); return l.some((x) => x.id === r.id) ? l : [r]; };
@@ -174,13 +175,15 @@ const N4 = (() => {
   }, { passive: true });
 
   // ---------- Miel : récoltes dans l'onglet Stock ----------
-  const mielAvant = window.viewMiel;
-  window.viewMiel = function () {
-    mielAvant();
+  // Écran « miel » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerMiel() {
     const rec = S.d.recoltes.slice(0, 30);
     document.querySelector(".wrap")?.insertAdjacentHTML("beforeend", `<section class="card u-liste"><div class="u-entete"><h2>Récoltes</h2><button type="button" class="link" data-act="newrecolte">Saisir une récolte</button></div>
       ${rec.map((x) => `<button type="button" class="u-todo" data-act="editrecolte" data-v="${x.id}"><span class="u-todo-t"><b>${esc(n(x.kg))} kg · ${esc(U.dateCourte(x.date_recolte))}</b><span class="small">${esc([x.ruche_id ? byId([...S.d.ruches, ...(S.d.ruchesSorties || [])], x.ruche_id)?.nom : "Toutes les ruches", x.miel, x.extraction].filter(Boolean).join(" · "))}</span></span>${x._attente ? '<span class="tag watch">en attente</span>' : ""}<span class="u-chev" aria-hidden="true">›</span></button>`).join("") || '<p class="small">Aucune récolte saisie.</p>'}</section>`);
-  };
+  }
+  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
+  const mielAvant = window.viewMiel;
+  window.viewMiel = function () { mielAvant(); completerMiel(); };
 
   // ---------- Gestion ----------
   function viewGestion() {
@@ -274,5 +277,6 @@ const N4 = (() => {
   ACT.delvente = delVente;
   ACT.uvsuppr = delVente;
 
-  return { prochaine, navRuche, viewGestion, plusTard };
+  window.viewRuches = ecranRuchers; // ancien chemin (?ancien=1), retiré à la fin d'IT-03
+  return { prochaine, navRuche, viewGestion, plusTard, ecranRuchers, completerMiel };
 })();
