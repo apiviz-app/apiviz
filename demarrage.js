@@ -109,8 +109,10 @@ const DM = (() => {
       if (r.error) throw r.error;
       memo("apidoo-exploitation", r.data);
       await EX.choisir();
-      const lignes = Array.from({ length: q.nb }, (_, i) => ({ id: crypto.randomUUID(), nom: `Ruche ${i + 1}`, rucher, type_ruche: "", etat: "Bonne", date_installation: today(), lat: q.lat, lng: q.lng }));
-      const a = await sb.from("ruches").insert(lignes);
+      // Rucher et colonies en une seule transaction (creer_rucher, migration 015, AP-TECH-093) ; identifiant fourni ici :
+      // un nouvel essai après une coupure ne crée pas de doublon. La position du rucher est recopiée sur ses colonies.
+      const colonies = Array.from({ length: q.nb }, (_, i) => ({ id: crypto.randomUUID(), nom: `Ruche ${i + 1}` }));
+      const a = await sb.rpc("creer_rucher", { p: { id: q.rucherId ||= crypto.randomUUID(), nom: rucher, lat: q.lat, lng: q.lng, colonies } });
       if (a.error) throw a.error;
       memo(cle("profil"), q.profil);
       S.member = true; S.route = "dash"; render(); await loadAll(); render();
@@ -213,8 +215,10 @@ const DM = (() => {
   // ---------- Rucher d'exemple : tout reste en mémoire, aucune requête vers la base ----------
   let demo = false;
   const jour = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
-  const R = ["1", "2", "3", "4", "5", "6"].map((n) => ({ id: "ex-r" + n, nom: "Ruche " + n, rucher: "Le Verger", etat: n === "5" ? "À surveiller" : "Bonne", type_ruche: "Dadant", notes: "", lat: 47.22, lng: -1.55, date_installation: jour(400) }));
+  const R = ["1", "2", "3", "4", "5", "6"].map((n) => ({ id: "ex-r" + n, nom: "Ruche " + n, rucher: "Le Verger", rucher_id: "ex-rucher", etat: n === "5" ? "À surveiller" : "Bonne", type_ruche: "Dadant", notes: "", lat: 47.22, lng: -1.55, date_installation: jour(400) }));
   const DEMO = { ruches: R,
+    ruchers: [{ id: "ex-rucher", nom: "Le Verger", lat: 47.22, lng: -1.55, acces: "Chemin de terre après la ferme ; se garer devant la grange.",
+      proprietaire: "", proprietaire_tel: "", capacite: 10, environnement: "Vergers et prairies", ressources: "Fruitiers, ronces, trèfle", point_eau: "Ruisseau à 50 m", notes: "", archive_le: null }],
     visites: R.map((r, i) => ({ id: "ex-v" + i, ruche_id: r.id, date_visite: jour(12 + i), activite: "Normale", provisions: i === 4 ? "Faibles" : "Bonnes", reine: "Vue", couvain: "Normal", poids_kg: 38 - i, varroa: null, note: "", auteur: "exemple" })),
     lots_stock: [{ id: "ex-l", code: "L26-01", miel: "Toutes fleurs", format_g: 500, prix: 12, pots_initiaux: 40, pots_restants: 29 }],
     clients: [{ id: "ex-c", nom: "Mme Martin", cercle: "Famille" }],

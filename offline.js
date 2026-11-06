@@ -88,6 +88,11 @@ const HL = (() => {
           d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0 });
           if (lot) lot.pots_restants = Number(lot.pots_restants) - Number(x.quantite);
         }
+      } else if (it.type === "rpc" && it.nom === "creer_rucher") {
+        // Rucher créé sans réseau (IT-05) : montré tout de suite, comme le fera la base (migration 015).
+        const p = it.args.p;
+        d.ruchers = d.ruchers || [];
+        if (!d.ruchers.some((x) => x.id === p.id)) d.ruchers.push({ id: p.id, nom: p.nom, lat: p.lat ?? null, lng: p.lng ?? null, archive_le: null });
       } else if (it.type === "rpc" && it.nom === "placer_rucher") {
         // Rucher placé sans réseau (IT-05) : le rucher et ses colonies, comme le fera la base (migration 015).
         const p = it.args.p, r = (d.ruchers || []).find((x) => x.id === p.id);
@@ -263,6 +268,7 @@ const HL = (() => {
       const p = it.args.p, pots = (p.lignes || []).reduce((s, l) => s + Number(l.quantite), 0);
       return ["Vente · " + (byId(d.clients || [], p.client_id)?.nom || "client"), dfr(p.date_vente) + " · " + pluriel(pots, "pot")];
     }
+    if (it.type === "rpc" && it.nom === "creer_rucher") return ["Rucher · " + (it.args.p.nom || ""), "créé"];
     if (it.type === "rpc" && it.nom === "placer_rucher") {
       return ["Position · " + ((d.ruchers || []).find((x) => x.id === it.args.p.id)?.nom || "rucher"), "placé sur la carte"];
     }
