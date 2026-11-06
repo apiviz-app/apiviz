@@ -200,7 +200,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | FAIT (6 nov. 2026, IT-02) — 010, 011 et 012 sur les deux bases, structure identique aux fichiers ; déplacement, intervention et facture validés en production ; CHANGELOG, GUIDE et contrôle de structure à jour. Publication de la v5.16 : cycle normal recette puis production |
+| Statut actuel | FAIT (6 nov. 2026, IT-02) — 010, 011 et 012 sur les deux bases, structure identique aux fichiers ; déplacement, intervention et facture validés en production ; CHANGELOG, GUIDE et contrôle de structure à jour. v5.16 publiée en recette puis en production le 6 nov. 2026 |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |

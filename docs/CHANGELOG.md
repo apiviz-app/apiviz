@@ -1,7 +1,7 @@
 # Notes de version
 
-**État au 6 nov. 2026.** Production et recette publient la **v5.14** (commit `554f98f`, constaté au relevé du
-5 nov. 2026) : les v5.0 à v5.14 sont donc en production. Les v5.15 et v5.16 sont sur `main`, pas encore publiées.
+**État au 6 nov. 2026, 10 h 38.** Production et recette publient la **v5.16** (commit `ab93c53`, recette puis production
+le 6 nov. 2026). Jusqu'au 4 nov., la v5.14 (`554f98f`).
 Bases `apidoo` et `apidoo-test` : 000 à 012, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-012.json`).
 `apidoo-test` a aussi 013 (IT-03, 6 nov. 2026) ; **013 en attente pour `apidoo`**.
 
@@ -43,7 +43,7 @@ lecture du journal des erreurs, entrée « Opérations » de Gestion (l'écran n
 6. Base `apidoo-test`, éditeur SQL : `select * from journal_erreurs order by derniere_fois desc;` après une erreur
    provoquée (par exemple une coupure réseau pendant un envoi) : une ligne, sans adresse e-mail.
 
-## IT-02 · réalignement de la production (6 nov. 2026)
+## IT-02 · réalignement de la production (6 nov. 2026, en production avec la v5.16)
 Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de `sw.js` que la v5.16).
 **`012-correctifs.sql` appliquée sur `apidoo` le 6 nov. 2026** (relevé avant/après : production identique à la recette).
 
@@ -64,7 +64,7 @@ Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de
    Créer la facture (F-2026-0001) validés par le responsable et vérifiés en base ; données d'essai retirées ensuite,
    numéro de facture libéré, base revenue à son état d'avant l'essai.
 
-## v5.16 · à publier en recette · correctifs de fiabilité (IT-01)
+## v5.16 · 6 nov. 2026 · en production · correctifs de fiabilité (IT-01)
 Migration : `migrations/012-correctifs.sql`, **appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026**. Elle n'ajoute que des colonnes et des fonctions : l'ancienne version reste compatible.
 Sans elle, la nouvelle version marche aussi (réglages, entrée de stock et clients retombent sur l'ancienne écriture).
 
@@ -90,7 +90,7 @@ Sans elle, la nouvelle version marche aussi (réglages, entrée de stock et clie
 5. Réglages enregistrés depuis deux téléphones à la fois : les deux modifications restent.
 6. Supprimer une ruche de test qui a des photos : la place utilisée par les photos baisse.
 
-## v5.15 · à publier en recette · mise à plat (IT-00)
+## v5.15 · 6 nov. 2026 · en production · mise à plat (IT-00)
 Aucune migration. Aucun changement visible : l'ancienne version et la nouvelle se comportent pareil.
 
 - `app.js` en source lisible : formatage Prettier puis noms des variables locales, écran par écran. Arbre syntaxique
