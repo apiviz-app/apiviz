@@ -1392,13 +1392,18 @@ function sheet({
     (sheet.del = supprimer),
     $sheet.showModal());
 }
-const ruchers = () => [...new Set(S.d.ruches.map((ruche) => ruche.rucher).filter(Boolean))],
+// Noms proposés dans le champ Rucher : les ruchers de la table, non archivés (IT-05), sinon les textes des ruches.
+const ruchers = () =>
+    (S.d.ruchers || []).length
+      ? S.d.ruchers.filter((rucher) => !rucher.archive_le).map((rucher) => rucher.nom)
+      : [...new Set(S.d.ruches.map((ruche) => ruche.rucher).filter(Boolean))],
   fournOpts = () =>
     [["", "Aucun"]].concat(
       S.d.fournisseurs.map((fournisseur) => [fournisseur.id, fournisseur.nom]),
     ),
   del = (nomTable, id, message) => () => write(sb.from(nomTable).delete().eq("id", id), message);
-function ruchesForm() {
+// rucher : rucher déjà choisi (bouton « Ajouter des ruches ici » d'un rucher, IT-05).
+function ruchesForm(rucher = "") {
   sheet({
     title: "Ajouter des ruches",
     label: "Ajouter",
@@ -1413,7 +1418,7 @@ function ruchesForm() {
         value: 1,
       },
       { name: "prefixe", label: "Nom", required: !0, value: "Ruche" },
-      { name: "rucher", label: "Rucher (facultatif)", list: ruchers() },
+      { name: "rucher", label: "Rucher (facultatif)", value: rucher, list: ruchers() },
       {
         name: "type_ruche",
         label: "Type de ruche (facultatif)",

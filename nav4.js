@@ -128,12 +128,15 @@ const N4 = (() => {
   // Écran « ruches » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, N4.ecranRuchers).
   function ecranRuchers() {
     const d = S.d;
-    if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoute ta première ruche", "Une par une ou plusieurs d’un coup. Tu pourras les regrouper par rucher.", "Ajouter des ruches", "newruches"));
+    const ls = U.lieux(), archives = (d.ruchers || []).filter((r) => r.archive_le);
+    const entete = '<button class="btn" data-act="rcnouveau">Nouveau rucher</button><button class="btn" data-act="newruches">Ajouter des ruches</button>';
+    if (!ls.length) return shell("Ruchers", "", entete, emptyState("Crée ton premier rucher", "Un nom, un emplacement, puis tes ruches. Tu pourras le placer sur la carte et noter comment y accéder.", "Nouveau rucher", "rcnouveau"));
     const seuil = U.seuilVarroa();
-    const blocs = U.ruchers().map(([k, rs]) => {
-      const pb = rs.filter((r) => r.etat !== "Bonne"), etat = U.pire(rs);
+    // Un bloc par rucher de la table (IT-05), y compris sans colonie ; data-k : clé lue par AL.completerRuchers.
+    const blocs = ls.map((l) => {
+      const k = l.cle, rs = l.rs, pb = rs.filter((r) => r.etat !== "Bonne"), etat = l.etat;
       const der = rs.map((r) => lastVisit(r.id)).filter(Boolean).sort((a, b) => b.date_visite.localeCompare(a.date_visite))[0];
-      const place = rs.find((r) => r.lat != null);
+      const place = l.lat != null;
       const lignes = rs.map((r) => {
         const v = d.visites.find((x) => x.ruche_id === r.id && x.varroa != null), t = U.tauxVarroa(v);
         const sous = [r.etat !== "Bonne" ? r.etat : "", r.hausses ? U.pluriel(r.hausses, "hausse") : "", r.annee_reine ? "reine " + r.annee_reine : "", lastVisit(r.id) ? "" : "jamais visitée"].filter(Boolean).join(" · ");
@@ -141,16 +144,24 @@ const N4 = (() => {
           <span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(sous || "en bon état")}</span></span>
           ${t !== null ? `<span class="n4-taux ${t >= seuil ? "crit" : ""}">${n(t, 1)} %</span>` : ""}<span class="u-chev" aria-hidden="true">›</span></button>`;
       }).join("");
-      return `<section class="card"><div class="u-entete"><div><h2>${esc(U.nomRucher(k))}</h2><span class="small">${place ? "" : "Pas encore placé sur la carte · "}${der ? "visité il y a " + days(der.date_visite) + " j" : "jamais visité"}</span></div>
-        ${pb.length ? `<span class="tag ${etatClass(etat)}">${pb.length} ${etat === "Critique" ? "critique" : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>'}</div>
+      const etatTag = !rs.length ? "" : pb.length ? `<span class="tag ${etatClass(etat)}">${pb.length} ${etat === "Critique" ? "critique" : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>';
+      const action = rs.length > 1 ? `<button type="button" class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>`
+        : rs.length ? `<button type="button" class="btn main" data-act="newvisite" data-v="${rs[0].id}">Visiter</button>`
+        : `<button type="button" class="btn main" data-act="rcajouter" data-v="${esc(k)}">Ajouter des ruches ici</button>`;
+      const lieu = place ? `<a class="btn u-lienbtn" href="${esc(Regles.ruchers.lienItineraire(l))}" target="_blank" rel="noopener">Itinéraire</a>` : `<button type="button" class="btn" data-act="rcplacer" data-v="${esc(k)}">Placer sur la carte</button>`;
+      return `<section class="card" data-k="${esc(k)}"><div class="u-entete"><div><h2>${esc(l.nom)}</h2><span class="small">${place ? "" : "Pas encore placé sur la carte · "}${!rs.length ? "aucune colonie pour l’instant" : der ? "visité il y a " + days(der.date_visite) + " j" : "jamais visité"}</span></div>
+        ${etatTag}</div>
         <div class="n4-ruches">${lignes}</div>
-        <div class="u-deux">${rs.length > 1 ? `<button type="button" class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>` : `<button type="button" class="btn main" data-act="newvisite" data-v="${rs[0].id}">Visiter</button>`}
-        ${place ? `<a class="btn u-lienbtn" href="https://www.google.com/maps/dir/?api=1&amp;destination=${place.lat},${place.lng}" target="_blank" rel="noopener">Itinéraire</a>` : `<button type="button" class="btn" data-act="go" data-v="carte">Placer sur la carte</button>`}</div></section>`;
+        <div class="u-deux">${action}${lieu}</div></section>`;
     }).join("");
     const rr = d.ruchesSorties || [];
     const sorties = rr.length ? `<details class="card u-pli"><summary><h2>Ruches sorties · ${rr.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
       ${rr.map((r) => `<button type="button" class="u-todo" data-act="ruche" data-v="${r.id}"><span class="u-dot bg-crit" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
-    shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(U.ruchers().length, "rucher")}`, '<button class="btn" data-act="newruches">Ajouter</button>', blocs + sorties);
+    // Ruchers archivés (AP-TECH-096) : gardés pour l'historique, rouvrables depuis leur fiche.
+    const arch = archives.length ? `<details class="card u-pli"><summary><h2>Ruchers archivés · ${archives.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
+      ${archives.map((r) => `<button type="button" class="u-todo" data-act="alrucher" data-v="${esc(r.nom)}"><span class="u-dot" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">archivé le ${esc(dfr(String(r.archive_le).slice(0, 10)))}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
+    const nbR = ls.filter((l) => l.cle).length;
+    shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(nbR, "rucher")}`, entete, blocs + sorties + arch);
   }
 
   // ---------- Fiche ruche : passer d'une ruche à l'autre ----------
