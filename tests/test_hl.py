@@ -55,6 +55,10 @@ def supabase(route):
             if not inv: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Ce lien d'invitation n'est plus valable : demandez-en un nouveau."}))
             EXPL["miennes"].append(inv); return route.fulfill(status=200, headers=hdr, body=json.dumps(inv["id"]))
         if nom == "photos_espace": return route.fulfill(status=200, headers=hdr, body="0")
+        if nom == "restaurer":  # comme la migration 014 : la visite revient, la ligne du journal est marquée
+            a = next(x for x in DATA.get("journal_audit", []) if x["id"] == body["p_id"])
+            DATA[a["table_nom"]].append(a["avant"]); a["restaure_le"] = "2026-11-06T12:00:00Z"
+            return route.fulfill(status=200, headers=hdr, body=json.dumps({"table": a["table_nom"], "id": a["avant"]["id"]}))
         if nom == "regler":  # comme la migration 012 : fusion clé par clé, null retire la clé
             d = DATA["reglages"][0].setdefault("data", {})
             for k, v in (body.get("p_modifs") or {}).items():
@@ -83,9 +87,17 @@ def supabase(route):
         if t == "membres" and req.method == "POST":
             EXPL["membres"].append(req.post_data_json); return route.fulfill(status=201, headers=hdr, body="")
         if t == "invitations" and req.method == "POST":
-            i = {"code": uuid.uuid4().hex, "exploitation_id": req.headers.get("x-exploitation"), "created_at": "2026-11-03T10:00:00Z", "expire_le": "2026-11-17T10:00:00Z"}
+            # Comme la migration 014 : rôle et nombre d'usages choisis à la création (par défaut : membre, sans limite).
+            i = {"role": "membre", "usages_max": None, **(req.post_data_json or {}), "code": uuid.uuid4().hex, "exploitation_id": req.headers.get("x-exploitation"),
+                 "created_at": "2026-11-03T10:00:00Z", "expire_le": "2026-11-17T10:00:00Z", "usages": 0, "revoque_le": None}
             EXPL["invit"].append(i); return route.fulfill(status=201, headers=hdr, body=json.dumps(i))
-        if t == "invitations" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["invit"]))
+        if t == "invitations" and req.method == "GET":
+            return route.fulfill(status=200, headers=hdr, body=json.dumps([i for i in EXPL["invit"] if not i.get("revoque_le")]))
+        if t == "invitations" and req.method == "PATCH":
+            code = re.search(r"code=eq\.(\w+)", req.url).group(1)
+            for i in EXPL["invit"]:
+                if i["code"] == code: i.update(req.post_data_json)
+            return route.fulfill(status=204, headers=hdr, body="")
         if req.method == "GET":
             # Comme Supabase : au plus PLAFOND lignes par requête (« Max rows »), tranche offset/limit respectée.
             from urllib.parse import parse_qs

@@ -21,7 +21,10 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
 6. **Base de production** : appliquer les migrations en attente sur `apidoo`. Depuis le 6 nov. 2026, Claude les applique lui-même
    par l'accès Supabase (décision de Pierre-Louis : pas d'action manuelle), une fois l'accord donné dans la conversation,
    avec un relevé de structure avant/après enregistré dans `migrations/releves/`. Pas de sauvegarde automatique pour le moment (D-03).
-7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`, case « migrations faites » si besoin. Seule la version exacte en recette est acceptée.
+7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`. Seule la version exacte en recette est acceptée.
+   Depuis IT-04, la mise en ligne compare elle-même la structure de la base `apidoo` aux fichiers de migrations
+   (`scripts/controler-structure.mjs`, clé publique, lecture seule) et refuse de partir en cas d'écart : il n'y a plus de
+   case « migrations faites ». En recette, un écart avec `apidoo-test` n'est qu'un avertissement.
 8. **Après** : vider la liste des migrations en attente, passer la version à « en production » dans `CHANGELOG.md`.
 
 ## Règles de contenu

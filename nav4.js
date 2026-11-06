@@ -205,13 +205,14 @@ const N4 = (() => {
     const cour = typeof EX != "undefined" ? EX.courante() : null;
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<div class="n4-moi"><span class="avatar">${esc(mail[0]?.toUpperCase() || "?")}</span><span class="u-todo-t"><b>${esc(mail.split("@")[0])}</b><span class="small">${esc(mail)}</span></span><button type="button" class="link" data-act="closesheet">Fermer</button></div>
-      ${ex.length ? `<section class="n4-bloc"><h3>Exploitation</h3>${ex.map((x) => `<button type="button" class="n4-ligne" aria-pressed="${x.id === cour}" data-act="n4expl" data-v="${x.id}"><span class="n4-radio ${x.id === cour ? "on" : ""}" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(x.nom)}</b><span class="small">${x.role === "responsable" ? "Responsable" : "Membre"}</span></span></button>`).join("")}
+      ${ex.length ? `<section class="n4-bloc"><h3>Exploitation</h3>${ex.map((x) => `<button type="button" class="n4-ligne" aria-pressed="${x.id === cour}" data-act="n4expl" data-v="${x.id}"><span class="n4-radio ${x.id === cour ? "on" : ""}" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(x.nom)}</b><span class="small">${esc(window.Regles?.compte?.libelleRole(x.role) || "Membre")}</span></span></button>`).join("")}
         <button type="button" class="n4-ligne" data-act="n4q" data-v="go" data-k="membres"><span class="u-todo-t"><b>Membres et invitations</b></span><span aria-hidden="true">›</span></button></section>` : ""}
       <section class="n4-bloc">
         <button type="button" class="n4-ligne" data-act="n4soleil" aria-pressed="${soleil()}"><span class="u-todo-t"><b>Mode plein soleil</b><span class="small">Plus de contraste dehors</span></span><span class="n4-inter ${soleil() ? "on" : ""}" aria-hidden="true"></span></button>
         <button type="button" class="n4-ligne" data-act="n4q" data-v="go" data-k="reglages"><span class="u-todo-t"><b>Réglages, exports et sauvegarde</b></span><span aria-hidden="true">›</span></button>
         ${installee() ? "" : `<button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>Installer sur l’écran d’accueil</b></span><span aria-hidden="true">›</span></button>`}
       </section>
+      <section class="n4-bloc"><a class="n4-ligne" href="confidentialite.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Confidentialité</b><span class="small">Où vont tes données, services utilisés</span></span><span aria-hidden="true">›</span></a></section>
       <button type="button" class="btn n4-sortir" data-act="logout">Se déconnecter</button>`;
     if (!$sheet.open) $sheet.showModal();
   };

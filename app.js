@@ -2297,6 +2297,9 @@ const ACT = {
   const cible = evt.target.closest("[data-act]");
   if (!(!cible || cible.disabled)) {
     evt.preventDefault();
+    // Lecture seule (IT-04) : une action de saisie n'est jamais lancée, même si un bouton reste visible.
+    if (typeof EX != "undefined" && EX.autorise && !EX.autorise(cible))
+      return toast("Tu as un acc\xE8s en lecture seule : demande \xE0 un responsable pour modifier.", !0);
     try {
       await ACT[cible.dataset.act](cible.dataset.v, cible.dataset.k, cible);
     } catch (erreur) {

@@ -32,4 +32,20 @@ jobs:
       - name: Installer Playwright
         run: pip install playwright
       - name: Tests
+        env:
+          SANS_SQL: "1"
         run: sh tests/lancer.sh _site/recette
+
+  # Tests SQL (IT-04, AP-FEAT-008) : migrations, règles d'accès entre exploitations, rôles, fonctions.
+  # Job séparé, sans navigateur : il tourne en parallèle et répond en moins d'une minute.
+  sql:
+    name: Tests SQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Migrations, règles d'accès et fonctions (Postgres en mémoire)
+        run: sh tests/sql/lancer.sh

@@ -1,0 +1,20 @@
+    # IT-04 — Confidentialité (AP-US-026) : page publiée, lien dans le compte et sur la présentation.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .n4-moi")
+    lien = page.locator("#sheet a[href='confidentialite.html']")
+    verif(lien.count() == 1 and "Confidentialité" in lien.inner_text(), "lien « Confidentialité » dans le menu du compte")
+    page.goto(url + "confidentialite.html"); page.wait_for_selector("h1")
+    t = page.locator("body").inner_text()
+    verif("Union européenne" in t and "Open-Meteo" in t and "fournisseur du navigateur" in t and "1 an" in t and "90 jours" in t,
+          "page : hébergement, services tiers, dictée et durées")
+    if cap: page.screenshot(path=cap + "/cf-page-375.png", full_page=True)
+    page.set_viewport_size({"width": 1280, "height": 900})
+    if cap: page.screenshot(path=cap + "/cf-page-1280.png", full_page=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    # Présentation (avant connexion).
+    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.goto(url); page.wait_for_selector(".dm-sombre", timeout=15000)
+    verif(page.locator(".dm-sombre a[href='confidentialite.html']").count() == 1, "lien sur l'écran de présentation, avant la connexion")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

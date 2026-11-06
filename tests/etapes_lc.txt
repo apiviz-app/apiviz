@@ -1,0 +1,45 @@
+    # IT-04 — Rôle lecteur (AP-US-019) : aucun bouton de saisie, et toute action de saisie est refusée.
+    import os
+    cap = os.environ.get("CAPTURES")
+    EXPL["miennes"][0]["role"] = "lecteur"
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R1, "date_visite": "2026-11-01", "activite": "Normale", "provisions": "Moyennes", "reine": "Vue",
+        "couvain": "Normal", "poids_kg": 40, "varroa": None, "note": "Calme", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False}]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.evaluate("document.documentElement.classList.contains('lecteur')"), "le rôle lecteur est appliqué à l'interface")
+    verif(page.locator(".ex-lecture >> text=Lecture seule").count() == 1, "repère « Lecture seule » sous le titre")
+    visibles = lambda sel: page.locator(sel).evaluate_all("l => l.filter(e => e.offsetParent !== null).length")
+    verif(visibles(".bottom [data-v=saisir]") == 0, "barre du bas : pas de bouton « Saisir »")
+    page.evaluate("ACT.go('saisir')"); page.wait_for_timeout(400)
+    verif(page.locator("[data-act=n4q]").evaluate_all("l => l.filter(e => e.offsetParent !== null && e.dataset.v !== 'go').length") == 0, "écran Saisir : aucune tuile de saisie")
+    page.evaluate("ACT.go('dash')"); page.wait_for_timeout(400)
+    verif(visibles(".fab") == 0 and visibles("[data-act=newvisite]") == 0 and visibles("[data-act=newvente]") == 0, "accueil : ni « + », ni « Nouvelle visite », ni « Nouvelle vente »")
+    if cap: page.screenshot(path=cap + "/lc-accueil-375.png", full_page=True)
+    # Écrans de consultation : rien à saisir, mais tout se lit.
+    for route, texte in (("ruches", "Ruche 1"), ("clients", "pots en stock"), ("miel", "L26-01"), ("agenda", "")):
+        page.evaluate("r => ACT.go(r)", route); page.wait_for_timeout(400)
+        boutons = page.locator(".wrap .btn[data-act], .wrap .chips button[data-act]").evaluate_all(
+            "l => l.filter(e => e.offsetParent !== null).map(e => e.dataset.act)")
+        permis = page.evaluate("Regles.compte.ACTIONS_LECTEUR")
+        verif(all(b in permis for b in boutons), f"{route} : aucun bouton de saisie visible ({', '.join(b for b in boutons if b not in permis) or 'rien'})")
+        if texte: verif(page.locator(f"text={texte}").count() >= 1, f"{route} : les données restent lisibles")
+    page.evaluate("ACT.ruche(arguments[0])" if False else f"ACT.ruche('{R1}')"); page.wait_for_timeout(400)
+    verif(page.locator("text=Calme").count() >= 1, "fiche de la ruche : le journal des visites se lit")
+    verif(visibles("[data-act=delvisite]") == 0, "fiche de la ruche : pas de lien « Supprimer »")
+    page.set_viewport_size({"width": 1280, "height": 900})
+    if cap: page.screenshot(path=cap + "/lc-ruche-1280.png", full_page=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    # Même un bouton de saisie qui resterait dans la page ne lance rien.
+    avant = len(recu["rpc"])
+    page.evaluate("document.querySelector('.wrap').insertAdjacentHTML('beforeend', '<button id=essai data-act=newvisite>x</button>')")
+    page.evaluate("document.getElementById('essai').click()")
+    page.wait_for_selector(".toast.err >> text=lecture seule", timeout=5000)
+    verif(page.evaluate("S.route") != "visite", "une action de saisie forcée est refusée avec un message")
+    # Le menu du compte montre le rôle ; on peut quitter l'exploitation.
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .n4-moi")
+    verif("Lecture seule" in page.locator("#sheet").inner_text(), "menu du compte : rôle « Lecture seule »")
+    page.click("#sheet [data-act=closesheet]")
+    EXPL["membres"][0]["role"] = "lecteur"
+    page.evaluate("ACT.go('membres')"); page.wait_for_selector("text=Membres · 2", timeout=10000)
+    verif(page.locator("[data-act=exquitter]").count() == 1 and page.locator("[data-act=exlien]").count() == 0, "écran Membres : quitter possible, pas d'invitation")
+    verif(len([n for n, b in recu["rpc"][avant:] if n in ("creer_visite", "creer_vente", "regler", "ajouter_stock")]) == 0, "aucune écriture envoyée au serveur")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

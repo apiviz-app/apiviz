@@ -1,0 +1,47 @@
+    # IT-04 — Invitations maîtrisées (AP-US-018) et invitation en lecture seule (AP-US-019).
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('membres')"); page.wait_for_selector("text=Membres · 2", timeout=10000)
+    # A. Choix du rôle et de l'usage avant de créer le lien ; par défaut : membre, une seule personne.
+    verif(page.locator("[data-act=exchoix][data-k=role][data-v=membre].on").count() == 1 and page.locator("[data-act=exchoix][data-k=unique][data-v=true].on").count() == 1,
+          "par défaut : rôle membre, lien pour une seule personne")
+    page.click("[data-act=exchoix][data-k=role][data-v=lecteur]")
+    verif(page.locator("text=ne peut rien saisir ni supprimer").count() == 1, "explication du rôle lecture seule")
+    if cap: page.screenshot(path=cap + "/iv-choix-375.png", full_page=True)
+    page.click("[data-act=exlien]"); page.wait_for_selector(".ex-lien input")
+    i = EXPL["invit"][-1]
+    verif(i["role"] == "lecteur" and i["usages_max"] == 1, "lien créé en base avec rôle lecteur et un seul usage : %s" % {k: i[k] for k in ("role", "usages_max")})
+    verif("pour une seule personne, en lecture seule" in page.locator(".ex-lien").inner_text(), "le lien affiché dit pour qui il vaut")
+    # B. Liste des liens actifs avec Révoquer ; révocation immédiate.
+    verif(page.locator(".ex-lienactif").count() == 1 and "Une personne · lecture seule" in page.locator(".ex-lienactif").inner_text(), "liste des liens actifs")
+    page.click("[data-act=exrevoquer]"); page.click("[data-act=exrevoquer] >> text=Confirmer")
+    page.wait_for_selector(".toast >> text=Lien révoqué", timeout=5000)
+    verif(EXPL["invit"][-1].get("revoque_le") and page.locator(".ex-lienactif").count() == 0, "lien révoqué : date en base, il disparaît de la liste")
+    # C. Lien pour plusieurs personnes comme membre.
+    page.click("[data-act=exchoix][data-k=role][data-v=membre]"); page.click("[data-act=exchoix][data-k=unique][data-v=false]")
+    page.locator("[data-act=exlien]").first.click(); page.wait_for_timeout(500)
+    verif(EXPL["invit"][-1]["role"] == "membre" and EXPL["invit"][-1]["usages_max"] is None, "lien pour plusieurs personnes : sans limite d'usages")
+    # D. Changer le rôle d'un membre : responsable, membre ou lecture seule.
+    page.click("[data-act=exrole][data-v='ami@apidoo.fr']"); page.wait_for_selector("#sheet[open] select[name=role]")
+    verif(page.locator("#sheet select[name=role] option").count() == 3, "trois rôles proposés")
+    page.select_option("#sheet select[name=role]", "lecteur"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Rôle modifié", timeout=5000)
+    verif(any(t == "membres" and c == {"role": "lecteur"} for t, c in patchs), "rôle lecteur enregistré pour ami@apidoo.fr")
+    # E. Ajout par e-mail avec le rôle choisi.
+    page.click("[data-act=exchoix][data-k=role][data-v=lecteur]")
+    page.fill("#ex_email", "Comptable@Apidoo.fr"); page.click("[data-act=exajout]")
+    page.wait_for_selector(".toast >> text=Ajouté", timeout=5000)
+    verif(EXPL["membres"][-1] == {"exploitation_id": E1, "email": "comptable@apidoo.fr", "role": "lecteur"}, "ajout par e-mail en lecture seule")
+    page.set_viewport_size({"width": 1280, "height": 900})
+    if cap: page.screenshot(path=cap + "/iv-membres-1280.png", full_page=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    # F. Lien qui a déjà servi : message clair (le serveur refuse, message de la migration 014).
+    code = uuid.uuid4().hex
+    EXPL["codes"][code] = None
+    page.route("**/rest/v1/rpc/rejoindre", lambda r: r.fulfill(status=400, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+               body=json.dumps({"code": "P0001", "message": "Ce lien a déjà servi : demandes-en un nouveau."})))
+    page.goto(url + "?invitation=" + code); page.wait_for_selector(".toast.err >> text=Ce lien a déjà servi", timeout=15000)
+    verif(True, "deuxième personne sur un lien à usage unique : « Ce lien a déjà servi »")
+    page.unroute("**/rest/v1/rpc/rejoindre")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

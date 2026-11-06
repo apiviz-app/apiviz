@@ -58,7 +58,7 @@
   la RLS de chaque table compare cette colonne à `exploitation_courante()` (exploitation choisie dans l'en-tête
   `x-exploitation`, dont l'utilisateur doit être membre). Créations atomiques par `creer_visite` et `creer_vente`.
   L'API renvoie au plus 1 000 lignes par requête (« Max rows ») ; détail dans `migrations/README.md`.
-- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 013, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
+- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 014, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
 - **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette. Tests SQL des migrations (Postgres en mémoire) : `tests/sql/`, lancés par `tests/lancer.sh`. La base simulée
   rend au plus 1 000 lignes par requête, comme Supabase.
 - **Après une visite** (IT-03, AP-FEAT-014) : `creer_visite` puis mise à jour locale par
@@ -86,6 +86,30 @@
   communes aux deux.
 - **Écritures à plusieurs** (IT-01) : `saveCfg` appelle `regler(p_modifs)` (fusion en base, `null` retire la clé),
   l'entrée de stock `ajouter_stock(p)` ; repli sur l'ancienne écriture si la migration 012 manque.
+- **Rôles et accès** (IT-04, migration 014) : `responsable` (invite, retire, restaure), `membre` (lit et écrit),
+  `lecteur` (lit seulement). Chaque table métier a quatre politiques : `lire` (`exploitation_courante()`), `ajouter`,
+  `modifier`, `supprimer` (`exploitation_ecriture()` : l'exploitation courante seulement si `peut_ecrire()`). Les
+  fonctions d'écriture appellent `exiger_ecriture()` (message « lecture seule »). Interface : liste blanche
+  `ACTIONS_LECTEUR` (`src/domaines/compte/regles.js`) ; la classe `lecteur` sur `<html>` et la règle CSS générée
+  masquent les boutons de saisie ; le répartiteur de clics d'`app.js` refuse toute autre action (`EX.autorise`).
+  Toute nouvelle action est donc interdite au lecteur tant qu'elle n'est pas ajoutée à la liste.
+- **Invitations** (IT-04) : `invitations.role`, `usages_max` (null = illimité), `usages`, `revoque_le` ;
+  `rejoindre()` refuse un lien révoqué, expiré ou épuisé ; une personne déjà membre ne consomme pas d'usage.
+- **Intégrité entre exploitations** (IT-04, AP-FEAT-009) : `creer_visite`/`creer_vente` vérifient sous RLS que la ruche,
+  le client, les articles et les lots sont de l'exploitation courante ; 14 clés étrangères composites
+  `(x_id, exploitation_id)` → `(id, exploitation_id)` (liste dans `rattachements()`). **Règle pour toute nouvelle table**
+  (AP-TECH-076) : une colonne qui référence un objet métier se double d'une clé composite avec `exploitation_id`.
+- **Journal d'audit** (IT-04, AP-FEAT-019) : déclencheur `audit` (fonction `auditer()`) sur les 16 tables métier, après
+  modification ou suppression : ancienne ligne en `jsonb`, auteur, date, identifiant de transaction (une suppression en
+  cascade partage le sien). Pas de trace pour un changement de stock seul. Lecture : responsables, écran Activité
+  (« Supprimé récemment », 30 jours). `restaurer(id)` : visites (avec intrants), ventes (avec lignes, si les pots sont
+  là), dépenses. Purge à 1 an à chaque écriture.
+- **Données de démonstration** (IT-04, AP-FEAT-018) : `tests/demo/exploitation-demo.json` → `tests/demo/operations.mjs`
+  → `scripts/demo.mjs` (API, compte d'essai en variables d'environnement, refuse la production) ou `tests/sql/test_demo.mjs`.
+  `exploitations.demo` ; `indicateurs_usage()` les exclut.
+- **Confidentialité** (IT-04, AP-FEAT-021) : `docs/CONFIDENTIALITE.md` (source) et `confidentialite.html` (page publiée,
+  sans script) ; `tests/unitaires/confidentialite.test.mjs` échoue si un nouveau service tiers apparaît dans le code
+  sans y être cité. Dictée : `VX.avantDictee()` montre l'information une fois (clé `apidoo-dictee-info`).
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).

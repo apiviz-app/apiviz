@@ -8,6 +8,7 @@
     R = [r["id"] for r in DATA["ruches"]]
     DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R[1], "date_visite": J(12), "activite": "Normale", "provisions": "Moyennes", "reine": "Non vue", "couvain": "Normal",
         "poids_kg": 42, "varroa": None, "note": "A surveiller", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False}]
+    page.add_init_script("localStorage.setItem('apidoo-dictee-info', '1')")  # information de la première dictée déjà vue (testée dans vx)
     page.add_init_script("""
       window.__recos = [];
       window.SpeechRecognition = window.webkitSpeechRecognition = class { constructor() { window.__recos.push(this); } start() {} stop() { this.onend && this.onend(); } };
