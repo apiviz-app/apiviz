@@ -1,13 +1,17 @@
 # Notes de version
 
-**État au 6 nov. 2026, 10 h 38.** Production et recette publient la **v5.16** (commit `ab93c53`, recette puis production
-le 6 nov. 2026). Jusqu'au 4 nov., la v5.14 (`554f98f`).
-Bases `apidoo` et `apidoo-test` : 000 à 012, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-012.json`).
-`apidoo-test` a aussi 013 (IT-03, 6 nov. 2026) ; **013 en attente pour `apidoo`**.
+**État au 6 nov. 2026, 15 h 10.** Production et recette publient la **v5.17** (commit `bc66584`, recette puis production
+le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jusqu'au 4 nov.
+Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
+Aucune migration en attente.
 
-## v5.17 · à publier en recette · noyau applicatif (IT-03)
-Migration : `migrations/013-noyau-resume-et-journal.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026**, à appliquer
-sur `apidoo` après accord. Elle n'ajoute qu'une vue, une table et une fonction : **l'ancienne version reste compatible**,
+## v5.17 · 6 nov. 2026 · en production · noyau applicatif (IT-03)
+Migration : `migrations/013-noyau-resume-et-journal.sql`, **appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026**
+(accord du responsable ; relevé avant/après : production identique à la recette).
+Publiée en recette puis en production le 6 nov. 2026 (Mise en ligne, trois étapes vertes ; `sw.js` en
+`apidoo-2026-11-06-bc66584`). Contrôle automatique des deux sites à 375 et 1 280 px : écran d'accueil sans erreur, noyau
+chargé (30 écrans), une seule feuille de style, aucun « vous ». **Pas encore fait : la rubrique « À vérifier » sur un
+vrai téléphone, connecté.** Elle n'ajoute qu'une vue, une table et une fonction : **l'ancienne version reste compatible**,
 et la nouvelle fonctionne aussi sans elle (les erreurs restent alors dans la console).
 
 Pour l'apiculteur, l'application est la même, avec trois différences voulues :
