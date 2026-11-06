@@ -25,3 +25,14 @@ de `leaflet@1.9.4` dans la variable `APIDOO_LEAFLET` (tous deux obtenus par `npm
 Limite de la couverture : c'est un indice, pas une preuve. Quelques fonctions bien exécutées (par exemple
 `viewPrevisions`, affichée par les captures) ressortent à zéro appel. Avant toute suppression, la chaîne des surcharges
 est vérifiée à la main et les tests repassent.
+
+## Relevés après IT-03 (6 nov. 2026, branche `claude/it-03-noyau`, même machine que `main` mesurée en même temps)
+
+- Tests : 28 de bout en bout, 38 unitaires, 3 SQL, 3 contrôles de structure, tous verts.
+- Ouverture, données des tests : médiane 0,48 s (`main` : 0,48 s), 16 lectures. Avant le regroupement des styles et des
+  modules à l'assemblage (`scripts/regrouper.py`), la branche ouvrait en 0,70 s : 37 feuilles et 25 modules chargés un
+  par un.
+- 300 colonies et 5 000 visites, 4G simulée : médiane 0,73 s (`main` : 0,68 s, écart dans le bruit), 20 lectures.
+- Captures `main` → branche, 30 écrans × 2 largeurs : différences limitées aux textes passés au tutoiement, au bloc
+  Registre de Gestion, aux liens « ‹ Gestion » du registre et de la déclaration, et à la classe d'animation `enter`
+  désormais posée sur les 7 écrans d'`essentiels.js`, `alveoles.js` et `tournee.js` qui ne l'avaient pas.

@@ -3,7 +3,45 @@
 **État au 6 nov. 2026.** Production et recette publient la **v5.14** (commit `554f98f`, constaté au relevé du
 5 nov. 2026) : les v5.0 à v5.14 sont donc en production. Les v5.15 et v5.16 sont sur `main`, pas encore publiées.
 Bases `apidoo` et `apidoo-test` : 000 à 012, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-012.json`).
-Aucune migration en attente.
+`apidoo-test` a aussi 013 (IT-03, 6 nov. 2026) ; **013 en attente pour `apidoo`**.
+
+## v5.17 · à publier en recette · noyau applicatif (IT-03)
+Migration : `migrations/013-noyau-resume-et-journal.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026**, à appliquer
+sur `apidoo` après accord. Elle n'ajoute qu'une vue, une table et une fonction : **l'ancienne version reste compatible**,
+et la nouvelle fonctionne aussi sans elle (les erreurs restent alors dans la console).
+
+Pour l'apiculteur, l'application est la même, avec trois différences voulues :
+- **Elle te tutoie partout.** Les documents qu'elle émet (registre, factures, reçus et messages aux clients) vouvoient.
+- **Registre et déclaration sont rangés dans Gestion** : un bloc « Registre et déclaration » et, depuis le registre, le
+  lien « ‹ Gestion » (il ramenait à Santé). L'onglet Santé garde son raccourci.
+- Les écrans météo, rappels, conseils du mois, fiche de lot, registre, fiche rucher et tournée ont la même petite
+  animation d'arrivée que les autres écrans.
+
+Sous le capot :
+- **Noyau d'écrans** : 30 écrans enregistrés une seule fois (`src/domaines/*/ecrans.js`) ; plus aucune surcharge de
+  `render`, `shell` ni des écrans ; environ 330 lignes de code jamais exécuté retirées.
+- **Une seule requête après une visite** (au lieu de relire toutes les tables).
+- **Journal des erreurs de production** (`journal_erreurs`, regroupé par minute, sans e-mail, purgé à 90 jours).
+- **Service worker à liste générée** : `sw.js` n'est plus tenu à la main ; version = date + commit.
+- **Styles** sortis d'`index.html` (jetons, composant Feuille, rubriques) ; styles et modules regroupés en un fichier
+  chacun à l'assemblage : ouverture mesurée identique à la v5.16 (0,48 s contre 0,48 s, base simulée).
+- **Tests** : 38 tests unitaires (calculs, ton, assemblage) dans « Vérifier » ; scénarios `nk`, `dl`, `je` ; 28 de bout
+  en bout.
+
+**Reporté à IT-03b** (décision du 6 nov. 2026) : chargement ciblé et paginé par domaine (`src/donnees/acces.js`, usage
+de `colonies_resume`), découpage des styles par composant et purge des règles redéfinies ou orphelines, écran de
+lecture du journal des erreurs, entrée « Opérations » de Gestion (l'écran n'existe pas encore).
+
+**À vérifier**
+1. Après mise en recette, le téléphone reprend la nouvelle version (`VERSION` de `sw.js` en `recette-apidoo-<date>-<commit>`),
+   l'accueil s'affiche ; mode avion puis réouverture : l'app s'ouvre.
+2. Parcourir Accueil, Ruchers (liste, carte, santé, fiche rucher, fiche ruche), Visite, Tournée, Miel (stock, lot,
+   vente, facture), Gestion (chaque bloc), Réglages, Équipe, recherche : rien ne manque par rapport à la v5.16.
+3. Enregistrer une visite avec un intrant : elle apparaît tout de suite au journal de la ruche, le stock baisse.
+4. Gestion › Registre et déclaration : le registre s'ouvre ; « ‹ Gestion » y ramène. Même chose pour la déclaration.
+5. Relire quelques écrans : plus aucun « vous » dans l'app ; le reçu d'une vente dit toujours « merci pour votre achat ».
+6. Base `apidoo-test`, éditeur SQL : `select * from journal_erreurs order by derniere_fois desc;` après une erreur
+   provoquée (par exemple une coupure réseau pendant un envoi) : une ligne, sans adresse e-mail.
 
 ## IT-02 · réalignement de la production (6 nov. 2026)
 Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de `sw.js` que la v5.16).
