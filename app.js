@@ -36,7 +36,10 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     taches: ["taches", "echeance"],
     budgets: ["budgets"],
     reglages: ["reglages"],
+    ruchers: ["ruchers", "nom"],
   },
+  // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
+  TABLES_FACULTATIVES = { ruchers: "015" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -305,7 +308,15 @@ async function lireTout(nomTable, tri, croissant) {
 }
 async function loadAll() {
   const cles = Object.keys(TABLES),
-    tables = await Promise.all(cles.map((cle) => lireTout(...TABLES[cle]))),
+    tables = await Promise.all(
+      cles.map((cle) =>
+        lireTout(...TABLES[cle]).catch((erreur) =>
+          TABLES_FACULTATIVES[cle] && /PGRST20[45]|42P01|does not exist|Could not find/.test(`${erreur?.code} ${erreur?.message}`)
+            ? []
+            : Promise.reject(erreur),
+        ),
+      ),
+    ),
     donnees = {};
   (tables.forEach((lignes, index) => (donnees[cles[index]] = lignes)),
     (S.d = donnees),

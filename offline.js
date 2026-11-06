@@ -88,6 +88,12 @@ const HL = (() => {
           d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0 });
           if (lot) lot.pots_restants = Number(lot.pots_restants) - Number(x.quantite);
         }
+      } else if (it.type === "rpc" && it.nom === "placer_rucher") {
+        // Rucher placé sans réseau (IT-05) : le rucher et ses colonies, comme le fera la base (migration 015).
+        const p = it.args.p, r = (d.ruchers || []).find((x) => x.id === p.id);
+        if (!r) continue;
+        Object.assign(r, { lat: p.lat, lng: p.lng });
+        (d.ruches || []).forEach((x) => { if (x.rucher_id === p.id) Object.assign(x, { lat: p.lat, lng: p.lng }); });
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
@@ -257,6 +263,9 @@ const HL = (() => {
       const p = it.args.p, pots = (p.lignes || []).reduce((s, l) => s + Number(l.quantite), 0);
       return ["Vente · " + (byId(d.clients || [], p.client_id)?.nom || "client"), dfr(p.date_vente) + " · " + pluriel(pots, "pot")];
     }
+    if (it.type === "rpc" && it.nom === "placer_rucher") {
+      return ["Position · " + ((d.ruchers || []).find((x) => x.id === it.args.p.id)?.nom || "rucher"), "placé sur la carte"];
+    }
     const l = it.lignes[0] || {};
     if (it.table === "recoltes") return ["Récolte · " + n(l.kg) + " kg", dfr(l.date_recolte)];
     if (it.table === "depenses") return ["Dépense · " + (l.libelle || ""), dfr(l.date_depense) + " · " + eur(l.montant)];
@@ -332,6 +341,7 @@ const HL = (() => {
           q: Object.fromEntries((intrants || []).map((x) => [x.article_id, Number(x.quantite)])) };
         return go("visite");
       }
+      if (it.type === "rpc") { toast("Abandonne cette saisie, puis refais-la : rien d’autre à corriger ici.", true); return; }
       const l = it.lignes[0] || {}, champs = CHAMPS[it.table] || [];
       sheet({
         title: "Corriger : " + libelle(it)[0], intro: it.erreur,
