@@ -6,10 +6,11 @@ import * as format from "./noyau/format.js";
 import * as finances from "./domaines/finances/regles.js";
 import * as sante from "./domaines/sante/regles.js";
 import * as meteo from "./domaines/meteo/regles.js";
+import * as visites from "./domaines/visites/regles.js";
 import { creerFile } from "./noyau/erreurs.js";
 import * as crochets from "./noyau/crochets.js";
 
-window.Regles = Object.freeze({ ...format, finances, sante, meteo });
+window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites });
 
 // Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
 // S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.

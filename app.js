@@ -317,6 +317,15 @@ async function loadAll() {
 async function refresh() {
   (await loadAll(), render());
 }
+// Après des visites enregistrées (IT-03, AP-FEAT-014, AP-US-009) : en ligne, elles sont ajoutées aux données du
+// téléphone comme le fait creer_visite côté base (src/domaines/visites/regles.js), sans relire toutes les tables :
+// une seule requête par visite. Hors ligne (saisie gardée) ou sans offline.js : la relecture habituelle.
+async function apresVisites(charges, local) {
+  if (local || typeof HL == "undefined" || !S.d) return refresh();
+  const extra = { auteur: S.session?.user?.email || "", created_at: new Date().toISOString() };
+  for (const p of charges) Regles.visites.appliquerVisite(S.d, p, extra);
+  (await HL.garderDonnees(), render());
+}
 async function write(requete, message) {
   if (typeof HL != "undefined") return HL.write(requete, message);
   const { error: erreur } = await requete;
@@ -2666,7 +2675,7 @@ function showTip(evt) {
               typeof RG != "undefined" && (await RG.apres(visite)),
               (S.ruche = visite.ruche_id),
               (S.route = "ruche"),
-              await refresh(),
+              await apresVisites([{ ...visite, q: void 0, couvain: visite.couvain === "Non vu" ? "" : visite.couvain, intrants, id: vid }], enAttente),
               toast(
                 enAttente ? "Visite gard\xE9e sur le t\xE9l\xE9phone" : "Visite enregistr\xE9e",
               ));
