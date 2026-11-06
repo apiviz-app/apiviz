@@ -1,0 +1,30 @@
+    # AP-FEAT-036 / AP-US-123 : erreurs en français, détail technique au journal.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    cas = page.evaluate("""() => [
+      ["42501", messageErreur({ code: "42501", message: "new row violates row-level security policy for table \\"taches\\"" })],
+      ["23503", messageErreur({ code: "23503", message: "update or delete on table violates foreign key constraint" })],
+      ["23505", messageErreur({ code: "23505", message: "duplicate key value violates unique constraint" })],
+      ["23514", messageErreur({ code: "23514", message: "new row violates check constraint" })],
+      ["P0001", messageErreur({ code: "P0001", message: "Stock insuffisant pour le lot L1 (reste 3 pots)" })],
+      ["PGRST301", messageErreur({ code: "PGRST301", message: "JWT expired" })],
+      ["reseau", messageErreur(new TypeError("Failed to fetch"))],
+      ["auth", messageErreur(Object.assign(new Error("Invalid login credentials"), { name: "AuthApiError", status: 400 }))],
+      ["appli", messageErreur(new Error("Choisis une ruche"))],
+      ["inconnu", messageErreur({ code: "XX000", message: "internal error: tuple concurrently updated" })],
+      ["bug", messageErreur(new TypeError("Cannot read properties of undefined (reading 'nom')"))],
+    ]""")
+    attendu = {"42501": "Ton rôle ne permet pas cette action.", "23503": "utilisé ailleurs", "23505": "existe déjà", "23514": "pas acceptée",
+               "P0001": "Stock insuffisant pour le lot L1", "PGRST301": "session a expiré", "reseau": "Pas de réseau", "auth": "E-mail ou mot de passe incorrect",
+               "appli": "Choisis une ruche", "inconnu": "Une erreur est survenue. Réessaie", "bug": "Une erreur est survenue. Réessaie"}
+    for code, texte in cas:
+        verif(attendu[code] in texte, "message pour %s : %s" % (code, texte))
+    verif(all(not any(m in t for m in ("violates", "JWT", "fetch", "tuple", "undefined")) for _, t in cas), "aucun message technique anglais affiché")
+
+    # Une vraie erreur de droits renvoyée par la base : message clair, détail au journal.
+    page.route("**/rest/v1/taches*", lambda r: r.fulfill(status=403, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+        body=json.dumps({"code": "42501", "message": "new row violates row-level security policy for table \"taches\"", "details": None, "hint": None})) if r.request.method == "POST" else r.fallback())
+    page.evaluate("ACT.addsug('Tâche refusée').catch(fail)")
+    page.wait_for_selector(".toast.err >> text=Ton rôle ne permet pas cette action", timeout=10000)
+    j = page.evaluate("JSON.parse(localStorage.getItem('apidoo-journal') || '[]')")
+    verif(any(e["code"] == "42501" and "row-level security" in e["message"] for e in j), "le détail technique part dans le journal")
+    page.unroute("**/rest/v1/taches*")
