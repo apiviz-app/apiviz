@@ -1,0 +1,34 @@
+    # AP-BUG-005 / AP-US-085 : réglages et entrées de stock sans écrasement entre membres.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # Pendant que ce téléphone affiche les réglages, un autre membre enregistre l'objectif.
+    DATA["reglages"][0]["data"]["objectif"] = 800
+    page.evaluate("saveCfg({ napi: 'A1234567' }, 'Réglages enregistrés')")
+    page.wait_for_selector(".toast >> text=Réglages enregistrés", timeout=10000)
+    d = DATA["reglages"][0]["data"]
+    verif(d.get("napi") == "A1234567" and d.get("objectif") == 800, "deux membres, deux clés : les deux sont gardées (%s)" % d)
+    verif(page.evaluate("cfg().objectif") == 800, "l'écran montre aussi la modification de l'autre membre")
+    regler = [b for n, b in recu["rpc"] if n == "regler"]
+    verif(regler and regler[-1]["p_modifs"] == {"napi": "A1234567"}, "seule la clé modifiée est envoyée")
+
+    # « Revenir aux valeurs calculées » retire la clé sim sans toucher au reste.
+    page.evaluate("saveCfg({ sim: { ruches: 9 } })"); page.wait_for_timeout(300)
+    verif(DATA["reglages"][0]["data"].get("sim") == {"ruches": 9}, "hypothèses enregistrées")
+    page.evaluate("ACT.resetsim()"); page.wait_for_selector(".toast >> text=Valeurs recalculées", timeout=10000)
+    d = DATA["reglages"][0]["data"]
+    verif("sim" not in d and d.get("objectif") == 800, "hypothèses retirées, le reste intact")
+
+    # Entrée de stock : l'autre membre a déjà ajouté 2 kg ; ce téléphone affiche encore l'ancien stock.
+    avant = float(DATA["articles"][0]["stock"])
+    DATA["articles"][0]["stock"] = avant + 2
+    page.evaluate("ACT.entree('%s')" % A1); page.wait_for_selector("#sheet[open] [name=q]")
+    page.fill("#sheet [name=q]", "3"); page.fill("#sheet [name=cout]", "15")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Stock mis à jour", timeout=10000)
+    verif(float(DATA["articles"][0]["stock"]) == avant + 5, "stock = %s + 2 (autre membre) + 3 (ici) : %s" % (avant, DATA["articles"][0]["stock"]))
+    deps = [x for x in DATA["depenses"] if x.get("article_id") == A1]
+    verif(len(deps) == 1 and float(deps[0]["montant"]) == 15, "une seule dépense de 15 € liée à l'entrée")
+    appel = [b for n, b in recu["rpc"] if n == "ajouter_stock"][-1]
+    # Même appel envoyé deux fois (réseau lent, double appui) : une seule dépense, un seul ajout.
+    page.evaluate("p => sb.rpc('ajouter_stock', p)", appel); page.wait_for_timeout(300)
+    verif(float(DATA["articles"][0]["stock"]) == avant + 5 and len([x for x in DATA["depenses"] if x.get("article_id") == A1]) == 1, "renvoyé, l'appel ne compte pas deux fois")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
