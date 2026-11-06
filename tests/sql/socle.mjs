@@ -8,12 +8,12 @@ import fs from "node:fs";
 export const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql", "005-securite-et-ping.sql",
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
   "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql",
-  "012-correctifs.sql", "013-noyau-resume-et-journal.sql", "014-roles-audit.sql"];
+  "012-correctifs.sql", "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql"];
 
 // Migrations relançables après 008 (000 à 009 ne le sont pas toutes : 008 ne se lance qu'une fois,
 // et 009 ne doit jamais être relancée en entier après 008).
 export const RELANCABLES = ["010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql",
-  "013-noyau-resume-et-journal.sql", "014-roles-audit.sql"];
+  "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql"];
 
 export const SUPABASE = `
 create role anon; create role authenticated; create role service_role;
@@ -82,7 +82,7 @@ export async function erreur(db, q, p) {
 export const id = (k, n) => `${k}${n.toString(16).padStart(7, "0")}-0000-4000-8000-000000000000`;
 export const EX = (k) => (k === 1 ? E1 : E2);
 
-/** Une ligne dans chacune des 16 tables métier, pour A et pour B (insérées sans RLS). */
+/** Une ligne dans chacune des 17 tables métier, pour A et pour B (insérées sans RLS). */
 export async function donnees(db) {
   await db.exec("reset role");
   for (const k of [1, 2]) {
@@ -90,6 +90,9 @@ export async function donnees(db) {
     await db.exec(`
       insert into public.fournisseurs (id, nom, exploitation_id) values ('${I(1)}', 'Fournisseur ${k}', '${e}');
       insert into public.articles (id, nom, type, unite, stock, seuil, fournisseur_id, exploitation_id) values ('${I(2)}', 'Candy', 'Consommable', 'kg', 10, 1, '${I(1)}', '${e}');
+      do $r$ begin if to_regclass('public.ruchers') is not null then
+        insert into public.ruchers (id, nom, exploitation_id) values ('${I(16)}', 'Rucher ${k}', '${e}');
+      end if; end $r$;
       insert into public.ruches (id, nom, etat, exploitation_id) values ('${I(3)}', 'Ruche ${k}', 'Bonne', '${e}'), ('${I(13)}', 'Ruche ${k}b', 'Bonne', '${e}');
       insert into public.visites (id, ruche_id, activite, provisions, reine, exploitation_id) values ('${I(4)}', '${I(3)}', 'Normale', 'Moyennes', 'Vue', '${e}');
       insert into public.visite_intrants (id, visite_id, article_id, quantite, exploitation_id) values ('${I(5)}', '${I(4)}', '${I(2)}', 1, '${e}');
@@ -107,7 +110,7 @@ export async function donnees(db) {
   }
 }
 
-/** Les 16 tables métier et, pour chacune, une ligne nouvelle valable dans l'exploitation k. */
+/** Les 17 tables métier (ruchers depuis 015) et, pour chacune, une ligne nouvelle valable dans l'exploitation k. */
 export const TABLES = {
   ruches: (k) => ({ nom: "Nouvelle " + k }),
   articles: (k) => ({ nom: "Article neuf " + k }),
@@ -125,6 +128,7 @@ export const TABLES = {
   budgets: (k) => ({ annee: 2031, poste: "Autre", montant: 1 }),
   visite_photos: (k) => ({ visite_id: id(k, 4), chemin: `${EX(k)}/n${k}.jpg` }),
   ruche_evenements: (k) => ({ ruche_id: id(k, 3), type: "installation" }),
+  ruchers: (k) => ({ nom: "Rucher neuf " + k }),
 };
 
 /** Requête d'insertion paramétrée pour une table et un objet { colonne: valeur }. */
