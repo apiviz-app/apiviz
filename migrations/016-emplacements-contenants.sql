@@ -391,7 +391,8 @@ end;
 $$;
 
 -- Change le statut d'une colonie (p : {id, colonie_id, statut, date, detail} ; id : identifiant de la saisie, pour la
--- file d'envoi). Sans effet si le statut est déjà celui-là (saisie renvoyée). Une sortie (morte, vendue, perdue) ou une remise en service est notée au registre, comme dans v3.js.
+-- file d'envoi). Sans effet si le statut est déjà celui-là (saisie renvoyée). Une sortie (morte, vendue, perdue) ou
+-- une remise en service est notée au registre, comme dans v3.js.
 create or replace function public.changer_statut(p jsonb)
 returns uuid language plpgsql set search_path = '' as $$
 declare
