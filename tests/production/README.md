@@ -11,7 +11,7 @@ mémoire par `tests/sql/test_donnees_essai.mjs` (lancé par `tests/lancer.sh`), 
 Tout porte « ESSAI IT-02 » dans le nom et un identifiant commençant par `e55a1002-` :
 
 - 3 ruches : « ESSAI IT-02 ruche 1 » et « ruche 2 » au rucher « ESSAI IT-02 départ », « ruche 3 » au rucher « ESSAI IT-02 arrivée » ;
-- 1 client « ESSAI IT-02 client » (avec adresse si 012 est appliquée) ;
+- 1 client « ESSAI IT-02 client » avec adresse (012 est appliquée en production depuis le 6 nov. 2026) ;
 - 1 lot « ESSAI-IT02 » de 5 pots de 500 g à 1 €, et 1 vente d'un pot à ce client, payée, sans facture.
 
 Le script s'arrête sans rien écrire si la base compte plus d'une exploitation.

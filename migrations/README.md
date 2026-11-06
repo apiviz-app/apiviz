@@ -24,10 +24,7 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | Relevé | Bases | Jusqu'à | Résultat |
 |---|---|---|---|
 | `structure-2026-11-06.json` | `apidoo` et `apidoo-test` | 011 | aucun écart |
-| `structure-2026-11-06-recette-apres-012.json` | `apidoo-test` | 012 | aucun écart |
-
-Après 012 en production : relever `apidoo` de la même façon, l'enregistrer dans `releves/`, et vérifier qu'il est
-identique au relevé de la recette après 012.
+| `structure-2026-11-06-apres-012.json` | `apidoo` et `apidoo-test` | 012 | aucun écart ; les 19 fonctions ont la même empreinte (corps, mode, `search_path`, droits) sur les deux bases |
 
 ## État des migrations
 
@@ -42,10 +39,10 @@ identique au relevé de la recette après 012.
 | 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | 3 nov. 2026 | présente, **date inconnue** (appliquée hors historique, écart E2) |
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
-| 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | **à appliquer**, après accord |
+| 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | 6 nov. 2026 (IT-02, relevé avant/après : structure identique à la recette) |
 | (correction E5, sans fichier) | `revoke execute … from public` sur `creer_visite` et `creer_vente` : aligne la recette sur la production | 6 nov. 2026 (entrée d'historique `e5_retrait_execution_public`) | déjà dans cet état |
 
-En attente pour la production : `012-correctifs.sql` (voir `a-appliquer-en-production.txt`).
+En attente pour la production : aucune (`a-appliquer-en-production.txt` est vide depuis le 6 nov. 2026).
 
 Tests SQL de 012 sur une base en mémoire : `node tests/sql/test_012.mjs` (lancé aussi par `tests/lancer.sh`).
 
