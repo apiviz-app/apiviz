@@ -10,9 +10,10 @@ const HL = (() => {
   const st = { hors: navigator.onLine === false, depuis: null, file: [], envoi: false, essai: 0 };
 
   // ---------- Stockage local (IndexedDB), avec repli en mémoire ----------
-  let dbP = null;
+  let dbP = null, ferme = false;
   const memoire = { kv: new Map(), file: new Map() };
   function db() {
+    if (ferme) return Promise.resolve(null); // déconnexion en cours : plus rien n'est écrit sur l'appareil
     if (!dbP) dbP = new Promise((ok) => {
       try {
         const r = indexedDB.open("apidoo-hors-ligne" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
@@ -367,6 +368,13 @@ const HL = (() => {
     horsLigne: () => st.hors,
     nb: () => st.file.length, // toutes les saisies pas encore enregistrées, y compris celles à corriger
     nbCorriger: () => aCorriger().length,
+    // Déconnexion (AP-BUG-003) : ferme la base locale pour qu'elle puisse être supprimée, et oublie tout.
+    fermer: async () => {
+      ferme = true;
+      const d = await dbP?.catch(() => null);
+      d?.close(); dbP = null;
+      st.file = []; memoire.kv.clear(); memoire.file.clear();
+    },
     ficheCorriger,
     enAttente: (id) => !!saisieDe(id),
   };

@@ -2332,6 +2332,68 @@ const twoStep = async (bouton, confirmation, action) => {
       bouton.isConnected && (delete bouton.dataset.armed, (bouton.textContent = texte));
     }, 4e3));
 };
+// ---------- Déconnexion : rien ne reste sur l'appareil (AP-BUG-003, AP-US-027) ----------
+// Purge seulement sur une déconnexion demandée : une session expirée (SIGNED_OUT automatique) garde la file.
+async function purgerLocal() {
+  for (const module of [typeof HL != "undefined" && HL, typeof PH != "undefined" && PH])
+    module?.fermer && (await module.fermer().catch(() => {}));
+  const suffixe = window.APIDOO?.env === "recette" ? "-recette" : "",
+    bases = ["apidoo-hors-ligne" + suffixe, "apidoo-photos" + suffixe];
+  await Promise.all(
+    bases.map(
+      (nom) =>
+        new Promise((fini) => {
+          try {
+            const requete = indexedDB.deleteDatabase(nom);
+            requete.onsuccess = requete.onerror = requete.onblocked = () => fini();
+          } catch {
+            fini();
+          }
+        }),
+    ),
+  );
+  // Clés apidoo-* de cet environnement. La recette et la production partagent l'origine : on laisse les clés
+  // propres à l'autre environnement (suffixe -recette vu depuis la production).
+  try {
+    Object.keys(localStorage)
+      .filter((cle) => cle.startsWith("apidoo-") && (suffixe || !cle.endsWith("-recette")))
+      .forEach((cle) => localStorage.removeItem(cle));
+    sessionStorage.clear();
+  } catch {}
+  Object.assign(S, { d: null, sim: null, ruche: null, visite: null, vente: null, route: "dash" });
+}
+async function deconnecter() {
+  $sheet.open && $sheet.close();
+  // Hors ligne, signOut ne joint pas le serveur : on ferme au moins la session sur l'appareil.
+  try {
+    const { error: erreur } = await sb.auth.signOut();
+    if (erreur) throw erreur;
+  } catch {
+    await sb.auth.signOut({ scope: "local" }).catch(() => {});
+  }
+  await purgerLocal();
+  // En ligne : on recharge pour repartir de zéro. Hors ligne, le rechargement pourrait échouer : on affiche
+  // l'écran de connexion, et la page sera rechargée à la prochaine connexion (bases locales rouvertes).
+  if (navigator.onLine !== !1) return location.replace(location.pathname);
+  ((S.purge = !0), (S.session = null), render());
+}
+sb.auth.onAuthStateChange((evenement) => {
+  evenement === "SIGNED_IN" && S.purge && location.reload();
+});
+function ficheDeconnexion(alerte) {
+  const nombre = HL.nb(),
+    aCorriger = HL.nbCorriger();
+  (($sheetForm.onsubmit = (evt) => evt.preventDefault()),
+    ($sheetForm.innerHTML = `<h2>Se d\xE9connecter ?</h2>
+    <p>${nombre > 1 ? nombre + " saisies ne sont" : "Une saisie n\u2019est"} pas encore enregistr\xE9e${nombre > 1 ? "s" : ""} sur le serveur${aCorriger ? ` (dont ${aCorriger} \xE0 corriger)` : ""}.</p>
+    <p class="small">Si tu te d\xE9connectes maintenant, ${nombre > 1 ? "elles seront supprim\xE9es" : "elle sera supprim\xE9e"} de cet appareil avec toutes les donn\xE9es gard\xE9es pour le hors ligne.</p>
+    ${alerte ? `<p class="notice" role="status">${esc(alerte)}</p>` : ""}
+    <button type="button" class="btn main block" data-act="decoenvoyer">Envoyer d\u2019abord</button>
+    ${aCorriger ? '<button type="button" class="btn block" data-act="hlcorriger">Voir les saisies \xE0 corriger</button>' : ""}
+    <button type="button" class="btn block danger" data-act="decoforcer">Supprimer quand m\xEAme</button>
+    <button type="button" class="btn" data-act="closesheet">Annuler</button>`),
+    $sheet.open || $sheet.showModal());
+}
 function quickSheet() {
   const choix = [
     ["newvisite", "Visite"],
@@ -2352,8 +2414,13 @@ const ACT = {
     ((S.authMode = valeur), (S.authMsg = ""), authView());
   },
   logout: async () => {
-    await sb.auth.signOut();
+    if (typeof HL != "undefined" && HL.nb() > 0) return ficheDeconnexion();
+    await deconnecter();
   },
+  decoenvoyer: async () => {
+    (await HL.envoyer(), HL.nb() ? ficheDeconnexion("Il reste des saisies : le r\xE9seau manque ou certaines sont \xE0 corriger.") : await deconnecter());
+  },
+  decoforcer: (valeur, cle, bouton) => twoStep(bouton, "Confirmer : supprimer et se d\xE9connecter", deconnecter),
   ruche: (valeur) => {
     ((S.ruche = valeur), go("ruche"));
   },
