@@ -23,7 +23,17 @@ rm -rf "$sortie"
 copier "$prod" "$sortie"
 copier "$rec" "$sortie/recette"
 cp "$rec"/environnements/recette/* "$sortie/recette/"
-sed -i 's/const VERSION = "/const VERSION = "recette-/' "$sortie/recette/sw.js"
+
+# Version (date du commit + commit) et liste des fichiers gardés hors ligne, générées depuis index.html (IT-03).
+version() { # $1 : dossier source
+  if git -C "$1" rev-parse -q --verify HEAD > /dev/null 2>&1; then
+    echo "apidoo-$(git -C "$1" log -1 --format=%cs)-$(git -C "$1" rev-parse --short HEAD)$(git -C "$1" diff --quiet HEAD -- . 2>/dev/null || echo -modifie)"
+  else echo "apidoo-$(date -u +%F)-local"; fi
+}
+python3 "$rec/scripts/generer-coquille.py" "$sortie" "$(version "$prod")"
+python3 "$rec/scripts/generer-coquille.py" "$sortie/recette" "recette-$(version "$rec")"
+# Sources antérieures à IT-03 (sw.js écrit à la main) : la recette garde son préfixe comme avant.
+grep -q 'const VERSION = "recette-' "$sortie/recette/sw.js" || sed -i 's/const VERSION = "/const VERSION = "recette-/' "$sortie/recette/sw.js"
 
 # Garde-fou : chaque environnement ne parle qu'à sa propre base.
 # Tous les fichiers publiés en production, sous-dossiers compris, sauf le dossier de la recette.
