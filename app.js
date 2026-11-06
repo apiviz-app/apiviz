@@ -178,8 +178,8 @@ function toast(message, erreur) {
     setTimeout(() => bulle.remove(), erreur ? 6e3 : 3e3));
 }
 // ---------- Erreurs : message en français pour l'utilisateur, détail au journal (AP-FEAT-036) ----------
-// Journal : en attendant la table journal_erreurs (IT-03), console et 50 dernières entrées sur l'appareil
-// (clé apidoo-journal, effacée à la déconnexion). IT-03 n'aura qu'à brancher cette fonction sur la table.
+// Journal : console et 50 dernières entrées sur l'appareil (clé apidoo-journal, effacée à la déconnexion),
+// plus une copie regroupée dans la table journal_erreurs (IT-03, src/noyau/erreurs.js).
 function journaliser(type, detail) {
   const entree = {
     at: new Date().toISOString(),
@@ -190,6 +190,11 @@ function journaliser(type, detail) {
     details: String(detail?.details || detail?.hint || "").slice(0, 500),
   };
   console.warn("[apidoo]", type, detail);
+  // Copie au journal de production (IT-03, table journal_erreurs) : message nettoyé, sans e-mail ni donnée métier.
+  try {
+    const lieu = String(detail?.stack || "").match(/([\w.-]+\.js):(\d+):(\d+)/);
+    window.Noyau?.journal.signaler(type, { ...entree, source: lieu ? lieu.slice(1).join(":") : "" });
+  } catch {}
   try {
     const liste = JSON.parse(localStorage.getItem("apidoo-journal") || "[]");
     (liste.push(entree), localStorage.setItem("apidoo-journal", JSON.stringify(liste.slice(-50))));

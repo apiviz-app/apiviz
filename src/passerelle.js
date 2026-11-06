@@ -6,5 +6,19 @@ import * as format from "./noyau/format.js";
 import * as finances from "./domaines/finances/regles.js";
 import * as sante from "./domaines/sante/regles.js";
 import * as meteo from "./domaines/meteo/regles.js";
+import { creerFile } from "./noyau/erreurs.js";
 
 window.Regles = Object.freeze({ ...format, finances, sante, meteo });
+
+// Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
+// S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.
+const journal = creerFile({
+  version: document.querySelector('meta[name="apidoo-version"]')?.content || "dev",
+  pret: () => typeof S !== "undefined" && !!S.session && navigator.onLine !== false,
+  envoyer: async (p) => {
+    const { error } = await sb.rpc("journaliser_erreur", { p });
+    if (error) throw error; // fonction absente (base sans 013) ou refus : l'erreur reste dans la console
+  },
+});
+addEventListener("pagehide", () => journal.vider());
+window.Noyau = { journal };

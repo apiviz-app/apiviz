@@ -1,0 +1,19 @@
+    # AP-FEAT-016 / AP-US-016 : une erreur JavaScript chez un utilisateur part au journal de production,
+    # regroupée (compteur), avec version et écran, sans e-mail ni donnée métier.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.wait_for_timeout(300)
+    page.evaluate("""() => { for (let i = 0; i < 50; i++) setTimeout(() => { throw new TypeError("boum pour pl@exemple.fr dans « Ruche 1 »"); }, 0); }""")
+    page.evaluate("fail({ code: 'XX000', message: 'internal error: tuple concurrently updated' })")
+    page.wait_for_timeout(6500)  # regroupement : un envoi toutes les 5 s au plus
+    envois = [b["p"] for n, b in recu["rpc"] if n == "journaliser_erreur"]
+    script = [p for p in envois if p["message"].startswith("script")]
+    verif(len(script) == 1 and script[0]["nombre"] == 50, "50 erreurs identiques : un seul envoi, compteur 50 : %s" % [(p["message"], p["nombre"]) for p in envois])
+    verif(script and script[0]["ecran"] == "ruche" and script[0]["version"], "écran et version : %s" % (script[:1],))
+    verif(any("XX000" in p["message"] for p in envois), "une erreur inconnue de la base part aussi au journal")
+    verif(all("@" not in json.dumps(p) and "Ruche 1" not in json.dumps(p) for p in envois), "ni e-mail ni nom de ruche dans le journal")
+    erreurs.clear()  # les 50 erreurs étaient voulues
+    # Sans session : rien n'est envoyé.
+    nb = len(envois)
+    page.evaluate("S.session = null; setTimeout(() => { throw new Error('après déconnexion'); }, 0)"); page.wait_for_timeout(6000)
+    verif(len([1 for n, b in recu["rpc"] if n == "journaliser_erreur"]) == nb, "sans session, aucun envoi")
+    erreurs.clear()
