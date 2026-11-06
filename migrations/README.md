@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -25,6 +25,7 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 |---|---|---|---|
 | `structure-2026-11-06.json` | `apidoo` et `apidoo-test` | 011 | aucun écart |
 | `structure-2026-11-06-apres-012.json` | `apidoo` et `apidoo-test` | 012 | aucun écart ; les 19 fonctions ont la même empreinte (corps, mode, `search_path`, droits) sur les deux bases |
+| `structure-2026-11-06-recette-apres-013.json` | `apidoo-test` seulement | 013 | avant 013 : identique à « apres-012 » ; après : uniquement les ajouts de 013, empreinte de `journaliser_erreur` identique au fichier |
 
 ## État des migrations
 
@@ -40,11 +41,12 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
 | 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | 6 nov. 2026 (IT-02, relevé avant/après : structure identique à la recette) |
+| 013-noyau-resume-et-journal.sql | Vue `colonies_resume` (dernière visite, dernier poids, dernier comptage varroa, nombre de visites par colonie ; `security_invoker`) ; table `journal_erreurs` (RLS sans politique : aucun accès par l'API) ; `journaliser_erreur()` (écriture regroupée par minute, e-mails masqués, purge à 90 jours). Additive, ne casse pas l'ancienne version (IT-03) | 6 nov. 2026 (relevé avant/après ; `revoke` de la vue relancé à part après ajout au fichier) | à faire, après accord |
 | (correction E5, sans fichier) | `revoke execute … from public` sur `creer_visite` et `creer_vente` : aligne la recette sur la production | 6 nov. 2026 (entrée d'historique `e5_retrait_execution_public`) | déjà dans cet état |
 
 En attente pour la production : aucune (`a-appliquer-en-production.txt` est vide depuis le 6 nov. 2026).
 
-Tests SQL de 012 sur une base en mémoire : `node tests/sql/test_012.mjs` (lancé aussi par `tests/lancer.sh`).
+Tests SQL de 012 et 013 sur une base en mémoire : `node tests/sql/test_012.mjs`, `node tests/sql/test_013.mjs` (lancés aussi par `tests/lancer.sh`).
 
 ## Relevé des deux bases — 6 novembre 2026
 
