@@ -57,7 +57,7 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 |---|---|---|---|
 | D-01 | ~~La source non minifiée de `app.js` existe-t-elle ?~~ **Non (réponse du 6 nov. 2026) : source reconstituée en IT-00** | — | IT-00 |
 | D-02 | ~~Autoriser l'application de 010 et 011 en production~~ **Accordée et réalisée le 5 nov. 2026** | — | IT-02 |
-| D-03 | Où stocker les sauvegardes chiffrées (hors dépôt public) et qui détient la clé | Pas de sauvegarde automatique sur l'offre gratuite (Supabase Pro en ferait une partie, voir 12 §6) | IT-02 |
+| D-03 | Où stocker les sauvegardes chiffrées (hors dépôt public) et qui détient la clé. **6 nov. 2026 : reportée, pas de sauvegarde automatique pour le moment** ; recommandation : Cloudflare R2, clé `age` détenue hors ligne par le responsable | Pas de sauvegarde automatique sur l'offre gratuite (Supabase Pro en ferait une partie, voir 12 §6) | avant toute migration non additive |
 | D-04 | Confirmer le tutoiement dans toute l'application | Charte de ton | IT-03 |
 | D-05 | Facturation électronique 2027 : export Factur-X, partenaire agréé, ou hors périmètre (Apidoo ne facture qu'aux particuliers) | Obligation d'émission pour les PME au 1er sept. 2027 | IT-21 |
 | D-06 | Cible des 12 prochains mois : amateurs et passionnés (recommandé), ou professionnels d'emblée | Ordre des phases 4 à 7 | IT-05 |
