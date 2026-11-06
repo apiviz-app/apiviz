@@ -18,15 +18,9 @@ const UX = (() => {
   let bootEnCours = null;
   window.boot = () => bootEnCours || (bootEnCours = Promise.resolve().then(bootAvant).finally(() => { bootEnCours = null; }));
 
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route === "carte" && S.session && S.d && S.member !== false && !S.recovery) {
-      carte();
-      if (S.lastRoute !== S.route) { window.scrollTo?.(0, 0); document.querySelector(".wrap")?.classList.add("enter"); }
-      S.lastRoute = S.route;
-    } else renderAvant();
-    document.body.dataset.route = S.route;
-  };
+  // Écran « carte » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, UX.carte).
+  // La route est notée sur <body> après chaque rendu (crochet du noyau, IT-03).
+  Noyau.crochets.sur("apresRendu", "ux.route", () => { document.body.dataset.route = S.route; });
 
   // ---------- Petits morceaux ----------
   const chip = (txt, ton = "") => `<span class="u-chip ${ton}">${esc(txt)}</span>`;

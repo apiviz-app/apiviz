@@ -48,8 +48,8 @@ const RP = (() => {
       (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
     } catch {}
   }
-  const renderAvant = window.render;
-  window.render = function () { renderAvant(); pastille(); };
+  // Pastille de l'icône mise à jour après chaque rendu (crochet du noyau, IT-03).
+  Noyau.crochets.sur("apresRendu", "rappels.pastille", pastille);
 
   const bouton = () => (aExporter().length ? '<button class="btn" data-act="rpics">Mettre dans mon agenda</button>' : "");
   return { ics, pastille, bouton };

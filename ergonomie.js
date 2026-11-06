@@ -269,26 +269,28 @@ const ER = (() => {
   });
 
   // ---------- Après chaque écran ----------
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // Crochet du noyau (IT-03).
+  Noyau.crochets.sur("apresCoquille", "ergonomie", () => {
     poser();
     ariane();
     videsUtiles();
-  };
+  });
 
   // ---------- Revenir au même endroit ----------
   const hauteurs = new Map();
   let retour = false;
   document.addEventListener("click", (e) => { if (e.target.closest?.(".u-retour")) retour = true; }, true);
-  const renderAvant = window.render;
-  window.render = function () {
+  // Crochets du noyau (IT-03) : hauteur notée avant le rendu, rétablie après si l'on revient par « ‹ ».
+  let revient = false;
+  Noyau.crochets.sur("avantRendu", "ergonomie.defilement", () => {
     if (S.lastRoute && S.lastRoute !== S.route) hauteurs.set(S.lastRoute, window.scrollY);
-    const change = S.lastRoute !== S.route, revient = retour && change;
+    revient = retour && S.lastRoute !== S.route;
     retour = false;
-    renderAvant();
+  });
+  Noyau.crochets.sur("apresRendu", "ergonomie.defilement", () => {
     if (revient && hauteurs.get(S.route)) requestAnimationFrame(() => window.scrollTo(0, hauteurs.get(S.route)));
-  };
+    revient = false;
+  });
 
   return { fermerDoux, bloc, jauge };
 })();

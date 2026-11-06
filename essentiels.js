@@ -332,29 +332,18 @@ const ES = (() => {
     if (l.length) await write(sb.from("taches").insert(l.map((titre) => ({ titre, echeance: fin }))), "Ajouté à l’agenda");
   };
 
-  // ---------- Après chaque écran ----------
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // ---------- Après chaque écran (crochets du noyau, IT-03) ----------
+  Noyau.crochets.sur("apresCoquille", "essentiels", () => {
     Object.assign(MT.SEUILS, cfg().meteo || {});
     cloche();
     if (S.route === "dash") document.querySelector(".u-liste .u-entete")?.insertAdjacentHTML("beforeend", '<button type="button" class="link" data-act="go" data-v="saison">Ce mois-ci</button>');
     appliquerBandeau();
     prevenir().catch(() => {});
-  };
-
-  // ---------- Routage ----------
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route !== "reglages") S.rgForm = false;
-    const v = VUES[S.route];
-    if (!v || !S.session || !S.d || S.member === false || S.recovery) { renderAvant(); return appliquerBandeau(); }
-    v();
-    appliquerBandeau();
-    if (S.lastRoute !== S.route) window.scrollTo?.(0, 0);
-    S.lastRoute = S.route;
-    document.body.dataset.route = S.route;
-  };
+  });
+  Noyau.crochets.sur("avantRendu", "essentiels.reglages", () => { if (S.route !== "reglages") S.rgForm = false; });
+  Noyau.crochets.sur("apresRendu", "essentiels.bandeau", () => { appliquerBandeau(); });
+  // Les écrans de VUES (météo, rappels, registre, lot, facture, saison) sont enregistrés dans le noyau :
+  // src/domaines/*/ecrans.js.
 
   return { VUES, memo, retour, phrase, jourLong };
 })();

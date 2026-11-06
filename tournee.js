@@ -443,7 +443,7 @@ const TN = (() => {
     const p = document.getElementById("tn_poids");
     if (p) p.addEventListener("input", () => { const f = fiche(courante()); f.poids_kg = p.value === "" ? null : Number(p.value); sauver(); });
   }
-  ES.VUES.tournee = vue;
+  // Écran « tournee » enregistré dans le noyau : src/domaines/visites/ecrans.js (TN.vue).
 
   // ---------- Actions ----------
   ACT.v3tournee = (cle) => {
@@ -530,5 +530,5 @@ const TN = (() => {
     aller(f.etat === "enregistree" ? T().i + 1 : T().i);
     return true;
   }
-  return { retour, decouper, comprendre };
+  return { retour, decouper, comprendre, vue };
 })();

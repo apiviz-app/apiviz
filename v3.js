@@ -35,19 +35,10 @@ const V3 = (() => {
   window.loadAll = async function () { await loadAvant(); separer(S.d); };
   if (S.d) separer(S.d);
 
+  // Écrans récolte, varroa, déclaration, activité et recherche : enregistrés dans le noyau (src/domaines/…, V3.vues).
   const VUES = { recolte: vueRecolte, varroa: vueVarroa, declaration: vueDeclaration, activite: vueActivite, recherche: vueRecherche };
-  const renderAvant = window.render;
-  window.render = function () {
-    const v = VUES[S.route];
-    if (v && S.session && S.d && S.member !== false && !S.recovery) {
-      v();
-      if (S.lastRoute !== S.route) { window.scrollTo?.(0, 0); document.querySelector(".wrap")?.classList.add("enter"); }
-      S.lastRoute = S.route;
-      document.body.dataset.route = S.route;
-    } else renderAvant();
-  };
-  const shellAvant = window.shell;
-  window.shell = function (...a) { shellAvant(...a); boutonRecherche(); };
+  // Bouton de recherche dans la barre du haut, après chaque coquille (crochet du noyau, IT-03).
+  Noyau.crochets.sur("apresCoquille", "v3.recherche", () => boutonRecherche());
   function boutonRecherche() {
     const tb = document.querySelector(".topbar");
     if (!tb || tb.querySelector(".v3-cherche")) return;
@@ -600,5 +591,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer };
+  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES };
 })();

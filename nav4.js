@@ -20,10 +20,13 @@ const N4 = (() => {
   const TITRES = { pilotage: "Bilan", miel: "Miel", materiel: "Matériel" };
 
   // ---------- Coquille : titres, onglets Ruchers, badge Miel, avatar ----------
-  const shellAvant = window.shell;
-  window.shell = function (titre, ...reste) {
+  // Crochets de la coquille (IT-03) : titres et sous-titres avant, onglets, retours, badge et avatar après.
+  Noyau.crochets.sur("avantCoquille", "nav4.titres", (a) => {
+    const [titre, ...reste] = a;
     if (S.route === "materiel" || S.route === "miel") reste[0] = "";
-    shellAvant(TITRES[S.route] || titre, ...reste);
+    return [TITRES[S.route] || titre, ...reste];
+  });
+  Noyau.crochets.sur("apresCoquille", "nav4", () => {
     const wrap = document.querySelector(".wrap");
     if (["ruches", "carte", "varroa"].includes(S.route) && wrap && S.d?.ruches.length) {
       wrap.querySelector(".head")?.insertAdjacentHTML("afterend", subtabs([["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]], S.route, "go"));
@@ -37,7 +40,7 @@ const N4 = (() => {
       if (nb) document.querySelector('.bottom [data-v="ventes"] svg')?.insertAdjacentHTML("afterend", `<span class="n4-badge" aria-label="${nb} vente(s) à suivre">${nb}</span>`);
     }
     document.querySelectorAll('.topbar .avatar, .side .me .avatar').forEach((a) => { a.dataset.act = "n4compte"; a.removeAttribute("data-v"); a.setAttribute("aria-label", "Mon compte"); });
-  };
+  });
   const gabarit = (html) => { const t = document.createElement("template"); t.innerHTML = html; return [...t.content.childNodes]; };
   const retour = (wrap) => wrap?.insertAdjacentHTML("afterbegin", '<button type="button" class="link u-retour" data-act="go" data-v="plus">‹ Gestion</button>');
 
@@ -76,14 +79,13 @@ const N4 = (() => {
 
   // Visite commencée puis quittée : on peut la reprendre depuis le bouton +.
   let brouillon = null, heure = "";
-  const renderAvant = window.render;
-  window.render = function () {
+  // Avant chaque rendu (crochet du noyau, IT-03) : garder le brouillon de visite, cartes grisées pendant le chargement.
+  Noyau.crochets.sur("avantRendu", "nav4", () => {
     if (S.lastRoute === "visite" && S.route !== "visite" && S.visite && !enregistree.has(S.visite) && !S.tournee) {
       brouillon = S.visite; heure = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     }
-    if (S.session && !S.d && S.member !== false && !S.recovery) return squelette();
-    renderAvant();
-  };
+    if (S.session && !S.d && S.member !== false && !S.recovery) return squelette(), true;
+  });
   const enregistree = new WeakSet();
   if (typeof VR != "undefined") {
     const enregAvant = VR.enregistrer;

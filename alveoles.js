@@ -33,9 +33,8 @@ const AL = (() => {
   const zoneMeteo = (k, nb = 3) => `<div class="al-wx" data-k="${esc(k)}" data-jours="${nb}">${MT.html(k, ruchesDe(k), nb)}</div>`;
   const RETOURS = { agenda: ["dash", "Accueil"], activite: ["dash", "Accueil"], registre: ["varroa", "Santé"], declaration: ["varroa", "Santé"] };
 
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // Après chaque coquille (crochet du noyau, IT-03) : logo, compagnon API dans la barre, liens de retour.
+  Noyau.crochets.sur("apresCoquille", "alveoles", () => {
     if (S.route !== "dash") S.alVu = false;
     document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
     document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
@@ -44,7 +43,7 @@ const AL = (() => {
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
     if (S.route === "varroa") lienSante();
-  };
+  });
   function lienSante() {
     const an = new Date().getFullYear();
     document.querySelector(".subtabs")?.insertAdjacentHTML("afterend", `<div class="al-liens"><button type="button" data-act="go" data-v="registre"><b>Registre d’élevage</b><span class="small">Traitements et ordonnances</span></button>
@@ -270,15 +269,7 @@ const AL = (() => {
       <section class="al-ruches"><h2>${esc(U.pluriel(rs.length, "ruche"))}</h2>${lignes}</section>`);
     document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", '<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruchers</button>');
   }
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route === "rucher" && S.session && S.d && S.member !== false && !S.recovery) {
-      vueRucher();
-      if (S.route !== "rucher") return;
-      if (S.lastRoute !== "rucher") window.scrollTo?.(0, 0);
-      S.lastRoute = "rucher"; document.body.dataset.route = "rucher";
-    } else renderAvant();
-  };
+  // Écran « rucher » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, AL.vueRucher).
 
   // ---------- Fiche ruche : la courbe de poids reste visible ----------
   const rucheAvant = window.viewRuche;
@@ -373,5 +364,5 @@ const AL = (() => {
     document.querySelectorAll(".al-recents .chip").forEach((b) => b.classList.toggle("on", b.dataset.v === id));
   };
 
-  return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
+  return { compagnon, phrase, ruchesDe, vueRucher, meteoPrete: () => window.AL_meteoPrete() };
 })();
