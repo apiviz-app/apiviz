@@ -38,8 +38,10 @@ export async function base({ jusqua = ORDRE.at(-1), deuxFois = [] } = {}) {
   const db = new PGlite();
   await db.exec(SUPABASE);
   for (const f of ORDRE.slice(0, ORDRE.indexOf(jusqua) + 1)) {
-    await db.exec(fs.readFileSync("migrations/" + f, "utf8"));
-    if (deuxFois.includes(f)) await db.exec(fs.readFileSync("migrations/" + f, "utf8"));
+    for (let k = 0; k < (deuxFois.includes(f) ? 2 : 1); k++) {
+      try { await db.exec(fs.readFileSync("migrations/" + f, "utf8")); }
+      catch (e) { throw new Error(`${f}${k ? " (2e passage)" : ""} : ${e.message}`); }
+    }
   }
   return db;
 }
@@ -74,4 +76,59 @@ export function verificateur() {
 /** Lance une requête et renvoie l'erreur (ou null si elle passe). */
 export async function erreur(db, q, p) {
   try { await db.query(q, p); return null; } catch (e) { return e; }
+}
+
+/** Identifiant fixe : objet n de l'exploitation k (1 = A, 2 = B). */
+export const id = (k, n) => `${k}${n.toString(16).padStart(7, "0")}-0000-4000-8000-000000000000`;
+export const EX = (k) => (k === 1 ? E1 : E2);
+
+/** Une ligne dans chacune des 16 tables métier, pour A et pour B (insérées sans RLS). */
+export async function donnees(db) {
+  await db.exec("reset role");
+  for (const k of [1, 2]) {
+    const e = EX(k), I = (n) => id(k, n);
+    await db.exec(`
+      insert into public.fournisseurs (id, nom, exploitation_id) values ('${I(1)}', 'Fournisseur ${k}', '${e}');
+      insert into public.articles (id, nom, type, unite, stock, seuil, fournisseur_id, exploitation_id) values ('${I(2)}', 'Candy', 'Consommable', 'kg', 10, 1, '${I(1)}', '${e}');
+      insert into public.ruches (id, nom, etat, exploitation_id) values ('${I(3)}', 'Ruche ${k}', 'Bonne', '${e}'), ('${I(13)}', 'Ruche ${k}b', 'Bonne', '${e}');
+      insert into public.visites (id, ruche_id, activite, provisions, reine, exploitation_id) values ('${I(4)}', '${I(3)}', 'Normale', 'Moyennes', 'Vue', '${e}');
+      insert into public.visite_intrants (id, visite_id, article_id, quantite, exploitation_id) values ('${I(5)}', '${I(4)}', '${I(2)}', 1, '${e}');
+      insert into public.recoltes (id, ruche_id, kg, exploitation_id) values ('${I(6)}', '${I(3)}', 12, '${e}');
+      insert into public.lots (id, code, format_g, prix, pots_initiaux, exploitation_id) values ('${I(7)}', 'L${k}', 500, 10, 20, '${e}');
+      insert into public.clients (id, nom, exploitation_id) values ('${I(8)}', 'Client ${k}', '${e}');
+      insert into public.ventes (id, client_id, exploitation_id) values ('${I(9)}', '${I(8)}', '${e}');
+      insert into public.vente_lignes (id, vente_id, lot_id, quantite, prix_unitaire, exploitation_id) values ('${I(10)}', '${I(9)}', '${I(7)}', 2, 10, '${e}');
+      insert into public.depenses (id, categorie, libelle, montant, fournisseur_id, exploitation_id) values ('${I(11)}', 'Autre', 'Achat ${k}', 30, '${I(1)}', '${e}');
+      insert into public.taches (id, titre, ruche_id, exploitation_id) values ('${I(12)}', 'Tâche ${k}', '${I(3)}', '${e}');
+      insert into public.budgets (annee, poste, montant, exploitation_id) values (2026, 'Autre', 100, '${e}');
+      insert into public.visite_photos (id, visite_id, chemin, exploitation_id) values ('${I(14)}', '${I(4)}', '${e}/${I(4)}/p.jpg', '${e}');
+      insert into public.ruche_evenements (id, ruche_id, type, exploitation_id) values ('${I(15)}', '${I(3)}', 'installation', '${e}');
+      insert into storage.objects (bucket_id, name, metadata) values ('photos-visites', '${e}/${I(4)}/p.jpg', '{"size": 1000}');`);
+  }
+}
+
+/** Les 16 tables métier et, pour chacune, une ligne nouvelle valable dans l'exploitation k. */
+export const TABLES = {
+  ruches: (k) => ({ nom: "Nouvelle " + k }),
+  articles: (k) => ({ nom: "Article neuf " + k }),
+  visites: (k) => ({ ruche_id: id(k, 3), activite: "Normale", provisions: "Moyennes", reine: "Vue" }),
+  visite_intrants: (k) => ({ visite_id: id(k, 4), article_id: id(k, 2), quantite: 1 }),
+  recoltes: (k) => ({ kg: 3 }),
+  lots: (k) => ({ code: "LN" + k, format_g: 250, prix: 6, pots_initiaux: 5 }),
+  clients: (k) => ({ nom: "Client neuf " + k }),
+  ventes: (k) => ({ client_id: id(k, 8) }),
+  vente_lignes: (k) => ({ vente_id: id(k, 9), lot_id: id(k, 7), quantite: 1, prix_unitaire: 10 }),
+  depenses: (k) => ({ categorie: "Autre", libelle: "Neuve", montant: 1 }),
+  reglages: null, // une seule ligne par exploitation : pas d'ajout
+  fournisseurs: (k) => ({ nom: "Fournisseur neuf " + k }),
+  taches: (k) => ({ titre: "Neuve" }),
+  budgets: (k) => ({ annee: 2031, poste: "Autre", montant: 1 }),
+  visite_photos: (k) => ({ visite_id: id(k, 4), chemin: `${EX(k)}/n${k}.jpg` }),
+  ruche_evenements: (k) => ({ ruche_id: id(k, 3), type: "installation" }),
+};
+
+/** Requête d'insertion paramétrée pour une table et un objet { colonne: valeur }. */
+export function insertion(table, ligne, extra = {}) {
+  const o = { ...ligne, ...extra }, cols = Object.keys(o);
+  return [`insert into public.${table} (${cols.join(", ")}) values (${cols.map((_, i) => "$" + (i + 1)).join(", ")})`, cols.map((c) => o[c])];
 }
