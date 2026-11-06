@@ -7,6 +7,7 @@ REPO, SBJS = sys.argv[1], sys.argv[2]
 # Référence du projet lue dans config.js : les tests tournent en recette comme en production.
 REF = re.search(r"https://(\w+)\.supabase\.co", open(REPO + "/config.js", encoding="utf-8").read()).group(1)
 PORT = 8765
+PLAFOND = 1000  # « Max rows » des deux projets Supabase (relevé du 6 nov. 2026)
 
 class Calme(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -72,7 +73,12 @@ def supabase(route):
             i = {"code": uuid.uuid4().hex, "exploitation_id": req.headers.get("x-exploitation"), "created_at": "2026-11-03T10:00:00Z", "expire_le": "2026-11-17T10:00:00Z"}
             EXPL["invit"].append(i); return route.fulfill(status=201, headers=hdr, body=json.dumps(i))
         if t == "invitations" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["invit"]))
-        if req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(DATA.get(t, [])))
+        if req.method == "GET":
+            # Comme Supabase : au plus PLAFOND lignes par requête (« Max rows »), tranche offset/limit respectée.
+            from urllib.parse import parse_qs
+            q = parse_qs(urlparse(req.url).query); lignes = DATA.get(t, [])
+            debut = int(q.get("offset", ["0"])[0]); taille = min(int(q.get("limit", [str(PLAFOND)])[0]), PLAFOND)
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(lignes[debut:debut + taille]))
         if req.method == "POST":
             rows = req.post_data_json; rows = rows if isinstance(rows, list) else [rows]
             recu["upsert"].append((t, req.url, rows))
