@@ -18,6 +18,10 @@ de `leaflet@1.9.4` dans la variable `APIDOO_LEAFLET` (tous deux obtenus par `npm
 - Ouverture, 300 colonies et 5 000 visites, 4G simulée : médiane 1,20 s, 20 lectures.
   Limite : les réponses de la base simulée ne passent pas par la limitation de débit de Chrome ; seuls les fichiers
   de l'application la subissent. Le chiffre sert à comparer avant / après, pas à prédire un vrai téléphone.
-- Couverture : les écrans `viewDash`, `viewRuche`, `viewVisite`, `viewClients`, `viewPlus`, `viewRuches`,
-  `viewPrevisions`, `viewFournisseurs` et `quickSheet` de `app.js`, `viewPlus` de `ux.js`, `viewGestion` de `nav4.js` et
+- Couverture : les écrans `viewDash`, `viewRuche`, `viewVisite`, `viewClients`, `viewPlus`, `viewRuches` et
+  `quickSheet` de `app.js`, `viewPlus` de `ux.js`, `viewGestion` de `nav4.js` et
   `viewRuches` de `v3.js` ne sont jamais appelés : ce sont les implémentations recouvertes (voir `docs/TECHNIQUE.md`).
+
+Limite de la couverture : c'est un indice, pas une preuve. Quelques fonctions bien exécutées (par exemple
+`viewPrevisions`, affichée par les captures) ressortent à zéro appel. Avant toute suppression, la chaîne des surcharges
+est vérifiée à la main et les tests repassent.
