@@ -1839,7 +1839,12 @@ function rucheForm(ruche) {
         "Ruche enregistr\xE9e",
       ),
     del: async () => {
-      ((S.route = "ruches"), await del("ruches", ruche.id, "Ruche supprim\xE9e")());
+      // AP-BUG-004 : relever les photos avant que la suppression en cascade n'efface leurs lignes, puis effacer
+      // les fichiers. Si l'effacement échoue, photos_orphelines() (migration 012) les retrouve.
+      const photos = typeof PH != "undefined" ? PH.cheminsRuche(ruche.id) : null;
+      ((S.route = "ruches"),
+        await del("ruches", ruche.id, "Ruche supprim\xE9e")(),
+        photos && (await PH.effacer(photos)));
     },
     delLabel: "Supprimer la ruche et ses visites",
   });

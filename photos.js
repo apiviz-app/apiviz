@@ -273,6 +273,24 @@ const PH = (() => {
   // Si les données étaient déjà chargées avant ce fichier, on complète.
   if (S.d) load().then(() => render()).catch(() => {});
 
+  // Suppression d'une ruche (AP-BUG-004) : chemins de toutes les photos de ses visites, envoyées ou en attente.
+  function cheminsRuche(rucheId) {
+    const visites = new Set((S.d?.visites || []).filter((v) => v.ruche_id === rucheId).map((v) => v.id));
+    return {
+      chemins: (S.d?.photos || []).filter((p) => visites.has(p.visite_id)).map((p) => p.chemin),
+      locales: st.attente.filter((p) => visites.has(p.visite_id)).map((p) => p.id),
+    };
+  }
+  async function effacer({ chemins, locales }) {
+    for (let i = 0; i < chemins.length; i += 100) {
+      const { error } = await sb.storage.from(BUCKET).remove(chemins.slice(i, i + 100));
+      if (error) { journaliser("photos non effacees", error); break; }
+    }
+    for (const id of locales) await qOter(id).catch(() => {});
+    st.attente = st.attente.filter((p) => !locales.includes(p.id));
+    if (chemins.length) sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
+  }
+
   // Déconnexion (AP-BUG-003) : ferme la base locale et oublie les photos gardées sur l'appareil.
   async function fermer() {
     ferme = true;
@@ -282,5 +300,5 @@ const PH = (() => {
     st.attente = []; st.brouillon = []; memoire.clear(); st.urls.clear();
   }
 
-  return { fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
+  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
 })();

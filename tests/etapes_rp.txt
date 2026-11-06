@@ -1,22 +1,40 @@
-    DATA["taches"] = [
-      {"id": str(uuid.uuid4()), "titre": "Fin du traitement Produit, test; long titre pour vérifier le repli des lignes du calendrier", "echeance": "2026-12-14", "ruche_id": R1, "faite": False, "assigne": "Pierre"},
-      {"id": str(uuid.uuid4()), "titre": "Tâche en retard", "echeance": "2026-10-01", "ruche_id": None, "faite": False, "assigne": ""},
-      {"id": str(uuid.uuid4()), "titre": "Tâche faite", "echeance": "2026-12-20", "ruche_id": None, "faite": True, "assigne": ""},
-    ]
-    page.add_init_script("window.__badge=null; navigator.setAppBadge=(n)=>{window.__badge=n;return Promise.resolve()}; navigator.clearAppBadge=()=>{window.__badge=0;return Promise.resolve()}")
+    # AP-BUG-004 / AP-US-098 : supprimer une ruche efface aussi les fichiers photo de ses visites.
+    R2 = str(uuid.uuid4())
+    DATA["ruches"].append({"id": R2, "nom": "Ruche 2", "rucher": "", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""})
+    V1, V2, V3 = str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())
+    for v, r in ((V1, R1), (V2, R1), (V3, R2)):
+        DATA["visites"].append({"id": v, "ruche_id": r, "date_visite": "2026-10-01", "activite": "Normale", "provisions": "Moyennes", "reine": "Vue", "couvain": "", "poids_kg": None, "varroa": None, "note": ""})
+    photos = [(V1, "a"), (V1, "b"), (V2, "c"), (V3, "d")]
+    DATA["visite_photos"] = [{"id": str(uuid.uuid4()), "visite_id": v, "chemin": "%s/%s/%s.jpg" % (E1, v, n), "largeur": 10, "hauteur": 10, "octets": 100, "created_at": "2026-10-01T10:00:00Z"} for v, n in photos]
+    efface, suppr = [], []
+    def stockage(route):
+        if route.request.method == "DELETE":
+            efface.extend((route.request.post_data_json or {}).get("prefixes", []))
+            return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body="[]")
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body="[]")
+    page.route("**/storage/v1/object/**", stockage)
+    def ruches(route):
+        if route.request.method != "DELETE": return route.fallback()
+        suppr.append(route.request.url)
+        DATA["ruches"] = [r for r in DATA["ruches"] if r["id"] != R1]
+        ids = {v["id"] for v in DATA["visites"] if v["ruche_id"] == R1}
+        DATA["visites"] = [v for v in DATA["visites"] if v["ruche_id"] != R1]
+        DATA["visite_photos"] = [p for p in DATA["visite_photos"] if p["visite_id"] not in ids]
+        return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*"}, body="")
+    page.route("**/rest/v1/ruches*", ruches)
+
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    verif(page.evaluate("window.__badge") == 1, "pastille : 1 point à surveiller (tâche en retard)")
-    page.evaluate("ACT.go('agenda')"); page.wait_for_selector("h1 >> text=Agenda")
-    verif(page.locator("[data-act=rpics]").count() == 1, "bouton « Mettre dans mon agenda »")
-    with page.expect_download() as dl:
-        page.click("[data-act=rpics]")
-    brut = open(dl.value.path(), "rb").read()
-    txt = brut.decode("utf-8")
-    lignes = txt.split("\r\n")
-    verif(txt.startswith("BEGIN:VCALENDAR\r\n") and txt.endswith("END:VCALENDAR\r\n"), "fichier calendrier bien formé")
-    verif(txt.count("BEGIN:VEVENT") == 1, "seules les tâches à venir non faites sont exportées")
-    verif("DTSTART:20261214T090000" in txt and "TRIGGER:PT0M" in txt, "rendez-vous à 9 h avec alerte")
-    verif(all(len(l.encode()) <= 75 for l in lignes), "lignes repliées à 75 octets")
-    deplie = txt.replace("\r\n ", "")
-    verif("Produit\\, test\\; long titre" in deplie and "Ruche : Ruche 1" in deplie and "Qui : Pierre" in deplie, "titre, ruche et personne dans l'événement")
+    verif(page.evaluate("S.d.photos.length") == 4, "4 photos chargées")
+    page.evaluate("ACT.editruche('%s')" % R1); page.wait_for_selector("#sheet[open] [data-act=sheetdel]")
+    verif("Supprimer la ruche" in page.locator("#sheet [data-act=sheetdel]").inner_text(), "bouton de suppression de la ruche")
+    page.click("#sheet [data-act=sheetdel]")
+    if page.locator(".n4-annuler").count() == 0: page.click("#sheet [data-act=sheetdel]")  # confirmation en deux temps selon la version
+    page.wait_for_function("() => !document.querySelector('.n4-annuler')", timeout=15000)
+    page.wait_for_timeout(800)
+    verif(len(suppr) == 1, "la ruche est supprimée")
+    attendus = sorted("%s/%s/%s.jpg" % (E1, v, n) for v, n in photos if v != V3)
+    verif(sorted(efface) == attendus, "les 3 fichiers de ses visites sont effacés : %s" % efface)
+    verif(not any(V3 in c for c in efface), "les photos de l'autre ruche ne sont pas touchées")
+    verif(page.evaluate("S.d.photos.length") == 1, "il reste la photo de la ruche 2")
+    page.unroute("**/storage/v1/object/**"); page.unroute("**/rest/v1/ruches*")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
