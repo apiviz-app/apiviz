@@ -81,3 +81,4 @@
 .wrap>.subtabs{display:flex;width:100%;align-self:stretch}
 .wrap>.subtabs button{flex:1;padding:0 6px}
 html.recette body::before{content:"RECETTE";position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;background:#E3A008;color:#1B2420;font:700 11px/1 sans-serif;letter-spacing:.1em;padding:4px 10px;border-radius:0 0 8px 8px;pointer-events:none}
+a.n4-ligne{text-decoration:none}

@@ -11,7 +11,7 @@ const DM = (() => {
   .dm-prom{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 14px;border-radius:14px;background:var(--pine2)}.dm-prom span{color:#C5D0C8;font-size:13px}
   .dm-pas{font-size:13px;font-weight:600;color:var(--muted)}.dm-choix{flex:1;min-height:84px;display:flex;flex-direction:column;justify-content:center;text-align:left;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
   .dm-choix span{font-size:13px;color:var(--muted)}.dm-compte{display:grid;grid-template-columns:52px 1fr 52px;gap:6px;align-items:center}.dm-compte b{text-align:center;font-size:34px;font-family:'Bricolage Grotesque',system-ui,sans-serif}
-  .dm-grand{flex:1}.dm-lien{min-height:44px;background:none;border:0;font-weight:600;color:var(--good);text-decoration:underline}.dm-sombre .dm-lien{color:#F6C453}
+  .dm-grand{flex:1}.dm-lien{min-height:44px;background:none;border:0;font-weight:600;color:var(--good);text-decoration:underline}.dm-sombre .dm-lien{color:#F6C453}a.dm-confid{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
   .dm-guide .step{min-height:48px}.dm-bravo{display:flex;gap:10px;align-items:center;background:var(--honeysoft);border-radius:14px;padding:12px 14px;margin-bottom:12px}.dm-bravo>div{flex:1;min-width:0}
   .dm-sous{margin:12px 0 2px;font-weight:700}
   .dm-exemple{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--pine);color:#fff;font-size:13px;font-weight:600}.dm-exemple button{margin-left:auto;min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--honey);color:var(--ink);font-weight:700}
@@ -55,15 +55,18 @@ const DM = (() => {
         <div class="dm-prom"><b>Suis ton miel jusqu’au pot vendu</b><span>Récoltes, stock, clients et ce qu’il reste à encaisser</span></div>
         <button type="button" class="btn honey block" data-act="dmentrer" data-v="up">Créer mon rucher</button>
         <button type="button" class="dm-lien" data-act="dmentrer" data-v="in">J’ai déjà un compte</button>
-        <button type="button" class="dm-lien" data-act="dmexemple">Voir un rucher d’exemple</button></div>`;
+        <button type="button" class="dm-lien" data-act="dmexemple">Voir un rucher d’exemple</button>
+        <a class="dm-lien dm-confid" href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a></div>`;
       return;
     }
     if (S.authMsg) S.authMsg = S.authMsg.replace(/Compte créé\..*/, "Compte créé. Ouvre le lien reçu par e-mail sur ce téléphone pour continuer.");
     authAvant();
     const sub = document.querySelector(".auth .sub");
     if (invit && sub) {
-      sub.outerHTML = inv && !inv.valide ? '<h1 class="dm-say dm-invite">Ce lien n’est plus valable.</h1><p class="small">Demande un nouveau lien à la personne qui t’a invité.</p>'
-        : `<h1 class="dm-say dm-invite">Tu es invité à rejoindre ${inv ? esc(inv.nom) : "une exploitation"}.</h1><p class="small">Les ruches, les visites et le miel t’attendent, rien à ressaisir.</p>`;
+      // État du lien (migration 014) : déjà servi, révoqué ou expiré.
+      const raison = { epuise: "Ce lien a déjà servi.", revoque: "Ce lien a été révoqué." }[inv?.etat] || "Ce lien n’est plus valable.";
+      sub.outerHTML = inv && !inv.valide ? `<h1 class="dm-say dm-invite">${raison}</h1><p class="small">Demande un nouveau lien à la personne qui t’a invité.</p>`
+        : `<h1 class="dm-say dm-invite">Tu es invité à rejoindre ${inv ? esc(inv.nom) : "une exploitation"}${inv?.role === "lecteur" ? " en lecture seule" : ""}.</h1><p class="small">${inv?.role === "lecteur" ? "Tu verras les ruches, les visites et le miel, sans rien modifier." : "Les ruches, les visites et le miel t’attendent, rien à ressaisir."}</p>`;
     }
   };
   ACT.dmentrer = (v) => { memo("apidoo-dm-entree", "1"); S.authMode = v; S.authMsg = ""; authView(); };

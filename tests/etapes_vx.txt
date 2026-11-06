@@ -21,7 +21,14 @@
     # Parcours complet
     R5 = DATA["ruches"][4]["id"]
     page.evaluate("id => ACT.newvisite(id)", R5); page.wait_for_selector(".vx-entree")
-    page.click(".vx-entree"); page.wait_for_selector("#alVoix[open] .vx-c")
+    # Première dictée (IT-04, AP-US-026) : information sur l'envoi de l'audio, avec le choix de saisir au doigt.
+    page.click(".vx-entree"); page.wait_for_selector("#sheet[open] >> text=Avant de dicter")
+    verif("fournisseur du navigateur" in page.locator("#sheet").inner_text() and page.locator("#sheet [data-act=vxdoigt]").count() == 1, "première dictée : message sur l'audio, choix de saisir au doigt")
+    page.click("#sheet [data-act=vxdoigt]")
+    verif(page.locator("#alVoix[open]").count() == 0 and page.evaluate("localStorage.getItem('apidoo-dictee-info')") is None, "« Saisir au doigt » : pas de dictée, la question reviendra")
+    page.click(".vx-entree"); page.wait_for_selector("#sheet[open] [data-act=vxaccord]")
+    page.click("#sheet [data-act=vxaccord]"); page.wait_for_selector("#alVoix[open] .vx-c")
+    verif(page.evaluate("localStorage.getItem('apidoo-dictee-info')") == "1", "« Continuer » : la dictée s'ouvre, le message ne reviendra plus")
     verif(page.locator("#alVoix svg.api[data-etat=ecoute]").count() == 1 and page.locator(".vx-c.on").count() == 0, "API écoute, alvéoles vides")
     page.evaluate("dire('Activité faible, provisions faibles.')")
     verif(page.locator(".vx-c.on").count() == 2, "les alvéoles se remplissent")

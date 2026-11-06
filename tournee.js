@@ -137,6 +137,13 @@ const TN = (() => {
   function ecouter({ continu, final, partiel }) {
     const R = Reco();
     if (!R) return false;
+    // Première dictée : information d'abord (voix.js) ; l'écoute démarre si on choisit de continuer.
+    let accepte = true;
+    try { accepte = localStorage.getItem("apidoo-dictee-info") === "1"; } catch {}
+    if (!accepte && typeof VX != "undefined" && VX.avantDictee) {
+      VX.avantDictee(() => { if (S.tn) { S.tn.ecoute = ecouter({ continu, final, partiel }); render(); } });
+      return false;
+    }
     const r = new R();
     r.lang = "fr-FR"; r.continuous = !!continu; r.interimResults = true;
     r.onresult = (ev) => {

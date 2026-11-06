@@ -158,8 +158,31 @@ const VX = (() => {
     document.getElementById("alVoix")?.close();
     E = null;
   }
+  // Information avant la première dictée (IT-04, AP-US-026). La reconnaissance vocale est celle du navigateur :
+  // selon l'appareil, l'audio peut partir chez son fournisseur. Un seul message, mémorisé sur l'appareil.
+  const CLE_INFO = "apidoo-dictee-info";
+  let suiteDictee = null;
+  const dicteeAcceptee = () => { try { return localStorage.getItem(CLE_INFO) === "1"; } catch { return false; } };
+  function avantDictee(suite) {
+    if (dicteeAcceptee()) return suite();
+    suiteDictee = suite;
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    $sheetForm.innerHTML = `<h2>Avant de dicter</h2>
+      <p>La dictée utilise la reconnaissance vocale de ton navigateur. Selon ton téléphone, ce que tu dis peut être envoyé au fournisseur du navigateur (Google pour Chrome et Android, Apple pour Safari et l’iPhone) pour être transformé en texte.</p>
+      <p class="small">Apidoo ne garde pas l’audio : seul le texte que tu relis et enregistres est conservé. <a href="confidentialite.html" target="_blank" rel="noopener">Où partent tes données</a></p>
+      <div class="actions"><button type="button" class="btn main" data-act="vxaccord">Continuer avec la dictée</button><button type="button" class="btn" data-act="vxdoigt">Saisir au doigt</button></div>`;
+    $sheet.showModal();
+  }
   Object.assign(ACT, {
-    vxouvrir: ouvrir,
+    vxaccord: () => {
+      try { localStorage.setItem(CLE_INFO, "1"); } catch {}
+      $sheet.close();
+      const s = suiteDictee; suiteDictee = null; s?.();
+    },
+    vxdoigt: () => { suiteDictee = null; $sheet.close(); },
+  });
+  Object.assign(ACT, {
+    vxouvrir: () => avantDictee(ouvrir),
     vxquitter: () => fermer(),
     vxpause: () => {
       if (E.alerte) { E.alerte = ""; E.pause = false; api()?.setAttribute("etat", "ecoute"); etatBouton(); return ecouter(); }
@@ -191,5 +214,5 @@ const VX = (() => {
     if (!Reco() || !S.visite?.ruche_id || S.visite.multi) return;
     document.querySelector('form[data-form="visite"]')?.insertAdjacentHTML("afterbegin", `<button type="button" class="btn honey block vx-entree" data-act="vxouvrir">Visiter à la voix</button>`);
   }
-  return { lire, completerVisite };
+  return { lire, completerVisite, avantDictee, dicteeAcceptee };
 })();

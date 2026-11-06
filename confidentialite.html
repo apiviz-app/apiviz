@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1E2B24">
+<title>Apidoo — confidentialité et services tiers</title>
+<link rel="icon" href="icone-apidoo.svg" type="image/svg+xml">
+<!-- Page sans connexion ni script, sans police externe. Source : docs/CONFIDENTIALITE.md (à modifier ensemble). -->
+<style>
+:root{--ink:#1B2420;--muted:#56605A;--ground:#F4F4EE;--line:#E8E9E1;--pine:#1E2B24;--honey:#E3A008}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--pine);color:#fff;padding:20px 20px 24px}
+header img{display:block;height:28px;margin-bottom:14px}
+header h1{margin:0;font-size:26px;line-height:1.15}
+header p{margin:6px 0 0;color:#C9D2CB;font-size:14px}
+main{max-width:760px;margin:0 auto;padding:8px 20px 48px}
+h2{font-size:19px;margin:28px 0 8px}
+p,li{margin:6px 0}
+ul{padding-left:20px}
+.t{overflow-x:auto;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(30,43,36,.06)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:13px}
+tr:last-child td{border-bottom:0}
+a{color:#245640}
+.retour{display:inline-block;margin-top:28px;font-weight:600}
+</style>
+</head>
+<body>
+<header><img src="logo-apidoo-clair.svg" alt="Apidoo"><h1>Confidentialité et services tiers</h1><p>Version du 6 novembre 2026</p></header>
+<main>
+<h2>Qui traite vos données</h2>
+<p>Apidoo est un carnet de bord pour apiculteurs. Le responsable du traitement est [à compléter : nom, adresse]. Pour toute question ou demande : [à compléter : adresse e-mail de contact].</p>
+<h2>Ce que nous enregistrons</h2>
+<ul><li><b>Votre compte</b> : adresse e-mail et mot de passe (le mot de passe est conservé sous une forme protégée par notre hébergeur ; personne ne peut le lire, nous non plus).</li><li><b>Les données de votre exploitation</b>, que vous saisissez : ruchers et leur position, colonies, visites, traitements, récoltes, lots, stock, clients, ventes et factures, dépenses, fournisseurs, tâches, photos de visite.</li><li><b>Qui a fait quoi</b> : l'adresse e-mail de l'auteur d'une visite, d'une vente ou d'une photo, visible des autres membres de l'exploitation.</li><li><b>Le journal des suppressions et modifications</b> : l'ancienne valeur, l'auteur et la date, pour pouvoir réparer une erreur. Visible des seuls responsables de l'exploitation.</li><li><b>Le journal des erreurs techniques</b> : version de l'application, écran, message d'erreur, sans adresse e-mail ni donnée de votre exploitation.</li></ul>
+<p>Il n'y a ni publicité, ni mesure d'audience, ni revente de données.</p>
+<h2>Qui voit vos données</h2>
+<p>Seuls les membres de votre exploitation, selon leur rôle : un responsable invite et retire des membres ; un membre voit et saisit tout ; un membre « lecture seule » consulte sans rien modifier. Ces règles sont appliquées par la base de données elle-même. Une exploitation ne voit jamais les données d'une autre.</p>
+<h2>Où sont vos données</h2>
+<div class="t"><table><thead><tr><th>Service</th><th>Ce qu'il reçoit</th><th>Pourquoi</th><th>Où</th></tr></thead><tbody><tr><td>Supabase (hébergeur de la base de données, des comptes et des photos)</td><td>Toutes les données ci-dessus</td><td>Faire fonctionner l'application</td><td>Union européenne</td></tr><tr><td>GitHub Pages (hébergement des fichiers de l'application)</td><td>Votre adresse IP, comme tout site visité</td><td>Télécharger l'application</td><td>États-Unis (GitHub, Inc.)</td></tr><tr><td>jsDelivr (diffusion de bibliothèques : accès à la base, carte, QR code)</td><td>Votre adresse IP</td><td>Télécharger ces bibliothèques</td><td>Réseau mondial</td></tr><tr><td>Google Fonts (polices de caractères)</td><td>Votre adresse IP</td><td>Afficher les polices</td><td>Google, réseau mondial</td></tr><tr><td>OpenStreetMap (fonds de carte, recherche d'adresse)</td><td>Votre adresse IP, la zone de carte affichée, l'adresse ou la position recherchée</td><td>Carte des ruchers, nom de la commune</td><td>Royaume-Uni (fondation OpenStreetMap), réseau mondial</td></tr><tr><td>Open-Meteo (météo)</td><td>La position de vos ruchers (latitude, longitude)</td><td>Prévisions et créneaux de visite</td><td>Europe</td></tr></tbody></table></div>
+<p>Certaines fonctions passent par votre navigateur ou une autre application, seulement si vous les utilisez :</p>
+<ul><li><b>Dictée</b> : la reconnaissance vocale est celle de votre navigateur. Selon l'appareil, l'audio peut être envoyé au fournisseur du navigateur (Google pour Chrome et Android, Apple pour Safari et l'iPhone) pour être transformé en texte. Apidoo ne reçoit et ne garde que le texte que vous relisez et enregistrez. Un message vous l'explique avant la première dictée, avec le choix de saisir au doigt.</li><li><b>Itinéraire</b> : le bouton ouvre Google Maps avec la position du rucher.</li><li><b>Déclaration de ruches</b> : le lien ouvre le service officiel du ministère de l'Agriculture ; rien n'est envoyé automatiquement.</li><li><b>Partage d'un lien d'invitation, d'un reçu ou d'une relance</b> : il passe par l'application de votre choix (messagerie, e-mail).</li></ul>
+<h2>Sur votre appareil</h2>
+<p>Pour fonctionner sans réseau, l'application garde sur votre téléphone ou votre ordinateur : une copie des données de l'exploitation ouverte, les saisies en attente d'envoi et les photos pas encore envoyées. Elles sont effacées à la déconnexion. Vos préférences d'affichage y sont aussi gardées.</p>
+<h2>Combien de temps</h2>
+<div class="t"><table><thead><tr><th>Donnée</th><th>Durée</th></tr></thead><tbody><tr><td>Données de l'exploitation</td><td>Tant que l'exploitation existe</td></tr><tr><td>Journal des suppressions et modifications</td><td>1 an, puis effacement automatique</td></tr><tr><td>Journal des erreurs techniques</td><td>90 jours, puis effacement automatique</td></tr><tr><td>Données sur votre appareil</td><td>Jusqu'à la déconnexion</td></tr></tbody></table></div>
+<h2>Vos droits</h2>
+<p>Vous pouvez à tout moment accéder à vos données, les corriger, les exporter (Réglages › Exports et sauvegarde : fichiers lisibles dans un tableur et sauvegarde complète), et demander leur effacement. La suppression du compte depuis l'application est en préparation ; d'ici là, écrivez à [à compléter : adresse e-mail de contact].</p>
+<p>Vous pouvez aussi adresser une réclamation à la CNIL (<a href="https://www.cnil.fr" rel="noopener">www.cnil.fr</a>).</p>
+<a class="retour" href="./">Revenir à Apidoo</a>
+</main>
+</body>
+</html>
