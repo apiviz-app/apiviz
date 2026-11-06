@@ -74,7 +74,8 @@ const PH = (() => {
   // ---------- Chargement ----------
   const memoPret = (v) => { try { if (v === undefined) return localStorage.getItem("apidoo-photos-pret"); localStorage.setItem("apidoo-photos-pret", v); } catch { return null; } };
   async function load() {
-    const { data, error } = await sb.from("visite_photos").select("*").order("created_at");
+    // Lecture paginée (AP-BUG-002) : plus de 1 000 photos restent toutes visibles.
+    const { data, error } = await lireTout("visite_photos", "created_at").then((d) => ({ data: d, error: null }), (e) => ({ data: null, error: e }));
     if (error && typeof HL != "undefined" && HL.reseau(error)) {
       // Sans réseau : on garde les photos déjà connues et l'état de la base.
       st.pret = memoPret() === "1";
@@ -180,7 +181,7 @@ const PH = (() => {
       }
     } finally { st.envoi = false; }
     if (ok) {
-      const { data } = await sb.from("visite_photos").select("*").order("created_at");
+      const data = await lireTout("visite_photos", "created_at").catch(() => null);
       if (data && S.d) S.d.photos = data;
       sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
       if (["ruche", "ruches"].includes(S.route)) render();
