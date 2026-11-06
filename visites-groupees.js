@@ -23,21 +23,21 @@ const VR = (() => {
   }
 
   Object.assign(ACT, {
-    vrmulti: () => { readVisitForm(); S.visite.multi = true; S.visite.ruches = [S.visite.ruche_id].filter(Boolean); viewVisite(); },
-    vrsolo: () => { readVisitForm(); S.visite.multi = false; S.visite.ruche_id = S.visite.ruches[0] || S.visite.ruche_id; viewVisite(); },
+    vrmulti: () => { readVisitForm(); S.visite.multi = true; S.visite.ruches = [S.visite.ruche_id].filter(Boolean); redessiner("visite"); },
+    vrsolo: () => { readVisitForm(); S.visite.multi = false; S.visite.ruche_id = S.visite.ruches[0] || S.visite.ruche_id; redessiner("visite"); },
     vrtoggle: (id) => {
       readVisitForm();
       const l = S.visite.ruches, i = l.indexOf(id);
       i >= 0 ? l.splice(i, 1) : l.push(id);
       S.visite.ruche_id = l[0] || "";
-      viewVisite();
+      redessiner("visite");
     },
     vrrucher: (nom) => {
       readVisitForm();
       S.visite.multi = true;
       S.visite.ruches = S.d.ruches.filter((r) => (r.rucher || "") === nom).map((r) => r.id);
       S.visite.ruche_id = S.visite.ruches[0];
-      viewVisite();
+      redessiner("visite");
     },
   });
 
@@ -46,7 +46,7 @@ const VR = (() => {
     readVisitForm();
     const s = S.visite;
     const cibles = s.multi ? [...s.ruches] : [s.ruche_id].filter(Boolean);
-    if (!cibles.length) throw new Error("Choisissez une ruche");
+    if (!cibles.length) throw new Error("Choisis une ruche");
     const intrants = Object.entries(s.q).filter(([, q]) => q > 0).map(([article_id, quantite]) => ({ article_id, quantite }));
     for (const x of intrants) { // le stock doit suffire pour toutes les ruches
       const a = byId(S.d.articles, x.article_id);
@@ -56,21 +56,22 @@ const VR = (() => {
     }
     S.busy = true;
     const appel = typeof HL != "undefined" ? HL.rpc : (x, y) => sb.rpc(x, y);
-    const faites = []; let local = false;
+    const faites = [], charges = []; let local = false;
     for (const id of cibles) {
       const { multi, ruches, q, ...reste } = s;
-      const { data, error, local: hl } = await appel("creer_visite", { p: { ...reste, ruche_id: id, couvain: s.couvain === "Non vu" ? "" : s.couvain, intrants } });
+      const p = { ...reste, ruche_id: id, couvain: s.couvain === "Non vu" ? "" : s.couvain, intrants };
+      const { data, error, local: hl } = await appel("creer_visite", { p });
       if (error) {
         if (!faites.length) throw error;
         toast(`${faites.length} visite(s) enregistrée(s), arrêt sur ${byId(S.d.ruches, id)?.nom} : ${messageErreur(error)}`, true);
         break;
       }
-      faites.push({ id: data, ruche: id }); local = local || !!hl;
+      faites.push({ id: data, ruche: id }); charges.push({ ...p, id: data }); local = local || !!hl;
     }
     if (typeof PH != "undefined") await PH.rattacher(faites[0].id);
     if (typeof RG != "undefined") await RG.apres({ ...s, ruche_id: faites.length > 1 ? null : faites[0].ruche }, faites.length > 1 ? noms(faites.map((f) => f.ruche)).join(", ") : "");
     if (faites.length > 1) { S.route = "ruches"; } else { S.ruche = faites[0].ruche; S.route = "ruche"; }
-    await refresh();
+    await apresVisites(charges, local); // IT-03 : sans relire toutes les tables quand tout est parti
     const nb = faites.length;
     if (nb === cibles.length) toast(nb > 1 ? `${nb} visites ${local ? "gardées sur le téléphone" : "enregistrées"}` : local ? "Visite gardée sur le téléphone" : "Visite enregistrée");
   }

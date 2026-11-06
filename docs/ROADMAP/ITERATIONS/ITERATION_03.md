@@ -171,3 +171,13 @@ Chaque écran migré l'est dans un commit séparé : revert ciblé. Drapeau `?an
 ## 18. Itération suivante
 
 [IT-04 — Sécurité de la base et tests SQL](ITERATION_04.md)
+
+## 19. Bilan au 6 nov. 2026 et reste à faire (IT-03b)
+
+Réalisé sur `claude/it-03-noyau` (v5.17) : AP-FEAT-002, 013, 016, 017, 112, 113 ; AP-FEAT-007 (code recouvert retiré,
+aucun module entier obsolète) ; AP-FEAT-014 et 015 en partie. Décision du 6 nov. 2026 : le reste passe dans une IT-03b
+plutôt que de presser la fin :
+- AP-TECH-026, 027 : `src/donnees/acces.js`, lecture ciblée et paginée par domaine, accueil sur `colonies_resume` ;
+- AP-TECH-024, 030, 031 : styles par composant, purge des règles redéfinies et orphelines ;
+- AP-TECH-052 : écran de lecture du journal des erreurs (suppose un rôle « responsable technique », hors modèle actuel) ;
+- entrée « Opérations » de Gestion, avec l'écran correspondant (nouvelle fonctionnalité, hors périmètre d'IT-03).

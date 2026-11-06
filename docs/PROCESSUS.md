@@ -24,6 +24,14 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
 7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`, case « migrations faites » si besoin. Seule la version exacte en recette est acceptée.
 8. **Après** : vider la liste des migrations en attente, passer la version à « en production » dans `CHANGELOG.md`.
 
+## Règles de contenu
+
+- **Arborescence gelée** (AP-FEAT-113) : la place des rubriques et des écrans est celle de
+  `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §2. Déplacer, renommer ou ajouter une rubrique passe d'abord par la roadmap
+  (décision notée), puis `docs/GUIDE.md` et les astuces de l'app sont mis à jour dans la même pull request.
+- **Ton** (AP-FEAT-112) : tutoiement dans l'application, vouvoiement dans les documents émis
+  (`docs/CHARTE_DE_TON.md`). « Vérifier » échoue sur un nouveau « vous » non justifié.
+
 ## Retour arrière
 
 Revenir à une version antérieure en passant par le même circuit (revert, recette, production). Cela suffit quand les migrations sont additives.

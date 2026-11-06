@@ -1,7 +1,10 @@
 # Guide d'utilisation (v5)
 
-Mis à jour le 6 nov. 2026 pour la v5.16. Les points marqués *(v5.16)* arrivent avec cette version ; la production
-publie la v5.14 tant qu'elle n'est pas validée en recette.
+Mis à jour le 6 nov. 2026 pour la v5.17 (IT-03). Les points marqués *(v5.16)* ou *(v5.17)* arrivent avec ces versions ;
+la production publie la v5.14 tant qu'elles ne sont pas validées en recette.
+
+L'organisation ci-dessous est **gelée** (doc `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §2) : une rubrique ne change de
+place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour dans la même pull request.
 
 ## Se repérer
 
@@ -23,13 +26,11 @@ publie la v5.14 tant qu'elle n'est pas validée en recette.
 
 ## Ruchers
 
-- Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (varroa, registre d'élevage,
-  déclaration annuelle).
+- Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un
+  raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Gestion).
 - **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; onglets Journal, Colonie (reine, hausses,
   équipement, division, essaimage, réunion, sortie), Photos ; courbe de poids.
 - **Météo** : depuis un rucher, « Voir heure par heure » sur cinq jours, puis Prévoir une visite.
-- **Registre d'élevage** (Santé) : onglets Traitements, Mouvements, Interventions, Exploitation.
-  « Déplacer des ruches » et « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel.
 
 ## Saisir (API)
 
@@ -49,12 +50,22 @@ publie la v5.14 tant qu'elle n'est pas validée en recette.
 
 ## Gestion
 
-- Blocs : Bilan de l'année, Dépenses, Budget, Stock matériel, Fournisseurs, Équipe.
+- Blocs : Bilan de l'année, Dépenses, Budget, Stock matériel, Fournisseurs, **Registre et déclaration** *(v5.17)*, Équipe.
+- **Registre d'élevage** : onglets Traitements, Mouvements, Interventions, Exploitation. « Déplacer des ruches » et
+  « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel. Le lien « ‹ Gestion » ramène ici,
+  d'où que tu l'aies ouvert *(v5.17)*. La **déclaration annuelle** est rangée au même endroit.
+- **Opérations** (traitements et nourrissements hors visite) : prévue dans Gestion par l'arborescence, pas encore
+  disponible.
 - **Équipe** : créer un lien d'invitation et l'envoyer. La personne ouvre le lien, crée son compte ou se connecte,
   et rejoint l'exploitation ; le nom de l'exploitation s'affiche sur le lien. Un responsable peut retirer un membre.
 - **Réglages** (depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,
   exports CSV et sauvegarde complète. À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
 - **Rappels** : la cloche ; sujets à couper, « Tout marquer comme vu ».
+
+## Ton de l'application
+
+L'application te tutoie partout ; les documents qu'elle émet (registre, factures, reçus et messages aux clients)
+vouvoient *(v5.17)*. Voir `docs/CHARTE_DE_TON.md`.
 
 ## Sans réseau
 

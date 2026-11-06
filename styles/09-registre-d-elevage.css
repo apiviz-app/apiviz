@@ -1,0 +1,17 @@
+/* Registre d'élevage */
+.rg-check{flex-direction:row;align-items:center;gap:10px;font-size:14px}
+.rg-check input{width:22px;height:22px;min-height:0;flex:none}
+.rg-ident{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rg-ident p{margin:2px 0}
+@media print{
+  .side,.topbar,.bottom,.fab,.head .actions,.hl-band,.toast,.tip{display:none!important}
+  body{background:#fff}
+  .shell{display:block}
+  main{padding:0}
+  .wrap{max-width:none}
+  .head.hero-head{background:none;color:inherit;padding:0}
+  .card{box-shadow:none;border:1px solid #C9CDC1;break-inside:avoid}
+  .card.tbl{overflow:visible}
+  th,td{font-size:10pt;padding:5px 6px}
+  *{animation:none!important}
+}

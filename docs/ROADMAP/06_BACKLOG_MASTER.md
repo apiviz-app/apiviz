@@ -243,7 +243,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : table des écrans (src/noyau/routeur.js), 30 écrans enregistrés une fois dans src/domaines/*/ecrans.js, crochets à la place des surcharges, plus aucune réaffectation de window.render/shell/view* ; scénario etapes_nk ; en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | L |
@@ -283,7 +283,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | OBSOLÈTE |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : code recouvert retiré après mesure de couverture (≈ 330 lignes : écrans d'app.js, ux.js, nav4.js, v3.js) ; aucun module entier n'est obsolète (chacun porte encore un écran ou un service). Purge des règles CSS orphelines : IT-03b |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | M |
@@ -320,7 +320,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | PARTIEL — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : une seule requête après une visite (scénario etapes_dl), vue colonies_resume en base (013). Lecture ciblée et paginée par domaine (src/donnees/acces.js, AP-TECH-026/027) : IT-03b |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | M |
@@ -358,7 +358,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | PARTIEL — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : styles sortis d'index.html (styles/jetons.css, composant Feuille, 35 rubriques dans l'ordre de la cascade), regroupés à l'assemblage ; découpage par composant des autres règles et suppression des règles redéfinies (AP-TECH-031) : IT-03b |
 | Priorité | P2 |
 | Valeur métier | 2/5 |
 | Complexité | M |
@@ -394,7 +394,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : liste et version (date + commit) générées à l'assemblage (scripts/generer-coquille.py), test unitaire et ouverture hors ligne vérifiée par etapes_hl sur le site assemblé ; en attente de fusion puis de recette |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -510,7 +510,7 @@ Tester ce qui ne l'est pas : SQL, RLS, règles métier pures.
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-035 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : fin, rythme, taux varroa, créneaux météo, formats dans src/ ; tests node --test dans « Vérifier » (moins d'une seconde) ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -589,7 +589,7 @@ Voir les erreurs et la santé du service en production.
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-036 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : table journal_erreurs et journaliser_erreur() (013, appliquée sur apidoo-test), regroupement par minute, e-mails masqués, purge à 90 jours ; scénario etapes_je. Lecture par l'éditeur SQL (écran réservé : hors périmètre, décision du 6 nov. 2026) |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -4637,7 +4637,7 @@ Une interface stable et homogène.
 | Type | Fonctionnalité |
 | Domaine | D18 Expérience utilisateur transversale |
 | Epic parent | AP-EPIC-044 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : docs/CHARTE_DE_TON.md, ≈ 80 textes passés au tutoiement, contrôle automatique tests/unitaires/ton.test.mjs ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 2/5 |
 | Complexité | S |
@@ -4673,7 +4673,7 @@ Une interface stable et homogène.
 | Type | Fonctionnalité |
 | Domaine | D18 Expérience utilisateur transversale |
 | Epic parent | AP-EPIC-044 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-03-noyau` (v5.17) : Registre et déclaration dans Gestion (bloc, lien « ‹ Gestion »), GUIDE.md réécrit, règle de modification dans PROCESSUS.md ; Opérations réservée, écran à créer dans une itération ultérieure |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |

@@ -1,0 +1,8 @@
+{
+  "name": "apidoo",
+  "private": true,
+  "description": "Apidoo — outils de développement. Le site lui-même n'a pas de dépendance npm.",
+  "scripts": {
+    "test": "node --test \"tests/unitaires/*.test.mjs\""
+  }
+}

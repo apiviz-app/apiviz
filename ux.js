@@ -18,15 +18,9 @@ const UX = (() => {
   let bootEnCours = null;
   window.boot = () => bootEnCours || (bootEnCours = Promise.resolve().then(bootAvant).finally(() => { bootEnCours = null; }));
 
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route === "carte" && S.session && S.d && S.member !== false && !S.recovery) {
-      carte();
-      if (S.lastRoute !== S.route) { window.scrollTo?.(0, 0); document.querySelector(".wrap")?.classList.add("enter"); }
-      S.lastRoute = S.route;
-    } else renderAvant();
-    document.body.dataset.route = S.route;
-  };
+  // Écran « carte » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, UX.carte).
+  // La route est notée sur <body> après chaque rendu (crochet du noyau, IT-03).
+  Noyau.crochets.sur("apresRendu", "ux.route", () => { document.body.dataset.route = S.route; });
 
   // ---------- Petits morceaux ----------
   const chip = (txt, ton = "") => `<span class="u-chip ${ton}">${esc(txt)}</span>`;
@@ -68,7 +62,7 @@ const UX = (() => {
   }
   function meteoHtml() {
     const l = lieu();
-    if (!l) return S.d.ruches.length ? '<button type="button" class="link u-meteo-lien" data-act="go" data-v="carte">Météo du rucher : placez-le sur la carte</button>' : "";
+    if (!l) return S.d.ruches.length ? '<button type="button" class="link u-meteo-lien" data-act="go" data-v="carte">Météo du rucher : place-le sur la carte</button>' : "";
     const cle = l.lat.toFixed(2) + "," + l.lng.toFixed(2);
     if (meteo.cle !== cle || Date.now() - meteo.at > 18e5) chargerMeteo(l, cle);
     if (!meteo.data || meteo.cle !== cle) return "";
@@ -98,14 +92,14 @@ const UX = (() => {
 
   // ---------- 1. Accueil ----------
   let toutVoir = false, filtreTodo = "tout";
-  ACT.utout = () => { toutVoir = !toutVoir; viewDash(); };
-  ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; viewDash(); };
+  ACT.utout = () => { toutVoir = !toutVoir; redessiner("dash"); };
+  ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; redessiner("dash"); };
   const CATS = [["ruches", "Ruches"], ["miel", "Miel"], ["stock", "Stock"], ["agenda", "Agenda"]];
   const categorie = (cible) => (cible.startsWith("ruche:") ? "ruches" : ["clients", "livrer", "miel"].includes(cible) ? "miel" : cible === "materiel" ? "stock" : "agenda");
   function viewDash() {
     const d = S.d, c = cfg(), s = stock(), an = new Date().getFullYear(), f = fin(an);
-    const etapes = [[d.ruches.length > 0, "Ajouter vos ruches", "newruches"], [d.articles.length > 0, "Renseigner votre matériel", "gomateriel"],
-      [d.recoltes.length > 0, "Saisir une récolte", "newrecolte"], [d.lots.length > 0, "Créer vos lots de pots", "newlot"],
+    const etapes = [[d.ruches.length > 0, "Ajouter tes ruches", "newruches"], [d.articles.length > 0, "Renseigner ton matériel", "gomateriel"],
+      [d.recoltes.length > 0, "Saisir une récolte", "newrecolte"], [d.lots.length > 0, "Créer tes lots de pots", "newlot"],
       [d.clients.length > 0, "Ajouter un client", "newclient"], [d.ventes.length > 0, "Enregistrer une vente", "newvente"]];
     const faites = etapes.filter((x) => x[0]).length;
     const demarrer = faites < etapes.length ? `<section class="card"><h2>Bien démarrer</h2><p class="small">${faites} sur ${etapes.length} étapes terminées</p><div class="track"><i style="width:${Math.round(faites / etapes.length * 100)}%"></i></div>
@@ -156,8 +150,9 @@ const UX = (() => {
     reine: { Vue: "good", "Non vue": "watch" }, couvain: { "Réduit": "watch", Normal: "good", Abondant: "good" },
   };
   // Taux pour 100 abeilles quand on connaît le nombre d'abeilles prélevées (sucre glace, lavage).
-  const tauxVarroa = (v) => (v && v.varroa != null && v.varroa_abeilles > 0 && v.varroa_methode !== "Lange" ? v.varroa / v.varroa_abeilles * 100 : null);
-  const seuilVarroa = () => Number(cfg().varroaSeuil) || 3;
+  // Règles sanitaires : src/domaines/sante/regles.js (IT-03, testées unitairement).
+  const tauxVarroa = Regles.sante.tauxVarroa;
+  const seuilVarroa = () => Regles.sante.seuilVarroa(cfg());
   function chipVarroa(v) {
     const t = tauxVarroa(v);
     if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");
@@ -220,12 +215,12 @@ const UX = (() => {
   }
 
   let ongletRuche = { id: null, v: "journal" };
-  ACT.uronglet = (v) => { ongletRuche.v = v; viewRuche(); };
+  ACT.uronglet = (v) => { ongletRuche.v = v; redessiner("ruche"); };
   function photosRuche(vis) {
     if (typeof PH == "undefined") return "";
     const blocs = vis.map((v) => [v, PH.vignettes(v.id)]).filter(([, h]) => h);
     return blocs.length ? blocs.map(([v, h]) => `<section class="card"><h2>${esc(dateCourte(v.date_visite))}</h2>${h}</section>`).join("")
-      : '<p class="small">Aucune photo pour cette ruche. Ajoutez-en pendant une visite.</p>';
+      : '<p class="small">Aucune photo pour cette ruche. Ajoutes-en pendant une visite.</p>';
   }
 
   // ---------- 3. Visite ----------
@@ -276,15 +271,15 @@ const UX = (() => {
         ${sec("poids", "Poids et varroa", pv || "Ajouter", !!pv, `<div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(e.poids_kg)}"></label>
           <label>Varroas comptés<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>
           ${seg("Méthode", "varroa_methode", ["Sucre glace", "Lavage", "Lange"])}
-          ${lange ? '<p class="small">Lange : notez les varroas tombés pendant le comptage (pas de taux pour 100 abeilles).</p>'
+          ${lange ? '<p class="small">Lange : note les varroas tombés pendant le comptage (pas de taux pour 100 abeilles).</p>'
             : `<label>Abeilles prélevées<input type="number" step="1" min="1" inputmode="numeric" id="v_abeilles" value="${esc(e.varroa_abeilles ?? "")}" placeholder="300 (un demi-verre)"></label>
           ${tx !== null ? `<p class="small u-taux ${tx >= seuilVarroa() ? "crit" : ""}">Soit ${n(tx, 1)} varroas pour 100 abeilles · seuil ${n(seuilVarroa(), 1)} %</p>` : ""}`}`)}
-        ${sec("intrants", "Nourrissement et matériel", utilise || "Ajouter", !!utilise, steppers || '<p class="small">Ajoutez vos consommables dans Stocks › Matériel pour les suivre ici.</p>')}
+        ${sec("intrants", "Nourrissement et matériel", utilise || "Ajouter", !!utilise, steppers || '<p class="small">Ajoute tes consommables dans Stocks › Matériel pour les suivre ici.</p>')}
         ${typeof RG != "undefined" ? sec("traitement", "Traitement", e.traitement || "Ajouter", !!e.traitement, RG.formSection(e)) : ""}
         ${typeof PH != "undefined" ? sec("photos", "Photos", "Ajouter", false, PH.formSection()) : ""}
       </section>
       <section class="card u-notecarte"><div class="u-entete"><label for="v_note" class="u-lab">Note</label>${typeof V3 != "undefined" ? V3.boutonDictee() : ""}</div>
-        <textarea id="v_note" rows="3" placeholder="Ce que vous avez vu, ce qu’il faudra faire…">${esc(e.note)}</textarea></section>
+        <textarea id="v_note" rows="3" placeholder="Ce que tu as vu, ce qu’il faudra faire…">${esc(e.note)}</textarea></section>
       <div class="u-barre">${T ? `<div class="u-tbarre"><button type="button" class="btn" data-act="v3passer">Passer</button><button class="btn main" ${S.busy ? "disabled" : ""}>${T.i + 1 < T.ids.length ? "Enregistrer · Ruche suivante ›" : "Enregistrer et terminer"}</button></div>`
         : `<button class="btn main block" ${S.busy ? "disabled" : ""}>${horsLigne ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button>`}</div>
     </form>`);
@@ -292,8 +287,8 @@ const UX = (() => {
 
   // ---------- 4. Ventes ----------
   let onglet = "ventes";
-  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? viewClients() : go("clients"); };
-  ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? viewClients() : go("clients"); };
+  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? redessiner("clients") : go("clients"); };
+  ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? redessiner("clients") : go("clients"); };
   // Tuiles et onglets communs aux écrans Miel (ventes, clients, stock).
   function enteteMiel(actif) {
     const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
@@ -318,7 +313,7 @@ const UX = (() => {
   }
   function viewClients() {
     const d = S.d;
-    if (!d.clients.length) return shell("Miel et ventes", "", "", emptyState("Ajoutez votre premier client", "Famille, amis, collègues : retrouvez qui a acheté quoi.", "Ajouter un client", "newclient"));
+    if (!d.clients.length) return shell("Miel et ventes", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
     const impayees = d.ventes.filter((v) => !v.paye);
     const du = sum(impayees, venteTotal);
     let corps = "";
@@ -351,8 +346,8 @@ const UX = (() => {
   ACT.urelancer = () => {
     const imp = S.d.ventes.filter((v) => !v.paye);
     if (imp.length === 1) return message(imp[0].id, "relance");
-    S.venteFiltre = "impayees"; onglet = "ventes"; viewClients();
-    toast("Touchez « Relancer » sur chaque vente");
+    S.venteFiltre = "impayees"; onglet = "ventes"; redessiner("clients");
+    toast("Touche « Relancer » sur chaque vente");
   };
   ACT.uvente = (id) => {
     const d = S.d, v = byId(d.ventes, id), c = byId(d.clients, v.client_id);
@@ -399,7 +394,7 @@ const UX = (() => {
         <button type="button" class="btn ${tel ? "main" : ""}" data-act="umsg" data-v="sms" ${tel ? "" : "disabled"}>SMS</button>
         <button type="button" class="btn ${!tel && mail ? "main" : ""}" data-act="umsg" data-v="mail" ${mail ? "" : "disabled"}>E-mail</button>
         <button type="button" class="btn ${!tel && !mail ? "main" : ""}" data-act="umsg" data-v="copier">Copier</button></div>
-      <p class="small">${!tel && !mail ? "Pas de téléphone ni d’e-mail pour ce client : copiez le message. " : !tel ? "Pas de téléphone pour ce client. " : !mail ? "Pas d’e-mail pour ce client. " : ""}Le message part de votre téléphone, à votre nom.</p>
+      <p class="small">${!tel && !mail ? "Pas de téléphone ni d’e-mail pour ce client : copie le message. " : !tel ? "Pas de téléphone pour ce client. " : !mail ? "Pas d’e-mail pour ce client. " : ""}Le message part de ton téléphone, à ton nom.</p>
       <button type="button" class="btn" data-act="closesheet">Fermer</button>`;
     if (!$sheet.open) $sheet.showModal();
   }
@@ -411,7 +406,7 @@ const UX = (() => {
     if (kind === "sms") { location.href = `sms:${String(c.telephone).replace(/[^\d+]/g, "")}?&body=${encodeURIComponent(txt)}`; return; }
     if (kind === "mail") { location.href = `mailto:${encodeURIComponent(c.email.trim())}?subject=${encodeURIComponent("Votre miel · " + cfg().nom)}&body=${encodeURIComponent(txt)}`; return; }
     try { await navigator.clipboard.writeText(txt); toast("Message copié"); }
-    catch { document.getElementById("u_msg").select(); toast("Sélectionnez le message pour le copier", true); }
+    catch { document.getElementById("u_msg").select(); toast("Sélectionne le message pour le copier", true); }
   };
 
   // ---------- 6. Carte des ruchers (Leaflet + OpenStreetMap) ----------
@@ -455,8 +450,8 @@ const UX = (() => {
       S.d.ruches.length ? `<div id="uCarte" class="u-carte" role="region" aria-label="Carte des ruchers"><p class="small u-carte-msg">Chargement de la carte…</p></div>
        <div id="uPanneau">${panneau(ls.find((l) => l.cle === choix))}</div>
        <section class="card u-liste"><h2>Ruchers</h2>${liste}</section>
-       <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher : touchez-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
-        : emptyState("Aucune ruche", "Ajoutez vos ruches pour les voir sur la carte.", "Ajouter des ruches", "newruches"));
+       <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher : touche-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
+        : emptyState("Aucune ruche", "Ajoute tes ruches pour les voir sur la carte.", "Ajouter des ruches", "newruches"));
     if (S.d.ruches.length) monter(ls);
     if (visee) setTimeout(() => ACT.uplacermain(visee), 0);
   }
@@ -502,7 +497,7 @@ const UX = (() => {
     el.classList.add("u-visee");
     if (l.lat != null) carteMap.setView([l.lat, l.lng], Math.max(carteMap.getZoom(), 15));
     p.innerHTML = `<section class="card u-panneau"><h2>Placer « ${esc(l.nom)} »</h2>
-      <p class="small">Faites glisser la carte pour amener la croix sur le rucher, zoomez si besoin, puis validez. Vous pouvez aussi chercher une commune ou une adresse.</p>
+      <p class="small">Fais glisser la carte pour amener la croix sur le rucher, zoome si besoin, puis valide. Tu peux aussi chercher une commune ou une adresse.</p>
       <form data-form="ucherche" class="two ex-ajout"><label>Commune ou adresse<input name="q" autocomplete="off" placeholder="Ex. Fontaine-lès-Dijon"></label><button class="btn">Chercher</button></form>
       <div class="u-deux"><button type="button" class="btn main" data-act="uvalider" data-v="${esc(cle)}">Valider ici</button><button type="button" class="btn" data-act="uannuler">Annuler</button></div></section>`;
     el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -516,7 +511,7 @@ const UX = (() => {
     try {
       const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&accept-language=fr&q=${encodeURIComponent(q)}`);
       const j = r.ok ? await r.json() : [];
-      if (!j.length) toast("Adresse introuvable : essayez avec le nom de la commune", true);
+      if (!j.length) toast("Adresse introuvable : essaie avec le nom de la commune", true);
       else { carteMap.setView([Number(j[0].lat), Number(j[0].lon)], 15); toast(j[0].display_name.split(",").slice(0, 2).join(",")); }
     } catch { toast("Recherche indisponible sans réseau", true); }
     finally { b.disabled = false; }
@@ -534,14 +529,14 @@ const UX = (() => {
   };
   ACT.uplacer = (cle) => new Promise((ok) => {
     if (!navigator.geolocation) { toast("Ce téléphone ne donne pas sa position", true); return ok(); }
-    toast("Recherche de votre position…");
+    toast("Recherche de ta position…");
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
         choix = cle;
         await write(sb.from("ruches").update({ lat: pos.coords.latitude, lng: pos.coords.longitude }).eq("rucher", cle), `« ${nomRucher(cle)} » placé sur la carte`);
       } catch (e) { fail(e); }
       ok();
-    }, () => { toast("Position indisponible : autorisez la localisation pour Apidoo", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+    }, () => { toast("Position indisponible : autorise la localisation pour Apidoo", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   });
 
   // ---------- Tableaux lisibles sur téléphone ----------
@@ -598,19 +593,8 @@ const UX = (() => {
     return i < 0 ? comparaison() + html : html.slice(0, i + 6) + comparaison() + html.slice(i + 6);
   };
 
-  // ---------- Menu Plus ----------
-  function viewPlus() {
-    const items = [["recherche", "Rechercher"], ["pilotage", "Pilotage"], ["agenda", "Agenda et tâches"], ["carte", "Carte des ruchers"], ["varroa", "Suivi varroa"],
-      ["registre", "Registre d’élevage"], ["declaration", "Déclaration des ruches"], ["activite", "Activité récente"],
-      ["previsions", "Prévisions et budget"], ["compta", "Dépenses"], ["fournisseurs", "Fournisseurs"], ["reglages", "Réglages et exports"]];
-    if (typeof EX != "undefined") items.unshift(["membres", "Exploitation et membres"]);
-    shell("Plus", "", "", `<section class="card menu">${items.filter(([k]) => ICON[k]).map(([k, t]) => `<button data-act="go" data-v="${k}">${icon(k)}<span>${t}</span></button>`).join("")}
-      ${typeof V3 != "undefined" ? V3.boutonSoleil() : ""}
-      <button data-act="logout">${icon("plus")}<span>Se déconnecter</span></button></section>`);
-  }
-
-  Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
   return {
+    ecrans: { accueil: viewDash, fiche: viewRuche, visite: viewVisite, clients: viewClients },
     carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
     onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },

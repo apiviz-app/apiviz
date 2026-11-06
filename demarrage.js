@@ -1,6 +1,6 @@
 // Apidoo — prise en main : présentation avant le compte, création du rucher en trois questions,
 // guide de démarrage selon la saison, premier succès, écrans vides utiles. Chargé en dernier.
-(() => {
+const DM = (() => {
   const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
   const cle = (k) => `apidoo-dm-${k}-${typeof EX != "undefined" ? EX.courante() : ""}`;
   const api = (etat, t) => (typeof Apidoo != "undefined" ? Apidoo.compagnon(etat, t) : "");
@@ -61,13 +61,10 @@
     if (S.authMsg) S.authMsg = S.authMsg.replace(/Compte créé\..*/, "Compte créé. Ouvre le lien reçu par e-mail sur ce téléphone pour continuer.");
     authAvant();
     const sub = document.querySelector(".auth .sub");
-    if (sub) sub.textContent = "Le carnet de bord de ton rucher";
-    const note = document.querySelector(".auth .notice");
     if (invit && sub) {
       sub.outerHTML = inv && !inv.valide ? '<h1 class="dm-say dm-invite">Ce lien n’est plus valable.</h1><p class="small">Demande un nouveau lien à la personne qui t’a invité.</p>'
         : `<h1 class="dm-say dm-invite">Tu es invité à rejoindre ${inv ? esc(inv.nom) : "une exploitation"}.</h1><p class="small">Les ruches, les visites et le miel t’attendent, rien à ressaisir.</p>`;
     }
-    if (note) note.textContent = note.textContent.replace("Vous avez reçu une invitation. Connectez-vous ou créez votre compte pour rejoindre l’exploitation.", "Tu as reçu une invitation. Connecte-toi ou crée ton compte pour rejoindre l’exploitation.");
   };
   ACT.dmentrer = (v) => { memo("apidoo-dm-entree", "1"); S.authMode = v; S.authMsg = ""; authView(); };
 
@@ -147,15 +144,14 @@
   ACT.dmdeclarer = () => go("declaration");
   ACT.dminviter = () => { memo(cle("invite"), "1"); go("membres"); };
   ACT.dminstaller = () => { memo(cle("installe"), "1"); ACT.n4installer(); };
-  ACT.dmmasquer = () => { memo(cle("masque"), "1"); viewDash(); };
+  ACT.dmmasquer = () => { memo(cle("masque"), "1"); redessiner("dash"); };
   ACT.dmbravo = () => {
-    memo(cle("bravo"), "1"); viewDash();
+    memo(cle("bravo"), "1"); redessiner("dash");
     if (matchMedia("(max-width:800px)").matches && !installee() && !memo(cle("installe"))) ACT.dminstaller();
   };
 
-  const dashAvant = window.viewDash;
-  window.viewDash = function () {
-    dashAvant();
+  // Écran « dash » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerAccueil() {
     const d = S.d, wrap = document.querySelector(".wrap");
     if (!d || !wrap) return;
     document.querySelector(".steps")?.closest("section")?.remove();
@@ -183,7 +179,7 @@
     const avant = wrap.querySelector(".dm-bravo") || (haut && wrap.contains(haut) ? haut : null);
     if (avant) avant.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
     if (matchMedia("(min-width:801px)").matches && !installee()) relais();
-  };
+  }
   function arrivee(wrap) {
     if (memo(cle("arrivee"))) return;
     const d = S.d, lignes = d.visites.slice(0, 2).map((v) => `<li class="small">${esc(byId(d.ruches, v.ruche_id)?.nom || "Ruche")} visitée le ${esc(dshort(v.date_visite))}</li>`).join("");
@@ -193,7 +189,7 @@
       ${installee() ? "" : '<button type="button" class="btn block" data-act="dminstaller">Installer Apidoo sur ton téléphone</button>'}</section>`;
     if (haut) haut.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
   }
-  ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); viewDash(); };
+  ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); redessiner("dash"); };
   // Ordinateur : un code QR pour passer sur le téléphone.
   function relais() {
     const g = document.querySelector(".dm-guide"), lien = location.origin + location.pathname;
@@ -240,13 +236,13 @@
   // ---------- Écrans vides ----------
   const videAvant = window.emptyState;
   window.emptyState = function (titre, texte, bouton, act) {
-    if (titre === "Ajoutez votre premier client") {
+    if (titre === "Ajoute ton premier client") {
       return `<section class="card"><h2>Par où commence ton miel ?</h2><p class="small">Choisis ton point de départ.</p>
         <button class="dm-choix" data-act="newlot"><b>J’ai déjà des pots</b><span>Saisis ton stock, tu peux vendre tout de suite</span></button>
         <button class="dm-choix" data-act="newrecolte"><b>Je viens de récolter</b><span>Note la récolte, puis crée tes lots</span></button>
         <button class="dm-choix" data-act="newclient"><b>J’ajoute d’abord un client</b><span>Famille, amis, collègues</span></button></section>`;
     }
-    const tu = { "Ajoutez votre première ruche": "Ajoute ta première ruche", "Ajoutez vos fournisseurs": "Ajoute tes fournisseurs", "Votre stock de miel est vide": "Ton stock de miel est vide" };
-    return videAvant(tu[titre] || titre, texte.replace("Une par une ou plusieurs d’un coup. Vous pourrez les regrouper par rucher.", "Une par une ou plusieurs d’un coup. Tu pourras les regrouper par rucher."), bouton, act);
+    return videAvant(titre, texte, bouton, act);
   };
+  return { completerAccueil };
 })();

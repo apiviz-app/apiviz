@@ -151,7 +151,7 @@ const VX = (() => {
     if (E.v.poids_kg != null) e.poids_kg = E.v.poids_kg;
     const note = document.getElementById("vx_note")?.value.trim() ?? E.final;
     if (note) e.note = [e.note, note].filter(Boolean).join(" ");
-    viewVisite();
+    redessiner("visite");
   }
   function fermer() {
     arreter();
@@ -186,11 +186,10 @@ const VX = (() => {
       document.querySelector('form[data-form="visite"]')?.requestSubmit();
     },
   });
-  const visiteAvant = window.viewVisite;
-  window.viewVisite = function (...a) {
-    visiteAvant(...a);
+  // Écran « visite » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerVisite(...a) {
     if (!Reco() || !S.visite?.ruche_id || S.visite.multi) return;
     document.querySelector('form[data-form="visite"]')?.insertAdjacentHTML("afterbegin", `<button type="button" class="btn honey block vx-entree" data-act="vxouvrir">Visiter à la voix</button>`);
-  };
-  return { lire };
+  }
+  return { lire, completerVisite };
 })();

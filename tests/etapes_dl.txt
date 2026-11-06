@@ -1,0 +1,20 @@
+    # AP-FEAT-014 / AP-US-009 : après l'enregistrement d'une visite, une seule requête, pas une relecture de toutes les tables.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_timeout(300)
+    # AP-TECH-028 : nombre de lectures à l'ouverture, surveillé (relevé de départ : 16 avec les données des tests).
+    verif(len(lectures) <= 16, "lectures de données à l'ouverture : %s (16 au plus)" % len(lectures))
+    page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.wait_for_selector("form[data-form=visite]")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
+    page.fill("#v_note", "Visite comptée")
+    requetes = []
+    page.on("request", lambda r: requetes.append((r.method, r.url)) if "/rest/v1/" in r.url else None)
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=Visite enregistrée", timeout=10000); page.wait_for_timeout(500)
+    verif(len(requetes) == 1 and "/rpc/creer_visite" in requetes[0][1], "une seule requête après la visite : %s" % [u.split("/rest/v1/")[1][:40] for m, u in requetes])
+    verif(page.evaluate("S.route") == "ruche" and page.locator("text=Visite comptée").count() >= 1, "la visite apparaît dans le journal de la ruche")
+    verif(page.evaluate("byId(S.d.articles, '%s').stock" % A1) == 4.5, "stock du candy mis à jour sur le téléphone (5 − 0,5)")
+    # La copie gardée pour le hors-ligne contient la visite : coupure réseau et réouverture.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif(page.evaluate("S.d.visites.some(v => v.note === 'Visite comptée' && !v._attente)"), "hors ligne : la visite enregistrée est dans la copie gardée")
+    etat["coupe"] = False; ctx.set_offline(False)

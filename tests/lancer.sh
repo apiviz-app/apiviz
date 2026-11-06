@@ -13,6 +13,9 @@ mkdir sb leaflet
 (cd sb && npm pack --silent @supabase/supabase-js@2.45.4 > /dev/null && tar xzf ./*.tgz)
 (cd leaflet && npm pack --silent leaflet@1.9.4 > /dev/null && tar xzf ./*.tgz)
 echec=0
+# Tests unitaires des règles métier (node --test, quelques secondes).
+if (cd "$racine" && node --test "tests/unitaires/*.test.mjs") > "$travail/unitaires.log" 2>&1; then echo "OK     unitaires ($(grep -c '^ok ' "$travail/unitaires.log") tests)"
+else echo "ECHEC  unitaires"; grep -B2 -A12 '^not ok' "$travail/unitaires.log" | head -40; echec=1; fi
 for t in test_*.py; do
   if python3 "$t" "$site" "$travail/sb/package/dist/umd/supabase.js" > "$t.log" 2>&1; then
     echo "OK     $t"

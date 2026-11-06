@@ -1,12 +1,9 @@
 // Apidoo — service worker : garde l'application sur le téléphone pour l'ouvrir sans réseau.
 // Les données (Supabase) ne passent pas par ici : offline.js s'en occupe.
-const VERSION = "apidoo-2026-11-06-v5-16-correctifs";
-const COQUILLE = [
-  "./", "./index.html", "./app.js", "./photos.js", "./offline.js", "./registre.js", "./rappels.js", "./visites-groupees.js", "./etiquettes.js", "./exploitations.js", "./ux.js", "./v3.js", "./nav4.js", "./meteo.js", "./api-compagnon.js", "./alveoles.js", "./voix.js", "./ergonomie.js", "./essentiels.js", "./tournee.js", "./demarrage.js", "./config.js", "./manifest.webmanifest",
-  "./logo-apidoo.svg", "./logo-apidoo-clair.svg", "./symbole-apidoo.svg", "./icone-apidoo.svg",
-  "./icone-180.png", "./icone-192.png", "./icone-512.png", "./icone-maskable-192.png", "./icone-maskable-512.png",
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
-];
+const VERSION = "apidoo-dev"; // remplie à l'assemblage : date + commit (scripts/generer-coquille.py)
+// Liste remplie à l'assemblage depuis index.html (scripts/generer-coquille.py, IT-03) : ne plus l'écrire à la main.
+// Hors assemblage (développement), seule la page est gardée ; le reste l'est au fil de l'eau.
+const COQUILLE = ["./", "./index.html"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) =>

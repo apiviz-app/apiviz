@@ -131,10 +131,10 @@ const ES = (() => {
     document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apidoo-clair.svg" : "logo-apidoo.svg"; });
   }
   appliquerBandeau();
-  const reglagesAvant = window.viewReglages;
-  window.viewReglages = function () {
+  // Écran « reglages » : enregistré dans le noyau (src/domaines/compte/ecrans.js, ES.ecranReglages).
+  function ecranReglages() {
     if (S.rgForm) {
-      reglagesAvant();
+      viewReglages();
       document.querySelector(".wrap .u-retour, .wrap .er-ariane")?.remove();
       retour("errgblocs", "", "Réglages");
       return;
@@ -150,7 +150,7 @@ const ES = (() => {
       ${b("rappels", "Rappels", nouveaux().length ? U.pluriel(nouveaux().length, "rappel") : "À jour", "Notifications et sujets suivis")}
       ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
     </div>`);
-  };
+  }
   ACT.errgblocs = () => { S.rgForm = false; render(); };
   ACT.errgform = () => { S.rgForm = true; render(); window.scrollTo(0, 0); };
   ACT.errgexpl = () => {
@@ -225,11 +225,10 @@ const ES = (() => {
 
   // ---------- 5. Traçabilité des lots ----------
   ACT.erlot = (id) => { S.lotId = id; go("lot"); };
-  const mielAvant = window.viewMiel;
-  window.viewMiel = function () {
-    mielAvant();
+  // Écran « miel » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerMiel() {
     document.querySelectorAll('.wrap td button[data-act="editlot"]').forEach((b) => b.insertAdjacentHTML("afterend", ` <button type="button" class="link er-fiche" data-act="erlot" data-v="${b.dataset.v}" aria-label="Fiche du lot">Fiche</button>`));
-  };
+  }
   VUES.lot = function () {
     const d = S.d, l = byId(d.lots, S.lotId), c = cfg();
     if (!l) { S.route = "miel"; return render(); }
@@ -332,29 +331,18 @@ const ES = (() => {
     if (l.length) await write(sb.from("taches").insert(l.map((titre) => ({ titre, echeance: fin }))), "Ajouté à l’agenda");
   };
 
-  // ---------- Après chaque écran ----------
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // ---------- Après chaque écran (crochets du noyau, IT-03) ----------
+  Noyau.crochets.sur("apresCoquille", "essentiels", () => {
     Object.assign(MT.SEUILS, cfg().meteo || {});
     cloche();
     if (S.route === "dash") document.querySelector(".u-liste .u-entete")?.insertAdjacentHTML("beforeend", '<button type="button" class="link" data-act="go" data-v="saison">Ce mois-ci</button>');
     appliquerBandeau();
     prevenir().catch(() => {});
-  };
+  });
+  Noyau.crochets.sur("avantRendu", "essentiels.reglages", () => { if (S.route !== "reglages") S.rgForm = false; });
+  Noyau.crochets.sur("apresRendu", "essentiels.bandeau", () => { appliquerBandeau(); });
+  // Les écrans de VUES (météo, rappels, registre, lot, facture, saison) sont enregistrés dans le noyau :
+  // src/domaines/*/ecrans.js.
 
-  // ---------- Routage ----------
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route !== "reglages") S.rgForm = false;
-    const v = VUES[S.route];
-    if (!v || !S.session || !S.d || S.member === false || S.recovery) { renderAvant(); return appliquerBandeau(); }
-    v();
-    appliquerBandeau();
-    if (S.lastRoute !== S.route) window.scrollTo?.(0, 0);
-    S.lastRoute = S.route;
-    document.body.dataset.route = S.route;
-  };
-
-  return { VUES, memo, retour, phrase, jourLong };
+  return { VUES, memo, retour, phrase, jourLong, ecranReglages, completerMiel };
 })();

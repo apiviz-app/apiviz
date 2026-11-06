@@ -77,20 +77,7 @@ const HL = (() => {
       if (it.ex && it.ex !== (typeof EX != "undefined" ? EX.courante() : "")) continue; // saisie d'une autre exploitation
       if (it.statut === QUARANTAINE) continue; // refusée par le serveur : n'entre pas dans les chiffres tant qu'elle n'est pas corrigée
       if (it.type === "rpc" && it.nom === "creer_visite") {
-        const p = it.args.p;
-        if (d.visites.some((v) => v.id === p.id)) continue;
-        d.visites.push({ id: p.id, ruche_id: p.ruche_id, date_visite: p.date_visite, activite: p.activite, provisions: p.provisions,
-          reine: p.reine, couvain: p.couvain, poids_kg: p.poids_kg === "" ? null : Number(p.poids_kg),
-          varroa: p.varroa === "" ? null : Number(p.varroa), note: p.note,
-          traitement: p.traitement || "", lot_produit: p.lot_produit || "", traitement_dose: p.traitement_dose || "",
-          retrait_prevu: p.retrait_prevu || null, ordonnance: !!p.ordonnance,
-          varroa_methode: p.varroa_methode || "", varroa_abeilles: p.varroa_abeilles ? Number(p.varroa_abeilles) : null, _attente: true });
-        d.visites.sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
-        for (const x of p.intrants || []) {
-          d.intrants.push({ visite_id: p.id, article_id: x.article_id, quantite: x.quantite });
-          const a = byId(d.articles, x.article_id); if (a) a.stock = Number(a.stock) - Number(x.quantite);
-        }
-        const r = byId(d.ruches, p.ruche_id); if (r && p.etat) r.etat = p.etat;
+        Regles.visites.appliquerVisite(d, it.args.p, { _attente: true }); // src/domaines/visites/regles.js (IT-03)
       } else if (it.type === "rpc" && it.nom === "creer_vente") {
         const p = it.args.p;
         if (d.ventes.some((v) => v.id === p.id)) continue;
@@ -178,7 +165,7 @@ const HL = (() => {
       toast("Gardé sur le téléphone : envoi au retour du réseau");
       return;
     }
-    throw new Error(enAttente ? "Cette saisie n’est pas encore envoyée : modifiez-la une fois le réseau revenu."
+    throw new Error(enAttente ? "Cette saisie n’est pas encore envoyée : modifie-la une fois le réseau revenu."
       : "Pas de réseau : cette modification se fera une fois le réseau revenu.");
   }
 
@@ -363,8 +350,10 @@ const HL = (() => {
     addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("Hors ligne indisponible", e)));
   }
 
+  // Après une écriture appliquée sur le téléphone sans relecture (IT-03) : la copie gardée pour le hors-ligne suit.
+  const garderDonnees = () => kvMettre({ k: "donnees:" + (typeof EX != "undefined" ? EX.courante() : ""), d: S.d, at: Date.now() }).catch(() => {});
   return {
-    reseau, rpc, write, sessionLocale, membre, envoyer, bandeau, section,
+    reseau, rpc, write, sessionLocale, membre, envoyer, bandeau, section, garderDonnees,
     horsLigne: () => st.hors,
     nb: () => st.file.length, // toutes les saisies pas encore enregistrées, y compris celles à corriger
     nbCorriger: () => aCorriger().length,

@@ -20,10 +20,13 @@ const N4 = (() => {
   const TITRES = { pilotage: "Bilan", miel: "Miel", materiel: "Matériel" };
 
   // ---------- Coquille : titres, onglets Ruchers, badge Miel, avatar ----------
-  const shellAvant = window.shell;
-  window.shell = function (titre, ...reste) {
+  // Crochets de la coquille (IT-03) : titres et sous-titres avant, onglets, retours, badge et avatar après.
+  Noyau.crochets.sur("avantCoquille", "nav4.titres", (a) => {
+    const [titre, ...reste] = a;
     if (S.route === "materiel" || S.route === "miel") reste[0] = "";
-    shellAvant(TITRES[S.route] || titre, ...reste);
+    return [TITRES[S.route] || titre, ...reste];
+  });
+  Noyau.crochets.sur("apresCoquille", "nav4", () => {
     const wrap = document.querySelector(".wrap");
     if (["ruches", "carte", "varroa"].includes(S.route) && wrap && S.d?.ruches.length) {
       wrap.querySelector(".head")?.insertAdjacentHTML("afterend", subtabs([["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]], S.route, "go"));
@@ -37,7 +40,7 @@ const N4 = (() => {
       if (nb) document.querySelector('.bottom [data-v="ventes"] svg')?.insertAdjacentHTML("afterend", `<span class="n4-badge" aria-label="${nb} vente(s) à suivre">${nb}</span>`);
     }
     document.querySelectorAll('.topbar .avatar, .side .me .avatar').forEach((a) => { a.dataset.act = "n4compte"; a.removeAttribute("data-v"); a.setAttribute("aria-label", "Mon compte"); });
-  };
+  });
   const gabarit = (html) => { const t = document.createElement("template"); t.innerHTML = html; return [...t.content.childNodes]; };
   const retour = (wrap) => wrap?.insertAdjacentHTML("afterbegin", '<button type="button" class="link u-retour" data-act="go" data-v="plus">‹ Gestion</button>');
 
@@ -72,18 +75,17 @@ const N4 = (() => {
   };
   ACT.n4q = (a, k) => { $sheet.close(); ACT[a](k); };
   ACT.n4vocal = () => { ACT.newvisite(); setTimeout(() => { document.getElementById("v_note")?.scrollIntoView({ block: "center" }); ACT.v3dicter?.(); }, 50); };
-  ACT.n4photo = () => { ACT.newvisite(); U.ouvrir("photos"); viewVisite(); setTimeout(() => document.querySelector('details[data-sec="photos"] input[type=file], details[data-sec="photos"] [data-act^="ph"]')?.click(), 50); };
+  ACT.n4photo = () => { ACT.newvisite(); U.ouvrir("photos"); redessiner("visite"); setTimeout(() => document.querySelector('details[data-sec="photos"] input[type=file], details[data-sec="photos"] [data-act^="ph"]')?.click(), 50); };
 
   // Visite commencée puis quittée : on peut la reprendre depuis le bouton +.
   let brouillon = null, heure = "";
-  const renderAvant = window.render;
-  window.render = function () {
+  // Avant chaque rendu (crochet du noyau, IT-03) : garder le brouillon de visite, cartes grisées pendant le chargement.
+  Noyau.crochets.sur("avantRendu", "nav4", () => {
     if (S.lastRoute === "visite" && S.route !== "visite" && S.visite && !enregistree.has(S.visite) && !S.tournee) {
       brouillon = S.visite; heure = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     }
-    if (S.session && !S.d && S.member !== false && !S.recovery) return squelette();
-    renderAvant();
-  };
+    if (S.session && !S.d && S.member !== false && !S.recovery) return squelette(), true;
+  });
   const enregistree = new WeakSet();
   if (typeof VR != "undefined") {
     const enregAvant = VR.enregistrer;
@@ -120,12 +122,13 @@ const N4 = (() => {
       <div class="n4-deux"><button type="button" class="btn honey" data-act="${plusieurs ? "v3tournee" : "newvisite"}" data-v="${esc(plusieurs ? c.k : c.rs[0].id)}">${plusieurs ? "Commencer la tournée" : "Commencer la visite"}</button>
       <button type="button" class="btn ghost" data-act="n4plustard">Plus tard</button></div></div>`;
   }
-  ACT.n4plustard = () => { memo("n4-plustard", today()); viewDash(); };
+  ACT.n4plustard = () => { memo("n4-plustard", today()); redessiner("dash"); };
 
   // ---------- Ruchers : liste ----------
-  window.viewRuches = function () {
+  // Écran « ruches » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, N4.ecranRuchers).
+  function ecranRuchers() {
     const d = S.d;
-    if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoutez votre première ruche", "Une par une ou plusieurs d’un coup. Vous pourrez les regrouper par rucher.", "Ajouter des ruches", "newruches"));
+    if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoute ta première ruche", "Une par une ou plusieurs d’un coup. Tu pourras les regrouper par rucher.", "Ajouter des ruches", "newruches"));
     const seuil = U.seuilVarroa();
     const blocs = U.ruchers().map(([k, rs]) => {
       const pb = rs.filter((r) => r.etat !== "Bonne"), etat = U.pire(rs);
@@ -148,7 +151,7 @@ const N4 = (() => {
     const sorties = rr.length ? `<details class="card u-pli"><summary><h2>Ruches sorties · ${rr.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
       ${rr.map((r) => `<button type="button" class="u-todo" data-act="ruche" data-v="${r.id}"><span class="u-dot bg-crit" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
     shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(U.ruchers().length, "rucher")}`, '<button class="btn" data-act="newruches">Ajouter</button>', blocs + sorties);
-  };
+  }
 
   // ---------- Fiche ruche : passer d'une ruche à l'autre ----------
   const voisines = (r) => { const l = S.d.ruches.filter((x) => (x.rucher || "") === (r.rucher || "")); return l.some((x) => x.id === r.id) ? l : [r]; };
@@ -172,39 +175,13 @@ const N4 = (() => {
   }, { passive: true });
 
   // ---------- Miel : récoltes dans l'onglet Stock ----------
-  const mielAvant = window.viewMiel;
-  window.viewMiel = function () {
-    mielAvant();
+  // Écran « miel » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerMiel() {
     const rec = S.d.recoltes.slice(0, 30);
     document.querySelector(".wrap")?.insertAdjacentHTML("beforeend", `<section class="card u-liste"><div class="u-entete"><h2>Récoltes</h2><button type="button" class="link" data-act="newrecolte">Saisir une récolte</button></div>
       ${rec.map((x) => `<button type="button" class="u-todo" data-act="editrecolte" data-v="${x.id}"><span class="u-todo-t"><b>${esc(n(x.kg))} kg · ${esc(U.dateCourte(x.date_recolte))}</b><span class="small">${esc([x.ruche_id ? byId([...S.d.ruches, ...(S.d.ruchesSorties || [])], x.ruche_id)?.nom : "Toutes les ruches", x.miel, x.extraction].filter(Boolean).join(" · "))}</span></span>${x._attente ? '<span class="tag watch">en attente</span>' : ""}<span class="u-chev" aria-hidden="true">›</span></button>`).join("") || '<p class="small">Aucune récolte saisie.</p>'}</section>`);
-  };
-
-  // ---------- Gestion ----------
-  function viewGestion() {
-    const d = S.d, an = new Date().getFullYear(), f = fin(an), seuil = U.seuilVarroa();
-    const retard = d.taches.filter((t) => !t.faite && t.echeance && t.echeance < today()).length;
-    const afaire = d.taches.filter((t) => !t.faite).length;
-    const varroa = d.ruches.filter((r) => { const t = U.tauxVarroa(d.visites.find((v) => v.ruche_id === r.id && v.varroa != null)); return t !== null && t >= seuil; }).length;
-    const bas = d.articles.filter((a) => a.type !== "Équipement" && Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil));
-    const decl = (cfg().declaration || {})[an] || [];
-    const mois = today().slice(0, 7), depMois = sum(d.depenses.filter((x) => String(x.date_depense).startsWith(mois)), (x) => x.montant);
-    const der = [...d.visites, ...d.ventes].map((x) => x.created_at).filter(Boolean).sort().pop();
-    const tuile = (route, titre, etat, ton = "", large = false) => `<button type="button" class="n4-g ${large ? "large" : ""}" data-act="go" data-v="${route}"><b>${titre}</b><span class="small ${ton}">${esc(etat)}</span></button>`;
-    const sect = (t, html, cols = 2) => `<h2 class="n4-sect">${t}</h2><div class="n4-grille c${cols}">${html}</div>`;
-    shell("Gestion", cfg().nom, "", [
-      sect("Organisation", tuile("agenda", "Agenda et tâches", retard ? `${retard} en retard` : afaire ? `${afaire} à faire` : "rien à faire", retard ? "watch" : "")
-        + tuile("activite", "Activité", der ? "dernière saisie " + U.dateCourte(String(der).slice(0, 10)) : "–")
-        + (typeof EX != "undefined" ? tuile("membres", "Membres", "inviter, gérer", "", true) : "")),
-      sect("Santé et obligations", tuile("varroa", "Suivi varroa", varroa ? `${U.pluriel(varroa, "ruche")} au-dessus` : "sous le seuil", varroa ? "crit" : "")
-        + tuile("registre", "Registre d’élevage", "traitements et ordonnances")
-        + tuile("declaration", `Déclaration ${an}`, decl.length >= 3 ? "faite" : new Date().getMonth() >= 8 ? `à faire avant le 31 déc. · ${U.pluriel(d.ruches.length, "colonie")}` : "ouvre le 1er septembre", decl.length >= 3 ? "good" : new Date().getMonth() >= 8 ? "watch" : "", true)),
-      sect("Argent", tuile("pilotage", "Bilan", (f.resultat >= 0 ? "+" : "") + eur0(f.resultat)) + tuile("compta", "Dépenses", eur0(depMois) + " ce mois") + tuile("previsions", "Budget", String(an)), 3),
-      sect("Matériel", tuile("materiel", "Stock matériel", bas.length ? `${bas[0].nom} : stock bas${bas.length > 1 ? ` (+${bas.length - 1})` : ""}` : "OK", bas.length ? "watch" : "")
-        + tuile("fournisseurs", "Fournisseurs", U.pluriel(d.fournisseurs.length, "contact"))),
-    ].join(""));
   }
-  window.viewPlus = viewGestion;
+
 
   // ---------- Menu du compte ----------
   const soleil = () => { try { return localStorage.getItem("apidoo-soleil") === "1"; } catch { return false; } };
@@ -272,5 +249,5 @@ const N4 = (() => {
   ACT.delvente = delVente;
   ACT.uvsuppr = delVente;
 
-  return { prochaine, navRuche, viewGestion, plusTard };
+  return { prochaine, navRuche, plusTard, ecranRuchers, completerMiel };
 })();

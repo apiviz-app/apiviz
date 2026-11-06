@@ -1,0 +1,9 @@
+/* ---------- Fenêtres : croix, brouillon, ajouter une autre ---------- */
+.er-croix{position:absolute;top:8px;right:8px;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--ink);cursor:pointer}
+.er-croix:hover{background:var(--ground)}
+.er-croix svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+.er-autre{align-self:center}
+.er-brouillon{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;background:var(--pine);color:#fff;border-radius:14px;box-shadow:0 10px 26px rgba(20,28,24,.3);white-space:nowrap}
+.er-brouillon .link{color:#F6C453;font-weight:700;text-decoration:none}
+.er-oubli{width:36px;height:36px;border:0;border-radius:50%;background:none;color:#C5D0C8;font-size:20px;line-height:1;cursor:pointer}
+@media (max-width:800px){.er-brouillon{bottom:calc(92px + env(safe-area-inset-bottom));max-width:calc(100vw - 24px)}}

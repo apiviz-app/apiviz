@@ -1,0 +1,15 @@
+/* ---------- Interface Alvéoles : compagnon API, écrans allégés ---------- */
+@media (max-width:800px){
+  .topbar{background:var(--bandeau);color:var(--bandeau-texte)}
+  .topbar .v3-cherche{color:var(--bandeau-texte)}
+  .bottom{background:#fff;border-top:1px solid var(--line);box-shadow:none}
+}
+.bottom button[data-v=saisir] api-compagnon{margin-top:-30px}
+.bottom button[data-v=saisir] api-compagnon svg{width:100%;height:100%;padding:0;margin:0;border-radius:0;background:none!important;box-shadow:none}
+.bottom button.on[data-v=saisir] api-compagnon svg{background:none!important}
+.side .nav api-compagnon svg{display:block!important;width:100%;height:100%;fill:initial}
+.al-api{display:block;flex:none}
+.al-tete{justify-content:flex-start;align-items:center;gap:10px}
+.al-tete h2{flex:1;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;letter-spacing:-.015em}
+.al-cherche{width:100%;min-height:50px;padding:0 16px;margin:6px 0 8px;border:1px solid var(--line2);border-radius:25px;background:#fff;font:inherit;color:var(--muted);text-align:left}
+.al-bientot{margin-top:6px}

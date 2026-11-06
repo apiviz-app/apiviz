@@ -1,0 +1,14 @@
+/* Photos de visite */
+.ph-grid{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.ph-th{position:relative;width:76px;height:76px;padding:0;border:0;border-radius:8px;overflow:hidden;background:var(--line);flex:none}
+.ph-th img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-mini{margin:8px 0 2px}.ph-mini .ph-th{width:56px;height:56px}
+.ph-x{position:absolute;top:3px;right:3px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(20,28,24,.72);color:#fff;font-size:18px;line-height:1}
+.ph-wait{position:absolute;left:0;right:0;bottom:0;background:rgba(20,28,24,.7);color:#fff;font-size:10px;padding:2px 0;text-align:center}
+.ph-add{display:flex;gap:8px;flex-wrap:wrap}.ph-add .btn{display:flex;align-items:center;justify-content:center;cursor:pointer}
+#photoView{padding:0;border:0;border-radius:var(--radius);max-width:min(96vw,900px);width:auto;background:var(--card)}
+#photoView::backdrop{background:rgba(10,14,12,.8)}
+#photoView figure{margin:0}
+#photoView img{display:block;max-width:100%;max-height:72vh;margin:0 auto}
+#photoView figcaption{padding:10px 14px 0;font-size:13px;color:var(--muted)}
+#photoView .ph-bar{display:flex;gap:8px;padding:12px 14px 14px}

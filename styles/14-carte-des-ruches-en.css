@@ -1,0 +1,16 @@
+/* Carte des ruches en alvéoles */
+.al-carte{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px 12px;align-items:start}
+.al-carte>.u-entete,.al-carte>.al-cle,.al-lentilles{grid-column:1/-1}
+@property --niv{syntax:'<percentage>';inherits:false;initial-value:0%}
+.al-lentilles{display:flex;gap:6px;width:100%;max-width:420px}
+.lent{flex:1;min-height:44px;padding:0 6px;border:1px solid var(--line2);border-radius:999px;background:#fff;font:inherit;font-size:14px;font-weight:500;color:var(--ink);transition:background var(--duree) ease,color var(--duree) ease,border-color var(--duree) ease}
+.lent.on{background:var(--pine);border-color:var(--pine);color:#fff;font-weight:600}
+.al-carte .u-hex{transition:background-color .34s ease,color .34s ease,--niv .62s var(--sortie);transition-delay:calc(var(--i,0)*26ms)}
+.al-carte .u-hex.bg-niv{background:linear-gradient(to top,var(--honey) var(--niv),#E9ECE4 var(--niv));color:var(--ink)}
+.al-carte .u-hex.bg-vide{background:#E9ECE4;color:#3F4A44}
+.al-carte .u-hex.al-txt{font-size:16px}
+.al-carte .u-hex.al-txt.bg-crit span::after{content:""}
+.al-carte .u-hex.bg-good{color:#fff}
+.al-cle i.al-niv{background:linear-gradient(to top,var(--honey) var(--niv),#E9ECE4 var(--niv))}
+.al-entree .u-hex{animation:al-hx .46s var(--sortie) backwards;animation-delay:calc(var(--i,0)*34ms)}
+@keyframes al-hx{from{opacity:0;scale:.55}}

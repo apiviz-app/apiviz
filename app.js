@@ -156,30 +156,8 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     sim: null,
     venteFiltre: "toutes",
   },
-  esc = (valeur) =>
-    String(valeur ?? "").replace(
-      /[&<>"']/g,
-      (car) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[car],
-    ),
-  n = (valeur, decimales = 1) =>
-    Number(valeur || 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }),
-  eur = (montant) => n(montant, 2) + " \u20AC",
-  eur0 = (montant) => n(montant, 0) + " \u20AC",
-  today = () => {
-    const maintenant = new Date();
-    return new Date(maintenant - maintenant.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-  },
-  dfr = (date) =>
-    date ? date.slice(8, 10) + "/" + date.slice(5, 7) + "/" + date.slice(0, 4) : "\u2013",
-  dshort = (date) => (date ? date.slice(8, 10) + "/" + date.slice(5, 7) : "\u2013"),
-  byId = (liste, id) => liste.find((element) => element.id === id),
-  sum = (liste, valeurDe) =>
-    liste.reduce((total, element) => total + Number(valeurDe(element) || 0), 0),
-  days = (date) => Math.floor((new Date(today()) - new Date(date)) / 864e5),
-  yr = (date) => Number(String(date).slice(0, 4)),
-  mo = (date) => Number(String(date).slice(5, 7)) - 1,
-  num = (valeur) => (valeur === "" || valeur === void 0 || valeur === null ? null : Number(valeur)),
-  orNull = (valeur) => valeur || null,
+  // Formats : fonctions pures de src/noyau/format.js (IT-03, testées unitairement).
+  { esc, n, eur, eur0, today, dfr, dshort, byId, sum, days, yr, mo, num, orNull } = Regles,
   etatClass = (etat) => (etat === "Bonne" ? "good" : etat === "Critique" ? "crit" : "watch"),
   // Nom affiché : celui des réglages, sinon celui de l'exploitation ouverte, sinon « Mon exploitation » (AP-BUG-006).
   nomExploitation = () =>
@@ -200,8 +178,8 @@ function toast(message, erreur) {
     setTimeout(() => bulle.remove(), erreur ? 6e3 : 3e3));
 }
 // ---------- Erreurs : message en français pour l'utilisateur, détail au journal (AP-FEAT-036) ----------
-// Journal : en attendant la table journal_erreurs (IT-03), console et 50 dernières entrées sur l'appareil
-// (clé apidoo-journal, effacée à la déconnexion). IT-03 n'aura qu'à brancher cette fonction sur la table.
+// Journal : console et 50 dernières entrées sur l'appareil (clé apidoo-journal, effacée à la déconnexion),
+// plus une copie regroupée dans la table journal_erreurs (IT-03, src/noyau/erreurs.js).
 function journaliser(type, detail) {
   const entree = {
     at: new Date().toISOString(),
@@ -212,6 +190,11 @@ function journaliser(type, detail) {
     details: String(detail?.details || detail?.hint || "").slice(0, 500),
   };
   console.warn("[apidoo]", type, detail);
+  // Copie au journal de production (IT-03, table journal_erreurs) : message nettoyé, sans e-mail ni donnée métier.
+  try {
+    const lieu = String(detail?.stack || "").match(/([\w.-]+\.js):(\d+):(\d+)/);
+    window.Noyau?.journal.signaler(type, { ...entree, source: lieu ? lieu.slice(1).join(":") : "" });
+  } catch {}
   try {
     const liste = JSON.parse(localStorage.getItem("apidoo-journal") || "[]");
     (liste.push(entree), localStorage.setItem("apidoo-journal", JSON.stringify(liste.slice(-50))));
@@ -334,6 +317,15 @@ async function loadAll() {
 async function refresh() {
   (await loadAll(), render());
 }
+// Après des visites enregistrées (IT-03, AP-FEAT-014, AP-US-009) : en ligne, elles sont ajoutées aux données du
+// téléphone comme le fait creer_visite côté base (src/domaines/visites/regles.js), sans relire toutes les tables :
+// une seule requête par visite. Hors ligne (saisie gardée) ou sans offline.js : la relecture habituelle.
+async function apresVisites(charges, local) {
+  if (local || typeof HL == "undefined" || !S.d) return refresh();
+  const extra = { auteur: S.session?.user?.email || "", created_at: new Date().toISOString() };
+  for (const p of charges) Regles.visites.appliquerVisite(S.d, p, extra);
+  (await HL.garderDonnees(), render());
+}
 async function write(requete, message) {
   if (typeof HL != "undefined") return HL.write(requete, message);
   const { error: erreur } = await requete;
@@ -356,7 +348,7 @@ function authView() {
   const mode = S.authMode;
   $app.innerHTML = `<div class="auth"><form data-form="auth">
     <div class="brand"><img src="logo-apidoo.svg" alt="Apidoo" height="38"></div>
-    <p class="sub">Le carnet de bord de votre rucher</p>
+    <p class="sub">Le carnet de bord de ton rucher</p>
     ${
       S.recovery
         ? `<label>Nouveau mot de passe<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
@@ -471,7 +463,14 @@ const ICON = {
     previsions: "plus",
     reglages: "plus",
   };
-function shell(titre, sousTitre, boutons, contenu, surTitre) {
+// Coquille unique (IT-03) : les modules ne surchargent plus shell(), ils déclarent des crochets
+// avantCoquille / apresCoquille (src/noyau/crochets.js), appelés ici dans un ordre fixe.
+function shell(...args) {
+  const C = window.Noyau?.crochets,
+    a = C ? C.coquille("avantCoquille", args) : args;
+  (coquilleDeBase(...a), C?.coquille("apresCoquille", a));
+}
+function coquilleDeBase(titre, sousTitre, boutons, contenu, surTitre) {
   const initiale = (S.session.user.email || "?")[0].toUpperCase(),
     menuLateral = SIDE.map((entree) =>
       entree
@@ -512,11 +511,7 @@ const table = (colonnes, lignes, siVide) =>
     window.innerWidth <= 800
       ? Math.max(280, window.innerWidth - 66)
       : Math.min(1e3, window.innerWidth - 300);
-function niceMax(valeur) {
-  if (valeur <= 0) return 1;
-  const puissance = 10 ** Math.floor(Math.log10(valeur));
-  return [1, 2, 2.5, 5, 10].map((palier) => palier * puissance).find((palier) => palier >= valeur);
-}
+const niceMax = Regles.niceMax;
 const legend = (series) =>
     series.length > 1
       ? `<div class="legend">${series.map((serie) => `<span><i style="background:${serie.color}"></i>${esc(serie.name)}</span>`).join("")}</div>`
@@ -644,20 +639,11 @@ function hbars(lignes, couleur = C.honey) {
     )
     .join("")}</div>`;
 }
+// Règles financières : src/domaines/finances/regles.js (IT-03, testées unitairement).
 function stock() {
-  const donnees = S.d;
-  return {
-    pots: sum(donnees.lots, (lot) => lot.pots_restants),
-    kg: sum(donnees.lots, (lot) => (lot.pots_restants * lot.format_g) / 1e3),
-    kgPots: sum(donnees.lots, (lot) => (lot.pots_initiaux * lot.format_g) / 1e3),
-    valeur: sum(donnees.lots, (lot) => lot.pots_restants * lot.prix),
-  };
+  return Regles.finances.stock(S.d);
 }
-const venteTotal = (vente) =>
-    sum(
-      S.d.lignes.filter((ligne) => ligne.vente_id === vente.id),
-      (ligne) => ligne.quantite * ligne.prix_unitaire,
-    ),
+const venteTotal = (vente) => Regles.finances.venteTotal(S.d, vente),
   lastVisit = (rucheId) => S.d.visites.find((visite) => visite.ruche_id === rucheId),
   years = () => {
     const donnees = S.d,
@@ -671,96 +657,10 @@ const venteTotal = (vente) =>
     );
   };
 function fin(annee) {
-  const donnees = S.d,
-    ventes = donnees.ventes.filter((vente) => yr(vente.date_vente) === annee),
-    depenses = donnees.depenses.filter((depense) => yr(depense.date_depense) === annee),
-    recoltes = donnees.recoltes.filter((recolte) => yr(recolte.date_recolte) === annee),
-    idsVentes = new Set(ventes.map((vente) => vente.id)),
-    lignes = donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
-    ca = sum(lignes, (ligne) => ligne.quantite * ligne.prix_unitaire),
-    encaisse = sum(
-      ventes.filter((vente) => vente.paye),
-      venteTotal,
-    ),
-    charges = sum(depenses, (depense) => depense.montant),
-    kgRecolte = sum(recoltes, (recolte) => recolte.kg),
-    kgVendu = sum(
-      lignes,
-      (ligne) => (ligne.quantite * (byId(donnees.lots, ligne.lot_id)?.format_g || 0)) / 1e3,
-    ),
-    moisCa = Array(12).fill(0),
-    moisEncaisse = Array(12).fill(0),
-    moisDepenses = Array(12).fill(0),
-    moisPots = Array(12).fill(0);
-  (ventes.forEach((vente) => {
-    const total = venteTotal(vente);
-    ((moisCa[mo(vente.date_vente)] += total),
-      vente.paye && (moisEncaisse[mo(vente.date_vente)] += total),
-      (moisPots[mo(vente.date_vente)] += sum(
-        donnees.lignes.filter((ligne) => ligne.vente_id === vente.id),
-        (ligne) => ligne.quantite,
-      )));
-  }),
-    depenses.forEach((depense) => {
-      moisDepenses[mo(depense.date_depense)] += Number(depense.montant);
-    }));
-  const report =
-    sum(
-      donnees.ventes.filter((vente) => yr(vente.date_vente) < annee && vente.paye),
-      venteTotal,
-    ) -
-    sum(
-      donnees.depenses.filter((depense) => yr(depense.date_depense) < annee),
-      (depense) => depense.montant,
-    );
-  let cumul = report;
-  const dernierMois =
-      new Date().getFullYear() === annee
-        ? new Date().getMonth()
-        : annee > new Date().getFullYear()
-          ? -1
-          : 11,
-    tresorerie = moisEncaisse.map(
-      (encaisse, mois) => (
-        (cumul += encaisse - moisDepenses[mois]),
-        mois <= dernierMois ? cumul : null
-      ),
-    );
-  return {
-    ventes: ventes,
-    dep: depenses,
-    lignes: lignes,
-    ca: ca,
-    encaisse: encaisse,
-    aEncaisser: ca - encaisse,
-    charges: charges,
-    resultat: ca - charges,
-    kgRec: kgRecolte,
-    kgVendu: kgVendu,
-    mCa: moisCa,
-    mEnc: moisEncaisse,
-    mDep: moisDepenses,
-    mPots: moisPots,
-    treso: tresorerie,
-    report: report,
-    tresoFin: report + encaisse - charges,
-    coutKg: kgRecolte ? charges / kgRecolte : null,
-    prixKg: kgVendu ? ca / kgVendu : null,
-  };
+  return Regles.finances.fin(S.d, annee);
 }
 function rythme() {
-  const donnees = S.d,
-    depuis = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10),
-    idsVentes = new Set(
-      donnees.ventes.filter((vente) => vente.date_vente >= depuis).map((vente) => vente.id),
-    ),
-    potsParMois =
-      sum(
-        donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
-        (ligne) => ligne.quantite,
-      ) / 3,
-    pots = stock().pots;
-  return { mois: potsParMois, moisRestants: potsParMois > 0 ? pots / potsParMois : null };
+  return Regles.finances.rythme(S.d);
 }
 function todos() {
   const donnees = S.d,
@@ -850,235 +750,6 @@ function todos() {
     liste
   );
 }
-function honeycomb(ruches) {
-  const parLigne = window.innerWidth <= 800 ? 3 : 4,
-    rangees = [];
-  for (let debut = 0; debut < ruches.length; debut += parLigne)
-    rangees.push(ruches.slice(debut, debut + parLigne));
-  const cellule = (ruche) =>
-      `<button class="cell bg-${etatClass(ruche.etat)}" data-act="ruche" data-v="${ruche.id}" aria-label="Ouvrir ${esc(ruche.nom)}, \xE9tat ${esc(ruche.etat)}"><span>${esc(ruche.nom)}</span></button>`,
-    legende = ETATS.map((etat) => [etat, ruches.filter((ruche) => ruche.etat === etat).length])
-      .filter((compte) => compte[1])
-      .map(
-        ([etat, nombre]) =>
-          `<span class="tag ${etatClass(etat)}">${nombre} ${etat === "Bonne" ? "en bon \xE9tat" : esc(etat.toLowerCase())}</span>`,
-      )
-      .join("");
-  return `<div class="comb">${rangees.map((rangee) => `<div class="comb-row">${rangee.map(cellule).join("")}</div>`).join("")}</div><div class="comb-legend">${legende}</div>`;
-}
-function viewDash() {
-  const donnees = S.d,
-    reglages = cfg(),
-    stockMiel = stock(),
-    annee = new Date().getFullYear(),
-    finances = fin(annee),
-    etapes = [
-      [donnees.ruches.length > 0, "Ajouter vos ruches", "newruches"],
-      [donnees.articles.length > 0, "Renseigner votre mat\xE9riel", "gomateriel"],
-      [donnees.recoltes.length > 0, "Saisir une r\xE9colte", "newrecolte"],
-      [donnees.lots.length > 0, "Cr\xE9er vos lots de pots", "newlot"],
-      [donnees.clients.length > 0, "Ajouter un client", "newclient"],
-      [donnees.ventes.length > 0, "Enregistrer une vente", "newvente"],
-    ],
-    faites = etapes.filter((etape) => etape[0]).length,
-    demarrage =
-      faites < etapes.length
-        ? `<section class="card">
-    <h2>Bien d\xE9marrer</h2><p class="small">${faites} sur ${etapes.length} \xE9tapes termin\xE9es</p><div class="track"><i style="width:${Math.round((faites / etapes.length) * 100)}%"></i></div>
-    <div class="steps">${etapes.map(([fait, libelle, action]) => `<button class="step ${fait ? "ok" : ""}" ${fait ? "disabled" : `data-act="${action}"`}><span class="dot">${fait ? "\u2713" : ""}</span>${esc(libelle)}</button>`).join("")}</div>
-  </section>`
-        : "",
-    rayon = honeycomb(donnees.ruches),
-    aFaire = todos()
-      .slice(0, 7)
-      .map(
-        ([titre, classe, texte, cible]) =>
-          `<button class="todo" data-act="${cible.startsWith("ruche:") ? "ruche" : "go"}" data-v="${cible.replace("ruche:", "")}"><b class="${classe}">${esc(titre)}</b><span>${esc(texte)}</span></button>`,
-      )
-      .join(""),
-    tachesOuvertes = donnees.taches.filter((tache) => !tache.faite).length,
-    aSurveiller = donnees.ruches.filter((ruche) => ruche.etat !== "Bonne").length,
-    resume = [
-      `${donnees.ruches.length} ruche${donnees.ruches.length > 1 ? "s" : ""}`,
-      aSurveiller ? `${aSurveiller} \xE0 surveiller` : "",
-      tachesOuvertes ? `${tachesOuvertes} t\xE2che${tachesOuvertes > 1 ? "s" : ""} \xE0 faire` : "",
-    ]
-      .filter(Boolean)
-      .join(" \xB7 "),
-    heure = new Date().getHours();
-  shell(
-    heure < 18 ? "Bonjour" : "Bonsoir",
-    resume,
-    '<button class="btn honey" data-act="newvisite">Nouvelle visite</button><button class="btn ghost" data-act="newvente">Nouvelle vente</button>',
-    `
-    ${demarrage}
-    ${typeof HL != "undefined" ? HL.section() : ""}
-    <div class="grid">
-      ${kpi("Miel en stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
-      ${kpi("Ventes " + annee, eur0(finances.ca), finances.aEncaisser > 0 ? eur0(finances.aEncaisser) + " \xE0 encaisser" : finances.ventes.length + " vente(s)")}
-      ${kpi("R\xE9sultat " + annee, eur0(finances.resultat), "apr\xE8s " + eur0(finances.charges) + " de d\xE9penses")}
-      ${kpi("Tr\xE9sorerie", eur0(finances.tresoFin), "encaiss\xE9 moins d\xE9pens\xE9")}
-    </div>
-    <div class="grid2">
-      <section class="card"><h2>\xC9tat des ruches</h2>${donnees.ruches.length ? rayon : '<p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button>'}</section>
-      <section class="card"><h2>\xC0 faire</h2>${aFaire || '<p class="small">Rien \xE0 signaler.</p>'}</section>
-    </div>`,
-    reglages.nom +
-      " \xB7 " +
-      new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }),
-  );
-}
-function viewPlus() {
-  shell(
-    "Plus",
-    "",
-    "",
-    `<section class="card menu">${[
-      ["membres", "Exploitation et membres"],
-      ["agenda", "Agenda et t\xE2ches"],
-      ["registre", "Registre d\u2019\xE9levage"],
-      ["previsions", "Pr\xE9visions et budget"],
-      ["compta", "D\xE9penses"],
-      ["fournisseurs", "Fournisseurs"],
-      ["reglages", "R\xE9glages et exports"],
-    ]
-      .map(
-        ([route, libelle]) =>
-          `<button data-act="go" data-v="${route}">${icon(route)}<span>${libelle}</span></button>`,
-      )
-      .join(
-        "",
-      )}<button data-act="logout">${icon("plus")}<span>Se d\xE9connecter</span></button></section>`,
-  );
-}
-function viewRuches() {
-  const donnees = S.d;
-  if (!donnees.ruches.length)
-    return shell(
-      "Ruches",
-      "",
-      "",
-      emptyState(
-        "Ajoutez votre premi\xE8re ruche",
-        "Une par une ou plusieurs d\u2019un coup. Vous pourrez les renommer et les regrouper par rucher.",
-        "Ajouter des ruches",
-        "newruches",
-      ),
-    );
-  const parRucher = {};
-  donnees.ruches.forEach((ruche) => {
-    (parRucher[ruche.rucher || "Sans rucher"] =
-      parRucher[ruche.rucher || "Sans rucher"] || []).push(ruche);
-  });
-  const sections = Object.keys(parRucher)
-      .sort()
-      .map(
-        (rucher) =>
-          `<section class="card"><h2>${esc(rucher)} <span class="small">\xB7 ${parRucher[rucher].length} ruche(s)</span></h2><div class="rlist">${parRucher[
-            rucher
-          ]
-            .map((ruche) => {
-              const derniere = lastVisit(ruche.id);
-              return `<button class="rcard" data-act="ruche" data-v="${ruche.id}"><span class="hex small-hex bg-${etatClass(ruche.etat)}"></span><span class="rmain"><b>${esc(ruche.nom)}</b><span class="small">${derniere ? "Visite il y a " + days(derniere.date_visite) + " j" : "Jamais visit\xE9e"}</span></span><span class="num"><b>${n(
-                sum(
-                  donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
-                  (recolte) => recolte.kg,
-                ),
-              )} kg</b><span class="small tag ${etatClass(ruche.etat)}">${esc(ruche.etat)}</span></span></button>`;
-            })
-            .join("")}</div></section>`,
-      )
-      .join(""),
-    lignesRecoltes = donnees.recoltes.map(
-      (recolte) =>
-        `<tr><td><button class="link" data-act="editrecolte" data-v="${recolte.id}">${dfr(recolte.date_recolte)}</button>${recolte._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${recolte.ruche_id ? esc(byId(donnees.ruches, recolte.ruche_id)?.nom) : "Toutes les ruches"}</td><td class="num">${n(recolte.kg)} kg</td></tr>`,
-    );
-  shell(
-    "Ruches",
-    donnees.ruches.length + " ruche(s)",
-    '<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newrecolte">R\xE9colte</button><button class="btn" data-act="newruches">Ajouter</button>',
-    `
-    ${sections}
-    <section class="card tbl"><h2>R\xE9coltes</h2>${table(["Date", "Origine", "#Quantit\xE9"], lignesRecoltes, "Aucune r\xE9colte saisie.")}</section>`,
-  );
-}
-function viewRuche() {
-  const donnees = S.d,
-    ruche = byId(donnees.ruches, S.ruche);
-  if (!ruche) return ((S.route = "ruches"), render());
-  const visites = donnees.visites.filter((visite) => visite.ruche_id === ruche.id),
-    journal = visites.map((visite) => {
-      const intrants = donnees.intrants
-        .filter((intrant) => intrant.visite_id === visite.id)
-        .map((intrant) => {
-          const article = byId(donnees.articles, intrant.article_id);
-          return `${n(intrant.quantite)} ${esc(article?.unite)} ${esc(article?.nom)}`;
-        })
-        .join(", ");
-      return `<tr><td>${dfr(visite.date_visite)}${visite._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>Activit\xE9 ${esc(visite.activite.toLowerCase())}, provisions ${esc(visite.provisions.toLowerCase())}, reine ${esc(visite.reine.toLowerCase())}${visite.couvain ? ", couvain " + esc(visite.couvain.toLowerCase()) : ""}${visite.poids_kg ? ", " + n(visite.poids_kg) + " kg" : ""}${visite.varroa !== null && visite.varroa !== void 0 ? ", varroa " + visite.varroa : ""}${visite.note ? '<br><span class="small">' + esc(visite.note) + "</span>" : ""}${typeof RG != "undefined" ? RG.journal(visite) : ""}${typeof PH != "undefined" ? PH.vignettes(visite.id) : ""}</td><td>${intrants || "\u2013"}</td><td class="num"><button class="link" data-act="delvisite" data-v="${visite.id}">Supprimer</button></td></tr>`;
-    }),
-    kgRecoltes = sum(
-      donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
-      (recolte) => recolte.kg,
-    ),
-    pesees = visites
-      .filter((visite) => visite.poids_kg)
-      .slice()
-      .reverse(),
-    taches = donnees.taches.filter((tache) => tache.ruche_id === ruche.id && !tache.faite);
-  shell(
-    ruche.nom,
-    [ruche.rucher, ruche.type_ruche, ruche.annee_reine ? "reine " + ruche.annee_reine : ""]
-      .filter(Boolean)
-      .join(" \xB7 ") || "Fiche de la ruche",
-    `<button class="btn main" data-act="newvisite" data-v="${ruche.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${ruche.id}">T\xE2che</button><button class="btn" data-act="editruche" data-v="${ruche.id}">Modifier</button>`,
-    `
-    <div class="grid">
-      ${kpi("\xC9tat", ruche.etat, "", etatClass(ruche.etat))}
-      ${kpi("Miel r\xE9colt\xE9", n(kgRecoltes) + " kg", "")}
-      ${kpi("Derni\xE8re visite", visites[0] ? "Il y a " + days(visites[0].date_visite) + " j" : "\u2013", visites[0] ? dfr(visites[0].date_visite) : "Aucune visite")}
-      ${kpi("Visites", visites.length, "")}
-    </div>
-    ${ruche.notes ? `<section class="card">${esc(ruche.notes)}</section>` : ""}
-    ${taches.length ? `<section class="card"><h2>T\xE2ches pr\xE9vues</h2>${taches.map(taskRow).join("")}</section>` : ""}
-    ${pesees.length > 1 ? `<section class="card"><h2>\xC9volution du poids</h2>${lineChart({ labels: pesees.map((visite) => dshort(visite.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.map((visite) => Number(visite.poids_kg)) }], fmt: (visite) => n(visite) + " kg", title: "\xC9volution du poids de la ruche", h: 180 })}</section>` : ""}
-    <section class="card tbl"><h2>Journal des visites</h2>${table(["Date", "Observations", "Intrants", "#"], journal, "Aucune visite enregistr\xE9e.")}</section>`,
-  );
-}
-function viewVisite() {
-  const visite = S.visite,
-    donnees = S.d,
-    choix = (titre, cle, options) =>
-      `<div class="field"><div class="t">${titre}</div><div class="seg" style="grid-template-columns:repeat(${options.length},minmax(0,1fr))">${options.map((option) => `<button type="button" class="${visite[cle] === option ? "on" : ""}" aria-pressed="${visite[cle] === option}" data-act="vset" data-k="${cle}" data-v="${option}">${option}</button>`).join("")}</div></div>`,
-    intrants = consommables()
-      .map((article) => {
-        const pas = ["kg", "L"].includes(article.unite) ? 0.5 : 1;
-        return `<div class="stepper"><div><b>${esc(article.nom)}</b><div class="small">${n(article.stock)} ${esc(article.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${-pas}">\u2212</button><span>${n(visite.q[article.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${pas}">+</button></div></div>`;
-      })
-      .join("");
-  shell(
-    "Nouvelle visite",
-    "Au rucher",
-    '<button class="btn" data-act="cancel">Annuler</button>',
-    `
-    <form data-form="visite" class="form">
-      ${typeof VR != "undefined" ? VR.pick(visite) : `<div class="field"><div class="t">Ruche visit\xE9e</div><div class="pick">${donnees.ruches.map((ruche) => `<button type="button" class="${visite.ruche_id === ruche.id ? "on" : ""}" aria-pressed="${visite.ruche_id === ruche.id}" data-act="vset" data-k="ruche_id" data-v="${ruche.id}">${esc(ruche.nom)}</button>`).join("")}</div></div>`}
-      <label>Date<input type="date" id="v_date" value="${esc(visite.date_visite)}" max="${today()}" required></label>
-      ${choix("Activit\xE9 \xE0 l\u2019entr\xE9e", "activite", ["Faible", "Normale", "Forte"])}
-      ${choix("Provisions", "provisions", ["Faibles", "Moyennes", "Bonnes"])}
-      ${choix("Reine", "reine", ["Vue", "Non vue", "Non cherch\xE9e"])}
-      ${choix("Couvain", "couvain", ["Non vu", "R\xE9duit", "Normal", "Abondant"])}
-      ${choix("\xC9tat de la ruche apr\xE8s la visite", "etat", ETATS)}
-      <section class="card"><h2>Ce que vous avez utilis\xE9</h2>${intrants || '<p class="small">Ajoutez vos consommables dans Mat\xE9riel pour les suivre ici.</p>'}</section>
-      <div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(visite.poids_kg)}"></label>
-      <label>Varroas compt\xE9s<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(visite.varroa)}"></label></div>
-      ${typeof RG != "undefined" ? RG.formSection(visite) : ""}
-      ${typeof PH != "undefined" ? PH.formSection() : ""}
-      <label>Note<textarea id="v_note">${esc(visite.note)}</textarea></label>
-      <button class="btn main block" ${S.busy ? "disabled" : ""}>${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le t\xE9l\xE9phone" : "Enregistrer la visite"}</button>
-    </form>`,
-  );
-}
 function viewMiel() {
   const donnees = S.d,
     stockMiel = stock(),
@@ -1098,10 +769,10 @@ function viewMiel() {
       ${kpi("En stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
       ${kpi("Valeur \xE0 vendre", eur0(stockMiel.valeur), rythmeVentes.moisRestants !== null ? `Environ ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "")}
     </div>
-    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9ez un lot par format de pot.")}</section>`
+    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9e un lot par format de pot.")}</section>`
         : emptyState(
-            "Votre stock de miel est vide",
-            "Saisissez une r\xE9colte, puis cr\xE9ez un lot par format de pot.",
+            "Ton stock de miel est vide",
+            "Saisis une r\xE9colte, puis cr\xE9e un lot par format de pot.",
             "Saisir une r\xE9colte",
             "newrecolte",
             '<button class="btn" data-act="newlot">Cr\xE9er un lot</button>',
@@ -1155,56 +826,6 @@ function viewMateriel() {
     <section class="card tbl"><h2>\xC9quipement</h2>${table(["\xC9quipement", "#Qt\xE9", "#Valeur", "Fournisseur"], lignesEquipements, "Aucun \xE9quipement enregistr\xE9.")}${ajoutRapide("\xC9quipement")}</section>`,
   );
 }
-function viewClients() {
-  const donnees = S.d,
-    ventesAffichees = donnees.ventes.filter((vente) => S.venteFiltre === "toutes" || !vente.paye),
-    lignesClients = donnees.clients.map((client) => {
-      const ventesClient = donnees.ventes.filter((vente) => vente.client_id === client.id);
-      return `<tr><td><button class="link" data-act="editclient" data-v="${client.id}">${esc(client.nom)}</button></td><td>${esc(client.cercle)}</td><td>${client.telephone ? `<a href="tel:${esc(client.telephone)}">${esc(client.telephone)}</a>` : "\u2013"}</td><td class="num">${eur(sum(ventesClient, venteTotal))}</td><td>${ventesClient[0] ? dfr(ventesClient[0].date_vente) : "Jamais"}</td></tr>`;
-    }),
-    lignesVentes = ventesAffichees.slice(0, 25).map((vente) => {
-      const pots = donnees.lignes
-        .filter((ligne) => ligne.vente_id === vente.id)
-        .map(
-          (ligne) => `${ligne.quantite} \xD7 ${n(byId(donnees.lots, ligne.lot_id)?.format_g, 0)} g`,
-        )
-        .join(", ");
-      return `<tr><td>${dfr(vente.date_vente)}${vente._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(byId(donnees.clients, vente.client_id)?.nom)}</td><td>${esc(pots)}</td><td class="num">${eur(venteTotal(vente))}</td><td><button class="link ${vente.paye ? "" : "watch"}" data-act="togglepaye" data-v="${vente.id}">${vente.paye ? "Pay\xE9e" + (vente.mode ? " \xB7 " + esc(vente.mode) : "") : "\xC0 encaisser"}</button></td><td class="num"><button class="link" data-act="delvente" data-v="${vente.id}">Supprimer</button></td></tr>`;
-    });
-  if (!donnees.clients.length)
-    return shell(
-      "Clients & ventes",
-      "",
-      "",
-      emptyState(
-        "Ajoutez votre premier client",
-        "Famille, amis, coll\xE8gues : retrouvez qui a achet\xE9 quoi.",
-        "Ajouter un client",
-        "newclient",
-      ),
-    );
-  const aEncaisser = sum(
-    donnees.ventes.filter((vente) => !vente.paye),
-    venteTotal,
-  );
-  shell(
-    "Clients & ventes",
-    donnees.clients.length +
-      " client(s)" +
-      (aEncaisser ? " \xB7 " + eur(aEncaisser) + " \xE0 encaisser" : ""),
-    '<button class="btn main" data-act="newvente">Nouvelle vente</button><button class="btn" data-act="newclient">Ajouter un client</button>',
-    `
-    <section class="card tbl">${table(["Client", "Cercle", "T\xE9l\xE9phone", "#Total", "Dernier achat"], lignesClients, "Aucun client.")}</section>
-    <section class="card tbl"><h2>Ventes</h2><div class="pad">${subtabs(
-      [
-        ["toutes", "Toutes"],
-        ["impayees", "\xC0 encaisser"],
-      ],
-      S.venteFiltre,
-      "vfiltre",
-    )}</div>${table(["Date", "Client", "Pots", "#Montant", "Paiement", "#"], lignesVentes, "Aucune vente.")}</section>`,
-  );
-}
 function viewVente() {
   const vente = S.vente,
     donnees = S.d,
@@ -1232,7 +853,7 @@ function viewVente() {
       ${donnees.clients.length ? `<label>Client<select id="s_client" required><option value="">Choisir\u2026</option>${optionsClients}</select></label>` : ""}
       <button type="button" class="link" data-act="newclient">Ajouter un client</button>
       <label>Date<input type="date" id="s_date" value="${esc(vente.date_vente)}" max="${today()}" required></label>
-      <section class="card"><h2>Pots vendus</h2>${lignesLots || '<p class="small">Aucun pot en stock. Cr\xE9ez d\u2019abord un lot dans Stocks.</p>'}</section>
+      <section class="card"><h2>Pots vendus</h2>${lignesLots || '<p class="small">Aucun pot en stock. Cr\xE9e d\u2019abord un lot dans Stocks.</p>'}</section>
       <div class="field"><div class="t">Paiement</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${vente.paye ? "on" : ""}" data-act="spaye" data-v="1">Pay\xE9e</button><button type="button" class="${vente.paye ? "" : "on"}" data-act="spaye" data-v="0">\xC0 encaisser</button></div></div>
       ${vente.paye ? `<label>Mode de paiement<select id="s_mode">${reglages.modes.map((mode) => `<option ${vente.mode === mode ? "selected" : ""}>${esc(mode)}</option>`).join("")}</select></label>` : ""}
       <button class="btn main block" ${S.busy ? "disabled" : ""}>Enregistrer \xB7 ${eur(total)}</button>
@@ -1247,8 +868,8 @@ function viewFournisseurs() {
       "",
       "",
       emptyState(
-        "Ajoutez vos fournisseurs",
-        "Gardez leurs coordonn\xE9es et suivez ce que vous leur achetez.",
+        "Ajoute tes fournisseurs",
+        "Garde leurs coordonn\xE9es et suis ce que tu leur ach\xE8tes.",
         "Ajouter un fournisseur",
         "newfournisseur",
       ),
@@ -1465,7 +1086,7 @@ function viewPilotage() {
     !S.d.ventes.length && !S.d.depenses.length && !S.d.recoltes.length && !S.d.visites.length;
   shell(
     "Pilotage",
-    "Vos chiffres financiers et op\xE9rationnels",
+    "Tes chiffres financiers et op\xE9rationnels",
     yearSel(),
     subtabs(
       [
@@ -1476,7 +1097,7 @@ function viewPilotage() {
       "ptab",
     ) +
       (vide
-        ? '<p class="notice">Les graphiques se rempliront avec vos r\xE9coltes, ventes, d\xE9penses et visites.</p>'
+        ? '<p class="notice">Les graphiques se rempliront avec tes r\xE9coltes, ventes, d\xE9penses et visites.</p>'
         : "") +
       (S.tab === "fin" ? pilotFin() : pilotOps()),
   );
@@ -1605,10 +1226,10 @@ function viewPrevisions() {
     budgetDepenses = sum(postes.slice(1), budgetDe);
   shell(
     "Pr\xE9visions",
-    "Testez vos hypoth\xE8ses et suivez votre budget",
+    "Teste tes hypoth\xE8ses et suis ton budget",
     yearSel(),
     `
-    <section class="card"><h2>Simulateur</h2><p class="small">Changez une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que vos donn\xE9es sont incompl\xE8tes.</p>
+    <section class="card"><h2>Simulateur</h2><p class="small">Change une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que tes donn\xE9es sont incompl\xE8tes.</p>
       <div class="simgrid">
         ${champ("ruches", "Ruches")}${champ("ajout", "Ruches ajout\xE9es par an")}${champ("rendement", "Rendement", "0.5", "kg/ruche")}${champ("vendu", "Part du miel vendue", "5", "%")}
         ${champ("part500", "Part en pots de 500 g", "5", "%")}${champ("prix500", "Prix pot 500 g", "0.5", "\u20AC")}${champ("prix250", "Prix pot 250 g", "0.5", "\u20AC")}
@@ -1617,7 +1238,7 @@ function viewPrevisions() {
       <div class="actions" style="margin-top:12px"><button class="btn" data-act="savesim">Enregistrer ces hypoth\xE8ses</button><button class="btn" data-act="resetsim">Revenir aux valeurs calcul\xE9es</button></div>
     </section>
     <div id="simOut" class="stack">${simOut()}</div>
-    <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
+    <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touche un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
   );
 }
 function taskRow(tache) {
@@ -1641,7 +1262,7 @@ function viewAgenda() {
       (typeof RP != "undefined" ? RP.bouton() : ""),
     `
     <section class="card"><h2>\xC0 faire</h2>${aFaire.map(taskRow).join("") || '<p class="small">Aucune t\xE2che pr\xE9vue.</p>'}</section>
-    ${idees.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 votre r\xE9gion et \xE0 vos protocoles.</p><div class="chips">${idees.map((idee) => `<button data-act="addsug" data-v="${esc(idee)}">+ ${esc(idee)}</button>`).join("")}</div></section>` : ""}
+    ${idees.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 ta r\xE9gion et \xE0 tes protocoles.</p><div class="chips">${idees.map((idee) => `<button data-act="addsug" data-v="${esc(idee)}">+ ${esc(idee)}</button>`).join("")}</div></section>` : ""}
     ${terminees.length ? `<section class="card"><h2>Termin\xE9es</h2>${terminees.map(taskRow).join("")}</section>` : ""}`,
   );
 }
@@ -1649,12 +1270,12 @@ function viewReglages() {
   const reglages = cfg();
   shell(
     "R\xE9glages",
-    "Adaptez Apidoo \xE0 votre exploitation",
+    "Adapte Apidoo \xE0 ton exploitation",
     "",
     `
     <form data-form="reglages" class="form">
       <section class="card stack">
-        <h2>Votre exploitation</h2>${typeof EX != "undefined" ? '<button type="button" class="link" data-act="go" data-v="membres">Membres, invitations et autres exploitations</button>' : ""}
+        <h2>Ton exploitation</h2>${typeof EX != "undefined" ? '<button type="button" class="link" data-act="go" data-v="membres">Membres, invitations et autres exploitations</button>' : ""}
         <label>Nom<input name="nom" value="${esc(reglages.nom)}" required></label>
         <label>Num\xE9ro d\u2019apiculteur (NAPI)<input name="napi" value="${esc(reglages.napi)}"></label>
         <label>Adresse (pour les \xE9tiquettes)<textarea name="adresse" rows="2" placeholder="Rue, code postal, commune">${esc(reglages.adresse || "")}</textarea></label>
@@ -1662,7 +1283,7 @@ function viewReglages() {
         <label>Objectif de r\xE9sultat annuel (\u20AC)<input name="objectif" type="number" min="0" step="10" value="${esc(reglages.objectif || "")}"></label>
       </section>
       <section class="card stack">
-        <h2>Vos listes</h2><p class="small">Une valeur par ligne.</p>
+        <h2>Tes listes</h2><p class="small">Une valeur par ligne.</p>
         <label>Postes de d\xE9pense<textarea name="postes" rows="5">${esc(
           reglages.postes.join(`
 `),
@@ -1679,12 +1300,23 @@ function viewReglages() {
       <button class="btn main block">Enregistrer</button>
     </form>
     <section class="card form stack">
-      <h2>Exports et sauvegarde</h2><p class="small">Fichiers lisibles dans Excel, \xE0 garder de votre c\xF4t\xE9.</p>
+      <h2>Exports et sauvegarde</h2><p class="small">Fichiers lisibles dans Excel, \xE0 garder de ton c\xF4t\xE9.</p>
       <div class="actions"><button class="btn" data-act="exp" data-v="visites">Journal des visites</button><button class="btn" data-act="exp" data-v="ventes">Ventes</button><button class="btn" data-act="exp" data-v="depenses">D\xE9penses</button><button class="btn" data-act="exp" data-v="clients">Clients</button><button class="btn" data-act="exp" data-v="json">Sauvegarde compl\xE8te</button></div>
     </section>`,
   );
 }
+// Rendu unique (IT-03) : les modules ne surchargent plus render(), ils déclarent des crochets avantRendu /
+// apresRendu (src/noyau/crochets.js) ; les écrans migrés sont dans la table du noyau (src/domaines/…).
 function render() {
+  const C = window.Noyau?.crochets;
+  (C?.lancer("avantRendu") || rendreEcran(), C?.lancer("apresRendu"));
+}
+// Redessine un écran par le même chemin que la navigation (IT-03, AP-US-007) : plus d'appel direct à view*(),
+// qui sautait les compléments de l'écran (Alvéoles, prise en main…) ou affichait un écran sous une autre route.
+function redessiner(route = S.route) {
+  route === S.route ? render() : go(route);
+}
+function rendreEcran() {
   if (S.recovery || !S.session) return authView();
   if (S.member === !1) {
     if (typeof EX != "undefined") return EX.accueil();
@@ -1696,25 +1328,10 @@ function render() {
       '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apidoo.svg" alt=""></div>';
     return;
   }
-  const vues = {
-    dash: viewDash,
-    plus: viewPlus,
-    agenda: viewAgenda,
-    ruches: viewRuches,
-    ruche: viewRuche,
-    visite: viewVisite,
-    miel: viewMiel,
-    materiel: viewMateriel,
-    clients: viewClients,
-    vente: viewVente,
-    fournisseurs: viewFournisseurs,
-    compta: viewCompta,
-    pilotage: viewPilotage,
-    previsions: viewPrevisions,
-    reglages: viewReglages,
-    registre: () => RG.vue(),
-    membres: () => EX.vue(),
-  }[S.route];
+  // Table des écrans du noyau (IT-03, src/domaines/*/ecrans.js) : une seule implémentation par écran.
+  // Route inconnue : l'accueil, plutôt qu'une page blanche.
+  const ecran = window.Noyau.ecran(S.route) || ((S.route = "dash"), window.Noyau.ecran("dash")),
+    vues = ecran.rendu;
   (vues(),
     S.lastRoute !== S.route &&
       (window.scrollTo?.(0, 0), document.querySelector(".wrap")?.classList.add("enter")),
@@ -2430,19 +2047,6 @@ function ficheDeconnexion(alerte) {
     <button type="button" class="btn" data-act="closesheet">Annuler</button>`),
     $sheet.open || $sheet.showModal());
 }
-function quickSheet() {
-  const choix = [
-    ["newvisite", "Visite"],
-    ["newvente", "Vente"],
-    ["newrecolte", "R\xE9colte"],
-    ["newdepense", "D\xE9pense"],
-    ["newtache", "T\xE2che"],
-    ["newclient", "Client"],
-  ];
-  (($sheetForm.onsubmit = (evt) => evt.preventDefault()),
-    ($sheetForm.innerHTML = `<h2>Ajouter</h2><div class="quick">${choix.map(([action, libelle]) => `<button type="button" class="btn" data-act="qk" data-v="${action}">${libelle}</button>`).join("")}</div><button type="button" class="btn" data-act="closesheet">Annuler</button>`),
-    $sheet.showModal());
-}
 const ACT = {
   go: (valeur) => go(valeur),
   gomateriel: () => go("materiel"),
@@ -2471,7 +2075,7 @@ const ACT = {
       (await sheet.del(), $sheet.close());
     }),
   newvisite: (valeur) => {
-    if (!S.d.ruches.length) return (toast("Ajoutez d\u2019abord une ruche", !0), go("ruches"));
+    if (!S.d.ruches.length) return (toast("Ajoute d\u2019abord une ruche", !0), go("ruches"));
     const rucheId = valeur || (S.ruche && byId(S.d.ruches, S.ruche)?.id) || S.d.ruches[0].id;
     ((S.visite = {
       ruche_id: rucheId,
@@ -2492,7 +2096,7 @@ const ACT = {
     (readVisitForm(),
       (S.visite[cle] = valeur),
       cle === "ruche_id" && (S.visite.etat = byId(S.d.ruches, valeur).etat),
-      viewVisite());
+      redessiner("visite"));
   },
   vstep: (valeur, cle) => {
     readVisitForm();
@@ -2501,7 +2105,7 @@ const ACT = {
       0,
       Math.min(Number(article.stock), (S.visite.q[cle] || 0) + Number(valeur)),
     )),
-      viewVisite());
+      redessiner("visite"));
   },
   newvente: () => {
     ((S.vente = { client_id: "", date_vente: today(), q: {}, paye: !0, mode: cfg().modes[0] }),
@@ -2514,13 +2118,13 @@ const ACT = {
       0,
       Math.min(lot.pots_restants, (S.vente.q[cle] || 0) + Number(valeur)),
     )),
-      viewVente());
+      redessiner("vente"));
   },
   spaye: (valeur) => {
-    (readSaleForm(), (S.vente.paye = valeur === "1"), viewVente());
+    (readSaleForm(), (S.vente.paye = valeur === "1"), redessiner("vente"));
   },
   vfiltre: (valeur) => {
-    ((S.venteFiltre = valeur), viewClients());
+    ((S.venteFiltre = valeur), redessiner("clients"));
   },
   togglepaye: async (valeur) => {
     const vente = byId(S.d.ventes, valeur);
@@ -2530,7 +2134,7 @@ const ACT = {
     );
   },
   ptab: (valeur) => {
-    ((S.tab = valeur), viewPilotage());
+    ((S.tab = valeur), redessiner("pilotage"));
   },
   newruches: () => ruchesForm(),
   editruche: (valeur) => rucheForm(byId(S.d.ruches, valeur)),
@@ -2734,7 +2338,7 @@ function showTip(evt) {
           else if (formulaire === "visite") {
             readVisitForm();
             const visite = S.visite;
-            if (!visite.ruche_id) throw new Error("Choisissez une ruche");
+            if (!visite.ruche_id) throw new Error("Choisis une ruche");
             S.busy = !0;
             const intrants = Object.entries(visite.q)
                 .filter(([, quantite]) => quantite > 0)
@@ -2759,18 +2363,18 @@ function showTip(evt) {
               typeof RG != "undefined" && (await RG.apres(visite)),
               (S.ruche = visite.ruche_id),
               (S.route = "ruche"),
-              await refresh(),
+              await apresVisites([{ ...visite, q: void 0, couvain: visite.couvain === "Non vu" ? "" : visite.couvain, intrants, id: vid }], enAttente),
               toast(
                 enAttente ? "Visite gard\xE9e sur le t\xE9l\xE9phone" : "Visite enregistr\xE9e",
               ));
           } else if (formulaire === "vente") {
             readSaleForm();
             const vente = S.vente;
-            if (!vente.client_id) throw new Error("Choisissez un client");
+            if (!vente.client_id) throw new Error("Choisis un client");
             const lignes = Object.entries(vente.q)
               .filter(([, quantite]) => quantite > 0)
               .map(([lotId, quantite]) => ({ lot_id: lotId, quantite: quantite }));
-            if (!lignes.length) throw new Error("Ajoutez au moins un pot");
+            if (!lignes.length) throw new Error("Ajoute au moins un pot");
             S.busy = !0;
             const { error: erreur, local: enAttente } = await (
               typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params)
@@ -2802,7 +2406,7 @@ function showTip(evt) {
               cercles = liste(form.cercles),
               modes = liste(form.modes);
             if (!postes.length || !cercles.length || !modes.length)
-              throw new Error("Gardez au moins une valeur par liste");
+              throw new Error("Garde au moins une valeur par liste");
             ((S.busy = !0),
               await saveCfg(
                 {
@@ -2856,6 +2460,10 @@ async function boot() {
   }
   render();
 }
+// Démarrage après tous les scripts (DOMContentLoaded) : avec « defer » (IT-03), readyState vaut déjà « interactive »
+// pendant l'exécution des scripts, il ne suffit plus à savoir s'ils sont tous chargés.
+let scriptsCharges = document.readyState === "complete";
+addEventListener("DOMContentLoaded", () => { scriptsCharges = !0; }, { once: !0 });
 (sb.auth.onAuthStateChange((evenement) => {
   if (evenement === "PASSWORD_RECOVERY") {
     ((S.recovery = !0), render());
@@ -2865,10 +2473,8 @@ async function boot() {
     ((evenement === "SIGNED_IN" || evenement === "SIGNED_OUT") &&
       setTimeout(
         () =>
-          document.readyState === "loading"
-            ? addEventListener("DOMContentLoaded", () => boot(), { once: !0 })
-            : boot(),
+          scriptsCharges ? boot() : addEventListener("DOMContentLoaded", () => boot(), { once: !0 }),
         0,
       ));
 }),
-  document.readyState === "loading" ? addEventListener("DOMContentLoaded", () => boot()) : boot());
+  scriptsCharges ? boot() : addEventListener("DOMContentLoaded", () => boot(), { once: !0 }));

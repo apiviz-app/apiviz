@@ -21,7 +21,8 @@ const ER = (() => {
     return `<span class="g-barres" aria-hidden="true">${t.map((v, i) => `<i class="${i === 5 ? "on" : ""}" style="height:${Math.max(6, Math.round(v / max * 100))}%"></i>`).join("")}</span>`;
   }
   const signe = (v) => (v > 0 ? "+" : "") + eur0(v);
-  window.viewPlus = function () {
+  // Écran « plus » (Gestion) : enregistré dans le noyau (src/domaines/compte/ecrans.js, ER.ecranGestion).
+  function ecranGestion() {
     const d = S.d, an = new Date().getFullYear(), f = fin(an), bilan = f.resultat;
     const mois = today().slice(0, 7), depMois = sum(d.depenses.filter((x) => String(x.date_depense).startsWith(mois)), (x) => x.montant);
     const bas = d.articles.filter((a) => a.type !== "Équipement" && Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil));
@@ -39,6 +40,9 @@ const ER = (() => {
         bas.length ? `<span class="u-chip watch">${esc(bas[0].nom)} : stock bas${bas.length > 1 ? ` (+${bas.length - 1})` : ""}</span>` : ""),
       bloc("fournisseurs", "Fournisseurs", U.pluriel(d.fournisseurs.length, "contact"), d.fournisseurs.slice(0, 2).map((x) => x.nom).join(", ") || "Aucun pour l’instant",
         achat ? `<span class="small">Dernier achat : ${esc(U.quand(achat.date_depense).toLowerCase())}, ${esc(eur0(achat.montant))}</span>` : ""),
+      // Registre : entrée stable dans Gestion (AP-FEAT-113, arborescence gelée, docs/ROADMAP/05 §2).
+      (() => { const t = d.visites.filter((v) => v.traitement && String(v.date_visite).startsWith(String(an))).length;
+        return bloc("registre", "Registre et déclaration", t ? U.pluriel(t, "traitement") : "Aucun traitement", `noté${t > 1 ? "s" : ""} en ${an} · déplacements, déclaration`); })(),
       ...(typeof EX != "undefined" ? [bloc("membres", "Équipe", "Membres", "Inviter, gérer").replace('class="n4-g g-bloc"', 'class="n4-g g-bloc" id="gEquipe"')] : []),
     ].join("");
     const phraseBilan = bilan > 0 ? `Bilan positif de ${eur0(bilan)}.` : bilan < 0 ? `Bilan négatif de ${eur0(-bilan)}.` : "Bilan à l’équilibre.";
@@ -47,7 +51,7 @@ const ER = (() => {
     const h1 = document.querySelector(".wrap > .head h1");
     if (h1) { h1.textContent = `${phraseBilan} ${phraseStock}`; h1.setAttribute("aria-label", `Gestion. ${phraseBilan} ${phraseStock}`); h1.closest(".head").classList.add("g-tete"); }
     if (typeof EX != "undefined") equipe();
-  };
+  }
   function equipe() {
     const montrer = () => {
       const b = document.getElementById("gEquipe"), m = EX.membres?.() || [];
@@ -60,9 +64,8 @@ const ER = (() => {
   }
 
   // ---------- Dépenses : chiffres et filtre par poste ----------
-  const comptaAvant = window.viewCompta;
-  window.viewCompta = function () {
-    comptaAvant();
+  // Écran « compta » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerDepenses() {
     const d = S.d, f = fin(S.annee), table = document.querySelector(".wrap .card.tbl");
     if (!table) return;
     const mois = today().slice(0, 7), depMois = sum(d.depenses.filter((x) => String(x.date_depense).startsWith(mois)), (x) => x.montant);
@@ -73,11 +76,11 @@ const ER = (() => {
     const puces = postes.length > 1 ? `<div class="u-puces er-puces" role="group" aria-label="Filtrer par poste">${["Tout", ...postes].map((p) => `<button type="button" class="${S.erDepense === p ? "on" : ""}" aria-pressed="${S.erDepense === p}" data-act="erposte" data-v="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : "";
     table.insertAdjacentHTML("beforebegin", `<section class="ab-chiffres er-c${chiffres.length}" aria-label="Chiffres des dépenses">${chiffres.map(([l, v]) => `<div class="ab-chiffre"><span class="small">${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</section>${puces}`);
     filtrerPostes();
-  };
+  }
   function filtrerPostes() {
     document.querySelectorAll(".wrap .card.tbl tbody tr").forEach((tr) => { tr.hidden = S.erDepense !== "Tout" && tr.children[2]?.textContent !== S.erDepense; });
   }
-  ACT.erposte = (p) => { S.erDepense = p; window.viewCompta(); };
+  ACT.erposte = (p) => { S.erDepense = p; redessiner("compta"); };
 
   // ---------- Saisie : préremplissage, enregistrement visible, ajouter une autre ----------
   const RETENUS = ["categorie", "fournisseur_id", "mode", "rucher"];
@@ -269,26 +272,28 @@ const ER = (() => {
   });
 
   // ---------- Après chaque écran ----------
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // Crochet du noyau (IT-03).
+  Noyau.crochets.sur("apresCoquille", "ergonomie", () => {
     poser();
     ariane();
     videsUtiles();
-  };
+  });
 
   // ---------- Revenir au même endroit ----------
   const hauteurs = new Map();
   let retour = false;
   document.addEventListener("click", (e) => { if (e.target.closest?.(".u-retour")) retour = true; }, true);
-  const renderAvant = window.render;
-  window.render = function () {
+  // Crochets du noyau (IT-03) : hauteur notée avant le rendu, rétablie après si l'on revient par « ‹ ».
+  let revient = false;
+  Noyau.crochets.sur("avantRendu", "ergonomie.defilement", () => {
     if (S.lastRoute && S.lastRoute !== S.route) hauteurs.set(S.lastRoute, window.scrollY);
-    const change = S.lastRoute !== S.route, revient = retour && change;
+    revient = retour && S.lastRoute !== S.route;
     retour = false;
-    renderAvant();
+  });
+  Noyau.crochets.sur("apresRendu", "ergonomie.defilement", () => {
     if (revient && hauteurs.get(S.route)) requestAnimationFrame(() => window.scrollTo(0, hauteurs.get(S.route)));
-  };
+    revient = false;
+  });
 
-  return { fermerDoux, bloc, jauge };
+  return { fermerDoux, bloc, jauge, ecranGestion, completerDepenses };
 })();

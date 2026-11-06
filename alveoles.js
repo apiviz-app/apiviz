@@ -27,15 +27,15 @@ const AL = (() => {
   const central = BOTTOM.find(([k]) => k === "saisir");
   if (central) central[1] = "API";
   SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Miel"], ["plus", "Gestion"], ["saisir", "API"]);
-  Object.assign(GROUP, { agenda: "dash", activite: "dash", registre: "ruches", declaration: "ruches", rucher: "ruches" });
+  Object.assign(GROUP, { agenda: "dash", activite: "dash", registre: "plus", declaration: "plus", rucher: "ruches" });
 
   const ruchesDe = (k) => (U.ruchers().find(([c]) => c === k) || [k, []])[1];
   const zoneMeteo = (k, nb = 3) => `<div class="al-wx" data-k="${esc(k)}" data-jours="${nb}">${MT.html(k, ruchesDe(k), nb)}</div>`;
-  const RETOURS = { agenda: ["dash", "Accueil"], activite: ["dash", "Accueil"], registre: ["varroa", "Santé"], declaration: ["varroa", "Santé"] };
+  const RETOURS = { agenda: ["dash", "Accueil"], activite: ["dash", "Accueil"], registre: ["plus", "Gestion"], declaration: ["plus", "Gestion"] };
+  // Registre et déclaration ont leur place dans Gestion (arborescence gelée, AP-FEAT-113) ; Santé garde un raccourci.
 
-  const shellAvant = window.shell;
-  window.shell = function (...a) {
-    shellAvant(...a);
+  // Après chaque coquille (crochet du noyau, IT-03) : logo, compagnon API dans la barre, liens de retour.
+  Noyau.crochets.sur("apresCoquille", "alveoles", () => {
     if (S.route !== "dash") S.alVu = false;
     document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
     document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
@@ -44,7 +44,7 @@ const AL = (() => {
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
     if (S.route === "varroa") lienSante();
-  };
+  });
   function lienSante() {
     const an = new Date().getFullYear();
     document.querySelector(".subtabs")?.insertAdjacentHTML("afterend", `<div class="al-liens"><button type="button" data-act="go" data-v="registre"><b>Registre d’élevage</b><span class="small">Traitements et ordonnances</span></button>
@@ -65,7 +65,7 @@ const AL = (() => {
   const prioritaire = () => S.d.ruches.find((x) => x.etat === "Critique") || S.d.ruches.find((x) => x.etat !== "Bonne");
   function phrase() {
     const d = S.d;
-    if (!d.ruches.length) return "Ajoutez votre première ruche pour commencer.";
+    if (!d.ruches.length) return "Ajoute ta première ruche pour commencer.";
     const r = prioritaire();
     if (!r) return "Tout va bien au rucher.";
     const p = d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg);
@@ -82,9 +82,8 @@ const AL = (() => {
     return `<p class="al-cle">${[[bien, "good", "en forme"], [surv, "watch", "à surveiller"], [crit, "crit", "critique"]].filter(([c]) => c)
       .map(([c, t, m]) => `<span><i class="bg-${t}"></i>${c} ${m}</span>`).join("")}</p>`;
   }
-  const dashAvant = window.viewDash;
-  window.viewDash = function () {
-    dashAvant();
+  // Écran « dash » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerAccueil() {
     const tete = document.querySelector(".hero-head");
     if (!tete) return;
     const h1 = tete.querySelector("h1");
@@ -111,10 +110,10 @@ const AL = (() => {
     if (surOrdinateur.matches && S.d.ruches.length) accueilOrdinateur(tete);
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
-  };
+  }
   // ---------- Accueil sur ordinateur : la priorité, quatre chiffres, puis ruchers, à faire, activité ----------
   const surOrdinateur = matchMedia("(min-width:801px)");
-  surOrdinateur.addEventListener("change", () => { if (S.route === "dash") window.viewDash(); });
+  surOrdinateur.addEventListener("change", () => { if (S.route === "dash") redessiner("dash"); });
   function actionsDuJour() {
     const r = prioritaire(), rs = U.ruchers(), cle = r ? r.rucher : rs.length === 1 ? rs[0][0] : undefined;
     const voir = r ? `<button type="button" class="btn main" data-act="ruche" data-v="${r.id}">Voir ${esc(r.nom)}</button>` : "";
@@ -221,13 +220,11 @@ const AL = (() => {
   }
   ACT.alrucher = (k) => { S.rucher = k; go("rucher"); };
   // « Voir les autres » réaffiche l'accueil depuis ux.js : on repasse par cette version.
-  const toutAvant = ACT.utout;
-  ACT.utout = () => { toutAvant(); window.viewDash(); };
+  // « Tout voir » : ux.js redessine l'accueil complet par le noyau (redessiner), plus besoin de le refaire ici (IT-03).
 
   // ---------- Ruchers : le poids sur chaque ligne ----------
-  const ruchesAvant = window.viewRuches;
-  window.viewRuches = function () {
-    ruchesAvant();
+  // Écran « ruches » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerRuchers() {
     document.querySelectorAll(".n4-ruche").forEach((b) => {
       const v = S.d.visites.find((x) => x.ruche_id === b.dataset.v && x.poids_kg);
       if (v) b.querySelector(".u-chev")?.insertAdjacentHTML("beforebegin", `<span class="al-kg">${esc(n(v.poids_kg))} kg</span>`);
@@ -242,11 +239,10 @@ const AL = (() => {
       if (h2) h2.innerHTML = `<button type="button" class="al-titre" data-act="alrucher" data-v="${esc(k)}">${esc(U.nomRucher(k))}</button>`;
     });
     if (cartes.length) { const g = document.createElement("div"); g.className = "al-grille"; cartes[0].before(g); g.append(...cartes); }
-  };
+  }
 
   // Changer d'onglet réaffiche la fiche depuis ux.js : on garde la courbe ouverte.
-  const ongletAvant = ACT.uronglet;
-  ACT.uronglet = (v) => { ongletAvant(v); window.viewRuche(); };
+  // Onglets de la fiche : ux.js redessine la fiche complète par le noyau (redessiner), plus besoin de le refaire ici (IT-03).
 
   // ---------- Fiche d'un rucher ----------
   function vueRucher() {
@@ -270,20 +266,11 @@ const AL = (() => {
       <section class="al-ruches"><h2>${esc(U.pluriel(rs.length, "ruche"))}</h2>${lignes}</section>`);
     document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", '<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruchers</button>');
   }
-  const renderAvant = window.render;
-  window.render = function () {
-    if (S.route === "rucher" && S.session && S.d && S.member !== false && !S.recovery) {
-      vueRucher();
-      if (S.route !== "rucher") return;
-      if (S.lastRoute !== "rucher") window.scrollTo?.(0, 0);
-      S.lastRoute = "rucher"; document.body.dataset.route = "rucher";
-    } else renderAvant();
-  };
+  // Écran « rucher » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, AL.vueRucher).
 
   // ---------- Fiche ruche : la courbe de poids reste visible ----------
-  const rucheAvant = window.viewRuche;
-  window.viewRuche = function () {
-    rucheAvant();
+  // Écran « ruche » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerFiche() {
     const pli = [...document.querySelectorAll("details.u-pli")].find((x) => x.textContent.includes("Évolution du poids"));
     pli?.setAttribute("open", "");
     const r = byId(S.d.ruches, S.ruche) || byId(S.d.ruchesSorties || [], S.ruche), hex = document.querySelector(".u-gros-hex");
@@ -292,7 +279,7 @@ const AL = (() => {
     if (S.alCourbe !== S.ruche) pli?.querySelector("polyline")?.classList.add("al-trace");
     pli?.querySelector("polyline")?.setAttribute("pathLength", "1");
     S.alCourbe = S.ruche;
-  };
+  }
 
   // ---------- Transitions : l'alvéole touchée devient l'en-tête de la fiche ----------
   const fluide = () => document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -334,9 +321,8 @@ const AL = (() => {
     });
     return [...f.values()].filter((x) => x.total).sort((p, q) => q.g - p.g).slice(0, 3);
   }
-  const clientsAvant = window.viewClients;
-  window.viewClients = function () {
-    clientsAvant();
+  // Écran « clients » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerClients() {
     const pots = potsParFormat(), wrap = document.querySelector(".wrap");
     const prec = S.alMiel || {}, suite = {};
     if (pots.length && wrap) {
@@ -355,23 +341,22 @@ const AL = (() => {
       if (prec["t" + i] !== undefined) compter(b, prec["t" + i], v, m[1].endsWith(" ") || m[1].endsWith("\u00a0") || m[1].endsWith("\u202f") ? "\u00a0" + fin : fin);
     });
     S.alMiel = suite;
-  };
+  }
   // Vente : les clients récents à portée de pouce.
-  const venteAvant = window.viewVente;
-  window.viewVente = function () {
-    venteAvant();
+  // Écran « vente » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  function completerVente() {
     const champ = document.getElementById("s_client");
     if (!champ) return;
     const ids = [...new Set(S.d.ventes.map((v) => v.client_id))].slice(0, 3);
     const noms = ids.map((i) => byId(S.d.clients, i)).filter(Boolean);
     if (noms.length < 3) S.d.clients.forEach((c) => { if (noms.length < 3 && !noms.includes(c)) noms.push(c); });
     champ.closest("label").insertAdjacentHTML("beforebegin", `<div class="chips al-recents" role="group" aria-label="Clients récents">${noms.map((c) => `<button type="button" class="chip ${champ.value === c.id ? "on" : ""}" data-act="alclient" data-v="${c.id}">${esc(c.nom)}</button>`).join("")}</div>`);
-  };
+  }
   ACT.alclient = (id) => {
     const c = document.getElementById("s_client");
     if (c) { c.value = id; c.dispatchEvent(new Event("change", { bubbles: true })); }
     document.querySelectorAll(".al-recents .chip").forEach((b) => b.classList.toggle("on", b.dataset.v === id));
   };
 
-  return { compagnon, phrase, ruchesDe, meteoPrete: () => window.AL_meteoPrete() };
+  return { compagnon, phrase, ruchesDe, vueRucher, completerAccueil, completerRuchers, completerFiche, completerClients, completerVente, meteoPrete: () => window.AL_meteoPrete() };
 })();

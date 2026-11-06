@@ -1,0 +1,16 @@
+/* Écrans sans cartes empilées */
+body[data-route=dash] .card,body[data-route=ruches] .card,body[data-route=plus] .card{background:none;border:0;box-shadow:none;padding:0}
+body[data-route=dash] .wrap,body[data-route=ruches] .wrap{gap:24px}
+.head.hero-head{display:block;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
+.head.hero-head::after{display:none}
+.head.hero-head h1{color:var(--ink);font-size:27px;line-height:1.14;letter-spacing:-.018em;margin-top:4px;max-width:640px}
+.head.hero-head .eyebrow{color:var(--muted);font-size:14px;font-weight:500;letter-spacing:0;text-transform:none}
+.u-meteo{color:var(--muted)}
+.u-meteo .link,.head.hero-head .link{color:var(--good)}
+.u-jour{background:#E7EAE1}
+.u-meteo .u-meilleur{color:var(--muted)}
+.n4-prochaine{margin-top:10px;padding-top:0;border-top:0;max-width:520px}
+.n4-prochaine b{font-size:15px;font-weight:600}
+.n4-prochaine .small{color:var(--muted)}
+.n4-deux .btn.honey{background:var(--pine);border-color:var(--pine);color:#fff}
+.n4-deux .btn.ghost{background:#fff;border-color:var(--line2);color:var(--ink)}

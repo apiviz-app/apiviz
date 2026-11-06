@@ -1,0 +1,13 @@
+/* Manuel */
+.tn-e-manuel .tn-corps{gap:8px}
+.tn-lab{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:-4px}
+.tn-rang{flex:1;display:grid;grid-template-columns:repeat(var(--nb,3),minmax(0,1fr));gap:6px;min-height:46px}
+.tn-rang button{border:1px solid var(--line2);border-radius:11px;background:var(--card);color:var(--ink);font:500 14px 'Instrument Sans',system-ui,sans-serif;cursor:pointer;padding:0 2px}
+.tn-rang button.on{background:var(--pine);border-color:var(--pine);color:#fff;font-weight:600}
+.tn-pas{flex:1;display:grid;grid-template-columns:52px 1fr 52px;gap:6px;min-height:46px}
+.tn-pas button{border:1px solid var(--line2);border-radius:11px;background:var(--card);color:var(--ink);font-size:20px;font-weight:700;cursor:pointer}
+.tn-pas label{display:flex;align-items:center;justify-content:center;gap:4px;margin:0;flex-direction:row;font:700 20px 'Bricolage Grotesque',system-ui,sans-serif}
+.tn-pas input{width:96px;min-height:0;height:100%;border:0;background:none;text-align:right;font:inherit;color:inherit;padding:0}
+.tn-pas input::placeholder{font:500 14px 'Instrument Sans',system-ui,sans-serif;color:var(--muted)}
+.tn-outils{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-height:56px}
+.tn-outils button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
