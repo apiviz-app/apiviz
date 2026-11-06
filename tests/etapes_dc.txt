@@ -1,0 +1,60 @@
+    # AP-BUG-003 / AP-US-027 : déconnexion avec et sans saisies en attente ; rien ne reste sur l'appareil.
+    contenu_local = """async () => {
+      const lire = (nom, store) => new Promise((ok) => { const r = indexedDB.open(nom); r.onsuccess = () => { const d = r.result;
+        if (!d.objectStoreNames.contains(store)) { d.close(); return ok(0); }
+        const q = d.transaction(store).objectStore(store).count(); q.onsuccess = () => { d.close(); ok(q.result); }; }; r.onerror = () => ok(-1); });
+      return { kv: await lire('apidoo-hors-ligne-recette', 'kv'), file: await lire('apidoo-hors-ligne-recette', 'file'),
+               photos: await lire('apidoo-photos-recette', 'attente'),
+               cles: Object.keys(localStorage).filter((k) => k.startsWith('apidoo-')) };
+    }"""
+    connecte = lambda: page.locator("[data-act=logout]").count() > 0 or page.evaluate("!!S.session")
+
+    # 1. Sans saisie en attente : tout est vidé, retour à l'écran de connexion.
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_timeout(800)
+    page.evaluate("localStorage.setItem('apidoo-journal', '[]'); localStorage.setItem('apidoo-test-perso', 'x')")
+    avant = page.evaluate(contenu_local)
+    verif(avant["kv"] > 0 and len(avant["cles"]) >= 2, "avant : données gardées pour le hors ligne (%s)" % avant)
+    page.evaluate("window.name = 'deco'")
+    page.evaluate("ACT.logout()")
+    page.wait_for_selector("form[data-form=auth], [data-act=dmentrer]", timeout=15000)
+    apres = page.evaluate(contenu_local)
+    verif(apres["kv"] == 0 and apres["file"] == 0 and apres["photos"] <= 0, "après : bases de l'appareil vidées (%s)" % apres)
+    verif(apres["cles"] == [], "après : plus aucune clé apidoo-* (%s)" % apres["cles"])
+    verif(page.evaluate("S.d") is None and not page.evaluate("!!S.session"), "après : déconnecté, plus de données en mémoire")
+
+    # 2. Avec 3 saisies en attente : un avertissement, « Envoyer d'abord » puis déconnexion.
+    page.evaluate("window.name = ''"); page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    etat["coupe"] = True; ctx.set_offline(True)
+    for t in ("Tâche 1", "Tâche 2", "Tâche 3"):
+        page.evaluate("ACT.addsug(%s)" % json.dumps(t)); page.wait_for_timeout(250)
+    verif(page.evaluate("HL.nb()") == 3, "3 saisies gardées sur le téléphone")
+    page.evaluate("ACT.logout()"); page.wait_for_selector("#sheet[open] >> text=Se déconnecter ?")
+    verif("3 saisies ne sont pas encore enregistrées" in page.locator("#sheet").inner_text(), "avertissement : 3 saisies pas encore enregistrées")
+    page.click("#sheet [data-act=decoenvoyer]"); page.wait_for_selector("#sheet .notice >> text=Il reste des saisies", timeout=10000)
+    verif(page.evaluate("HL.nb()") == 3 and page.evaluate("!!S.session"), "sans réseau : rien n'est supprimé, toujours connecté")
+    page.click("#sheet [data-act=closesheet]")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.evaluate("window.name = 'deco'")
+    page.evaluate("ACT.logout()"); page.wait_for_selector("#sheet[open] [data-act=decoenvoyer]")
+    page.click("#sheet [data-act=decoenvoyer]")
+    page.wait_for_selector("form[data-form=auth], [data-act=dmentrer]", timeout=20000)
+    verif(sorted(t["titre"] for t in DATA["taches"] if t["titre"].startswith("Tâche ")) == ["Tâche 1", "Tâche 2", "Tâche 3"], "« Envoyer d'abord » : les 3 saisies sont enregistrées avant la déconnexion")
+    verif(page.evaluate(contenu_local)["file"] == 0, "puis l'appareil est vidé")
+
+    # 3. Avec une saisie en attente : « Supprimer quand même », avec confirmation.
+    page.evaluate("window.name = ''"); page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.addsug('Tâche perdue')"); page.wait_for_timeout(300)
+    page.evaluate("window.name = 'deco'")
+    page.evaluate("ACT.logout()"); page.wait_for_selector("#sheet[open] >> text=Une saisie n’est pas encore enregistrée")
+    page.click("#sheet [data-act=decoforcer]")
+    verif(page.evaluate("HL.nb()") == 1 and "Confirmer" in page.locator("#sheet [data-act=decoforcer]").inner_text(), "suppression : une confirmation est demandée")
+    page.click("#sheet [data-act=decoforcer]")
+    page.wait_for_selector("form[data-form=auth], [data-act=dmentrer]", timeout=20000)
+    reste = page.evaluate(contenu_local)
+    verif(reste["file"] == 0 and reste["cles"] == [], "hors ligne aussi : déconnecté et appareil vidé (%s)" % reste)
+    etat["coupe"] = False; ctx.set_offline(False)
+    verif(not any(t["titre"] == "Tâche perdue" for t in DATA["taches"]), "la saisie abandonnée n'est jamais partie")
+    page.evaluate("window.name = ''")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

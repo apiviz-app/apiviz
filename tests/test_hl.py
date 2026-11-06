@@ -112,7 +112,7 @@ with sync_playwright() as pw:
     ctx.route("**/*supabase.co/**", supabase)
     ctx.route("https://cdn.jsdelivr.net/**", cdn)
     ctx.route(re.compile(r"https://fonts\.(googleapis|gstatic)\.com/.*"), lambda r: r.abort() if etat["coupe"] else r.fulfill(status=200, body="", headers={"Content-Type": "text/css"}))
-    ctx.add_init_script(f"localStorage.getItem('sb-{REF}-auth-token')||localStorage.setItem('sb-{REF}-auth-token', {json.dumps(json.dumps(session))})")
+    ctx.add_init_script(f"window.name==='deco'||localStorage.getItem('sb-{REF}-auth-token')||localStorage.setItem('sb-{REF}-auth-token', {json.dumps(json.dumps(session))})")
     page = ctx.new_page()
     erreurs = []
     page.on("pageerror", lambda e: erreurs.append(str(e)))

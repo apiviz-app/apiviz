@@ -18,9 +18,10 @@ const PH = (() => {
   };
 
   // ---------- Petit stockage local (IndexedDB), avec repli en mémoire ----------
-  let dbP = null;
+  let dbP = null, ferme = false;
   const memoire = new Map();
   function db() {
+    if (ferme) return Promise.resolve(null);
     if (!dbP) dbP = new Promise((ok) => {
       try {
         const r = indexedDB.open("apidoo-photos" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
@@ -272,5 +273,14 @@ const PH = (() => {
   // Si les données étaient déjà chargées avant ce fichier, on complète.
   if (S.d) load().then(() => render()).catch(() => {});
 
-  return { load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
+  // Déconnexion (AP-BUG-003) : ferme la base locale et oublie les photos gardées sur l'appareil.
+  async function fermer() {
+    ferme = true;
+    const d = await dbP?.catch(() => null);
+    d?.close(); dbP = null;
+    st.attente.forEach((p) => p.apercu && URL.revokeObjectURL(p.apercu));
+    st.attente = []; st.brouillon = []; memoire.clear(); st.urls.clear();
+  }
+
+  return { fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
 })();
