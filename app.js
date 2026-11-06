@@ -2017,16 +2017,28 @@ function clientForm(client) {
       },
       { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: client?.telephone },
       { name: "email", label: "E-mail", type: "email", value: client?.email },
+      // AP-BUG-007 : coordonnées imprimées sur la facture (migration 012).
+      { name: "adresse", label: "Adresse", value: client?.adresse },
+      { name: "code_postal", label: "Code postal", value: client?.code_postal },
+      { name: "ville", label: "Ville", value: client?.ville },
+      { name: "siret", label: "SIRET (client professionnel, facultatif)", value: client?.siret },
       { name: "notes", label: "Notes", type: "textarea", value: client?.notes },
     ],
     submit: async (saisie) => {
+      // Sans la migration 012, la base ne connaît pas ces colonnes : on enregistre le reste et on prévient.
+      const sansCoordonnees = (erreur) =>
+        erreur?.code === "PGRST204" && /adresse|code_postal|ville|siret/.test(erreur.message || "")
+          ? (["adresse", "code_postal", "ville", "siret"].forEach((cle) => delete saisie[cle]),
+            toast("Adresse non enregistr\xE9e : la base doit \xEAtre mise \xE0 jour.", !0),
+            !0)
+          : !1;
       if (client)
-        return write(sb.from("clients").update(saisie).eq("id", client.id), "Client enregistr\xE9");
-      const { data: cree, error: erreur } = await sb
-        .from("clients")
-        .insert(saisie)
-        .select()
-        .single();
+        return write(sb.from("clients").update(saisie).eq("id", client.id), "Client enregistr\xE9").catch((erreur) => {
+          if (!sansCoordonnees(erreur)) throw erreur;
+          return write(sb.from("clients").update(saisie).eq("id", client.id), "");
+        });
+      let { data: cree, error: erreur } = await sb.from("clients").insert(saisie).select().single();
+      (erreur && sansCoordonnees(erreur) && ({ data: cree, error: erreur } = await sb.from("clients").insert(saisie).select().single()));
       if (erreur) throw erreur;
       (depuisVente && (S.vente.client_id = cree.id),
         await refresh(),
@@ -2299,12 +2311,16 @@ const EXP = {
     clients: () =>
       csv(
         "clients",
-        ["Nom", "Cercle", "T\xE9l\xE9phone", "E-mail", "Notes"],
+        ["Nom", "Cercle", "T\xE9l\xE9phone", "E-mail", "Adresse", "Code postal", "Ville", "SIRET", "Notes"],
         S.d.clients.map((client) => [
           client.nom,
           client.cercle,
           client.telephone,
           client.email,
+          client.adresse,
+          client.code_postal,
+          client.ville,
+          client.siret,
           client.notes,
         ]),
       ),
