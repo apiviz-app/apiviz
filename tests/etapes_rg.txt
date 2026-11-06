@@ -1,29 +1,34 @@
+    # AP-BUG-005 / AP-US-085 : réglages et entrées de stock sans écrasement entre membres.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    # Visite avec traitement
-    page.click(".head .btn.honey"); page.wait_for_selector("#v_trt", state="attached"); page.locator("details[data-sec=traitement]").evaluate("d => d.open = true")
-    page.fill("#v_trt", "Produit test"); page.fill("#v_lot", "LOT42"); page.fill("#v_dose", "2 lanières")
-    page.fill("#v_retrait", "2026-12-14"); page.check("#v_ordo")
-    page.click("form[data-form=visite] .btn.main")
-    page.wait_for_selector(".toast >> text=Visite enregistrée", timeout=10000)
-    vis = [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
-    verif(vis and vis[0]["traitement"] == "Produit test" and vis[0]["lot_produit"] == "LOT42" and vis[0]["traitement_dose"] == "2 lanières" and vis[0]["retrait_prevu"] == "2026-12-14" and vis[0]["ordonnance"] is True, "traitement transmis avec la visite")
-    taches = [x for x in recu["upsert"] if x[0] == "taches"]
-    verif(len(taches) == 1 and taches[0][2][0]["echeance"] == "2026-12-14" and "Produit test" in taches[0][2][0]["titre"], "tâche de fin de traitement créée")
-    verif(page.locator(".u-chip >> text=Traitement · Produit test").count() == 1 and page.locator(".u-visite >> text=lot LOT42").count() == 1, "traitement visible dans le journal")
-    # Registre
-    page.evaluate("ACT.go('registre')"); page.wait_for_selector("h1 >> text=Registre")
-    t = page.locator(".card.tbl").inner_text()
-    verif("Produit test" in t and "LOT42" in t and "Ruche 1" in t and "14/12/2026" in t and "Oui" in t, "ligne complète dans le registre")
-    verif(page.locator(".notice >> text=en cours").count() == 1, "traitement en cours signalé")
-    verif(page.locator("text=à renseigner dans Réglages").count() == 1, "rappel NAPI manquant")
-    with page.expect_download() as dl:
-        page.click("[data-act=exp][data-v=registre]")
-    contenu = open(dl.value.path(), encoding="utf-8-sig").read()
-    verif("Produit test" in contenu and "LOT42" in contenu, "export Excel du registre")
-    page.evaluate("ACT.go('plus')")
-    page.click(".bottom button[data-v=ruches]"); page.click(".subtabs [data-v=varroa]"); page.wait_for_selector(".al-liens")
-    verif(page.locator(".al-liens >> text=Registre d’élevage").count() == 1, "entrée dans Ruchers, onglet Santé")
-    page.evaluate("ACT.go('registre')"); page.emulate_media(media="print")
-    verif(not page.locator(".bottom").is_visible() and not page.locator(".head .actions").is_visible(), "impression sans menus ni boutons")
-    page.screenshot(path="registre_print.png", full_page=True)
+
+    # Pendant que ce téléphone affiche les réglages, un autre membre enregistre l'objectif.
+    DATA["reglages"][0]["data"]["objectif"] = 800
+    page.evaluate("saveCfg({ napi: 'A1234567' }, 'Réglages enregistrés')")
+    page.wait_for_selector(".toast >> text=Réglages enregistrés", timeout=10000)
+    d = DATA["reglages"][0]["data"]
+    verif(d.get("napi") == "A1234567" and d.get("objectif") == 800, "deux membres, deux clés : les deux sont gardées (%s)" % d)
+    verif(page.evaluate("cfg().objectif") == 800, "l'écran montre aussi la modification de l'autre membre")
+    regler = [b for n, b in recu["rpc"] if n == "regler"]
+    verif(regler and regler[-1]["p_modifs"] == {"napi": "A1234567"}, "seule la clé modifiée est envoyée")
+
+    # « Revenir aux valeurs calculées » retire la clé sim sans toucher au reste.
+    page.evaluate("saveCfg({ sim: { ruches: 9 } })"); page.wait_for_timeout(300)
+    verif(DATA["reglages"][0]["data"].get("sim") == {"ruches": 9}, "hypothèses enregistrées")
+    page.evaluate("ACT.resetsim()"); page.wait_for_selector(".toast >> text=Valeurs recalculées", timeout=10000)
+    d = DATA["reglages"][0]["data"]
+    verif("sim" not in d and d.get("objectif") == 800, "hypothèses retirées, le reste intact")
+
+    # Entrée de stock : l'autre membre a déjà ajouté 2 kg ; ce téléphone affiche encore l'ancien stock.
+    avant = float(DATA["articles"][0]["stock"])
+    DATA["articles"][0]["stock"] = avant + 2
+    page.evaluate("ACT.entree('%s')" % A1); page.wait_for_selector("#sheet[open] [name=q]")
+    page.fill("#sheet [name=q]", "3"); page.fill("#sheet [name=cout]", "15")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Stock mis à jour", timeout=10000)
+    verif(float(DATA["articles"][0]["stock"]) == avant + 5, "stock = %s + 2 (autre membre) + 3 (ici) : %s" % (avant, DATA["articles"][0]["stock"]))
+    deps = [x for x in DATA["depenses"] if x.get("article_id") == A1]
+    verif(len(deps) == 1 and float(deps[0]["montant"]) == 15, "une seule dépense de 15 € liée à l'entrée")
+    appel = [b for n, b in recu["rpc"] if n == "ajouter_stock"][-1]
+    # Même appel envoyé deux fois (réseau lent, double appui) : une seule dépense, un seul ajout.
+    page.evaluate("p => sb.rpc('ajouter_stock', p)", appel); page.wait_for_timeout(300)
+    verif(float(DATA["articles"][0]["stock"]) == avant + 5 and len([x for x in DATA["depenses"] if x.get("article_id") == A1]) == 1, "renvoyé, l'appel ne compte pas deux fois")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

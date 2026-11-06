@@ -55,6 +55,18 @@ def supabase(route):
             if not inv: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Ce lien d'invitation n'est plus valable : demandez-en un nouveau."}))
             EXPL["miennes"].append(inv); return route.fulfill(status=200, headers=hdr, body=json.dumps(inv["id"]))
         if nom == "photos_espace": return route.fulfill(status=200, headers=hdr, body="0")
+        if nom == "regler":  # comme la migration 012 : fusion clé par clé, null retire la clé
+            d = DATA["reglages"][0].setdefault("data", {})
+            for k, v in (body.get("p_modifs") or {}).items():
+                if v is None: d.pop(k, None)
+                else: d[k] = v
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(d))
+        if nom == "ajouter_stock":
+            p = body["p"]; a = next(x for x in DATA["articles"] if x["id"] == p["article_id"]); dep = p.get("depense")
+            if not dep or not any(x["id"] == dep["id"] for x in DATA["depenses"]):
+                a["stock"] = float(a["stock"]) + float(p["quantite"])
+                if dep: DATA["depenses"].append({**dep, "article_id": a["id"], "quantite": p["quantite"], "fournisseur_id": dep.get("fournisseur_id") or None})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(a["stock"]))
         if nom == "creer_visite":
             p = body["p"]
             if not any(v["id"] == p["id"] for v in DATA["visites"]):

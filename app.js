@@ -220,6 +220,13 @@ function journaliser(type, detail) {
 // Erreurs JavaScript non rattrapées : au journal seulement (l'écran n'en dit rien de plus).
 (addEventListener("error", (evt) => journaliser("script", evt.error || evt.message)),
   addEventListener("unhandledrejection", (evt) => journaliser("promesse", evt.reason)));
+// Identifiant tiré par l'application, pour rendre un appel idempotent.
+const nouvelIdLocal = () =>
+  crypto.randomUUID
+    ? crypto.randomUUID()
+    : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16),
+      );
 // Codes Postgres (SQLSTATE) et PostgREST les plus courants -> ce que l'utilisateur doit comprendre et faire.
 const ERREURS_FR = {
   42501: "Ton r\xF4le ne permet pas cette action.",
@@ -333,9 +340,17 @@ async function write(requete, message) {
   if (erreur) throw erreur;
   (await refresh(), message && toast(message));
 }
+// Réglages clé par clé (AP-BUG-005) : regler() fusionne en base, deux membres ne s'écrasent plus.
+// Une valeur null retire la clé. Repli sur l'ancienne écriture si la migration 012 manque.
 async function saveCfg(modifs, message) {
-  const donnees = { ...((S.d.reglages[0] || {}).data || {}), ...modifs };
-  await write(sb.from("reglages").update({ data: donnees }).eq("id", 1), message);
+  const { error: erreur } = await sb.rpc("regler", { p_modifs: modifs });
+  if (erreur && ["PGRST202", "42883"].includes(erreur.code)) {
+    const donnees = { ...((S.d.reglages[0] || {}).data || {}), ...modifs };
+    Object.keys(modifs).forEach((cle) => modifs[cle] === null && delete donnees[cle]);
+    return write(sb.from("reglages").update({ data: donnees }).eq("id", 1), message);
+  }
+  if (erreur) throw erreur;
+  (await refresh(), message && toast(message));
 }
 function authView() {
   const mode = S.authMode;
@@ -2535,6 +2550,7 @@ const ACT = {
   },
   entree: (valeur) => {
     const article = byId(S.d.articles, valeur);
+    let entreeId = "";
     sheet({
       title: "Entr\xE9e de stock : " + article.nom,
       label: "Ajouter",
@@ -2556,6 +2572,36 @@ const ACT = {
         },
       ],
       submit: async (saisie) => {
+        // AP-BUG-005 : incrément en base et dépense dans la même transaction (ajouter_stock, migration 012).
+        // L'identifiant de dépense est tiré une fois par fiche : un double envoi ne crée qu'une dépense.
+        const depenseId = (entreeId ||= nouvelIdLocal()),
+          reglages = cfg(),
+          posteDeduit = /pot|couvercle|étiquette/i.test(article.nom)
+            ? "Pots & \xE9tiquettes"
+            : /candy|sirop/i.test(article.nom)
+              ? "Alimentation"
+              : /varroa/i.test(article.nom)
+                ? "Traitements"
+                : "Mat\xE9riel",
+          { error: erreurRpc } = await sb.rpc("ajouter_stock", {
+            p: {
+              article_id: article.id,
+              quantite: num(saisie.q),
+              depense: num(saisie.cout)
+                ? {
+                    id: depenseId,
+                    libelle: article.nom,
+                    categorie: reglages.postes.includes(posteDeduit) ? posteDeduit : reglages.postes[0],
+                    montant: num(saisie.cout),
+                    date_depense: today(),
+                    fournisseur_id: article.fournisseur_id || "",
+                  }
+                : null,
+            },
+          });
+        if (erreurRpc && !["PGRST202", "42883"].includes(erreurRpc.code)) throw erreurRpc;
+        if (!erreurRpc) return (await refresh(), toast("Stock mis \xE0 jour"));
+        // Repli si la migration 012 manque : ancienne écriture en deux temps.
         const { error: erreur } = await sb
           .from("articles")
           .update({ stock: Number(article.stock) + num(saisie.q) })
@@ -2608,13 +2654,7 @@ const ACT = {
   },
   savesim: () => saveCfg({ sim: S.sim }, "Hypoth\xE8ses enregistr\xE9es"),
   resetsim: async () => {
-    const donnees = { ...((S.d.reglages[0] || {}).data || {}) };
-    (delete donnees.sim,
-      (S.sim = null),
-      await write(
-        sb.from("reglages").update({ data: donnees }).eq("id", 1),
-        "Valeurs recalcul\xE9es",
-      ));
+    ((S.sim = null), await saveCfg({ sim: null }, "Valeurs recalcul\xE9es"));
   },
   exp: (valeur) => {
     (EXP[valeur](), toast("Fichier pr\xE9par\xE9"));
