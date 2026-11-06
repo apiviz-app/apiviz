@@ -109,7 +109,10 @@ jobs:
     needs: [construire, publier]
     runs-on: ubuntu-24.04
     steps:
+      # Historique complet : une branche essayée en recette doit être connue pour y poser le repère (IT-04).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Déplacer le repère
         env:
           CIBLE: ${{ inputs.cible }}
