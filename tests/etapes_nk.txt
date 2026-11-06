@@ -11,11 +11,14 @@
       const f = window[v]; window[v] = function (...a) { appels.push(v); return f.apply(this, a); }; } }""")
     for route in ["ruches", "dash", "miel", "clients", "plus", "compta", "reglages"]:
         page.evaluate(f"go('{route}')"); page.wait_for_timeout(150)
-    page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()")
-    try: page.wait_for_selector("form[data-form=vente]", timeout=5000)  # attente explicite (était 200 ms : test instable)
+    # ACT.ruche passe par une transition de vue (alveoles.js), donc différée : on attend la fiche avant l'action suivante,
+    # sinon la transition arrive après et ramène sur la fiche (test instable sur une machine lente).
+    page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.wait_for_function("S.route === 'ruche' && !!document.querySelector('.wrap h1')")
+    page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()")
+    try: page.wait_for_selector("form[data-form=vente]", timeout=5000)
     except Exception: pass
     verif(sorted(page.evaluate("appels")) == ["viewCompta", "viewMiel", "viewVente"], "chaque écran passe par sa seule définition : %s" % page.evaluate("appels"))
-    verif(page.locator("form[data-form=vente]").count() == 1, "l'écran Nouvelle vente est affiché par le noyau")
+    verif(page.locator("form[data-form=vente]").count() == 1, "l'écran Nouvelle vente est affiché par le noyau : route %s, titre %s, feuille %s" % (page.evaluate("S.route"), page.evaluate("document.querySelector('.wrap h1')?.textContent"), page.evaluate("document.getElementById('sheet').open")))
     # AP-US-007 : la même action ouverte depuis l'accueil, la fiche ou le bouton API ouvre le même formulaire.
     formulaire = """() => { const f = document.querySelector('form[data-form=visite]'); return f && JSON.stringify([S.visite.ruche_id, S.visite.date_visite, S.visite.activite, S.visite.varroa_methode, f.querySelectorAll('input,select,textarea,button').length]); }"""
     page.evaluate("go('dash')"); page.wait_for_timeout(150)
