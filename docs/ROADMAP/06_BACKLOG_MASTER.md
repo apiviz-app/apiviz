@@ -51,7 +51,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | OBSOLÈTE |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-00-mise-a-plat` (v5.15), en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -89,7 +89,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-00-mise-a-plat` (v5.15), en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -126,7 +126,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-00-mise-a-plat` (v5.15), en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -156,6 +156,41 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 - AP-TECH-010 — Relever Max rows (tableau de bord Supabase › API) et réglages Auth (inscriptions ouvertes ?).
 - AP-TECH-011 — Compter les lignes par table et l'espace photos.
 - AP-TECH-012 — Écrire le rapport dans migrations/README.md.
+- Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
+
+### AP-BUG-008 — Recette : méthode varroa et livraison non enregistrées
+
+| Champ | Valeur |
+|---|---|
+| Type | Anomalie |
+| Domaine | D01 Socle technique et qualité |
+| Epic parent | AP-EPIC-001 |
+| Statut actuel | NON IMPLÉMENTÉ — constaté au relevé du 6 nov. 2026 (IT-00, écart E1 de `migrations/README.md`) |
+| Priorité | P1 |
+| Valeur métier | 3/5 |
+| Complexité | XS |
+| Risque | Faible |
+| Itération cible | [IT-01](ITERATIONS/ITERATION_01.md) |
+| Dépendances | AP-FEAT-004 |
+| Modules impactés | base `apidoo-test`, `migrations/009` |
+
+**Description.** Sur `apidoo-test`, la 009 enregistrée ne contient pas la section 6 (nouvelles versions de `creer_visite` et `creer_vente`). Relancer `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test` (fichier relançable, aucune autre modification).
+
+**Problème résolu.** En recette, `varroa_methode`, `varroa_abeilles` (visite) et `livraison` (vente) sont ignorés sans message : une vérification faite en recette peut conclure à tort à un défaut de l'application, ou masquer un vrai défaut. La production est correcte.
+
+**Risques.** Aucun sur les données : la fonction remplacée est celle des fichiers et de la production.
+
+**Tests nécessaires.** Après correction, empreinte des fonctions identique entre les deux bases (requête du relevé) ; une visite avec méthode varroa saisie en recette garde la méthode.
+
+**User stories et critères d'acceptation**
+
+- **AP-US-135** — En tant que responsable d'exploitation, je veux que la recette se comporte comme la production afin que mes vérifications soient fiables.
+  - GIVEN la 009 relancée sur `apidoo-test` · WHEN je compare les empreintes des fonctions des deux bases (fins de ligne ignorées) · THEN elles sont identiques
+
+**Tâches techniques**
+
+- AP-TECH-378 — Relancer 009 sur `apidoo-test` (accord du responsable).
+- AP-TECH-379 — Ajouter à la vérification de mise en ligne une comparaison d'empreintes des fonctions entre recette et production.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
 ### AP-FEAT-005 — Réalignement base de production / version publiée

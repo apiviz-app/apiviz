@@ -2,6 +2,8 @@
 
 # IT-00 — Mise à plat de l'existant
 
+> Réalisé le 6 nov. 2026, version v5.15 (branche `claude/it-00-mise-a-plat`), en attente de fusion et de recette.
+
 | | |
 |---|---|
 | Identifiant | IT-00 |
@@ -89,14 +91,14 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 ## 12. Définition de terminé
 
 - [ ] Le parcours utilisateur fonctionne sur téléphone et ordinateur.
-- [ ] Les règles métier des user stories sont respectées.
-- [ ] Les données sont correctement enregistrées (vérifiées en base de recette).
-- [ ] Les permissions sont contrôlées (tests SQL si la base change).
+- [x] Les règles métier des user stories sont respectées.
+- [ ] Les données sont correctement enregistrées (vérifiées en base de recette) — sans objet ici ; voir AP-BUG-008 pour la recette.
+- [x] Les permissions sont contrôlées (tests SQL si la base change) — base inchangée ; politiques RLS relevées.
 - [ ] Les erreurs sont gérées et affichées en français.
-- [ ] Les 18 tests de bout en bout et les nouveaux tests passent.
+- [x] Les 18 tests de bout en bout et les nouveaux tests passent.
 - [ ] Les régressions sont vérifiées (liste « À vérifier » du CHANGELOG).
-- [ ] CHANGELOG, migrations/README.md et le backlog (statuts) sont à jour.
-- [ ] Les limites connues sont documentées.
+- [x] CHANGELOG, migrations/README.md et le backlog (statuts) sont à jour.
+- [x] Les limites connues sont documentées.
 
 ## 13. Livrables
 
