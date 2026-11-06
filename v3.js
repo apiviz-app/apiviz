@@ -63,8 +63,8 @@ const V3 = (() => {
     const reine = `<section class="card v3-reine"><div class="u-entete"><h2>Reine</h2>${r.sortie ? "" : `<button type="button" class="link" data-act="v3reine" data-v="${r.id}">${r.annee_reine ? "Changer" : "Renseigner"}</button>`}</div>
       ${r.annee_reine ? `<div class="v3-reine-l"><span class="v3-pastille" style="background:${m[1]}" aria-hidden="true"></span><span><b>Reine ${r.annee_reine}</b> · ${an - r.annee_reine <= 0 ? "de l’année" : an - r.annee_reine + " an" + (an - r.annee_reine > 1 ? "s" : "")}
         <span class="small">Marquage ${m[0].toLowerCase()}${r.reine_origine ? " · " + esc(r.reine_origine.toLowerCase()) : ""}${r.reine_introduite ? " · introduite le " + esc(dfr(r.reine_introduite)) : ""}</span></span></div>
-        ${an - r.annee_reine >= 3 ? '<p class="small watch">Reine de 3 ans ou plus : pensez à la remplacer.</p>' : ""}`
-        : '<p class="small">Année inconnue. Renseignez-la pour suivre son âge et sa couleur de marquage.</p>'}</section>`;
+        ${an - r.annee_reine >= 3 ? '<p class="small watch">Reine de 3 ans ou plus : pense à la remplacer.</p>' : ""}`
+        : '<p class="small">Année inconnue. Renseigne-la pour suivre son âge et sa couleur de marquage.</p>'}</section>`;
     const actif = !r.sortie;
     const hausses = `<section class="card"><div class="v3-ligne"><span><b>Hausses posées</b><span class="small">retirées automatiquement à la récolte</span></span>
       ${actif ? `<div class="ctl"><button type="button" aria-label="Retirer une hausse" data-act="v3hausse" data-v="-1" data-k="${r.id}">−</button><span>${r.hausses || 0}</span><button type="button" aria-label="Ajouter une hausse" data-act="v3hausse" data-v="1" data-k="${r.id}">+</button></div>` : `<b>${r.hausses || 0}</b>`}</div>
@@ -75,7 +75,7 @@ const V3 = (() => {
         <button type="button" class="btn" data-act="v3essaimage" data-v="${r.id}">Essaimage</button>
         <button type="button" class="btn" data-act="v3reunir" data-v="${r.id}" ${S.d.ruches.length < 2 ? "disabled" : ""}>Réunir</button>
         <button type="button" class="btn" data-act="v3sortie" data-v="${r.id}">Sortie</button></div></section>`
-      : `<section class="card"><p>Cette colonie est sortie du rucher (${esc(r.sortie.toLowerCase())}). Elle n’est plus comptée dans vos ruches.</p><button type="button" class="btn" data-act="v3reactiver" data-v="${r.id}">Remettre en service</button></section>`;
+      : `<section class="card"><p>Cette colonie est sortie du rucher (${esc(r.sortie.toLowerCase())}). Elle n’est plus comptée dans tes ruches.</p><button type="button" class="btn" data-act="v3reactiver" data-v="${r.id}">Remettre en service</button></section>`;
     const evs = S.d.evenements.filter((e) => e.ruche_id === r.id);
     const lignes = evs.map((e) => `<div class="v3-evt"><span class="small">${esc(U.dateCourte(e.date_evenement))}</span><span><b>${esc(TYPES[e.type] || e.type)}</b>${e.detail ? `<span class="small">${esc(e.detail)}</span>` : ""}</span>
       ${e.autre_ruche_id && rucheDe(e.autre_ruche_id) ? `<button type="button" class="link" data-act="ruche" data-v="${e.autre_ruche_id}">${esc(rucheDe(e.autre_ruche_id).nom)}</button>` : "<span></span>"}</div>`).join("");
@@ -144,12 +144,12 @@ const V3 = (() => {
     },
     v3reunir: (id) => {
       const r = rucheDe(id), autres = S.d.ruches.filter((x) => x.id !== id);
-      sheet({ title: "Réunir avec " + r.nom, intro: `La ruche choisie est réunie dans ${r.nom} : elle sort de vos ruches actives et garde son historique.`,
+      sheet({ title: "Réunir avec " + r.nom, intro: `La ruche choisie est réunie dans ${r.nom} : elle sort de tes ruches actives et garde son historique.`,
         fields: [{ name: "autre", label: "Ruche réunie dans " + r.nom, type: "select", required: true, options: [["", "Choisir…"]].concat(autres.map((x) => [x.id, x.nom + (x.rucher ? " · " + x.rucher : "")])), value: "" },
           { name: "date", label: "Date", type: "date", required: true, value: today() }],
         submit: async (f) => {
           const a = rucheDe(f.autre);
-          if (!a) throw new Error("Choisissez la ruche à réunir");
+          if (!a) throw new Error("Choisis la ruche à réunir");
           await ok(sb.from("ruches").update({ sortie: "Réunie", date_sortie: f.date }).eq("id", a.id));
           await ok(sb.from("ruche_evenements").insert([evt(id, "reunion", a.nom + " réunie dans cette ruche", a.id, f.date), evt(a.id, "sortie", "Réunie dans " + r.nom, id, f.date)]));
           await refresh(); toast(`${a.nom} réunie dans ${r.nom}`);
@@ -157,7 +157,7 @@ const V3 = (() => {
     },
     v3sortie: (id) => {
       const r = rucheDe(id);
-      sheet({ title: "Sortie de " + r.nom, intro: "La ruche quitte vos ruches actives et la déclaration. Son historique reste consultable.",
+      sheet({ title: "Sortie de " + r.nom, intro: "La ruche quitte tes ruches actives et la déclaration. Son historique reste consultable.",
         fields: [{ name: "motif", label: "Motif", type: "select", options: ["Morte", "Vendue"], value: "Morte" },
           { name: "date", label: "Date", type: "date", required: true, value: today() },
           { name: "detail", label: "Précision (facultatif)", value: "" }],
@@ -209,7 +209,7 @@ const V3 = (() => {
     const haut = S.d.ruches.filter((r) => { const t = U.tauxVarroa(mesures(r.id)[0]); return t !== null && t >= seuil; }).length;
     shell("Suivi varroa", haut ? `${U.pluriel(haut, "ruche")} au-dessus du seuil` : "Taux pour 100 abeilles", "",
       `<section class="card"><form data-form="v3seuil"><label for="v3seuil">Seuil d’alerte (varroas pour 100 abeilles)</label><div class="v3-rang"><input id="v3seuil" name="s" type="number" step="0.1" min="0.1" inputmode="decimal" value="${esc(seuil)}"><button class="btn">Enregistrer</button></div></form>
-        <p class="small">Réglable selon les conseils de votre GDSA ou de votre technicien sanitaire. Taux = varroas comptés ÷ abeilles prélevées × 100 (sucre glace ou lavage, environ 300 abeilles).</p></section>
+        <p class="small">Réglable selon les conseils de ton GDSA ou de ton technicien sanitaire. Taux = varroas comptés ÷ abeilles prélevées × 100 (sucre glace ou lavage, environ 300 abeilles).</p></section>
       ${lignes || '<p class="small">Aucune ruche active.</p>'}`);
   }
   const todosAvant = window.todos;
@@ -283,7 +283,7 @@ const V3 = (() => {
   async function enregistrerRecolte() {
     lireRecolte();
     const R = S.recolte, kg = Number(R.kg);
-    if (!(kg > 0)) throw new Error("Indiquez le poids de miel extrait");
+    if (!(kg > 0)) throw new Error("Indique le poids de miel extrait");
     const hum = R.humidite === "" ? null : Number(R.humidite);
     const dans = (U.ruchers().find(([k]) => k === R.rucher)?.[1] || []).filter((r) => (R.h[r.id] || 0) > 0);
     const H = sum(dans, (r) => R.h[r.id]);
@@ -299,7 +299,7 @@ const V3 = (() => {
       });
     } else lignes = [{ ...base, id: nouvelId(), ruche_id: null, kg, hausses: null }];
     const pots = FORMATS.filter((g) => Number(R.pots[g].n) > 0);
-    for (const g of pots) if (!(Number(R.pots[g].prix) >= 0) || R.pots[g].prix === "") throw new Error(`Indiquez le prix du pot de ${g} g`);
+    for (const g of pots) if (!(Number(R.pots[g].prix) >= 0) || R.pots[g].prix === "") throw new Error(`Indique le prix du pot de ${g} g`);
     if (kgPots(R) > kg + 0.05) throw new Error("Plus de miel en pots que de miel extrait");
     S.busy = true;
     if (!pots.length) {
@@ -437,7 +437,7 @@ const V3 = (() => {
       const el = document.getElementById("v_note");
       if (el) el.value = [avant, (final + prov).trim()].filter(Boolean).join(avant ? " " : "");
     };
-    r.onerror = (ev) => { if (ev.error === "not-allowed") toast("Autorisez le micro pour dicter", true); };
+    r.onerror = (ev) => { if (ev.error === "not-allowed") toast("Autorise le micro pour dicter", true); };
     r.onend = () => { dictee = null; majMicro(); if (S.visite && document.getElementById("v_note")) S.visite.note = document.getElementById("v_note").value; };
     dictee = r;
     try { r.start(); } catch { dictee = null; }
@@ -475,7 +475,7 @@ const V3 = (() => {
     shell(`Déclaration ${an}`, "À faire entre le 1er septembre et le 31 décembre", "", `
       <section class="card v3-decla"><span class="v3-eyebrow">Chiffres à reporter</span>
         <div class="v3-deux-chiffres"><div><b>${S.d.ruches.length}</b><span>colonies</span></div><div><b>${rs.length}</b><span>emplacement${rs.length > 1 ? "s" : ""}</span></div></div>
-        <p class="small">${c.napi ? "NAPI " + esc(c.napi) + " · " + esc(c.nom) : 'Ajoutez votre numéro d’apiculteur (NAPI) dans <button type="button" class="link" data-act="go" data-v="reglages">les réglages</button>.'}</p></section>
+        <p class="small">${c.napi ? "NAPI " + esc(c.napi) + " · " + esc(c.nom) : 'Ajoute ton numéro d’apiculteur (NAPI) dans <button type="button" class="link" data-act="go" data-v="reglages">les réglages</button>.'}</p></section>
       <section class="card u-liste"><h2>Par emplacement</h2>${rs.map((r) => `<div class="u-lot"><span><b>${esc(r.nom)}</b><br><span class="small">${r.lieu === null ? "Recherche de la commune…" : r.lieu ? esc(r.lieu) : '<button type="button" class="link" data-act="go" data-v="carte">Placer sur la carte pour connaître la commune</button>'}</span></span><b>${U.pluriel(r.nb, "colonie")}</b></div>`).join("")}
         <p class="small">La commune vient de la position du rucher sur la carte. Les ruches sorties ne sont pas comptées.</p></section>
       <section class="card"><h2>Étapes</h2>${ETAPES_D.map((t, i) => `<label class="v3-coche"><input type="checkbox" data-v3d="${i}" ${coch.includes(i) ? "checked" : ""}>${esc(t)}</label>`).join("")}
@@ -542,7 +542,7 @@ const V3 = (() => {
     ].filter(([, l]) => l.length);
   }
   function resultats(q) {
-    if (plat(q).trim().length < 2) return '<p class="small">Tapez au moins 2 lettres : ruche, client, lot, matériel, dépense, mot d’une note…</p>';
+    if (plat(q).trim().length < 2) return '<p class="small">Tape au moins 2 lettres : ruche, client, lot, matériel, dépense, mot d’une note…</p>';
     const ligne = (x) => `<button type="button" class="u-todo" data-act="${x.act}" data-v="${esc(x.v)}"><span class="u-todo-t"><b>${esc(x.t)}</b><span class="small">${esc(x.s)}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`;
     const groupes = chercher(q);
     return groupes.length ? groupes.map(([g, l]) => `<section class="card u-liste"><h2>${g}</h2>${l.map(ligne).join("")}</section>`).join("") : '<p class="small">Aucun résultat.</p>';

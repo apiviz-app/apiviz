@@ -348,7 +348,7 @@ function authView() {
   const mode = S.authMode;
   $app.innerHTML = `<div class="auth"><form data-form="auth">
     <div class="brand"><img src="logo-apidoo.svg" alt="Apidoo" height="38"></div>
-    <p class="sub">Le carnet de bord de votre rucher</p>
+    <p class="sub">Le carnet de bord de ton rucher</p>
     ${
       S.recovery
         ? `<label>Nouveau mot de passe<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
@@ -769,10 +769,10 @@ function viewMiel() {
       ${kpi("En stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
       ${kpi("Valeur \xE0 vendre", eur0(stockMiel.valeur), rythmeVentes.moisRestants !== null ? `Environ ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "")}
     </div>
-    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9ez un lot par format de pot.")}</section>`
+    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9e un lot par format de pot.")}</section>`
         : emptyState(
-            "Votre stock de miel est vide",
-            "Saisissez une r\xE9colte, puis cr\xE9ez un lot par format de pot.",
+            "Ton stock de miel est vide",
+            "Saisis une r\xE9colte, puis cr\xE9e un lot par format de pot.",
             "Saisir une r\xE9colte",
             "newrecolte",
             '<button class="btn" data-act="newlot">Cr\xE9er un lot</button>',
@@ -853,7 +853,7 @@ function viewVente() {
       ${donnees.clients.length ? `<label>Client<select id="s_client" required><option value="">Choisir\u2026</option>${optionsClients}</select></label>` : ""}
       <button type="button" class="link" data-act="newclient">Ajouter un client</button>
       <label>Date<input type="date" id="s_date" value="${esc(vente.date_vente)}" max="${today()}" required></label>
-      <section class="card"><h2>Pots vendus</h2>${lignesLots || '<p class="small">Aucun pot en stock. Cr\xE9ez d\u2019abord un lot dans Stocks.</p>'}</section>
+      <section class="card"><h2>Pots vendus</h2>${lignesLots || '<p class="small">Aucun pot en stock. Cr\xE9e d\u2019abord un lot dans Stocks.</p>'}</section>
       <div class="field"><div class="t">Paiement</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${vente.paye ? "on" : ""}" data-act="spaye" data-v="1">Pay\xE9e</button><button type="button" class="${vente.paye ? "" : "on"}" data-act="spaye" data-v="0">\xC0 encaisser</button></div></div>
       ${vente.paye ? `<label>Mode de paiement<select id="s_mode">${reglages.modes.map((mode) => `<option ${vente.mode === mode ? "selected" : ""}>${esc(mode)}</option>`).join("")}</select></label>` : ""}
       <button class="btn main block" ${S.busy ? "disabled" : ""}>Enregistrer \xB7 ${eur(total)}</button>
@@ -868,8 +868,8 @@ function viewFournisseurs() {
       "",
       "",
       emptyState(
-        "Ajoutez vos fournisseurs",
-        "Gardez leurs coordonn\xE9es et suivez ce que vous leur achetez.",
+        "Ajoute tes fournisseurs",
+        "Garde leurs coordonn\xE9es et suis ce que tu leur ach\xE8tes.",
         "Ajouter un fournisseur",
         "newfournisseur",
       ),
@@ -1086,7 +1086,7 @@ function viewPilotage() {
     !S.d.ventes.length && !S.d.depenses.length && !S.d.recoltes.length && !S.d.visites.length;
   shell(
     "Pilotage",
-    "Vos chiffres financiers et op\xE9rationnels",
+    "Tes chiffres financiers et op\xE9rationnels",
     yearSel(),
     subtabs(
       [
@@ -1097,7 +1097,7 @@ function viewPilotage() {
       "ptab",
     ) +
       (vide
-        ? '<p class="notice">Les graphiques se rempliront avec vos r\xE9coltes, ventes, d\xE9penses et visites.</p>'
+        ? '<p class="notice">Les graphiques se rempliront avec tes r\xE9coltes, ventes, d\xE9penses et visites.</p>'
         : "") +
       (S.tab === "fin" ? pilotFin() : pilotOps()),
   );
@@ -1226,10 +1226,10 @@ function viewPrevisions() {
     budgetDepenses = sum(postes.slice(1), budgetDe);
   shell(
     "Pr\xE9visions",
-    "Testez vos hypoth\xE8ses et suivez votre budget",
+    "Teste tes hypoth\xE8ses et suis ton budget",
     yearSel(),
     `
-    <section class="card"><h2>Simulateur</h2><p class="small">Changez une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que vos donn\xE9es sont incompl\xE8tes.</p>
+    <section class="card"><h2>Simulateur</h2><p class="small">Change une valeur : tout se recalcule. Les valeurs de d\xE9part sont des exemples tant que tes donn\xE9es sont incompl\xE8tes.</p>
       <div class="simgrid">
         ${champ("ruches", "Ruches")}${champ("ajout", "Ruches ajout\xE9es par an")}${champ("rendement", "Rendement", "0.5", "kg/ruche")}${champ("vendu", "Part du miel vendue", "5", "%")}
         ${champ("part500", "Part en pots de 500 g", "5", "%")}${champ("prix500", "Prix pot 500 g", "0.5", "\u20AC")}${champ("prix250", "Prix pot 250 g", "0.5", "\u20AC")}
@@ -1238,7 +1238,7 @@ function viewPrevisions() {
       <div class="actions" style="margin-top:12px"><button class="btn" data-act="savesim">Enregistrer ces hypoth\xE8ses</button><button class="btn" data-act="resetsim">Revenir aux valeurs calcul\xE9es</button></div>
     </section>
     <div id="simOut" class="stack">${simOut()}</div>
-    <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touchez un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
+    <section class="card tbl"><h2>Budget ${annee}</h2><p class="small pad">Touche un poste pour d\xE9finir son montant. Budget de d\xE9penses : ${eur0(budgetDepenses)}. R\xE9sultat budg\xE9t\xE9 : ${eur0(budgetDe("Ventes de miel") - budgetDepenses)}.</p>${table(["Poste", "#Budget", "#R\xE9alis\xE9", "#Avancement"], lignesBudget, "")}</section>`,
   );
 }
 function taskRow(tache) {
@@ -1262,7 +1262,7 @@ function viewAgenda() {
       (typeof RP != "undefined" ? RP.bouton() : ""),
     `
     <section class="card"><h2>\xC0 faire</h2>${aFaire.map(taskRow).join("") || '<p class="small">Aucune t\xE2che pr\xE9vue.</p>'}</section>
-    ${idees.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 votre r\xE9gion et \xE0 vos protocoles.</p><div class="chips">${idees.map((idee) => `<button data-act="addsug" data-v="${esc(idee)}">+ ${esc(idee)}</button>`).join("")}</div></section>` : ""}
+    ${idees.length ? `<section class="card"><h2>Id\xE9es pour ${esc(new Date().toLocaleDateString("fr-FR", { month: "long" }))}</h2><p class="small">\xC0 adapter \xE0 ta r\xE9gion et \xE0 tes protocoles.</p><div class="chips">${idees.map((idee) => `<button data-act="addsug" data-v="${esc(idee)}">+ ${esc(idee)}</button>`).join("")}</div></section>` : ""}
     ${terminees.length ? `<section class="card"><h2>Termin\xE9es</h2>${terminees.map(taskRow).join("")}</section>` : ""}`,
   );
 }
@@ -1270,12 +1270,12 @@ function viewReglages() {
   const reglages = cfg();
   shell(
     "R\xE9glages",
-    "Adaptez Apidoo \xE0 votre exploitation",
+    "Adapte Apidoo \xE0 ton exploitation",
     "",
     `
     <form data-form="reglages" class="form">
       <section class="card stack">
-        <h2>Votre exploitation</h2>${typeof EX != "undefined" ? '<button type="button" class="link" data-act="go" data-v="membres">Membres, invitations et autres exploitations</button>' : ""}
+        <h2>Ton exploitation</h2>${typeof EX != "undefined" ? '<button type="button" class="link" data-act="go" data-v="membres">Membres, invitations et autres exploitations</button>' : ""}
         <label>Nom<input name="nom" value="${esc(reglages.nom)}" required></label>
         <label>Num\xE9ro d\u2019apiculteur (NAPI)<input name="napi" value="${esc(reglages.napi)}"></label>
         <label>Adresse (pour les \xE9tiquettes)<textarea name="adresse" rows="2" placeholder="Rue, code postal, commune">${esc(reglages.adresse || "")}</textarea></label>
@@ -1283,7 +1283,7 @@ function viewReglages() {
         <label>Objectif de r\xE9sultat annuel (\u20AC)<input name="objectif" type="number" min="0" step="10" value="${esc(reglages.objectif || "")}"></label>
       </section>
       <section class="card stack">
-        <h2>Vos listes</h2><p class="small">Une valeur par ligne.</p>
+        <h2>Tes listes</h2><p class="small">Une valeur par ligne.</p>
         <label>Postes de d\xE9pense<textarea name="postes" rows="5">${esc(
           reglages.postes.join(`
 `),
@@ -1300,7 +1300,7 @@ function viewReglages() {
       <button class="btn main block">Enregistrer</button>
     </form>
     <section class="card form stack">
-      <h2>Exports et sauvegarde</h2><p class="small">Fichiers lisibles dans Excel, \xE0 garder de votre c\xF4t\xE9.</p>
+      <h2>Exports et sauvegarde</h2><p class="small">Fichiers lisibles dans Excel, \xE0 garder de ton c\xF4t\xE9.</p>
       <div class="actions"><button class="btn" data-act="exp" data-v="visites">Journal des visites</button><button class="btn" data-act="exp" data-v="ventes">Ventes</button><button class="btn" data-act="exp" data-v="depenses">D\xE9penses</button><button class="btn" data-act="exp" data-v="clients">Clients</button><button class="btn" data-act="exp" data-v="json">Sauvegarde compl\xE8te</button></div>
     </section>`,
   );
@@ -2075,7 +2075,7 @@ const ACT = {
       (await sheet.del(), $sheet.close());
     }),
   newvisite: (valeur) => {
-    if (!S.d.ruches.length) return (toast("Ajoutez d\u2019abord une ruche", !0), go("ruches"));
+    if (!S.d.ruches.length) return (toast("Ajoute d\u2019abord une ruche", !0), go("ruches"));
     const rucheId = valeur || (S.ruche && byId(S.d.ruches, S.ruche)?.id) || S.d.ruches[0].id;
     ((S.visite = {
       ruche_id: rucheId,
@@ -2338,7 +2338,7 @@ function showTip(evt) {
           else if (formulaire === "visite") {
             readVisitForm();
             const visite = S.visite;
-            if (!visite.ruche_id) throw new Error("Choisissez une ruche");
+            if (!visite.ruche_id) throw new Error("Choisis une ruche");
             S.busy = !0;
             const intrants = Object.entries(visite.q)
                 .filter(([, quantite]) => quantite > 0)
@@ -2370,11 +2370,11 @@ function showTip(evt) {
           } else if (formulaire === "vente") {
             readSaleForm();
             const vente = S.vente;
-            if (!vente.client_id) throw new Error("Choisissez un client");
+            if (!vente.client_id) throw new Error("Choisis un client");
             const lignes = Object.entries(vente.q)
               .filter(([, quantite]) => quantite > 0)
               .map(([lotId, quantite]) => ({ lot_id: lotId, quantite: quantite }));
-            if (!lignes.length) throw new Error("Ajoutez au moins un pot");
+            if (!lignes.length) throw new Error("Ajoute au moins un pot");
             S.busy = !0;
             const { error: erreur, local: enAttente } = await (
               typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params)
@@ -2406,7 +2406,7 @@ function showTip(evt) {
               cercles = liste(form.cercles),
               modes = liste(form.modes);
             if (!postes.length || !cercles.length || !modes.length)
-              throw new Error("Gardez au moins une valeur par liste");
+              throw new Error("Garde au moins une valeur par liste");
             ((S.busy = !0),
               await saveCfg(
                 {

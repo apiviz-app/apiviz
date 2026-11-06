@@ -165,7 +165,7 @@ const HL = (() => {
       toast("Gardé sur le téléphone : envoi au retour du réseau");
       return;
     }
-    throw new Error(enAttente ? "Cette saisie n’est pas encore envoyée : modifiez-la une fois le réseau revenu."
+    throw new Error(enAttente ? "Cette saisie n’est pas encore envoyée : modifie-la une fois le réseau revenu."
       : "Pas de réseau : cette modification se fera une fois le réseau revenu.");
   }
 

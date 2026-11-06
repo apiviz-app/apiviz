@@ -38,17 +38,17 @@ const ET = (() => {
   ACT.etiq = (id) => {
     const lot = byId(S.d.lots, id), c = cfg();
     if (!lot) return;
-    if (!String(c.adresse || "").trim()) { toast("Ajoutez d’abord votre adresse dans Réglages : elle doit figurer sur l’étiquette", true); return (S.rgForm = true, go("reglages")); }
+    if (!String(c.adresse || "").trim()) { toast("Ajoute d’abord ton adresse dans Réglages : elle doit figurer sur l’étiquette", true); return (S.rgForm = true, go("reglages")); }
     sheet({
       title: "Étiquettes · lot " + lot.code,
-      intro: "Planche A4 de 21 étiquettes 63,5 × 38,1 mm. Imprimez à 100 %, sans mise à l’échelle.",
+      intro: "Planche A4 de 21 étiquettes 63,5 × 38,1 mm. Imprime à 100 %, sans mise à l’échelle.",
       label: "Imprimer",
       fields: [
         { name: "nombre", label: "Nombre d’étiquettes", type: "number", step: "1", min: 1, required: true, value: Math.min(Number(lot.pots_initiaux) || 1, 210) },
         { name: "deja", label: "Cases déjà utilisées sur la première planche", type: "number", step: "1", min: 0, required: true, value: 0 },
       ],
       submit: async (v) => {
-        if (!lot.ddm) throw new Error("Renseignez d’abord la DDM du lot (touchez son numéro dans Stocks)");
+        if (!lot.ddm) throw new Error("Renseigne d’abord la DDM du lot (touche son numéro dans Stocks)");
         const nombre = Math.max(1, Math.min(210, Math.round(Number(v.nombre)))), deja = Math.max(0, Math.min(PAR_PLANCHE - 1, Math.round(Number(v.deja))));
         imprimer(lot, nombre, deja);
       },

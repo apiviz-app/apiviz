@@ -64,7 +64,7 @@ const AL = (() => {
   const prioritaire = () => S.d.ruches.find((x) => x.etat === "Critique") || S.d.ruches.find((x) => x.etat !== "Bonne");
   function phrase() {
     const d = S.d;
-    if (!d.ruches.length) return "Ajoutez votre première ruche pour commencer.";
+    if (!d.ruches.length) return "Ajoute ta première ruche pour commencer.";
     const r = prioritaire();
     if (!r) return "Tout va bien au rucher.";
     const p = d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg);

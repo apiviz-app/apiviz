@@ -68,7 +68,7 @@ const PH = (() => {
       }
       return { blob, largeur: w, hauteur: h, octets: blob.size };
     } catch {
-      throw new Error("Cette photo n’a pas pu être lue. Essayez d’en prendre une nouvelle.");
+      throw new Error("Cette photo n’a pas pu être lue. Essaie d’en prendre une nouvelle.");
     } finally { URL.revokeObjectURL(src); }
   }
 

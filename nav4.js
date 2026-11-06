@@ -128,7 +128,7 @@ const N4 = (() => {
   // Écran « ruches » : enregistré dans le noyau (src/domaines/ruchers/ecrans.js, N4.ecranRuchers).
   function ecranRuchers() {
     const d = S.d;
-    if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoutez votre première ruche", "Une par une ou plusieurs d’un coup. Vous pourrez les regrouper par rucher.", "Ajouter des ruches", "newruches"));
+    if (!d.ruches.length) return shell("Ruchers", "", "", emptyState("Ajoute ta première ruche", "Une par une ou plusieurs d’un coup. Tu pourras les regrouper par rucher.", "Ajouter des ruches", "newruches"));
     const seuil = U.seuilVarroa();
     const blocs = U.ruchers().map(([k, rs]) => {
       const pb = rs.filter((r) => r.etat !== "Bonne"), etat = U.pire(rs);

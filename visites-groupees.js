@@ -46,7 +46,7 @@ const VR = (() => {
     readVisitForm();
     const s = S.visite;
     const cibles = s.multi ? [...s.ruches] : [s.ruche_id].filter(Boolean);
-    if (!cibles.length) throw new Error("Choisissez une ruche");
+    if (!cibles.length) throw new Error("Choisis une ruche");
     const intrants = Object.entries(s.q).filter(([, q]) => q > 0).map(([article_id, quantite]) => ({ article_id, quantite }));
     for (const x of intrants) { // le stock doit suffire pour toutes les ruches
       const a = byId(S.d.articles, x.article_id);
