@@ -2,7 +2,8 @@
 # Actions › Mise en ligne › Run workflow, cible « recette », puis « production » une fois validée.
 # Repères git : « recette » (version en recette) et « deploiement » (version en production).
 # Garde-fous : Vérifier doit être vert ; la production n'accepte que la version exacte en recette,
-# et refuse de partir si une migration attend sans que la case soit cochée.
+# et refuse de partir si la structure de la base apidoo ne correspond pas exactement aux fichiers de migrations
+# (contrôle automatique, IT-04 / AP-TECH-042 : remplace la case « migrations faites »).
 name: Mise en ligne
 
 on:
@@ -17,10 +18,6 @@ on:
         description: "Branche à publier (recette uniquement, pour essayer avant fusion)"
         type: string
         default: main
-      migrations_faites:
-        description: "Production : les migrations en attente sont appliquées sur la base apidoo"
-        type: boolean
-        default: false
 
 concurrency:
   group: mise-en-ligne
@@ -49,7 +46,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CIBLE: ${{ inputs.cible }}
           VERSION: ${{ inputs.version }}
-          MIGRATIONS_FAITES: ${{ inputs.migrations_faites }}
         run: |
           if [ "$CIBLE" = production ]; then VERSION=main; fi
           sha=$(git rev-parse --verify -q "origin/$VERSION" || git rev-parse --verify -q "$VERSION") || {
@@ -69,10 +65,6 @@ jobs:
             if [ "$(git rev-parse "$sha^{tree}")" != "$(git rev-parse 'refs/tags/recette^{tree}')" ]; then
               echo "::error::Cette version n'est pas celle en recette : passez-la d'abord en recette."; exit 1
             fi
-            attente=$(git show "$sha:migrations/a-appliquer-en-production.txt" 2>/dev/null | grep -v '^#' | grep . || true)
-            if [ -n "$attente" ] && [ "$MIGRATIONS_FAITES" != true ]; then
-              echo "::error::Migrations à appliquer d'abord sur la base apidoo : $attente"; exit 1
-            fi
             prod=$sha
           else
             prod=refs/tags/deploiement
@@ -80,6 +72,25 @@ jobs:
           git worktree add -q --detach /tmp/src-prod "$prod"
           git worktree add -q --detach /tmp/src-recette "$sha"
           sh /tmp/src-recette/scripts/assembler-site.sh /tmp/src-prod /tmp/src-recette _site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Structure de la base
+        env:
+          CIBLE: ${{ inputs.cible }}
+        run: |
+          # Rejoue les migrations de la version publiée et compare à la vraie base (clé publique, lecture seule).
+          cd /tmp/src-recette
+          (mkdir -p /tmp/pg && cd /tmp/pg && npm i --silent --no-save @electric-sql/pglite@0.2 > /dev/null 2>&1)
+          ln -sfn /tmp/pg/node_modules node_modules
+          if [ "$CIBLE" = production ]; then
+            node scripts/controler-structure.mjs config.js || {
+              echo "::error::La base apidoo ne correspond pas aux migrations de cette version : appliquer d'abord les migrations en attente (migrations/a-appliquer-en-production.txt)."; exit 1; }
+          else
+            node scripts/controler-structure.mjs environnements/recette/config.js || \
+              echo "::warning::La base apidoo-test ne correspond pas aux migrations de cette version (recette publiée quand même)."
+          fi
+          rm -f node_modules
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
