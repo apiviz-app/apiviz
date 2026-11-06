@@ -27,6 +27,7 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | `structure-2026-11-06-apres-012.json` | `apidoo` et `apidoo-test` | 012 | aucun écart ; les 19 fonctions ont la même empreinte (corps, mode, `search_path`, droits) sur les deux bases |
 | `structure-2026-11-06-recette-apres-013.json` | `apidoo-test` seulement | 013 | avant 013 : identique à « apres-012 » ; après : uniquement les ajouts de 013, empreinte de `journaliser_erreur` identique au fichier |
 | `structure-2026-11-06-apres-013.json` | `apidoo` et `apidoo-test` | 013 | aucun écart ; production avant 013 identique à « apres-012 », après 013 identique à la recette |
+| `structure-2026-11-06-apres-014.json` | `apidoo` et `apidoo-test` | 014 | aucun écart ; les six empreintes de `empreinte_structure()` identiques sur les deux bases et au rejeu ; aucune incohérence, 14 clés composites validées |
 
 ## État des migrations
 
@@ -45,13 +46,10 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | 013-noyau-resume-et-journal.sql | Vue `colonies_resume` (dernière visite, dernier poids, dernier comptage varroa, nombre de visites par colonie ; `security_invoker`) ; table `journal_erreurs` (RLS sans politique : aucun accès par l'API) ; `journaliser_erreur()` (écriture regroupée par minute, e-mails masqués, purge à 90 jours). Additive, ne casse pas l'ancienne version (IT-03) | 6 nov. 2026 (relevé avant/après ; `revoke` de la vue relancé à part après ajout au fichier) | 6 nov. 2026 (accord du responsable ; relevé avant/après, structure identique à la recette) |
 | (correction E5, sans fichier) | `revoke execute … from public` sur `creer_visite` et `creer_vente` : aligne la recette sur la production | 6 nov. 2026 (entrée d'historique `e5_retrait_execution_public`) | déjà dans cet état |
 
-| 014-roles-audit.sql | Rôle `lecteur` (politiques séparées lecture / ajout / modification / suppression sur les 16 tables et l'espace photos) ; invitations avec `role`, `usages_max`, `usages`, `revoque_le` (vérifiés par `rejoindre()` ; `invitation_info()` renvoie aussi `etat` et `role`) ; `creer_visite` et `creer_vente` contrôlent ruche, client, articles et lots ; 14 clés étrangères composites « même exploitation » ; `incoherences_exploitation()` ; table `journal_audit` (déclencheur `auditer()`, lecture par les responsables, purge à 1 an) et `restaurer()` ; `exploitations.demo`, `creer_exploitation_demo()`, `indicateurs_usage()` ; `empreinte_structure()` (lisible sans connexion, empreintes md5 seulement). Additive, ne casse pas l'ancienne version (IT-04) | 6 nov. 2026 (relevé avant/après `releves/structure-2026-11-06-recette-apres-014.json` ; empreintes identiques au rejeu ; aucune incohérence, 14 clés validées) | à faire, après accord |
+| 014-roles-audit.sql | Rôle `lecteur` (politiques séparées lecture / ajout / modification / suppression sur les 16 tables et l'espace photos) ; invitations avec `role`, `usages_max`, `usages`, `revoque_le` (vérifiés par `rejoindre()` ; `invitation_info()` renvoie aussi `etat` et `role`) ; `creer_visite` et `creer_vente` contrôlent ruche, client, articles et lots ; 14 clés étrangères composites « même exploitation » ; `incoherences_exploitation()` ; table `journal_audit` (déclencheur `auditer()`, lecture par les responsables, purge à 1 an) et `restaurer()` ; `exploitations.demo`, `creer_exploitation_demo()`, `indicateurs_usage()` ; `empreinte_structure()` (lisible sans connexion, empreintes md5 seulement). Additive, ne casse pas l'ancienne version (IT-04) | 6 nov. 2026 (relevé avant/après ; empreintes identiques au rejeu ; aucune incohérence, 14 clés validées) | 6 nov. 2026 (accord du responsable ; relevé avant/après `releves/structure-2026-11-06-apres-014.json` : avant identique à la recette avant 014, aucune incohérence ; après : 14 clés validées, empreintes identiques à la recette et au rejeu ; `controler-structure.mjs` : identique) |
 
-En attente pour la production : `014-roles-audit.sql`. Avant de l'appliquer sur `apidoo`, lancer en lecture seule
-`select * from public.incoherences_exploitation();` **après** la migration (ou la requête équivalente avant) : une ligne
-non nulle signifie qu'une clé composite est restée « non validée » (la migration passe quand même et l'écrit en
-avertissement). Production relevée le 6 nov. 2026 : 0 visite, 0 vente, 7 récoltes, 1 dépense, aucune donnée d'une autre
-exploitation possible (une seule exploitation).
+En attente pour la production : aucune (014 appliquée sur `apidoo` le 6 nov. 2026). Pour vérifier une base à tout moment, en lecture seule :
+`select * from public.incoherences_exploitation() where nombre > 0;` (aucune ligne attendue).
 
 Tests SQL sur une base en mémoire (IT-04, AP-FEAT-008) : `sh tests/sql/lancer.sh` lance tous les `tests/sql/test_*.mjs` et
 les contrôles de structure ; « Vérifier » les lance dans un job à part (« Tests SQL »).

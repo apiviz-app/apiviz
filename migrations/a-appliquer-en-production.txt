@@ -2,4 +2,3 @@
 # Depuis IT-04, la mise en ligne en production compare elle-même la structure de la base apidoo aux fichiers
 # (scripts/controler-structure.mjs) et refuse de partir en cas d'écart : cette liste sert de mémo.
 # Retirer la ligne une fois la migration appliquée sur la base apidoo.
-014-roles-audit.sql

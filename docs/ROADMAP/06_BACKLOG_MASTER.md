@@ -471,7 +471,7 @@ Tester ce qui ne l'est pas : SQL, RLS, règles métier pures.
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-035 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : tests/sql (socle, matrice d'isolation 285 vérifications, 014, démo), job « Tests SQL », contrôle de structure avant production ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : tests/sql (socle, matrice d'isolation 285 vérifications, 014, démo), job « Tests SQL », contrôle de structure avant production ; en attente de fusion |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | M |
@@ -632,7 +632,7 @@ Jeux de données reproductibles, clairement séparés des données réelles.
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-039 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : tests/demo/exploitation-demo.json, scripts/demo.mjs (refuse la production), exploitations.demo ; chargement sur apidoo-test à faire avec un compte d'essai ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : tests/demo/exploitation-demo.json, scripts/demo.mjs (refuse la production), exploitations.demo ; chargement sur apidoo-test à faire avec un compte d'essai ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -680,7 +680,7 @@ Accès multi-personnes maîtrisé : invitations, rôles, journal.
 | Type | Fonctionnalité |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-003 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : rôle et usages du lien, liste des liens actifs, Révoquer, rejoindre() vérifie (014) ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : rôle et usages du lien, liste des liens actifs, Révoquer, rejoindre() vérifie (014) ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -718,7 +718,7 @@ Accès multi-personnes maîtrisé : invitations, rôles, journal.
 | Type | Fonctionnalité |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-003 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : rôle lecteur appliqué par la base (politiques séparées) et l'interface (liste blanche d'actions) ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : rôle lecteur appliqué par la base (politiques séparées) et l'interface (liste blanche d'actions) ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -867,7 +867,7 @@ Intégrité des données entre exploitations, traçabilité des modifications, d
 | Type | Fonctionnalité |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-004 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : contrôles dans creer_visite/creer_vente, 14 clés composites, incoherences_exploitation() ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : contrôles dans creer_visite/creer_vente, 14 clés composites, incoherences_exploitation() ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | M |
@@ -903,7 +903,7 @@ Intégrité des données entre exploitations, traçabilité des modifications, d
 | Type | Fonctionnalité |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-004 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : journal_audit, restaurer() (visites, ventes, dépenses), « Supprimé récemment » dans Activité, purge à 1 an ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : journal_audit, restaurer() (visites, ventes, dépenses), « Supprimé récemment » dans Activité, purge à 1 an ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -976,7 +976,7 @@ Intégrité des données entre exploitations, traçabilité des modifications, d
 | Type | Fonctionnalité |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-004 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test) : docs/CONFIDENTIALITE.md, confidentialite.html, information avant la première dictée ; responsable du traitement à compléter (D-13) ; en attente de fusion |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-04-securite-base` (v5.18, migration 014 appliquée sur apidoo-test et apidoo) : docs/CONFIDENTIALITE.md, confidentialite.html, information avant la première dictée ; responsable du traitement à compléter (D-13) ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |

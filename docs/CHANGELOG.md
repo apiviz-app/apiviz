@@ -3,12 +3,12 @@
 **État au 6 nov. 2026, 15 h 10.** Production et recette publient la **v5.17** (commit `bc66584`, recette puis production
 le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jusqu'au 4 nov.
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
-`apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
+Migration 014 (IT-04) appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026 : bases 000 à 014, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-014.json`). La v5.17 en production fonctionne avec 014 (migration compatible). Aucune migration en attente.
 
 ## v5.18 · à publier en recette · sécurité de la base, rôles et tests SQL (IT-04)
-Migration : `migrations/014-roles-audit.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé avant/après :
-seulement les ajouts de 014 ; empreintes de structure identiques au rejeu des fichiers ; aucune donnée incohérente),
-à appliquer sur `apidoo` après accord. **Ne casse pas l'ancienne version** : membres et responsables gardent les mêmes
+Migration : `migrations/014-roles-audit.sql`, **appliquée sur `apidoo-test` puis sur `apidoo` le 6 nov. 2026** (accord du
+responsable ; relevé avant/après : seulement les ajouts de 014 ; empreintes de structure identiques sur les deux bases et
+au rejeu des fichiers ; aucune donnée incohérente, 14 clés composites validées). **Ne casse pas l'ancienne version** (la v5.17 en production tourne avec) : membres et responsables gardent les mêmes
 droits, les liens d'invitation existants restent valables, `invitation_info()` garde ses colonnes. La v5.18 a besoin
 de 014 (la mise en ligne en production le vérifie désormais toute seule).
 

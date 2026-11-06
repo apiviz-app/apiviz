@@ -1,8 +1,8 @@
 {
  "date": "2026-11-06",
- "bases": 1,
+ "bases": 2,
  "derniere_migration": "014-roles-audit.sql",
- "note": "Relevé en lecture seule d'apidoo-test (recette) avant puis après 014 (IT-04), le 6 nov. 2026. Avant : identique au relevé « recette-apres-013 » (mêmes tables, vues, fonctions, politiques ; empreinte des fonctions 218fb774…). Après : seulement les ajouts et remplacements de 014 ; aucune donnée incohérente (incoherences_exploitation() vide), les 14 clés composites validées. Les six empreintes de empreinte_structure() lues sur apidoo-test sont identiques à celles du rejeu de 000 à 014 en mémoire (champ empreinte_structure).",
+ "note": "Relevé en lecture seule d'apidoo-test puis d'apidoo, avant et après 014 (IT-04), le 6 nov. 2026. Avant : les deux bases identiques au relevé « apres-013 » (empreinte des fonctions 218fb774…), aucune donnée rattachée à une autre exploitation. Après : seulement les ajouts et remplacements de 014 ; incoherences_exploitation() vide et les 14 clés composites validées sur les deux bases. Les six empreintes de empreinte_structure() lues sur apidoo-test et sur apidoo sont identiques entre elles et à celles du rejeu de 000 à 014 en mémoire.",
  "tables": {
   "articles": [
    "created_at",
