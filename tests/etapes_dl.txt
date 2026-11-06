@@ -1,8 +1,9 @@
     # AP-FEAT-014 / AP-US-009 : après l'enregistrement d'une visite, une seule requête, pas une relecture de toutes les tables.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_timeout(300)
-    # AP-TECH-028 : nombre de lectures à l'ouverture, surveillé (relevé de départ : 16 avec les données des tests).
-    verif(len(lectures) <= 16, "lectures de données à l'ouverture : %s (16 au plus)" % len(lectures))
+    # AP-TECH-028 : nombre de lectures à l'ouverture, surveillé (relevé de départ : 16 avec les données des tests ;
+    # 17 depuis IT-05 : table ruchers).
+    verif(len(lectures) <= 17, "lectures de données à l'ouverture : %s (17 au plus)" % len(lectures))
     page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.wait_for_selector("form[data-form=visite]")
     page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
     page.fill("#v_note", "Visite comptée")

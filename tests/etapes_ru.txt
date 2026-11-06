@@ -1,0 +1,77 @@
+    # IT-05 — Fiche rucher : créer (AP-TECH-092), renommer en une fois (AP-US-028), infos d'accès (AP-US-030),
+    # archiver au lieu de supprimer (AP-TECH-096). Captures à 375 et 1 280 px avec CAPTURES=<dossier>.
+    import os
+    cap = os.environ.get("CAPTURES")
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    RV = str(uuid.uuid4())
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": 47.32, "lng": 5.04, **vide}]
+    DATA["ruches"][0].update({"rucher_id": RV, "lat": 47.32, "lng": 5.04})
+    for i in range(2, 9):
+        DATA["ruches"].append({"id": str(uuid.uuid4()), "nom": f"Ruche {i}", "rucher": "Verger", "rucher_id": RV, "etat": "Bonne", "type_ruche": "",
+                               "annee_reine": None, "notes": "", "lat": 47.32, "lng": 5.04})
+    def captures(nom):
+        if not cap: return
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(400)
+            page.screenshot(path=f"{cap}/ru-{nom}-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector("[data-act=rcnouveau]", timeout=10000)
+    verif(page.locator("section.card[data-k='Verger'] .n4-ruche").count() == 8, "écran Ruchers : Verger et ses 8 colonies")
+
+    # A. Nouveau rucher : nom nettoyé, identifiant fourni par l'application, fiche ouverte même sans colonie.
+    page.click("[data-act=rcnouveau]"); page.fill("#sheet input[name=nom]", "  Bois   du Roi "); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Rucher créé", timeout=10000)
+    cr = [b["p"] for n, b in recu["rpc"] if n == "creer_rucher"]
+    verif(len(cr) == 1 and cr[0]["nom"] == "Bois du Roi" and len(cr[0]["id"]) == 36, "creer_rucher : nom nettoyé, identifiant fourni")
+    page.wait_for_selector("h1 >> text=Bois du Roi", timeout=5000)
+    verif(page.locator("[data-act=rcajouter]").count() == 1 and page.locator("text=Aucune colonie pour l’instant").count() >= 1,
+          "fiche d'un rucher vide : « Ajouter des ruches ici »")
+    page.click("[data-act=rcajouter]"); page.wait_for_selector("#sheet[open] input[name=rucher]")
+    verif(page.locator("#sheet input[name=rucher]").input_value() == "Bois du Roi", "ajout de ruches : rucher déjà choisi")
+    page.click("#sheet [data-act=closesheet]")
+
+    # B. Doublon refusé, sans tenir compte de la casse ni des espaces.
+    page.evaluate("ACT.go('ruches')"); page.click("[data-act=rcnouveau]"); page.fill("#sheet input[name=nom]", " verger ")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast.err >> text=Ce rucher existe déjà", timeout=5000)
+    verif(len([1 for n, b in recu["rpc"] if n == "creer_rucher"]) == 1, "doublon « verger » refusé avant tout envoi")
+    page.click("#sheet [data-act=closesheet]")
+
+    # C. Renommer en une fois : les 8 colonies suivent (AP-US-028).
+    page.evaluate("ACT.alrucher('Verger')"); page.wait_for_selector("h1 >> text=Verger", timeout=5000)
+    page.click("[data-act=rcrenommer]"); page.fill("#sheet input[name=nom]", "Verger du haut"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Rucher renommé", timeout=10000)
+    verif(("ruchers", {"nom": "Verger du haut"}) in patchs, "une seule modification, sur le rucher")
+    verif(sum(1 for c in DATA["ruches"] if c["rucher"] == "Verger du haut") == 8, "base : les 8 colonies portent le nouveau nom")
+    page.wait_for_selector("h1 >> text=Verger du haut", timeout=5000)
+    verif(page.locator(".al-ruches .al-ligne").count() == 8, "la fiche reste ouverte sous le nouveau nom, 8 colonies")
+
+    # D. Infos d'accès (AP-US-030) : section repliée, accès lisible, appel et itinéraire.
+    verif(page.evaluate("document.getElementById('rcInfos').open") is False, "section Infos repliée")
+    page.evaluate("document.getElementById('rcInfos').open = true"); page.click("[data-act=rcinfos]")
+    page.fill("#sheet textarea[name=acces]", "Portail vert, refermer derrière soi")
+    page.fill("#sheet input[name=proprietaire]", "M. Durand"); page.fill("#sheet input[name=proprietaire_tel]", "06 12 34 56 78")
+    page.fill("#sheet input[name=capacite]", "10"); page.fill("#sheet input[name=point_eau]", "Abreuvoir")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Infos enregistrées", timeout=10000)
+    rv = next(x for x in DATA["ruchers"] if x["id"] == RV)
+    verif(rv["acces"] == "Portail vert, refermer derrière soi" and rv["capacite"] == 10 and rv["proprietaire_tel"] == "06 12 34 56 78", "infos enregistrées")
+    verif("Accès : Portail vert" in page.locator("#rcInfos summary").inner_text(), "accès lisible sans ouvrir la section")
+    verif(page.locator("a[href='tel:0612345678']").count() >= 1, "bouton d'appel du propriétaire")
+    verif(page.locator("a.u-lienbtn[href*='destination=47.32,5.04']").count() >= 1, "itinéraire vers le rucher")
+    captures("fiche")
+
+    # E. Archiver : refusé avec des colonies, accepté pour un rucher vide ; il reste consultable.
+    page.click("[data-act=rcarchiver]"); page.wait_for_selector(".toast.err >> text=Déplace d’abord ses colonies", timeout=5000)
+    verif(not any(t == "ruchers" and "archive_le" in c for t, c in patchs), "rucher avec colonies : pas d'archivage")
+    page.evaluate("ACT.alrucher('Bois du Roi')"); page.wait_for_selector("h1 >> text=Bois du Roi", timeout=5000)
+    page.click("[data-act=rcarchiver]"); page.click("[data-act=rcarchiver]")
+    page.wait_for_selector(".toast >> text=Rucher archivé", timeout=10000)
+    verif(any(t == "ruchers" and c.get("archive_le") for t, c in patchs), "archivage enregistré (pas de suppression)")
+    verif(page.locator("[data-act=rcrouvrir]").count() == 1, "rucher archivé : « Rouvrir ce rucher »")
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector("text=Ruchers archivés · 1", timeout=5000)
+    verif(page.locator("section.card[data-k='Bois du Roi']").count() == 0, "rucher archivé retiré de la liste active")
+    verif("Bois du Roi" not in page.evaluate("ruchers()"), "rucher archivé absent du choix d'un rucher")
+    captures("liste")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

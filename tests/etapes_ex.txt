@@ -24,6 +24,10 @@
     page.wait_for_selector(".toast >> text=Exploitation créée", timeout=10000)
     E2 = EXPL["miennes"][0]["id"]
     verif(page.evaluate("EX.courante()") == E2 and page.locator("text=/Bonjour|Bonsoir/").count() >= 1, "exploitation créée puis ouverte")
+    cr = [b["p"] for n, b in recu["rpc"] if n == "creer_rucher"]
+    verif(len(cr) == 1 and cr[0]["nom"] == "Le Verger" and len(cr[0]["colonies"]) == 2 and len(cr[0]["id"]) == 36,
+          "rucher en 3 questions : le rucher et ses 2 colonies en un seul appel (creer_rucher)")
+    verif(not [1 for t, u, rows in recu["upsert"] if t == "ruches"], "plus d'insertion directe des ruches")
     # D. Invitation reçue : on rejoint en ouvrant le lien.
     code = uuid.uuid4().hex
     EXPL["codes"][code] = {"id": E1, "nom": "Bee’s Brothers", "role": "membre"}

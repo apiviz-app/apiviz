@@ -1,0 +1,62 @@
+    # IT-05 — Carte globale des ruchers (AP-US-031) et placement d'un rucher (AP-US-029), y compris sans réseau.
+    import os
+    cap = os.environ.get("CAPTURES")
+    _ici = __import__("pathlib").Path(__file__).parent
+    LF = _ici / "leaflet" / "package" / "dist"
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
+              headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    meteo = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: (meteo.append(rt.request.url), rt.abort()))
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    RV, RB, RP, RN = (str(uuid.uuid4()) for _ in range(4))
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": 47.32, "lng": 5.04, **vide}, {"id": RB, "nom": "Bois", "lat": 47.40, "lng": 5.10, **vide},
+                       {"id": RP, "nom": "Pré", "lat": 47.25, "lng": 4.95, **vide}, {"id": RN, "nom": "Colline", "lat": None, "lng": None, **vide}]
+    DATA["ruches"][0].update({"rucher_id": RV, "lat": 47.32, "lng": 5.04})
+    col = lambda nom, rid, rucher, etat, lat, lng: {"id": str(uuid.uuid4()), "nom": nom, "rucher": rucher, "rucher_id": rid, "etat": etat, "type_ruche": "",
+                                                 "annee_reine": None, "notes": "", "lat": lat, "lng": lng}
+    DATA["ruches"] += [col("Ruche 2", RV, "Verger", "Bonne", 47.32, 5.04), col("B1", RB, "Bois", "À surveiller", 47.40, 5.10),
+                       col("B2", RB, "Bois", "Critique", 47.40, 5.10), col("B3", RB, "Bois", "Bonne", 47.40, 5.10),
+                       col("P1", RP, "Pré", "À surveiller", 47.25, 4.95), col("C1", RN, "Colline", "Bonne", None, None)]
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('carte')"); page.wait_for_selector(".leaflet-container", timeout=10000)
+    page.wait_for_selector(".u-pin", timeout=5000)
+    pins = page.locator(".u-pin").evaluate_all("ps => ps.map(p => [p.querySelector('.u-pin-l').textContent, getComputedStyle(p.querySelector('.u-pin-h')).backgroundColor])")
+    attendu = {"Verger · 2": "rgb(47, 107, 79)", "Bois · 3": "rgb(166, 27, 27)", "Pré · 1": "rgb(227, 160, 8)"}
+    verif(dict(pins) == attendu, "un repère par rucher placé, couleur du pire état et nombre de colonies : %s" % pins)
+    verif("1 rucher à placer" in page.locator(".head").inner_text(), "rucher non placé signalé")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(500)
+            page.screenshot(path=f"{cap}/rc-carte-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    # Placer un rucher sans réseau (« Ma position » au rucher) : gardé sur le téléphone, envoyé au retour du réseau.
+    ctx.grant_permissions(["geolocation"]); ctx.set_geolocation({"latitude": 47.111111, "longitude": 5.222222})
+    page.click("[data-act=uchoix][data-v='Colline']"); page.wait_for_selector("[data-act=uplacer][data-v='Colline']")
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.click("[data-act=uplacer][data-v='Colline']")
+    page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+    verif(page.evaluate("S.d.ruches.find(r => r.nom === 'C1').lat") == 47.111111, "sans réseau : la colonie prend tout de suite la position du rucher")
+    verif(not [1 for n, b in recu["rpc"] if n == "placer_rucher"], "rien envoyé sans réseau")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=/envoyée|envoyées/", timeout=20000)
+    pl = [b["p"] for n, b in recu["rpc"] if n == "placer_rucher"]
+    verif(pl == [{"id": RN, "lat": 47.111111, "lng": 5.222222}], "retour du réseau : placer_rucher envoyé une fois : %s" % pl)
+    c1 = next(x for x in DATA["ruches"] if x["nom"] == "C1")
+    verif((c1["lat"], c1["lng"]) == (47.111111, 5.222222), "base : la colonie a la position du rucher")
+    verif(not any(t == "ruches" for t, _ in patchs), "aucune ruche modifiée une à une")
+
+    # Météo de ce lieu pour toutes ses colonies (AP-US-029).
+    page.evaluate("ACT.alrucher('Colline')"); page.wait_for_selector("h1 >> text=Colline", timeout=5000)
+    page.wait_for_timeout(300)
+    verif(any("latitude=47.11&longitude=5.22" in u for u in meteo), "météo demandée à la position du rucher")
+    verif(page.locator("text=Placer sur la carte pour voir la météo").count() == 0, "plus de « placer sur la carte » pour la météo")
+
+    # Écran Ruchers : « Placer sur la carte » ouvre la carte en mode placement.
+    DATA["ruchers"].append({"id": str(uuid.uuid4()), "nom": "Lande", "lat": None, "lng": None, **vide})
+    page.evaluate("refresh()"); page.evaluate("ACT.go('ruches')"); page.wait_for_selector("section.card[data-k='Lande']", timeout=5000)
+    page.click("section.card[data-k='Lande'] [data-act=rcplacer]"); page.wait_for_selector("#uCarte.u-visee", timeout=10000)
+    verif("Placer « Lande »" in page.locator("#uPanneau").inner_text(), "carte ouverte en mode « placer Lande »")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
