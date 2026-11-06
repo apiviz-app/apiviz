@@ -30,6 +30,10 @@ version() { # $1 : dossier source
     echo "apidoo-$(git -C "$1" log -1 --format=%cs)-$(git -C "$1" rev-parse --short HEAD)$(git -C "$1" diff --quiet HEAD -- . 2>/dev/null || echo -modifie)"
   else echo "apidoo-$(date -u +%F)-local"; fi
 }
+# Styles et modules regroupés en un fichier chacun : les sources restent découpées, l'ouverture n'est pas ralentie.
+for d in "$sortie" "$sortie/recette"; do
+  if [ -f "$rec/scripts/regrouper.py" ]; then python3 "$rec/scripts/regrouper.py" "$d"; fi
+done
 python3 "$rec/scripts/generer-coquille.py" "$sortie" "$(version "$prod")"
 python3 "$rec/scripts/generer-coquille.py" "$sortie/recette" "recette-$(version "$rec")"
 # Sources antérieures à IT-03 (sw.js écrit à la main) : la recette garde son préfixe comme avant.
