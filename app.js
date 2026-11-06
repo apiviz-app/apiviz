@@ -454,7 +454,14 @@ const ICON = {
     previsions: "plus",
     reglages: "plus",
   };
-function shell(titre, sousTitre, boutons, contenu, surTitre) {
+// Coquille unique (IT-03) : les modules ne surchargent plus shell(), ils déclarent des crochets
+// avantCoquille / apresCoquille (src/noyau/crochets.js), appelés ici dans un ordre fixe.
+function shell(...args) {
+  const C = window.Noyau?.crochets,
+    a = C ? C.coquille("avantCoquille", args) : args;
+  (coquilleDeBase(...a), C?.coquille("apresCoquille", a));
+}
+function coquilleDeBase(titre, sousTitre, boutons, contenu, surTitre) {
   const initiale = (S.session.user.email || "?")[0].toUpperCase(),
     menuLateral = SIDE.map((entree) =>
       entree
@@ -1568,7 +1575,13 @@ function viewReglages() {
     </section>`,
   );
 }
+// Rendu unique (IT-03) : les modules ne surchargent plus render(), ils déclarent des crochets avantRendu /
+// apresRendu (src/noyau/crochets.js) ; les écrans migrés sont dans la table du noyau (src/domaines/…).
 function render() {
+  const C = window.Noyau?.crochets;
+  (C?.lancer("avantRendu") || rendreEcran(), C?.lancer("apresRendu"));
+}
+function rendreEcran() {
   if (S.recovery || !S.session) return authView();
   if (S.member === !1) {
     if (typeof EX != "undefined") return EX.accueil();
@@ -1580,7 +1593,10 @@ function render() {
       '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apidoo.svg" alt=""></div>';
     return;
   }
-  const vues = {
+  // Écran enregistré dans le noyau (IT-03, src/domaines/…) : il remplace toute l'ancienne chaîne de cet écran.
+  // Sinon, ou avec ?ancien=1, l'ancien chemin ci-dessous.
+  const migre = window.Noyau?.ecran?.(S.route);
+  const vues = migre ? migre.rendu : {
     dash: viewDash,
     plus: viewPlus,
     agenda: viewAgenda,

@@ -7,6 +7,7 @@ import * as finances from "./domaines/finances/regles.js";
 import * as sante from "./domaines/sante/regles.js";
 import * as meteo from "./domaines/meteo/regles.js";
 import { creerFile } from "./noyau/erreurs.js";
+import * as crochets from "./noyau/crochets.js";
 
 window.Regles = Object.freeze({ ...format, finances, sante, meteo });
 
@@ -21,4 +22,5 @@ const journal = creerFile({
   },
 });
 addEventListener("pagehide", () => journal.vider());
-window.Noyau = { journal };
+// Crochets du rendu et de la coquille : les scripts classiques les déclarent au chargement.
+window.Noyau = { journal, crochets };
