@@ -35,7 +35,7 @@
   après passe par des **crochets nommés** (`src/noyau/crochets.js`) : `avantRendu`, `apresRendu`, `avantCoquille`,
   `apresCoquille`. « avant » : du dernier module chargé au premier ; « après » : du premier au dernier (l'ordre des
   anciennes chaînes). Un écran ne se modifie qu'à un endroit : sa fonction de rendu.
-- **Règles pures** (AP-FEAT-013) : `src/noyau/format.js`, `src/domaines/{finances,sante,meteo,visites,ruchers}/regles.js`, sans
+- **Règles pures** (AP-FEAT-013) : `src/noyau/format.js`, `src/domaines/{finances,sante,meteo,visites,ruchers,colonies}/regles.js`, sans
   navigateur ni base ; testées par `tests/unitaires/` (`npm test`, aussi dans « Vérifier »). Les scripts classiques les
   appellent par `window.Regles` (passerelle à retirer quand ils seront migrés).
 - **Assemblage** (`scripts/assembler-site.sh`) : copie le site (racine, `src/`, `styles/`), puis
@@ -120,6 +120,17 @@
   déclarées par l'écran « rucher » (`src/domaines/ruchers/ecrans.js`, enregistrées par `src/main.js` via
   `noyau/actions.js`). `creer_rucher` et `placer_rucher` passent par la file d'envoi hors ligne. Renommer, modifier
   les infos et archiver demandent le réseau (message clair sinon).
+- **Emplacements, déplacements, ruches physiques** (IT-06, migration 016) : `colonie_emplacements` dit où était chaque
+  colonie, par période `[du, au)` (contrainte d'exclusion `btree_gist` : jamais deux emplacements à la fois). Tout
+  changement de `ruches.rucher_id` (nouvelle version par `deplacer_colonies()`, ancienne version par le texte) passe par
+  le déclencheur `ruches_emplacement` ; `deplacer_colonies()` lui transmet sa date et son déplacement par deux
+  variables de transaction (`apidoo.deplacement_date`, `apidoo.deplacement_id`). Le registre des mouvements reste fait
+  des lignes `ruche_evenements` (une par colonie, lisibles par l'ancienne version), reliées à `deplacements` par
+  `deplacement_id` ; l'application les lit par `Regles.colonies.lignesMouvements()`. `ruches.statut` remplace
+  progressivement `sortie` (déclencheur dans les deux sens). Écran `deplacer` (`src/domaines/ruchers/deplacer.js`) ;
+  compléments de la fiche colonie et de Matériel dans `src/domaines/colonies/` ; les trois fonctions passent par la
+  file d'envoi hors ligne (`offline.js` les rejoue sur les données gardées). Ruches physiques derrière le réglage
+  `contenants` (désactivé par défaut). Ancienne fenêtre de déplacement : drapeau `apidoo-deplacement-v510`.
 - **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
   <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
   sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit

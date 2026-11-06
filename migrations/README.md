@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013 → 014 → 015
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013 → 014 → 015 → 016
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -29,6 +29,7 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | `structure-2026-11-06-apres-013.json` | `apidoo` et `apidoo-test` | 013 | aucun écart ; production avant 013 identique à « apres-012 », après 013 identique à la recette |
 | `structure-2026-11-06-recette-apres-014.json` | `apidoo-test` seulement | 014 | avant 014 : identique à « apres-013 » ; après : uniquement les ajouts de 014 |
 | `structure-2026-11-06-recette-apres-015.json` | `apidoo-test` seulement | 015 | avant 015 : six empreintes identiques à « recette-apres-014 » ; après : uniquement les ajouts de 015 ; `controler-structure.mjs` : identique aux fichiers |
+| `structure-2026-11-06-recette-apres-016.json` | `apidoo-test` seulement | 016 | avant 016 : six empreintes identiques au rejeu des fichiers 000 à 015 ; après : six empreintes identiques au rejeu de 000 à 016 (listes lues sur la base) |
 
 ## État des migrations
 
@@ -49,8 +50,9 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 
 | 014-roles-audit.sql | Rôle `lecteur` (politiques séparées lecture / ajout / modification / suppression sur les 16 tables et l'espace photos) ; invitations avec `role`, `usages_max`, `usages`, `revoque_le` (vérifiés par `rejoindre()` ; `invitation_info()` renvoie aussi `etat` et `role`) ; `creer_visite` et `creer_vente` contrôlent ruche, client, articles et lots ; 14 clés étrangères composites « même exploitation » ; `incoherences_exploitation()` ; table `journal_audit` (déclencheur `auditer()`, lecture par les responsables, purge à 1 an) et `restaurer()` ; `exploitations.demo`, `creer_exploitation_demo()`, `indicateurs_usage()` ; `empreinte_structure()` (lisible sans connexion, empreintes md5 seulement). Additive, ne casse pas l'ancienne version (IT-04) | 6 nov. 2026 (relevé avant/après `releves/structure-2026-11-06-recette-apres-014.json` ; empreintes identiques au rejeu ; aucune incohérence, 14 clés validées) | à faire, après accord |
 | 015-ruchers.sql | Table `ruchers` (nom unique par exploitation sans tenir compte de la casse ni des espaces, position, accès, propriétaire et téléphone, capacité, environnement, ressources, point d'eau, notes, `archive_le` ; RLS lire / ajouter / modifier / supprimer comme 014 ; audit) ; `ruches.rucher_id` (clé simple et composite « même exploitation ») ; reprise des textes `ruches.rucher` normalisés (graphie la plus fréquente, position moyenne des ruches placées) ; déclencheurs de synchronisation dans les deux sens (`ruches_rucher_sync`, `ruchers_apres`, `ruches_position_rucher`, `ruchers_avant`) ; `creer_rucher()` et `placer_rucher()` (idempotentes, `security invoker`) ; `rucher_cle()`. Additive, **ne casse pas l'ancienne version** : le texte `ruches.rucher` reste rempli et à jour (IT-05) | 6 nov. 2026 (relevé avant/après `releves/structure-2026-11-06-recette-apres-015.json` ; 8 colonies reprises dans 2 ruchers, aucune sans rucher ; aucune incohérence ; renommage et écriture « ancienne version » vérifiés dans un bloc annulé) | à faire, après accord (après 014) |
+| 016-emplacements-contenants.sql | Extension `btree_gist` (schéma `extensions`) ; `ruches.statut` (active, orpheline, morte, réunie, vendue, perdue), `origine`, `date_creation`, `code`, reprise depuis `sortie` et déclencheur sortie ↔ statut ; `sortie` accepte « Perdue » ; tables `deplacements`, `colonie_emplacements` (contrainte d'exclusion : pas de chevauchement), `contenants`, `colonie_contenants` (une colonie par caisse et une caisse par colonie à la fois), RLS et audit comme 014 ; `ruche_evenements.deplacement_id` ; reprise des événements « deplacement » de 010 (texte inchangé) et un emplacement ouvert par colonie ; déclencheur de suivi de l'emplacement (y compris l'ancienne version) ; `deplacer_colonies()`, `changer_statut()`, `affecter_contenant()` (idempotentes, `security invoker`), `rucher_a_date()`. Additive, **ne casse pas l'ancienne version** (IT-06) | 6 nov. 2026 (relevé avant/après `releves/structure-2026-11-06-recette-apres-016.json` ; empreintes identiques au rejeu ; 8 emplacements, 0 déplacement à reprendre, registre inchangé ; déplacement essayé dans un bloc annulé) | à faire, après accord (après 015) |
 
-En attente pour la production : `014-roles-audit.sql`, puis `015-ruchers.sql`. Avant de l'appliquer sur `apidoo`, lancer en lecture seule
+En attente pour la production : `014-roles-audit.sql`, puis `015-ruchers.sql` (voir `a-appliquer-en-production.txt`), puis `016-emplacements-contenants.sql`. Avant de l'appliquer sur `apidoo`, lancer en lecture seule
 `select * from public.incoherences_exploitation();` **après** la migration (ou la requête équivalente avant) : une ligne
 non nulle signifie qu'une clé composite est restée « non validée » (la migration passe quand même et l'écrit en
 avertissement). Production relevée le 6 nov. 2026 : 0 visite, 0 vente, 7 récoltes, 1 dépense, aucune donnée d'une autre
@@ -62,8 +64,9 @@ les contrôles de structure ; « Vérifier » les lance dans un job à part (« 
 | Fichier | Ce qu'il vérifie |
 |---|---|
 | `tests/sql/socle.mjs` | Socle commun : Postgres en mémoire, `auth.jwt()` simulé, ordre des migrations, deux exploitations avec une ligne dans chaque table |
-| `test_isolation.mjs` | Matrice tables × rôles × opérations (300 vérifications depuis 015) : un membre de A avec l'en-tête de B ne lit ni n'écrit rien ; membre écrit, lecteur non ; fonctions refusées au lecteur ; rattachements croisés refusés ; visiteur non connecté |
+| `test_isolation.mjs` | Matrice tables × rôles × opérations (360 vérifications depuis 016) : un membre de A avec l'en-tête de B ne lit ni n'écrit rien ; membre écrit, lecteur non ; fonctions refusées au lecteur ; rattachements croisés refusés ; visiteur non connecté |
 | `test_014.mjs` | Relance de 010 à 014, invitations (usage unique, révocation, expiration, liens anciens), audit et restauration, purge, migration sur données incohérentes, démo, empreinte |
+| `test_016.mjs` | Relance de 016, reprise (sortie → statut, événements « deplacement » de 010, emplacements), registre identique avant/après, déplacement de 12 colonies atomique et idempotent, chevauchement refusé, `rucher_a_date`, ancienne version (texte du rucher, sortie), statut, ruches physiques (transfert, occupation), lecteur et autre exploitation refusés |
 | `test_015.mjs` | Relance de 015, reprise sur un jeu varié (casse, espaces, vide), renommage d'un rucher de 8 colonies, écriture de l'ancienne version par le texte, archivage, position, `creer_rucher` et `placer_rucher` (idempotence, lecteur refusé), rattachement croisé refusé |
 | `test_demo.mjs` | Chargement de l'exploitation de démonstration par les mêmes opérations que `scripts/demo.mjs` |
 | `test_012.mjs`, `test_013.mjs`, `test_donnees_essai.mjs` | Migrations 012 et 013, scripts d'essai de `tests/production` |

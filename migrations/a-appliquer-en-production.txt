@@ -4,3 +4,4 @@
 # Retirer la ligne une fois la migration appliquée sur la base apidoo.
 014-roles-audit.sql
 015-ruchers.sql
+016-emplacements-contenants.sql

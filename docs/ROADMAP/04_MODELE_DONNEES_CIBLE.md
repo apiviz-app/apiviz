@@ -64,6 +64,7 @@ Champs indicatifs ; types exacts à fixer dans la migration de l'itération conc
 - **Rôle :** ruche physique (corps), avec son QR code.
 - **Champs :** `code_qr` (unique), `type` (Dadant 10, Langstroth, ruchette…), `etat`, `achat_le`, `article_id` (lien matériel), `notes` ; historique `colonie_id`, `du`, `au`.
 - **Règles :** un contenant accueille au plus une colonie à la fois ; facultatif (niveau Professionnel). Sans contenant, le QR désigne la colonie.
+- **Réalisé (IT-06, 016)** : colonne `code` (numéro peint sur la caisse) au lieu de `code_qr` ; le QR (IT-10) pourra s'y appuyer. `deplacements.date_deplacement`. Les lignes du registre restent dans `ruche_evenements`, reliées par `deplacement_id`.
 
 ### 3.6 `reines` (nouvelle, IT-07)
 - **Champs :** `colonie_id`, `annee_naissance`, `marquage` (couleur déduite de l'année, modifiable), `origine` (élevée, achetée, naturelle, essaim), `lignee_id`, `mere_id` (reine), `serie_id`, `fournisseur_id`, `en_place_du`, `en_place_au`, `statut` (`en_place`, `remplacee`, `morte`, `disparue`, `vendue`), `clippee`, `notes`.
