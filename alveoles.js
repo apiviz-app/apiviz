@@ -27,11 +27,12 @@ const AL = (() => {
   const central = BOTTOM.find(([k]) => k === "saisir");
   if (central) central[1] = "API";
   SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Miel"], ["plus", "Gestion"], ["saisir", "API"]);
-  Object.assign(GROUP, { agenda: "dash", activite: "dash", registre: "ruches", declaration: "ruches", rucher: "ruches" });
+  Object.assign(GROUP, { agenda: "dash", activite: "dash", registre: "plus", declaration: "plus", rucher: "ruches" });
 
   const ruchesDe = (k) => (U.ruchers().find(([c]) => c === k) || [k, []])[1];
   const zoneMeteo = (k, nb = 3) => `<div class="al-wx" data-k="${esc(k)}" data-jours="${nb}">${MT.html(k, ruchesDe(k), nb)}</div>`;
-  const RETOURS = { agenda: ["dash", "Accueil"], activite: ["dash", "Accueil"], registre: ["varroa", "Santé"], declaration: ["varroa", "Santé"] };
+  const RETOURS = { agenda: ["dash", "Accueil"], activite: ["dash", "Accueil"], registre: ["plus", "Gestion"], declaration: ["plus", "Gestion"] };
+  // Registre et déclaration ont leur place dans Gestion (arborescence gelée, AP-FEAT-113) ; Santé garde un raccourci.
 
   // Après chaque coquille (crochet du noyau, IT-03) : logo, compagnon API dans la barre, liens de retour.
   Noyau.crochets.sur("apresCoquille", "alveoles", () => {

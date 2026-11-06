@@ -11,7 +11,8 @@
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Gestion en blocs
     page.click(".side .nav[data-v=plus]"); page.wait_for_selector(".g-bloc")
-    verif(page.locator(".g-bloc").count() == 6, "six blocs")
+    verif(page.locator(".g-bloc").count() == 7, "sept blocs")
+    verif(page.locator(".g-bloc[data-v=registre]").count() == 1, "registre dans Gestion (AP-US-125)")
     verif("Un article est à racheter" in page.locator(".wrap .head h1").inner_text(), "phrase : " + page.locator(".wrap .head h1").inner_text())
     verif("40 %" in page.locator(".g-bloc[data-v=previsions]").inner_text(), "budget consommé")
     verif("Cire gaufrée : stock bas" in page.locator(".g-bloc[data-v=materiel]").inner_text(), "stock bas")
@@ -83,9 +84,10 @@
     page.mouse.click(20, 500); page.wait_for_timeout(100)
     # Revenir au même endroit
     page.set_viewport_size({"width": 1440, "height": 400})
-    page.click(".side .nav[data-v=plus]"); page.wait_for_selector(".g-bloc"); page.locator(".g-bloc[data-v=materiel]").hover(); page.wait_for_timeout(50)
+    page.click(".side .nav[data-v=plus]"); page.wait_for_selector(".g-bloc"); page.evaluate("scrollTo(0, 300)"); page.wait_for_timeout(50)
     y = page.evaluate("scrollY")
-    page.locator(".g-bloc[data-v=materiel]").click(); page.wait_for_selector(".er-ariane")
+    # Clic sans défilement automatique de Playwright : la hauteur notée est bien celle du départ.
+    page.locator(".g-bloc[data-v=materiel]").dispatch_event("click"); page.wait_for_selector(".er-ariane")
     page.click(".u-retour"); page.wait_for_selector(".g-bloc"); page.wait_for_timeout(100)
     verif(y > 0 and page.evaluate("scrollY") == y, "retour à la même hauteur : %s" % page.evaluate("scrollY"))
     # Téléphone
@@ -139,3 +141,7 @@
     page.wait_for_selector(".er-feuille")
     verif("F-2026-0012" in page.locator(".er-feuille").inner_text() and "20" in page.locator(".er-f-total").inner_text(), "facture")
     if CAP: page.screenshot(path=CAP + ".facture.png", full_page=True)
+    # Registre : toujours dans Gestion (AP-US-125)
+    page.evaluate("ACT.go('plus')"); page.wait_for_selector(".g-bloc[data-v=registre]")
+    page.click(".g-bloc[data-v=registre]"); page.wait_for_function("document.body.dataset.route === 'registre'")
+    verif("Gestion" in page.locator(".er-ariane").inner_text(), "registre ouvert depuis Gestion, retour vers Gestion")

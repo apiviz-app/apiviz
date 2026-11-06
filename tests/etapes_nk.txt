@@ -11,7 +11,9 @@
       const f = window[v]; window[v] = function (...a) { appels.push(v); return f.apply(this, a); }; } }""")
     for route in ["ruches", "dash", "miel", "clients", "plus", "compta", "reglages"]:
         page.evaluate(f"go('{route}')"); page.wait_for_timeout(150)
-    page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()"); page.wait_for_timeout(200)
+    page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()")
+    try: page.wait_for_selector("form[data-form=vente]", timeout=5000)  # attente explicite (était 200 ms : test instable)
+    except Exception: pass
     verif(sorted(page.evaluate("appels")) == ["viewCompta", "viewMiel", "viewVente"], "chaque écran passe par sa seule définition : %s" % page.evaluate("appels"))
     verif(page.locator("form[data-form=vente]").count() == 1, "l'écran Nouvelle vente est affiché par le noyau")
     # AP-US-007 : la même action ouverte depuis l'accueil, la fiche ou le bouton API ouvre le même formulaire.

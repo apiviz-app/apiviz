@@ -40,6 +40,9 @@ const ER = (() => {
         bas.length ? `<span class="u-chip watch">${esc(bas[0].nom)} : stock bas${bas.length > 1 ? ` (+${bas.length - 1})` : ""}</span>` : ""),
       bloc("fournisseurs", "Fournisseurs", U.pluriel(d.fournisseurs.length, "contact"), d.fournisseurs.slice(0, 2).map((x) => x.nom).join(", ") || "Aucun pour l’instant",
         achat ? `<span class="small">Dernier achat : ${esc(U.quand(achat.date_depense).toLowerCase())}, ${esc(eur0(achat.montant))}</span>` : ""),
+      // Registre : entrée stable dans Gestion (AP-FEAT-113, arborescence gelée, docs/ROADMAP/05 §2).
+      (() => { const t = d.visites.filter((v) => v.traitement && String(v.date_visite).startsWith(String(an))).length;
+        return bloc("registre", "Registre et déclaration", t ? U.pluriel(t, "traitement") : "Aucun traitement", `noté${t > 1 ? "s" : ""} en ${an} · déplacements, déclaration`); })(),
       ...(typeof EX != "undefined" ? [bloc("membres", "Équipe", "Membres", "Inviter, gérer").replace('class="n4-g g-bloc"', 'class="n4-g g-bloc" id="gEquipe"')] : []),
     ].join("");
     const phraseBilan = bilan > 0 ? `Bilan positif de ${eur0(bilan)}.` : bilan < 0 ? `Bilan négatif de ${eur0(-bilan)}.` : "Bilan à l’équilibre.";
