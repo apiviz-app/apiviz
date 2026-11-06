@@ -21,12 +21,12 @@ Le script s'arrête sans rien écrire si la base compte plus d'une exploitation.
 1. Supabase › `apidoo` › SQL Editor : coller `donnees-essai.sql`, « Run ». Le tableau final liste les 3 ruches et la
    vente « pas encore de facture ». Le message indique le numéro que prendra la facture d'essai.
 2. Sur https://apidoo.github.io/ (production), se connecter, puis :
-   - **Déplacer des ruches** (Gestion › Registre › Mouvements) : choisir « ESSAI IT-02 ruche 1 », vers
+   - **Déplacer des ruches** (Ruchers › Santé › Registre d’élevage, onglet Mouvements) : choisir « ESSAI IT-02 ruche 1 », vers
      « ESSAI IT-02 arrivée ». Attendu : « Déplacement noté au registre », la ruche change de rucher, la ligne apparaît
      dans Mouvements.
-   - **Noter une intervention** (Registre › Interventions) : ruche « ESSAI IT-02 ruche 2 », détail « Essai ».
+   - **Noter une intervention** (même registre, onglet Interventions) : ruche « ESSAI IT-02 ruche 2 », détail « Essai ».
      Attendu : « Intervention notée », la ligne apparaît.
-   - **Créer la facture** : ouvrir la vente du client « ESSAI IT-02 client », « Créer la facture ». Attendu : un
+   - **Créer la facture** : Miel, toucher la vente du client « ESSAI IT-02 client », puis « Créer la facture ». Attendu : un
      numéro `F-2026-000N` qui ne change pas quand on rouvre la facture ; Imprimer ou PDF fonctionne.
    - Ne pas ajouter de photo ni de visite aux ruches d'essai, et ne choisir que des ruches d'essai.
 3. Relancer `donnees-essai.sql` (il n'ajoute rien de plus) : le tableau final montre maintenant le déplacement,
