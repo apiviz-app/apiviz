@@ -165,7 +165,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Anomalie |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | NON IMPLÉMENTÉ — constaté au relevé du 6 nov. 2026 (IT-00, écart E1 de `migrations/README.md`) |
+| Statut actuel | EN PRODUCTION — corrigé le 6 nov. 2026 sur `apidoo-test` (partie 6 de 009 seulement, voir description) ; constaté au relevé du 6 nov. 2026 (IT-00, écart E1) |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -174,7 +174,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Dépendances | AP-FEAT-004 |
 | Modules impactés | base `apidoo-test`, `migrations/009` |
 
-**Description.** Sur `apidoo-test`, la 009 enregistrée ne contient pas la section 6 (nouvelles versions de `creer_visite` et `creer_vente`). Relancer `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test` (fichier relançable, aucune autre modification).
+**Description.** Sur `apidoo-test`, la 009 enregistrée ne contient pas la section 6 (nouvelles versions de `creer_visite` et `creer_vente`). Correction : relancer **la partie 6 seulement** de `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test`. Relancer le fichier entier est **à proscrire** sur une base où 008 est passée : il remettrait la vue `lots_stock` en version 009 et tenterait de recréer les politiques `membres_tout` avec `est_membre()`, que 008 a supprimée (essai du 6 nov. 2026 : échec, entièrement annulé).
 
 **Problème résolu.** En recette, `varroa_methode`, `varroa_abeilles` (visite) et `livraison` (vente) sont ignorés sans message : une vérification faite en recette peut conclure à tort à un défaut de l'application, ou masquer un vrai défaut. La production est correcte.
 
@@ -189,7 +189,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 
 **Tâches techniques**
 
-- AP-TECH-378 — Relancer 009 sur `apidoo-test` (accord du responsable).
+- AP-TECH-378 — ~~Relancer 009 sur `apidoo-test`~~ Fait le 6 nov. 2026 avec l'accord du responsable : partie 6 de 009 (`creer_visite`, `creer_vente`), entrée d'historique `009_relance_fonctions_ap_bug_008` ; empreintes identiques à la production.
 - AP-TECH-379 — Ajouter à la vérification de mise en ligne une comparaison d'empreintes des fonctions entre recette et production.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
