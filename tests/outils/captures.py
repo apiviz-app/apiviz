@@ -36,6 +36,7 @@ ECRANS = [
     ("recolte", "go('recolte')"), ("declaration", "go('declaration')"), ("activite", "go('activite')"),
     ("recherche", "go('recherche')"), ("meteo", "ACT.ermeteo('Verger')"), ("rappels", "go('rappels')"),
     ("lot", "ACT.erlot(S.d.lots[0].id)"), ("saison", "go('saison')"), ("tournee", "ACT.v3tournee()"),
+    ("feuille", "go('dash'); ACT.newdepense()"),
 ]
 
 etapes = f'''
@@ -55,6 +56,17 @@ etapes = f'''
       return c.innerHTML.replace(/blob:[^"']+/g, 'blob:').replace(/\\s+/g, ' ').replace(/> </g, '>\\n<');
     }}"""
     _n = len(erreurs)
+    # Styles calculés (AP-FEAT-015) : quelques propriétés de chaque élément de #app et de la feuille ouverte.
+    STYLES = r"""() => {{
+      const P = ["display","position","margin","padding","width","height","color","background-color","background-image","border","border-radius",
+        "box-shadow","font-family","font-size","font-weight","line-height","gap","grid-template-columns","flex-direction","justify-content",
+        "align-items","opacity","transform","z-index","overflow","text-align","max-width","min-height","top","bottom","left","right"];
+      const fige = document.createElement("style"); // animations arrêtées : valeurs stables d'une série à l'autre
+      fige.textContent = "*,*::before,*::after{{animation:none!important;transition:none!important}}"; document.head.append(fige);
+      const els = [...document.querySelectorAll("#app *, dialog[open], dialog[open] *")];
+      const r = els.map((e) => {{ const c = getComputedStyle(e); return e.tagName + "." + (e.getAttribute("class") || "") + " " + P.map((p) => c.getPropertyValue(p)).join("|"); }});
+      fige.remove(); return r;
+    }}"""
     for largeur, hauteur in ((375, 812), (1280, 900)):
         page.set_viewport_size({{"width": largeur, "height": hauteur}})
         for nom, code in {ECRANS!r}:
@@ -62,8 +74,10 @@ etapes = f'''
                 page.evaluate("document.querySelectorAll('dialog[open]').forEach((d) => d.close())")
                 page.evaluate("async () => {{ " + code + " }}")
                 page.wait_for_timeout(450)
-                page.evaluate("document.querySelectorAll('dialog[open]').forEach((d) => d.close())")
+                if nom != "feuille": page.evaluate("document.querySelectorAll('dialog[open]').forEach((d) => d.close())")
+                else: page.wait_for_timeout(400)  # fin de l'animation d'ouverture
                 (_sortie / f"{{nom}}-{{largeur}}.html").write_text(page.evaluate(NORMALISER), encoding="utf-8")
+                (_sortie / f"{{nom}}-{{largeur}}.styles.txt").write_text("\\n".join(page.evaluate(STYLES)), encoding="utf-8")
                 page.screenshot(path=str(_sortie / f"{{nom}}-{{largeur}}.png"), full_page=True)
                 print("OK   ", nom, largeur, ("ERREUR JS : " + erreurs[-1]) if len(erreurs) > _n else "")
                 _n = len(erreurs)
