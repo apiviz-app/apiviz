@@ -2064,7 +2064,7 @@ Les outils du terrain.
 | Type | Anomalie |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : fichiers effacés avec la ruche, photos_orphelines() (012), scénario etapes_rp ; nettoyage des orphelins existants : IT-11 |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : fichiers effacés avec la ruche, photos_orphelines() (012), scénario etapes_ph ; nettoyage des orphelins existants : IT-11 |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -3155,7 +3155,7 @@ Un stock juste, calculé par mouvements.
 | Type | Anomalie |
 | Domaine | D10 Matériel et stocks |
 | Epic parent | AP-EPIC-024 |
-| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : regler() et ajouter_stock() (012, appliquée sur apidoo-test), scénario etapes_rg |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : regler() et ajouter_stock() (012, appliquée sur apidoo-test), scénario etapes_cc |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |
