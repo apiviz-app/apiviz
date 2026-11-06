@@ -22,8 +22,9 @@ Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de
 1. Fait le 6 nov. 2026 : 012 sur `apidoo`, relevé de la production identique à la recette. Pas de sauvegarde
    préalable (décision du responsable ; 012 n'ajoute que des colonnes et des fonctions).
 2. Production, v5.14 avec 012 : l'app fonctionne comme avant (012 n'est utilisée qu'à partir de la v5.16).
-3. En production, avec les données d'essai : Déplacer des ruches, Noter une intervention, Créer la facture, puis
-   nettoyage (`tests/production/README.md`).
+3. Fait le 6 nov. 2026 : en production (v5.14), avec les données d'essai, Déplacer des ruches, Noter une intervention et
+   Créer la facture (F-2026-0001) validés par le responsable et vérifiés en base ; données d'essai retirées ensuite,
+   numéro de facture libéré, base revenue à son état d'avant l'essai.
 
 ## v5.16 · à publier en recette · correctifs de fiabilité (IT-01)
 Migration : `migrations/012-correctifs.sql`, **appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026**. Elle n'ajoute que des colonnes et des fonctions : l'ancienne version reste compatible.
