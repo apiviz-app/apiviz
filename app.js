@@ -38,7 +38,7 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     reglages: ["reglages"],
   },
   DEF = {
-    nom: "Bee\u2019s Brothers",
+    nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
     objectif: 0,
     postes: ["Pots & \xE9tiquettes", "Alimentation", "Traitements", "Mat\xE9riel", "Autre"],
@@ -181,7 +181,13 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
   num = (valeur) => (valeur === "" || valeur === void 0 || valeur === null ? null : Number(valeur)),
   orNull = (valeur) => valeur || null,
   etatClass = (etat) => (etat === "Bonne" ? "good" : etat === "Critique" ? "crit" : "watch"),
-  cfg = () => ({ ...DEF, ...((S.d?.reglages[0] || {}).data || {}) }),
+  // Nom affiché : celui des réglages, sinon celui de l'exploitation ouverte, sinon « Mon exploitation » (AP-BUG-006).
+  nomExploitation = () =>
+    (typeof EX != "undefined" && EX.liste().find((e) => e.id === EX.courante())?.nom) || "Mon exploitation",
+  cfg = () => {
+    const reglages = { ...DEF, ...((S.d?.reglages[0] || {}).data || {}) };
+    return (String(reglages.nom || "").trim() || (reglages.nom = nomExploitation()), reglages);
+  },
   consommables = () => S.d.articles.filter((article) => article.type !== "\xC9quipement"),
   equipements = () => S.d.articles.filter((article) => article.type === "\xC9quipement");
 function toast(message, erreur) {
@@ -193,33 +199,113 @@ function toast(message, erreur) {
     document.body.appendChild(bulle),
     setTimeout(() => bulle.remove(), erreur ? 6e3 : 3e3));
 }
+// ---------- Erreurs : message en français pour l'utilisateur, détail au journal (AP-FEAT-036) ----------
+// Journal : en attendant la table journal_erreurs (IT-03), console et 50 dernières entrées sur l'appareil
+// (clé apidoo-journal, effacée à la déconnexion). IT-03 n'aura qu'à brancher cette fonction sur la table.
+function journaliser(type, detail) {
+  const entree = {
+    at: new Date().toISOString(),
+    type,
+    route: S.route,
+    code: String(detail?.code || detail?.status || ""),
+    message: String(detail?.message || detail || "").slice(0, 500),
+    details: String(detail?.details || detail?.hint || "").slice(0, 500),
+  };
+  console.warn("[apidoo]", type, detail);
+  try {
+    const liste = JSON.parse(localStorage.getItem("apidoo-journal") || "[]");
+    (liste.push(entree), localStorage.setItem("apidoo-journal", JSON.stringify(liste.slice(-50))));
+  } catch {}
+}
+// Codes Postgres (SQLSTATE) et PostgREST les plus courants -> ce que l'utilisateur doit comprendre et faire.
+const ERREURS_FR = {
+  42501: "Ton r\xF4le ne permet pas cette action.",
+  23503: "Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",
+  23505: "Ce nom existe d\xE9j\xE0.",
+  23502: "Un champ obligatoire est vide : compl\xE8te-le puis r\xE9essaie.",
+  23514: "Une valeur n\u2019est pas accept\xE9e : v\xE9rifie les montants et les quantit\xE9s.",
+  "22P02": "Une valeur saisie n\u2019a pas le bon format.",
+  22003: "Un nombre saisi est trop grand.",
+  22001: "Un texte saisi est trop long.",
+  57014: "Le serveur a mis trop de temps \xE0 r\xE9pondre. R\xE9essaie dans un instant.",
+  "42P01": "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  42883: "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  PGRST202: "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  PGRST116: "Cet \xE9l\xE9ment n\u2019existe plus : un autre membre l\u2019a peut-\xEAtre supprim\xE9.",
+  PGRST301: "Ta session a expir\xE9 : reconnecte-toi.",
+  PGRST303: "Ta session a expir\xE9 : reconnecte-toi.",
+};
+const MESSAGE_PAR_DEFAUT =
+  "Une erreur est survenue. R\xE9essaie ; si elle revient, note l\u2019heure et pr\xE9viens le responsable.";
+const erreurReseau = (erreur) =>
+  !!erreur &&
+  /fetch|network|load failed|internet|offline|connexion|timed? ?out/i.test(String(erreur.message || erreur));
+// Renvoie { texte, connu } : connu = faux si le message par défaut a remplacé une erreur technique.
+function traduireErreur(erreur) {
+  const message = String(erreur?.message || erreur || ""),
+    code = String(erreur?.code || "");
+  if (ERREURS_FR[code]) return { texte: ERREURS_FR[code], connu: !0 };
+  // Messages écrits en français par nos fonctions SQL (raise exception) : affichés tels quels.
+  if (code === "P0001" && message) return { texte: message, connu: !0 };
+  if (erreurReseau(erreur))
+    return { texte: "Pas de r\xE9seau : r\xE9essaie quand la connexion revient.", connu: !0 };
+  if (/jwt expired|invalid jwt|refresh token|session.*(missing|expired)/i.test(message))
+    return { texte: ERREURS_FR.PGRST301, connu: !0 };
+  if (/row-level security|permission denied/i.test(message)) return { texte: ERREURS_FR[42501], connu: !0 };
+  if (/foreign key/i.test(message)) return { texte: ERREURS_FR[23503], connu: !0 };
+  if (/unique|duplicate/i.test(message)) return { texte: ERREURS_FR[23505], connu: !0 };
+  if (AUTH_FR[message]) return { texte: AUTH_FR[message], connu: !0 };
+  // Erreur levée par l'application elle-même (new Error("Choisis une ruche")) : déjà en français.
+  if (erreur instanceof Error && !code && erreur.name === "Error" && !erreur.status && message)
+    return { texte: message, connu: !0 };
+  // Réponse du serveur sans code (anciennes fonctions) : on garde le message s'il n'est pas technique.
+  if (!code && message && !(erreur instanceof Error) && !/[a-z]+_[a-z]+|\bnull\b|syntax|relation|column/i.test(message))
+    return { texte: message, connu: !0 };
+  return { texte: MESSAGE_PAR_DEFAUT, connu: !1 };
+}
+const messageErreur = (erreur) => traduireErreur(erreur).texte;
 function fail(erreur) {
   console.error(erreur);
-  const message = erreur.message || "Une erreur est survenue";
-  if (/foreign key/.test(message))
-    return toast(
-      "Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",
-      !0,
-    );
-  if (/unique|duplicate/.test(message)) return toast("Ce nom existe d\xE9j\xE0.", !0);
-  toast(message, !0);
+  const { texte, connu } = traduireErreur(erreur);
+  ((!connu || erreur?.code) && journaliser("erreur", erreur), toast(texte, !0));
+}
+// ---------- Lecture complète d'une table, page par page (AP-BUG-002) ----------
+// L'API renvoie au plus « Max rows » lignes (1 000) par requête, sans erreur : on lit par tranches, avec un tri
+// complété par une clé unique pour qu'aucune ligne ne soit sautée ni lue deux fois. Le total (count=exact)
+// sert de garde-fou si le plafond du serveur est plus bas que PAGE.
+const PAGE = 1e3,
+  PAGES_MAX = 200,
+  CLE_UNIQUE = { budgets: ["annee", "poste"], reglages: ["exploitation_id"] };
+async function lireTout(nomTable, tri, croissant) {
+  const lignes = [];
+  let total = null;
+  for (let page = 0; page < PAGES_MAX; page++) {
+    let requete = sb.from(nomTable).select("*", page ? {} : { count: "exact" });
+    (tri && (requete = requete.order(tri, { ascending: croissant !== !1 })),
+      (CLE_UNIQUE[nomTable] || ["id"]).forEach((cle) => (requete = requete.order(cle, { ascending: !0 }))));
+    const { data: tranche, error: erreur, count } = await requete.range(lignes.length, lignes.length + PAGE - 1);
+    if (erreur) throw erreur;
+    (page || (total = typeof count == "number" ? count : null), lignes.push(...tranche));
+    if (total !== null ? lignes.length >= total : tranche.length < PAGE) return lignes;
+    if (!tranche.length) break;
+  }
+  // Ne devrait jamais arriver : page vide avant le total annoncé, ou plus de PAGES_MAX pages.
+  return (
+    journaliser("lecture incomplete", { message: `${nomTable} : ${lignes.length} lignes lues sur ${total ?? "?"}` }),
+    (S.lectureIncomplete = !0),
+    lignes
+  );
 }
 async function loadAll() {
   const cles = Object.keys(TABLES),
-    reponses = await Promise.all(
-      cles.map((cle) => {
-        const [nomTable, tri, croissant] = TABLES[cle];
-        let requete = sb.from(nomTable).select("*");
-        return (tri && (requete = requete.order(tri, { ascending: croissant !== !1 })), requete);
-      }),
-    ),
+    tables = await Promise.all(cles.map((cle) => lireTout(...TABLES[cle]))),
     donnees = {};
-  (reponses.forEach((reponse, index) => {
-    if (reponse.error) throw reponse.error;
-    donnees[cles[index]] = reponse.data;
-  }),
+  (tables.forEach((lignes, index) => (donnees[cles[index]] = lignes)),
     (S.d = donnees),
-    typeof PH != "undefined" && (await PH.load()));
+    typeof PH != "undefined" && (await PH.load()),
+    S.lectureIncomplete &&
+      ((S.lectureIncomplete = !1),
+      toast("Une partie des donn\xE9es n\u2019a pas pu \xEAtre lue : recharge la page.", !0)));
 }
 async function refresh() {
   (await loadAll(), render());

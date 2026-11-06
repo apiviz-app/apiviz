@@ -1,0 +1,28 @@
+    # AP-BUG-002 / AP-US-012 : 1 500 visites dans la base, plafond de 1 000 lignes par requête.
+    import datetime
+    an = datetime.date.today().year
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R1, "date_visite": f"{an}-01-{1 + i % 28:02d}", "activite": "Normale",
+        "provisions": "Moyennes", "reine": "Vue", "couvain": "Normal", "poids_kg": None, "varroa": None, "note": "",
+        "traitement": "Traitement test", "lot_produit": f"L{i}", "traitement_dose": "", "retrait_prevu": None, "ordonnance": True} for i in range(1500)]
+    DATA["visite_intrants"] = [{"id": str(uuid.uuid4()), "visite_id": v["id"], "article_id": A1, "quantite": 0.1} for v in DATA["visites"][:1200]]
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif(page.evaluate("S.d.visites.length") == 1500, "les 1 500 visites sont chargées : %s" % page.evaluate("S.d.visites.length"))
+    verif(page.evaluate("S.d.intrants.length") == 1200, "les 1 200 intrants sont chargés")
+    verif(page.evaluate("new Set(S.d.visites.map(v => v.id)).size") == 1500, "aucune visite lue deux fois")
+    pages = [x for x in lectures if x[0] == "visites"]
+    verif([p[1] for p in pages][:2] == [0, 1000], "lecture en deux tranches : %s" % pages[:3])
+    page.evaluate("S.annee = %d; go('registre')" % an); page.wait_for_timeout(800)
+    lignes = page.locator(".wrap table tbody tr").count()
+    verif(lignes == 1500, "le registre compte les 1 500 traitements : %d" % lignes)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apidoo-journal') || '[]').filter(e => e.type === 'lecture incomplete').length") == 0, "aucune lecture incomplète au journal")
+
+    # Garde-fou : si le serveur annonce plus de lignes qu'il n'en rend, l'utilisateur est prévenu et le journal le note.
+    vraies = DATA["visites"]
+    DATA["visites"] = vraies[:1000]
+    page.route("**/rest/v1/visites*", lambda r: r.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Expose-Headers": "Content-Range", "Content-Type": "application/json",
+        "Content-Range": "0-999/1500" if "offset=0" in r.request.url else "*/1500"}, body=json.dumps(vraies[:1000] if "offset=0" in r.request.url else [])))
+    page.evaluate("refresh()")
+    page.wait_for_selector(".toast.err >> text=pas pu être lue", timeout=10000)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apidoo-journal') || '[]').some(e => e.type === 'lecture incomplete' && /visites/.test(e.message))"), "lecture incomplète notée au journal")
+    page.unroute("**/rest/v1/visites*")

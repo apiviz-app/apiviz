@@ -25,6 +25,7 @@ DATA = {
   "reglages": [{"id": 1, "data": {}}],
 }
 recu = {"rpc": [], "upsert": []}
+lectures = []  # (table, offset, lignes renvoyées)
 E1 = str(uuid.uuid4())
 EXPL = {"miennes": [{"id": E1, "nom": "Bee’s Brothers", "role": "responsable"}], "codes": {}, "invit": [],
         "membres": [{"exploitation_id": E1, "email": "test@apidoo.fr", "role": "responsable", "created_at": "2026-11-01"},
@@ -78,7 +79,13 @@ def supabase(route):
             from urllib.parse import parse_qs
             q = parse_qs(urlparse(req.url).query); lignes = DATA.get(t, [])
             debut = int(q.get("offset", ["0"])[0]); taille = min(int(q.get("limit", [str(PLAFOND)])[0]), PLAFOND)
-            return route.fulfill(status=200, headers=hdr, body=json.dumps(lignes[debut:debut + taille]))
+            tranche = lignes[debut:debut + taille]
+            h = dict(hdr)
+            if "count=exact" in (req.headers.get("prefer") or ""):
+                h["Content-Range"] = f"{debut}-{debut + len(tranche) - 1}/{len(lignes)}" if tranche else f"*/{len(lignes)}"
+                h["Access-Control-Expose-Headers"] = "Content-Range"
+            lectures.append((t, debut, len(tranche)))
+            return route.fulfill(status=200, headers=h, body=json.dumps(tranche))
         if req.method == "POST":
             rows = req.post_data_json; rows = rows if isinstance(rows, list) else [rows]
             recu["upsert"].append((t, req.url, rows))

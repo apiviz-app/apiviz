@@ -6,7 +6,7 @@ racine=$(cd "$(dirname "$0")/.." && pwd)
 site=$(cd "${1:-$racine}" && pwd)
 travail=$(mktemp -d)
 trap 'rm -rf "$travail"' EXIT
-cp "$racine"/tests/* "$travail"/
+cp "$racine"/tests/*.* "$travail"/
 cd "$travail"
 python3 fabrique_tests.py > /dev/null
 mkdir sb leaflet
@@ -20,4 +20,15 @@ for t in test_*.py; do
     echo "ECHEC  $t"; tail -20 "$t.log"; echec=1
   fi
 done
+# Tests SQL des migrations (Postgres en mémoire, aucune vraie base).
+if [ -d "$racine/tests/sql" ]; then
+  (cd "$travail" && npm i --silent --no-save @electric-sql/pglite@0.2 > /dev/null 2>&1)
+  ln -sfn "$travail/node_modules" "$racine/tests/sql/node_modules"
+  for t in "$racine"/tests/sql/test_*.mjs; do
+    n=$(basename "$t")
+    if (cd "$racine" && node "$t") > "$travail/$n.log" 2>&1; then echo "OK     sql/$n"
+    else echo "ECHEC  sql/$n"; tail -20 "$travail/$n.log"; echec=1; fi
+  done
+  rm -f "$racine/tests/sql/node_modules"
+fi
 exit $echec
