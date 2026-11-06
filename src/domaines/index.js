@@ -10,8 +10,9 @@ import meteo from "./meteo/ecrans.js";
 import production from "./production/ecrans.js";
 import ventes from "./ventes/ecrans.js";
 import materiel from "./materiel/ecrans.js";
+import finances from "./finances/ecrans.js";
 import agenda from "./agenda/ecrans.js";
 import registre from "./registre/ecrans.js";
 import compte from "./compte/ecrans.js";
 
-export const ecrans = [...accueil, ...ruchers, ...colonies, ...visites, ...sante, ...meteo, ...production, ...ventes, ...materiel, ...agenda, ...registre, ...compte];
+export const ecrans = [...accueil, ...ruchers, ...colonies, ...visites, ...sante, ...meteo, ...production, ...ventes, ...materiel, ...finances, ...agenda, ...registre, ...compte];
