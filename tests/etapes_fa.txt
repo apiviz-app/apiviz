@@ -1,0 +1,32 @@
+    # AP-BUG-006 / AP-US-126 : aucun nom d'exploitation codé en dur.
+    EXPL["miennes"][0]["nom"] = "Rucher des Tilleuls"
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.evaluate("cfg().nom") == "Rucher des Tilleuls", "nouveau compte : le nom affiché est celui de l'exploitation")
+    verif("Bee" not in page.locator("body").inner_text(), "aucune trace de « Bee’s Brothers » à l'écran")
+    DATA["reglages"][0]["data"]["nom"] = "Les Ruches de Lou"
+    page.evaluate("refresh()"); page.wait_for_timeout(400)
+    verif(page.evaluate("cfg().nom") == "Les Ruches de Lou", "le nom saisi dans les réglages l'emporte")
+    del DATA["reglages"][0]["data"]["nom"]
+    page.evaluate("refresh()"); page.wait_for_timeout(400)
+    verif(page.evaluate("(() => { const l = EX.liste; EX.liste = () => []; const n = cfg().nom; EX.liste = l; return n; })()") == "Mon exploitation", "sans exploitation nommée : « Mon exploitation »")
+    EXPL["miennes"][0]["nom"] = "Bee’s Brothers"
+
+    # AP-BUG-007 / AP-US-057 : la facture porte l'adresse complète du client.
+    page.evaluate("ACT.editclient('%s')" % C1); page.wait_for_selector("#sheet[open] [name=adresse]")
+    verif(all(page.locator("#sheet [name=%s]" % n).count() == 1 for n in ("adresse", "code_postal", "ville", "siret")), "fiche client : adresse, code postal, ville, SIRET")
+    page.fill("#sheet [name=adresse]", "12 rue des Abeilles"); page.fill("#sheet [name=code_postal]", "69007"); page.fill("#sheet [name=ville]", "Lyon"); page.fill("#sheet [name=siret]", "12345678900011")
+    def clients(route):
+        if route.request.method != "PATCH": return route.fallback()
+        c = next(x for x in DATA["clients"] if x["id"] == C1); c.update(route.request.post_data_json)
+        return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*"}, body="")
+    page.route("**/rest/v1/clients*", clients)
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Client enregistré", timeout=10000)
+    c = next(x for x in DATA["clients"] if x["id"] == C1)
+    verif(c.get("ville") == "Lyon" and c.get("code_postal") == "69007", "coordonnées enregistrées")
+    page.evaluate("""S.d.ventes.push({id:'v-f', client_id:'%s', date_vente:'2026-10-22', paye:false, facture_num:3, facture_annee:2026, facture_date:'2026-10-22'});
+      S.d.lignes.push({vente_id:'v-f', lot_id:S.d.lots[0].id, quantite:2, prix_unitaire:10}); S.factId='v-f'; ACT.go('facture')""" % C1)
+    page.wait_for_selector(".er-feuille")
+    f = page.locator(".er-feuille .er-d").inner_text()
+    verif("12 rue des Abeilles" in f and "69007 Lyon" in f and "12345678900011" in f, "la facture porte adresse, code postal, ville et SIRET : %r" % f)
+    page.unroute("**/rest/v1/clients*")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

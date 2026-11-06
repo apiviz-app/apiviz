@@ -7,6 +7,7 @@ REPO, SBJS = sys.argv[1], sys.argv[2]
 # Référence du projet lue dans config.js : les tests tournent en recette comme en production.
 REF = re.search(r"https://(\w+)\.supabase\.co", open(REPO + "/config.js", encoding="utf-8").read()).group(1)
 PORT = 8765
+PLAFOND = 1000  # « Max rows » des deux projets Supabase (relevé du 6 nov. 2026)
 
 class Calme(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -24,6 +25,7 @@ DATA = {
   "reglages": [{"id": 1, "data": {}}],
 }
 recu = {"rpc": [], "upsert": []}
+lectures = []  # (table, offset, lignes renvoyées)
 E1 = str(uuid.uuid4())
 EXPL = {"miennes": [{"id": E1, "nom": "Bee’s Brothers", "role": "responsable"}], "codes": {}, "invit": [],
         "membres": [{"exploitation_id": E1, "email": "test@apidoo.fr", "role": "responsable", "created_at": "2026-11-01"},
@@ -53,6 +55,18 @@ def supabase(route):
             if not inv: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Ce lien d'invitation n'est plus valable : demandez-en un nouveau."}))
             EXPL["miennes"].append(inv); return route.fulfill(status=200, headers=hdr, body=json.dumps(inv["id"]))
         if nom == "photos_espace": return route.fulfill(status=200, headers=hdr, body="0")
+        if nom == "regler":  # comme la migration 012 : fusion clé par clé, null retire la clé
+            d = DATA["reglages"][0].setdefault("data", {})
+            for k, v in (body.get("p_modifs") or {}).items():
+                if v is None: d.pop(k, None)
+                else: d[k] = v
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(d))
+        if nom == "ajouter_stock":
+            p = body["p"]; a = next(x for x in DATA["articles"] if x["id"] == p["article_id"]); dep = p.get("depense")
+            if not dep or not any(x["id"] == dep["id"] for x in DATA["depenses"]):
+                a["stock"] = float(a["stock"]) + float(p["quantite"])
+                if dep: DATA["depenses"].append({**dep, "article_id": a["id"], "quantite": p["quantite"], "fournisseur_id": dep.get("fournisseur_id") or None})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(a["stock"]))
         if nom == "creer_visite":
             p = body["p"]
             if not any(v["id"] == p["id"] for v in DATA["visites"]):
@@ -72,7 +86,18 @@ def supabase(route):
             i = {"code": uuid.uuid4().hex, "exploitation_id": req.headers.get("x-exploitation"), "created_at": "2026-11-03T10:00:00Z", "expire_le": "2026-11-17T10:00:00Z"}
             EXPL["invit"].append(i); return route.fulfill(status=201, headers=hdr, body=json.dumps(i))
         if t == "invitations" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["invit"]))
-        if req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(DATA.get(t, [])))
+        if req.method == "GET":
+            # Comme Supabase : au plus PLAFOND lignes par requête (« Max rows »), tranche offset/limit respectée.
+            from urllib.parse import parse_qs
+            q = parse_qs(urlparse(req.url).query); lignes = DATA.get(t, [])
+            debut = int(q.get("offset", ["0"])[0]); taille = min(int(q.get("limit", [str(PLAFOND)])[0]), PLAFOND)
+            tranche = lignes[debut:debut + taille]
+            h = dict(hdr)
+            if "count=exact" in (req.headers.get("prefer") or ""):
+                h["Content-Range"] = f"{debut}-{debut + len(tranche) - 1}/{len(lignes)}" if tranche else f"*/{len(lignes)}"
+                h["Access-Control-Expose-Headers"] = "Content-Range"
+            lectures.append((t, debut, len(tranche)))
+            return route.fulfill(status=200, headers=h, body=json.dumps(tranche))
         if req.method == "POST":
             rows = req.post_data_json; rows = rows if isinstance(rows, list) else [rows]
             recu["upsert"].append((t, req.url, rows))
@@ -99,7 +124,7 @@ with sync_playwright() as pw:
     ctx.route("**/*supabase.co/**", supabase)
     ctx.route("https://cdn.jsdelivr.net/**", cdn)
     ctx.route(re.compile(r"https://fonts\.(googleapis|gstatic)\.com/.*"), lambda r: r.abort() if etat["coupe"] else r.fulfill(status=200, body="", headers={"Content-Type": "text/css"}))
-    ctx.add_init_script(f"localStorage.getItem('sb-{REF}-auth-token')||localStorage.setItem('sb-{REF}-auth-token', {json.dumps(json.dumps(session))})")
+    ctx.add_init_script(f"window.name==='deco'||localStorage.getItem('sb-{REF}-auth-token')||localStorage.setItem('sb-{REF}-auth-token', {json.dumps(json.dumps(session))})")
     page = ctx.new_page()
     erreurs = []
     page.on("pageerror", lambda e: erreurs.append(str(e)))

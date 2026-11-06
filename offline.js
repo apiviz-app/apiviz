@@ -10,9 +10,10 @@ const HL = (() => {
   const st = { hors: navigator.onLine === false, depuis: null, file: [], envoi: false, essai: 0 };
 
   // ---------- Stockage local (IndexedDB), avec repli en mémoire ----------
-  let dbP = null;
+  let dbP = null, ferme = false;
   const memoire = { kv: new Map(), file: new Map() };
   function db() {
+    if (ferme) return Promise.resolve(null); // déconnexion en cours : plus rien n'est écrit sur l'appareil
     if (!dbP) dbP = new Promise((ok) => {
       try {
         const r = indexedDB.open("apidoo-hors-ligne" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
@@ -57,7 +58,7 @@ const HL = (() => {
       await kvMettre({ k: "donnees:" + (typeof EX != "undefined" ? EX.courante() : ""), d: S.d, at: Date.now() }).catch(() => {});
       st.depuis = Date.now();
       appliquer(S.d);
-      if (st.file.length && !st.envoi && Date.now() - st.essai > 30000) setTimeout(envoyer, 300);
+      if (aEnvoyer().length && !st.envoi && Date.now() - st.essai > 30000) setTimeout(envoyer, 300);
     } catch (e) {
       if (!reseau(e)) throw e;
       const c = await kvLire("donnees:" + (typeof EX != "undefined" ? EX.courante() : "")).catch(() => null);
@@ -74,6 +75,7 @@ const HL = (() => {
   function appliquer(d) {
     for (const it of st.file) {
       if (it.ex && it.ex !== (typeof EX != "undefined" ? EX.courante() : "")) continue; // saisie d'une autre exploitation
+      if (it.statut === QUARANTAINE) continue; // refusée par le serveur : n'entre pas dans les chiffres tant qu'elle n'est pas corrigée
       if (it.type === "rpc" && it.nom === "creer_visite") {
         const p = it.args.p;
         if (d.visites.some((v) => v.id === p.id)) continue;
@@ -117,6 +119,21 @@ const HL = (() => {
     memoire.file.delete(id);
     st.file = st.file.filter((x) => x.id !== id);
   }
+  // Quarantaine (AP-BUG-001) : une saisie refusée par le serveur (autre chose qu'une coupure réseau) reste sur le
+  // téléphone, visible dans « À corriger », jusqu'à ce qu'on la corrige, la renvoie ou l'abandonne. Elle ne bloque
+  // pas les suivantes.
+  const QUARANTAINE = "quarantaine";
+  const aEnvoyer = () => st.file.filter((it) => it.statut !== QUARANTAINE);
+  const aCorriger = () => st.file.filter((it) => it.statut === QUARANTAINE);
+  async function mettreEnQuarantaine(it, erreur) {
+    Object.assign(it, { statut: QUARANTAINE, erreur: messageErreur(erreur), code: String(erreur?.code || ""), refuseLe: Date.now() });
+    await fileMettre(it).catch(() => memoire.file.set(it.id, it));
+    journaliser("saisie refusee", erreur);
+  }
+  async function liberer(it) {
+    delete it.statut; delete it.erreur; delete it.code; delete it.refuseLe;
+    await fileMettre(it).catch(() => memoire.file.set(it.id, it));
+  }
   // Une saisie en attente porte-t-elle cet identifiant (visite, vente, ligne) ?
   const saisieDe = (id) => st.file.find((it) => (it.type === "rpc" ? it.args.p.id === id : it.lignes.some((l) => l.id === id)));
 
@@ -125,12 +142,18 @@ const HL = (() => {
   async function rpc(nom, args) {
     await pret;
     args = { ...args, p: { ...args.p, id: args.p.id || nouvelId() } };
+    // Correction d'une saisie en quarantaine : même identifiant, donc jamais de doublon côté serveur.
+    const ancienne = st.file.find((it) => it.type === "rpc" && it.nom === nom && it.args.p.id === args.p.id);
     if (navigator.onLine !== false) {
       const r = await sb.rpc(nom, args);
-      if (!r.error || !reseau(r.error)) return r;
+      if (!r.error) { if (ancienne) await retirer(ancienne.id); return r; }
+      if (!reseau(r.error)) return r; // refus : la saisie d'origine reste « à corriger »
     }
     st.hors = true;
-    await ajouter({ type: "rpc", nom, args: JSON.parse(JSON.stringify(args)) });
+    if (ancienne) {
+      ancienne.args = JSON.parse(JSON.stringify(args));
+      await liberer(ancienne);
+    } else await ajouter({ type: "rpc", nom, args: JSON.parse(JSON.stringify(args)) });
     return { data: args.p.id, error: null, local: true };
   }
 
@@ -175,38 +198,45 @@ const HL = (() => {
   const membre = () => (memo("apidoo-membre" + (window.APIDOO?.env === "recette" ? "-recette" : "")) === "1" ? true : null);
 
   // ---------- Envoi au retour du réseau ----------
-  async function envoyer() {
+  async function envoyer(silence) {
     await pret;
-    if (st.envoi || !st.file.length || navigator.onLine === false || !S.session) return;
+    if (st.envoi || !aEnvoyer().length || navigator.onLine === false || !S.session) return;
     st.envoi = true; st.essai = Date.now(); majBandeau();
-    let ok = 0, coupe = false;
+    let ok = 0, refus = 0, dernier = null, coupe = false;
     try {
       await sb.auth.getSession(); // renouvelle la connexion si besoin
       for (const it of [...st.file]) {
         if (it.ex && it.ex !== (typeof EX != "undefined" ? EX.courante() : "")) continue; // partira quand cette exploitation sera ouverte
+        if (it.statut === QUARANTAINE) continue;
         const r = it.type === "rpc"
           ? await sb.rpc(it.nom, it.args)
           : await sb.from(it.table).upsert(it.lignes, { onConflict: "id", ignoreDuplicates: true });
         if (r.error && reseau(r.error)) { coupe = true; break; }
+        if (r.error) { await mettreEnQuarantaine(it, r.error); refus++; dernier = it; continue; }
         await retirer(it.id);
-        if (r.error) toast(`Une saisie n’a pas pu être enregistrée : ${r.error.message}`, true);
-        else ok++;
+        ok++;
       }
     } catch (e) { coupe = reseau(e); if (!coupe) console.error(e); }
     finally { st.envoi = false; }
     st.hors = coupe;
-    if (ok) {
-      const formulaire = ["visite", "vente", "previsions", "reglages"].includes(S.route) || $sheet.open;
+    const formulaire = ["visite", "vente", "previsions", "reglages"].includes(S.route) || $sheet.open;
+    if (ok || refus) {
       try { await window.loadAll(); if (!formulaire) render(); } catch {}
+    }
+    if (ok) {
       toast(ok > 1 ? `${ok} saisies envoyées` : "Saisie envoyée");
       if (typeof PH != "undefined") PH.envoyer();
+    }
+    if (refus && silence !== true) {
+      const [t] = libelle(dernier);
+      setTimeout(() => toast(refus > 1 ? `${refus} saisies refusées par le serveur : à corriger` : `${t} refusée : ${dernier.erreur} À corriger.`, true), ok ? 1200 : 0);
     }
     majBandeau();
   }
   addEventListener("online", () => { st.hors = false; majBandeau(); setTimeout(envoyer, 1000); });
   addEventListener("offline", () => { st.hors = true; majBandeau(); });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) envoyer(); });
-  setInterval(() => { if (st.file.length) envoyer(); }, 60000);
+  setInterval(() => { if (aEnvoyer().length) envoyer(); }, 60000);
 
   // ---------- Affichage ----------
   const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
@@ -215,9 +245,11 @@ const HL = (() => {
   const ICO_SYNC = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg>';
 
   function bandeau() {
-    const n = st.file.length;
-    if (st.hors) return `<div class="hl-band off" role="status">${ICO_OFF}<span>Hors ligne${st.depuis ? " · chiffres du " + esc(quand(st.depuis)) : ""}${n ? " · " + pluriel(n, "saisie") + " en attente" : ""}</span></div>`;
-    if (n) return `<div class="hl-band sync" role="status">${ICO_SYNC}<span>${st.envoi ? "Envoi de " + pluriel(n, "saisie") + "…" : pluriel(n, "saisie") + " en attente d’envoi"}</span></div>`;
+    const n = aEnvoyer().length, k = aCorriger().length;
+    const pastille = k ? `<button type="button" class="hl-pastille" data-act="hlcorriger" aria-label="${esc(pluriel(k, "saisie") + " à corriger")}">${k} à corriger</button>` : "";
+    if (st.hors) return `<div class="hl-band off" role="status">${ICO_OFF}<span>Hors ligne${st.depuis ? " · chiffres du " + esc(quand(st.depuis)) : ""}${n ? " · " + pluriel(n, "saisie") + " en attente" : ""}</span>${pastille}</div>`;
+    if (n) return `<div class="hl-band sync" role="status">${ICO_SYNC}<span>${st.envoi ? "Envoi de " + pluriel(n, "saisie") + "…" : pluriel(n, "saisie") + " en attente d’envoi"}</span>${pastille}</div>`;
+    if (k) return `<div class="hl-band corr" role="status">${ICO_SYNC}<span>${k > 1 ? "Des saisies ont été refusées" : "Une saisie a été refusée"} par le serveur</span>${pastille}</div>`;
     return "";
   }
   function majBandeau() {
@@ -245,11 +277,86 @@ const HL = (() => {
   }
   function section() {
     if (!st.file.length) return "";
+    const k = aCorriger().length;
     return `<section class="card"><h2>En attente d’envoi</h2>${st.file.map((it) => {
       const [t, s] = libelle(it);
-      return `<div class="hl-row"><span><b>${esc(t)}</b><span class="small">${esc(s)}</span></span><span class="tag watch">en attente</span></div>`;
-    }).join("")}<p class="small">${st.hors ? "Envoi automatique dès que le réseau revient." : "Envoi en cours…"}</p></section>`;
+      return it.statut === QUARANTAINE
+        ? `<div class="hl-row"><span><b>${esc(t)}</b><span class="small">${esc(s)}</span><span class="small crit">${esc(it.erreur)}</span></span><button type="button" class="btn sm" data-act="hlcorriger">À corriger</button></div>`
+        : `<div class="hl-row"><span><b>${esc(t)}</b><span class="small">${esc(s)}</span></span><span class="tag watch">en attente</span></div>`;
+    }).join("")}<p class="small">${k && !aEnvoyer().length ? "Corrige, renvoie ou abandonne les saisies refusées." : st.hors ? "Envoi automatique dès que le réseau revient." : "Envoi en cours…"}</p></section>`;
   }
+
+  // ---------- Fiche « À corriger » (AP-TECH-156) ----------
+  // Une fiche plutôt qu'un écran : aucune nouvelle surcharge de render/shell/view*.
+  function ficheCorriger() {
+    const l = aCorriger();
+    if (!l.length) { if ($sheet.open) $sheet.close(); return; }
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    $sheetForm.innerHTML = `<h2>À corriger</h2><p class="small">Le serveur a refusé ${l.length > 1 ? "ces saisies" : "cette saisie"}. Rien n’est perdu : corrige, renvoie ou abandonne.</p>
+      ${l.map((it) => {
+        const [t, s] = libelle(it);
+        return `<div class="hl-corr"><b>${esc(t)}</b><span class="small">${esc(s)}${it.refuseLe ? " · refusée le " + esc(quand(it.refuseLe)) : ""}</span>
+          <p class="hl-motif">${esc(it.erreur || "Refusée par le serveur.")}</p>
+          <div class="actions"><button type="button" class="btn sm main" data-act="hlmodifier" data-v="${it.id}">Modifier</button><button type="button" class="btn sm" data-act="hlrenvoyer" data-v="${it.id}">Renvoyer</button><button type="button" class="btn sm" data-act="hlabandonner" data-v="${it.id}">Abandonner</button></div></div>`;
+      }).join("")}
+      <button type="button" class="btn" data-act="closesheet">Fermer</button>`;
+    if (!$sheet.open) $sheet.showModal();
+  }
+  const enFile = (id) => st.file.find((it) => it.id === id);
+  const CHAMPS = {
+    recoltes: [["kg", "Quantité (kg)", "number", "0.1"], ["date_recolte", "Date", "date"]],
+    depenses: [["libelle", "Libellé", "text"], ["montant", "Montant (€)", "number", "0.01"], ["date_depense", "Date", "date"]],
+    taches: [["titre", "Tâche", "text"], ["echeance", "Échéance", "date"]],
+  };
+  async function renvoyer(it) {
+    await liberer(it);
+    while (st.envoi) await new Promise((ok) => setTimeout(ok, 200));
+    st.essai = 0;
+    await envoyer(true);
+    const encore = enFile(it.id);
+    if (encore?.statut === QUARANTAINE) { toast(`Toujours refusée : ${encore.erreur}`, true); ficheCorriger(); }
+    else if (encore) { toast("Gardée sur le téléphone : envoi au retour du réseau"); ficheCorriger(); }
+    else ficheCorriger();
+    majBandeau();
+  }
+  Object.assign(ACT, {
+    hlcorriger: () => ficheCorriger(),
+    hlrenvoyer: async (id) => { const it = enFile(id); if (it) await renvoyer(it); },
+    hlabandonner: (id, _k, btn) => twoStep(btn, "Confirmer l’abandon", async () => {
+      const it = enFile(id); if (!it) return;
+      await retirer(it.id);
+      if (it.type === "rpc" && it.nom === "creer_visite" && typeof PH != "undefined") await PH.oterVisite(it.args.p.id).catch(() => {});
+      toast("Saisie abandonnée");
+      try { await window.loadAll(); } catch {}
+      render(); ficheCorriger();
+    }),
+    hlmodifier: (id) => {
+      const it = enFile(id); if (!it) return;
+      if ($sheet.open) $sheet.close();
+      if (it.type === "rpc" && it.nom === "creer_vente") {
+        const p = it.args.p;
+        S.vente = { id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye !== false, mode: p.mode || cfg().modes[0],
+          livre: p.livre !== false, livraison: p.livraison || "", q: Object.fromEntries((p.lignes || []).map((l) => [l.lot_id, Number(l.quantite)])) };
+        return go("vente");
+      }
+      if (it.type === "rpc" && it.nom === "creer_visite") {
+        const { intrants, ...p } = it.args.p;
+        S.visite = { ...p, couvain: p.couvain || "Non vu", poids_kg: p.poids_kg ?? "", varroa: p.varroa ?? "", note: p.note || "",
+          q: Object.fromEntries((intrants || []).map((x) => [x.article_id, Number(x.quantite)])) };
+        return go("visite");
+      }
+      const l = it.lignes[0] || {}, champs = CHAMPS[it.table] || [];
+      sheet({
+        title: "Corriger : " + libelle(it)[0], intro: it.erreur,
+        fields: champs.map(([name, label, type, step]) => ({ name, label, type, step, value: l[name] ?? "", required: name !== "echeance" })),
+        label: "Renvoyer",
+        submit: async (v) => {
+          for (const [name, , type] of champs) l[name] = type === "number" ? num(v[name]) : v[name] || (name === "echeance" ? null : "");
+          await renvoyer(it);
+        },
+      });
+    },
+  });
 
   // ---------- Mise en cache de l'app elle-même ----------
   if ("serviceWorker" in navigator) {
@@ -259,7 +366,16 @@ const HL = (() => {
   return {
     reseau, rpc, write, sessionLocale, membre, envoyer, bandeau, section,
     horsLigne: () => st.hors,
-    nb: () => st.file.length,
+    nb: () => st.file.length, // toutes les saisies pas encore enregistrées, y compris celles à corriger
+    nbCorriger: () => aCorriger().length,
+    // Déconnexion (AP-BUG-003) : ferme la base locale pour qu'elle puisse être supprimée, et oublie tout.
+    fermer: async () => {
+      ferme = true;
+      const d = await dbP?.catch(() => null);
+      d?.close(); dbP = null;
+      st.file = []; memoire.kv.clear(); memoire.file.clear();
+    },
+    ficheCorriger,
     enAttente: (id) => !!saisieDe(id),
   };
 })();

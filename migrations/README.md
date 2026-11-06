@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -33,8 +33,11 @@ ci-dessus sur une base Postgres vide en mémoire et compare la structure obtenue
 | 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | 3 nov. 2026 | présente, **date inconnue** (appliquée hors historique, écart E2) |
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
+| 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | **à appliquer**, après accord |
 
-Aucune migration en attente : `a-appliquer-en-production.txt` est vide.
+En attente pour la production : `012-correctifs.sql` (voir `a-appliquer-en-production.txt`).
+
+Tests SQL de 012 sur une base en mémoire : `node tests/sql/test_012.mjs` (lancé aussi par `tests/lancer.sh`).
 
 ## Relevé des deux bases — 6 novembre 2026
 

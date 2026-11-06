@@ -18,9 +18,10 @@ const PH = (() => {
   };
 
   // ---------- Petit stockage local (IndexedDB), avec repli en mémoire ----------
-  let dbP = null;
+  let dbP = null, ferme = false;
   const memoire = new Map();
   function db() {
+    if (ferme) return Promise.resolve(null);
     if (!dbP) dbP = new Promise((ok) => {
       try {
         const r = indexedDB.open("apidoo-photos" + (window.APIDOO?.env === "recette" ? "-recette" : ""), 1);
@@ -74,7 +75,8 @@ const PH = (() => {
   // ---------- Chargement ----------
   const memoPret = (v) => { try { if (v === undefined) return localStorage.getItem("apidoo-photos-pret"); localStorage.setItem("apidoo-photos-pret", v); } catch { return null; } };
   async function load() {
-    const { data, error } = await sb.from("visite_photos").select("*").order("created_at");
+    // Lecture paginée (AP-BUG-002) : plus de 1 000 photos restent toutes visibles.
+    const { data, error } = await lireTout("visite_photos", "created_at").then((d) => ({ data: d, error: null }), (e) => ({ data: null, error: e }));
     if (error && typeof HL != "undefined" && HL.reseau(error)) {
       // Sans réseau : on garde les photos déjà connues et l'état de la base.
       st.pret = memoPret() === "1";
@@ -180,7 +182,7 @@ const PH = (() => {
       }
     } finally { st.envoi = false; }
     if (ok) {
-      const { data } = await sb.from("visite_photos").select("*").order("created_at");
+      const data = await lireTout("visite_photos", "created_at").catch(() => null);
       if (data && S.d) S.d.photos = data;
       sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
       if (["ruche", "ruches"].includes(S.route)) render();
@@ -271,5 +273,32 @@ const PH = (() => {
   // Si les données étaient déjà chargées avant ce fichier, on complète.
   if (S.d) load().then(() => render()).catch(() => {});
 
-  return { load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
+  // Suppression d'une ruche (AP-BUG-004) : chemins de toutes les photos de ses visites, envoyées ou en attente.
+  function cheminsRuche(rucheId) {
+    const visites = new Set((S.d?.visites || []).filter((v) => v.ruche_id === rucheId).map((v) => v.id));
+    return {
+      chemins: (S.d?.photos || []).filter((p) => visites.has(p.visite_id)).map((p) => p.chemin),
+      locales: st.attente.filter((p) => visites.has(p.visite_id)).map((p) => p.id),
+    };
+  }
+  async function effacer({ chemins, locales }) {
+    for (let i = 0; i < chemins.length; i += 100) {
+      const { error } = await sb.storage.from(BUCKET).remove(chemins.slice(i, i + 100));
+      if (error) { journaliser("photos non effacees", error); break; }
+    }
+    for (const id of locales) await qOter(id).catch(() => {});
+    st.attente = st.attente.filter((p) => !locales.includes(p.id));
+    if (chemins.length) sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
+  }
+
+  // Déconnexion (AP-BUG-003) : ferme la base locale et oublie les photos gardées sur l'appareil.
+  async function fermer() {
+    ferme = true;
+    const d = await dbP?.catch(() => null);
+    d?.close(); dbP = null;
+    st.attente.forEach((p) => p.apercu && URL.revokeObjectURL(p.apercu));
+    st.attente = []; st.brouillon = []; memoire.clear(); st.urls.clear();
+  }
+
+  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
 })();

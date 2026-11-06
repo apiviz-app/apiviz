@@ -282,7 +282,7 @@ const ES = (() => {
     shell(`Facture ${numero(v)}`, `${cl?.nom || "Client"}, ${v.paye ? "payée" : "à encaisser"}`, `<button type="button" class="btn" data-act="uvente" data-v="${v.id}">Voir la vente</button>${mail}<button type="button" class="btn main" data-act="erimprimer">Imprimer ou PDF</button>`,
       `<article class="er-feuille" aria-label="Facture">
         <div class="er-f-t"><h2>${esc(c.nom)}</h2><div><h2>Facture ${numero(v)}</h2><p class="small">Émise le ${dfr(v.facture_date)}, vente du ${dfr(v.date_vente)}</p></div></div>
-        <div class="er-f-t"><p>${a(c.adresse, "Adresse")}<br>SIRET : ${a(c.siret, "à renseigner")}${c.telephone ? `<br>${esc(c.telephone)}` : ""}</p><p class="er-d"><b>${esc(cl?.nom || "Client")}</b>${cl?.adresse ? `<br>${esc(cl.adresse)}` : ""}${cl?.email ? `<br>${esc(cl.email)}` : ""}</p></div>
+        <div class="er-f-t"><p>${a(c.adresse, "Adresse")}<br>SIRET : ${a(c.siret, "à renseigner")}${c.telephone ? `<br>${esc(c.telephone)}` : ""}</p><p class="er-d"><b>${esc(cl?.nom || "Client")}</b>${cl?.adresse ? `<br>${esc(cl.adresse)}` : ""}${cl?.code_postal || cl?.ville ? `<br>${esc([cl.code_postal, cl.ville].filter(Boolean).join(" "))}` : ""}${cl?.siret ? `<br>SIRET : ${esc(cl.siret)}` : ""}${cl?.email ? `<br>${esc(cl.email)}` : ""}</p></div>
         <table><thead><tr><th>Produit</th><th>Lot</th><th class="m">Quantité</th><th class="m">Prix</th><th class="m">Total</th></tr></thead><tbody>${lignes}</tbody></table>
         <p class="er-f-total"><span>Total</span><span>${esc(eur(venteTotal(v)))}</span></p>
         <p class="small">${v.paye ? `Payée${v.mode ? ", " + esc(v.mode) : ""}.` : `Règlement à ${esc(c.delai_paiement || "réception")}.`} ${a(c.mention_tva, "Mention de TVA selon ton statut")}</p>

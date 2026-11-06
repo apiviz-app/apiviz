@@ -92,7 +92,9 @@
     shot("varroa")
     page.fill("form[data-form=v3seuil] input[name=s]", "5"); page.click("form[data-form=v3seuil] .btn")
     page.wait_for_selector(".toast >> text=Seuil enregistré", timeout=8000)
-    verif(any(b.get("data", {}).get("varroaSeuil") == 5 for u, b in patches("reglages")), "seuil réglable enregistré")
+    # Depuis IT-01 les réglages passent par regler() (clé par clé) ; l'ancienne écriture reste acceptée.
+    reglages_envoyes = lambda: [b.get("data", {}) for u, b in patches("reglages")] + [b.get("p_modifs", {}) for n, b in recu["rpc"] if n == "regler"]
+    verif(any(d.get("varroaSeuil") == 5 for d in reglages_envoyes()), "seuil réglable enregistré")
 
     # Récolte et mise en pots
     page.evaluate("ACT.newrecolte()"); page.wait_for_selector("#r_kg")
@@ -130,7 +132,7 @@
     verif("A1234567" in page.locator(".v3-decla").inner_text(), "déclaration : NAPI et chiffres")
     shot("declaration")
     page.locator("[data-v3d='0']").check(); page.wait_for_timeout(600)
-    verif(any(b.get("data", {}).get("declaration", {}).get(str(an)) == [0] for u, b in patches("reglages")), "étape cochée et gardée")
+    verif(any((d.get("declaration") or {}).get(str(an)) == [0] for d in reglages_envoyes()), "étape cochée et gardée")
 
     # Recherche, activité, plein soleil
     page.click(".topbar .v3-cherche"); page.fill("#v3q", "martin")

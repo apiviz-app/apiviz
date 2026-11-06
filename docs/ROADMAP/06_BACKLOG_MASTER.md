@@ -430,7 +430,7 @@ Remplacer l'empilement de surcharges par un noyau d'écrans enregistrés et une 
 | Type | Anomalie |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-002 |
-| Statut actuel | À VÉRIFIER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : lecture paginée de toutes les tables, scénario etapes_pg ; en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -1012,7 +1012,7 @@ Intégrité des données entre exploitations, traçabilité des modifications, d
 | Type | Anomalie |
 | Domaine | D02 Comptes, exploitations et sécurité |
 | Epic parent | AP-EPIC-004 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : purge à la déconnexion, scénario etapes_dc ; en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 4/5 |
 | Complexité | XS |
@@ -1837,7 +1837,7 @@ Aucune saisie perdue, toutes les saisies terrain possibles sans réseau.
 | Type | Anomalie |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-012 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : quarantaine, fiche « À corriger », scénario etapes_qr ; en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -2064,7 +2064,7 @@ Les outils du terrain.
 | Type | Anomalie |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : fichiers effacés avec la ruche, photos_orphelines() (012), scénario etapes_ph ; nettoyage des orphelins existants : IT-11 |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -3155,7 +3155,7 @@ Un stock juste, calculé par mouvements.
 | Type | Anomalie |
 | Domaine | D10 Matériel et stocks |
 | Epic parent | AP-EPIC-024 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : regler() et ajouter_stock() (012, appliquée sur apidoo-test), scénario etapes_cc |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -3653,7 +3653,7 @@ Factures fiables, paiements suivis.
 | Type | Anomalie |
 | Domaine | D12 Clients et commercialisation |
 | Epic parent | AP-EPIC-029 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : adresse, code postal, ville, SIRET (012), facture et export, scénario etapes_fa |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -4601,7 +4601,7 @@ Une interface stable et homogène.
 | Type | Fonctionnalité |
 | Domaine | D18 Expérience utilisateur transversale |
 | Epic parent | AP-EPIC-044 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : traduction des codes d'erreur, journal sur l'appareil (table journal_erreurs en IT-03), scénario etapes_er |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -4709,7 +4709,7 @@ Une interface stable et homogène.
 | Type | Anomalie |
 | Domaine | D18 Expérience utilisateur transversale |
 | Epic parent | AP-EPIC-044 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-01-correctifs` (v5.16) : nom de l'exploitation par défaut, scénario etapes_fa |
 | Priorité | P2 |
 | Valeur métier | 1/5 |
 | Complexité | XS |

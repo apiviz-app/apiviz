@@ -1,0 +1,86 @@
+    # AP-BUG-001 / AP-US-051 : une saisie refusée par le serveur au renvoi passe « à corriger », rien n'est perdu.
+    ventes_ok = []
+    def rpc_vente(route):
+        body = route.request.post_data_json or {}; p = body.get("p", {})
+        recu["rpc"].append(("creer_vente", body))
+        lot = DATA["lots_stock"][0]; total = sum(int(l["quantite"]) for l in p.get("lignes", []))
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if any(v["id"] == p["id"] for v in DATA["ventes"]): return route.fulfill(status=200, headers=h, body=json.dumps(p["id"]))
+        if total > lot["pots_restants"]:
+            return route.fulfill(status=400, headers=h, body=json.dumps({"code": "P0001", "message": "Stock insuffisant pour le lot %s (reste %d pots)" % (lot["code"], lot["pots_restants"]), "details": None, "hint": None}))
+        DATA["ventes"].append({"id": p["id"], "client_id": p["client_id"], "date_vente": p["date_vente"], "paye": p["paye"], "mode": p.get("mode", ""), "livre": True, "livraison": ""})
+        for l in p["lignes"]: DATA["vente_lignes"].append({"id": str(uuid.uuid4()), "vente_id": p["id"], "lot_id": l["lot_id"], "quantite": l["quantite"], "prix_unitaire": lot["prix"]})
+        lot["pots_restants"] -= total; ventes_ok.append(p)
+        return route.fulfill(status=200, headers=h, body=json.dumps(p["id"]))
+    ctx.route("**/rest/v1/rpc/creer_vente", lambda r: r.abort("internetdisconnected") if etat["coupe"] else rpc_vente(r))
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Sans réseau : une vente de 5 pots et une récolte.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.newvente()"); page.wait_for_selector("form[data-form=vente]")
+    page.select_option("#s_client", C1)
+    page.evaluate("S.vente.q['%s'] = 5; readSaleForm(); viewVente()" % L1)
+    page.click("form[data-form=vente] > .btn.main.block")
+    page.wait_for_selector(".toast >> text=Vente gardée sur le téléphone", timeout=10000)
+    id_vente = page.evaluate("JSON.parse(JSON.stringify(S.d.ventes.find(v => v._attente))).id")
+    page.evaluate("ACT.newrecolte()"); page.fill("#r_kg", "8")
+    page.click("form[data-form=v3recolte] .btn.main")
+    page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+
+    # Entre-temps, un autre membre a vendu 7 pots : il n'en reste que 3.
+    DATA["lots_stock"][0]["pots_restants"] = 3
+
+    # 2. Retour du réseau : la vente est refusée et mise de côté, la récolte part quand même.
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast.err >> text=refusée", timeout=20000)
+    verif("Stock insuffisant" in page.locator(".toast.err").inner_text(), "message du serveur affiché : %s" % page.locator(".toast.err").inner_text())
+    verif(len(DATA["recoltes"]) == 1 and DATA["recoltes"][0]["kg"] == 8, "la récolte est partie malgré la vente refusée")
+    verif(len(DATA["ventes"]) == 0, "la vente refusée n'est pas enregistrée")
+    verif(page.evaluate("HL.nb()") == 1 and page.evaluate("HL.nbCorriger()") == 1, "la vente reste sur le téléphone, à corriger")
+    page.wait_for_selector(".hl-pastille")
+    verif("1 à corriger" in page.locator(".hl-pastille").inner_text(), "pastille « 1 à corriger » sur le bandeau")
+    verif(page.evaluate("S.d.lots[0].pots_restants") == 3, "la vente refusée n'entre pas dans le stock affiché")
+
+    # 3. Elle survit à un rechargement.
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_selector(".hl-pastille")
+    verif(page.evaluate("HL.nbCorriger()") == 1, "après rechargement : toujours à corriger")
+
+    # 4. Fiche « À corriger » : modifier puis renvoyer.
+    page.click(".hl-pastille"); page.wait_for_selector("#sheet[open] >> text=À corriger")
+    verif("Stock insuffisant" in page.locator("#sheet .hl-motif").inner_text(), "la fiche montre le motif du refus")
+    page.click("#sheet [data-act=hlmodifier]"); page.wait_for_selector("form[data-form=vente]")
+    verif(page.evaluate("S.vente.id") == id_vente and page.evaluate("S.vente.q['%s']" % L1) == 5, "la vente se rouvre pré-remplie avec son identifiant")
+    page.evaluate("S.vente.q['%s'] = 3; viewVente()" % L1)
+    page.click("form[data-form=vente] > .btn.main.block")
+    page.wait_for_selector(".toast >> text=Vente enregistrée", timeout=10000)
+    verif(len(DATA["ventes"]) == 1 and DATA["ventes"][0]["id"] == id_vente, "corrigée, la vente est enregistrée avec le même identifiant")
+    verif(DATA["vente_lignes"][-1]["quantite"] == 3, "avec la quantité corrigée (3 pots)")
+    verif(page.evaluate("HL.nb()") == 0, "elle quitte la quarantaine")
+    page.wait_for_timeout(300)
+    verif(page.locator(".hl-pastille").count() == 0, "plus de pastille")
+
+    # 5. Une tâche refusée : renvoyer sans changement, puis abandonner avec confirmation.
+    refus_tache = {"n": 0}
+    def taches(route):
+        if route.request.method != "POST": return route.fallback()
+        if etat["coupe"]: return route.abort("internetdisconnected")
+        refus_tache["n"] += 1
+        return route.fulfill(status=400, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+            body=json.dumps({"code": "23514", "message": "new row for relation \"taches\" violates check constraint", "details": None, "hint": None}))
+    page.route("**/rest/v1/taches*", taches)
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.addsug('Tâche test')"); page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".hl-pastille", timeout=20000)
+    page.click(".hl-pastille"); page.wait_for_selector("#sheet[open] >> text=Tâche test")
+    verif("pas acceptée" in page.locator("#sheet .hl-motif").inner_text(), "motif en français : %s" % page.locator("#sheet .hl-motif").inner_text())
+    n = refus_tache["n"]
+    page.click("#sheet [data-act=hlrenvoyer]"); page.wait_for_selector(".toast.err >> text=Toujours refusée", timeout=10000)
+    verif(refus_tache["n"] == n + 1 and page.evaluate("HL.nbCorriger()") == 1, "renvoyée, toujours refusée, toujours gardée")
+    page.click("#sheet [data-act=hlabandonner]")
+    verif(page.evaluate("HL.nb()") == 1 and "Confirmer" in page.locator("#sheet [data-act=hlabandonner]").inner_text(), "abandon : une confirmation est demandée")
+    page.click("#sheet [data-act=hlabandonner]"); page.wait_for_selector(".toast >> text=Saisie abandonnée", timeout=5000)
+    verif(page.evaluate("HL.nb()") == 0, "confirmée, la saisie est supprimée")
+    page.unroute("**/rest/v1/taches*")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

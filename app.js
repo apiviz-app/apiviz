@@ -38,7 +38,7 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     reglages: ["reglages"],
   },
   DEF = {
-    nom: "Bee\u2019s Brothers",
+    nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
     objectif: 0,
     postes: ["Pots & \xE9tiquettes", "Alimentation", "Traitements", "Mat\xE9riel", "Autre"],
@@ -181,7 +181,13 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
   num = (valeur) => (valeur === "" || valeur === void 0 || valeur === null ? null : Number(valeur)),
   orNull = (valeur) => valeur || null,
   etatClass = (etat) => (etat === "Bonne" ? "good" : etat === "Critique" ? "crit" : "watch"),
-  cfg = () => ({ ...DEF, ...((S.d?.reglages[0] || {}).data || {}) }),
+  // Nom affiché : celui des réglages, sinon celui de l'exploitation ouverte, sinon « Mon exploitation » (AP-BUG-006).
+  nomExploitation = () =>
+    (typeof EX != "undefined" && EX.liste().find((e) => e.id === EX.courante())?.nom) || "Mon exploitation",
+  cfg = () => {
+    const reglages = { ...DEF, ...((S.d?.reglages[0] || {}).data || {}) };
+    return (String(reglages.nom || "").trim() || (reglages.nom = nomExploitation()), reglages);
+  },
   consommables = () => S.d.articles.filter((article) => article.type !== "\xC9quipement"),
   equipements = () => S.d.articles.filter((article) => article.type === "\xC9quipement");
 function toast(message, erreur) {
@@ -193,33 +199,137 @@ function toast(message, erreur) {
     document.body.appendChild(bulle),
     setTimeout(() => bulle.remove(), erreur ? 6e3 : 3e3));
 }
+// ---------- Erreurs : message en français pour l'utilisateur, détail au journal (AP-FEAT-036) ----------
+// Journal : en attendant la table journal_erreurs (IT-03), console et 50 dernières entrées sur l'appareil
+// (clé apidoo-journal, effacée à la déconnexion). IT-03 n'aura qu'à brancher cette fonction sur la table.
+function journaliser(type, detail) {
+  const entree = {
+    at: new Date().toISOString(),
+    type,
+    route: S.route,
+    code: String(detail?.code || detail?.status || ""),
+    message: String(detail?.message || detail || "").slice(0, 500),
+    details: String(detail?.details || detail?.hint || "").slice(0, 500),
+  };
+  console.warn("[apidoo]", type, detail);
+  try {
+    const liste = JSON.parse(localStorage.getItem("apidoo-journal") || "[]");
+    (liste.push(entree), localStorage.setItem("apidoo-journal", JSON.stringify(liste.slice(-50))));
+  } catch {}
+}
+// Erreurs JavaScript non rattrapées : au journal seulement (l'écran n'en dit rien de plus).
+(addEventListener("error", (evt) => journaliser("script", evt.error || evt.message)),
+  addEventListener("unhandledrejection", (evt) => journaliser("promesse", evt.reason)));
+// Identifiant tiré par l'application, pour rendre un appel idempotent.
+const nouvelIdLocal = () =>
+  crypto.randomUUID
+    ? crypto.randomUUID()
+    : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16),
+      );
+// Codes Postgres (SQLSTATE) et PostgREST les plus courants -> ce que l'utilisateur doit comprendre et faire.
+const ERREURS_FR = {
+  42501: "Ton r\xF4le ne permet pas cette action.",
+  23503: "Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",
+  23505: "Ce nom existe d\xE9j\xE0.",
+  23502: "Un champ obligatoire est vide : compl\xE8te-le puis r\xE9essaie.",
+  23514: "Une valeur n\u2019est pas accept\xE9e : v\xE9rifie les montants et les quantit\xE9s.",
+  "22P02": "Une valeur saisie n\u2019a pas le bon format.",
+  22003: "Un nombre saisi est trop grand.",
+  22001: "Un texte saisi est trop long.",
+  57014: "Le serveur a mis trop de temps \xE0 r\xE9pondre. R\xE9essaie dans un instant.",
+  "42P01": "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  42883: "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  PGRST202: "Cette action demande une mise \xE0 jour de la base de donn\xE9es : pr\xE9viens le responsable.",
+  PGRST116: "Cet \xE9l\xE9ment n\u2019existe plus : un autre membre l\u2019a peut-\xEAtre supprim\xE9.",
+  PGRST301: "Ta session a expir\xE9 : reconnecte-toi.",
+  PGRST303: "Ta session a expir\xE9 : reconnecte-toi.",
+  // Codes de Supabase Auth (connexion, inscription, mot de passe).
+  invalid_credentials: "E-mail ou mot de passe incorrect.",
+  email_not_confirmed: "Confirme d\u2019abord ton adresse gr\xE2ce \xE0 l\u2019e-mail re\xE7u.",
+  user_already_exists: "Ce compte existe d\xE9j\xE0.",
+  email_exists: "Ce compte existe d\xE9j\xE0.",
+  weak_password: "Mot de passe trop faible : 8 caract\xE8res au moins, en m\xE9langeant lettres et chiffres.",
+  same_password: "Choisis un mot de passe diff\xE9rent de l\u2019ancien.",
+  email_address_invalid: "Cette adresse e-mail n\u2019est pas valide.",
+  over_email_send_rate_limit: "Trop d\u2019e-mails envoy\xE9s : attends quelques minutes avant de r\xE9essayer.",
+  over_request_rate_limit: "Trop d\u2019essais : attends une minute avant de r\xE9essayer.",
+  signup_disabled: "Les inscriptions sont ferm\xE9es pour le moment.",
+  session_not_found: "Ta session a expir\xE9 : reconnecte-toi.",
+  refresh_token_not_found: "Ta session a expir\xE9 : reconnecte-toi.",
+};
+const MESSAGE_PAR_DEFAUT =
+  "Une erreur est survenue. R\xE9essaie ; si elle revient, note l\u2019heure et pr\xE9viens le responsable.";
+const erreurReseau = (erreur) =>
+  !!erreur &&
+  /fetch|network|load failed|internet|offline|connexion|timed? ?out/i.test(String(erreur.message || erreur));
+// Renvoie { texte, connu } : connu = faux si le message par défaut a remplacé une erreur technique.
+function traduireErreur(erreur) {
+  const message = String(erreur?.message || erreur || ""),
+    code = String(erreur?.code || "");
+  if (ERREURS_FR[code]) return { texte: ERREURS_FR[code], connu: !0 };
+  // Messages écrits en français par nos fonctions SQL (raise exception) : affichés tels quels.
+  if (code === "P0001" && message) return { texte: message, connu: !0 };
+  if (erreurReseau(erreur))
+    return { texte: "Pas de r\xE9seau : r\xE9essaie quand la connexion revient.", connu: !0 };
+  if (/jwt expired|invalid jwt|refresh token|session.*(missing|expired)/i.test(message))
+    return { texte: ERREURS_FR.PGRST301, connu: !0 };
+  if (/row-level security|permission denied/i.test(message)) return { texte: ERREURS_FR[42501], connu: !0 };
+  if (/foreign key/i.test(message)) return { texte: ERREURS_FR[23503], connu: !0 };
+  if (/unique|duplicate/i.test(message)) return { texte: ERREURS_FR[23505], connu: !0 };
+  if (AUTH_FR[message]) return { texte: AUTH_FR[message], connu: !0 };
+  if (erreur?.status === 429) return { texte: ERREURS_FR.over_request_rate_limit, connu: !0 };
+  // Erreur levée par l'application elle-même (new Error("Choisis une ruche")) : déjà en français.
+  if (erreur instanceof Error && !code && erreur.name === "Error" && !erreur.status && message)
+    return { texte: message, connu: !0 };
+  // Réponse du serveur sans code (anciennes fonctions) : on garde le message s'il n'est pas technique.
+  if (!code && message && !(erreur instanceof Error) && !/[a-z]+_[a-z]+|\bnull\b|syntax|relation|column/i.test(message))
+    return { texte: message, connu: !0 };
+  return { texte: MESSAGE_PAR_DEFAUT, connu: !1 };
+}
+const messageErreur = (erreur) => traduireErreur(erreur).texte;
 function fail(erreur) {
   console.error(erreur);
-  const message = erreur.message || "Une erreur est survenue";
-  if (/foreign key/.test(message))
-    return toast(
-      "Impossible : cet \xE9l\xE9ment est utilis\xE9 ailleurs dans l\u2019application.",
-      !0,
-    );
-  if (/unique|duplicate/.test(message)) return toast("Ce nom existe d\xE9j\xE0.", !0);
-  toast(message, !0);
+  const { texte, connu } = traduireErreur(erreur);
+  ((!connu || erreur?.code) && journaliser("erreur", erreur), toast(texte, !0));
+}
+// ---------- Lecture complète d'une table, page par page (AP-BUG-002) ----------
+// L'API renvoie au plus « Max rows » lignes (1 000) par requête, sans erreur : on lit par tranches, avec un tri
+// complété par une clé unique pour qu'aucune ligne ne soit sautée ni lue deux fois. Le total (count=exact)
+// sert de garde-fou si le plafond du serveur est plus bas que PAGE.
+const PAGE = 1e3,
+  PAGES_MAX = 200,
+  CLE_UNIQUE = { budgets: ["annee", "poste"], reglages: ["exploitation_id"] };
+async function lireTout(nomTable, tri, croissant) {
+  const lignes = [];
+  let total = null;
+  for (let page = 0; page < PAGES_MAX; page++) {
+    let requete = sb.from(nomTable).select("*", page ? {} : { count: "exact" });
+    (tri && (requete = requete.order(tri, { ascending: croissant !== !1 })),
+      (CLE_UNIQUE[nomTable] || ["id"]).forEach((cle) => (requete = requete.order(cle, { ascending: !0 }))));
+    const { data: tranche, error: erreur, count } = await requete.range(lignes.length, lignes.length + PAGE - 1);
+    if (erreur) throw erreur;
+    (page || (total = typeof count == "number" ? count : null), lignes.push(...tranche));
+    if (total !== null ? lignes.length >= total : tranche.length < PAGE) return lignes;
+    if (!tranche.length) break;
+  }
+  // Ne devrait jamais arriver : page vide avant le total annoncé, ou plus de PAGES_MAX pages.
+  return (
+    journaliser("lecture incomplete", { message: `${nomTable} : ${lignes.length} lignes lues sur ${total ?? "?"}` }),
+    (S.lectureIncomplete = !0),
+    lignes
+  );
 }
 async function loadAll() {
   const cles = Object.keys(TABLES),
-    reponses = await Promise.all(
-      cles.map((cle) => {
-        const [nomTable, tri, croissant] = TABLES[cle];
-        let requete = sb.from(nomTable).select("*");
-        return (tri && (requete = requete.order(tri, { ascending: croissant !== !1 })), requete);
-      }),
-    ),
+    tables = await Promise.all(cles.map((cle) => lireTout(...TABLES[cle]))),
     donnees = {};
-  (reponses.forEach((reponse, index) => {
-    if (reponse.error) throw reponse.error;
-    donnees[cles[index]] = reponse.data;
-  }),
+  (tables.forEach((lignes, index) => (donnees[cles[index]] = lignes)),
     (S.d = donnees),
-    typeof PH != "undefined" && (await PH.load()));
+    typeof PH != "undefined" && (await PH.load()),
+    S.lectureIncomplete &&
+      ((S.lectureIncomplete = !1),
+      toast("Une partie des donn\xE9es n\u2019a pas pu \xEAtre lue : recharge la page.", !0)));
 }
 async function refresh() {
   (await loadAll(), render());
@@ -230,9 +340,17 @@ async function write(requete, message) {
   if (erreur) throw erreur;
   (await refresh(), message && toast(message));
 }
+// Réglages clé par clé (AP-BUG-005) : regler() fusionne en base, deux membres ne s'écrasent plus.
+// Une valeur null retire la clé. Repli sur l'ancienne écriture si la migration 012 manque.
 async function saveCfg(modifs, message) {
-  const donnees = { ...((S.d.reglages[0] || {}).data || {}), ...modifs };
-  await write(sb.from("reglages").update({ data: donnees }).eq("id", 1), message);
+  const { error: erreur } = await sb.rpc("regler", { p_modifs: modifs });
+  if (erreur && ["PGRST202", "42883"].includes(erreur.code)) {
+    const donnees = { ...((S.d.reglages[0] || {}).data || {}), ...modifs };
+    Object.keys(modifs).forEach((cle) => modifs[cle] === null && delete donnees[cle]);
+    return write(sb.from("reglages").update({ data: donnees }).eq("id", 1), message);
+  }
+  if (erreur) throw erreur;
+  (await refresh(), message && toast(message));
 }
 function authView() {
   const mode = S.authMode;
@@ -295,7 +413,7 @@ async function submitAuth(formulaire) {
       return;
     }
   } catch (erreur) {
-    S.authMsg = AUTH_FR[erreur.message] || erreur.message;
+    ((S.authMsg = messageErreur(erreur)), traduireErreur(erreur).connu || journaliser("connexion", erreur));
   }
   authView();
 }
@@ -1736,7 +1854,12 @@ function rucheForm(ruche) {
         "Ruche enregistr\xE9e",
       ),
     del: async () => {
-      ((S.route = "ruches"), await del("ruches", ruche.id, "Ruche supprim\xE9e")());
+      // AP-BUG-004 : relever les photos avant que la suppression en cascade n'efface leurs lignes, puis effacer
+      // les fichiers. Si l'effacement échoue, photos_orphelines() (migration 012) les retrouve.
+      const photos = typeof PH != "undefined" ? PH.cheminsRuche(ruche.id) : null;
+      ((S.route = "ruches"),
+        await del("ruches", ruche.id, "Ruche supprim\xE9e")(),
+        photos && (await PH.effacer(photos)));
     },
     delLabel: "Supprimer la ruche et ses visites",
   });
@@ -1894,16 +2017,28 @@ function clientForm(client) {
       },
       { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: client?.telephone },
       { name: "email", label: "E-mail", type: "email", value: client?.email },
+      // AP-BUG-007 : coordonnées imprimées sur la facture (migration 012).
+      { name: "adresse", label: "Adresse", value: client?.adresse },
+      { name: "code_postal", label: "Code postal", value: client?.code_postal },
+      { name: "ville", label: "Ville", value: client?.ville },
+      { name: "siret", label: "SIRET (client professionnel, facultatif)", value: client?.siret },
       { name: "notes", label: "Notes", type: "textarea", value: client?.notes },
     ],
     submit: async (saisie) => {
+      // Sans la migration 012, la base ne connaît pas ces colonnes : on enregistre le reste et on prévient.
+      const sansCoordonnees = (erreur) =>
+        erreur?.code === "PGRST204" && /adresse|code_postal|ville|siret/.test(erreur.message || "")
+          ? (["adresse", "code_postal", "ville", "siret"].forEach((cle) => delete saisie[cle]),
+            toast("Adresse non enregistr\xE9e : la base doit \xEAtre mise \xE0 jour.", !0),
+            !0)
+          : !1;
       if (client)
-        return write(sb.from("clients").update(saisie).eq("id", client.id), "Client enregistr\xE9");
-      const { data: cree, error: erreur } = await sb
-        .from("clients")
-        .insert(saisie)
-        .select()
-        .single();
+        return write(sb.from("clients").update(saisie).eq("id", client.id), "Client enregistr\xE9").catch((erreur) => {
+          if (!sansCoordonnees(erreur)) throw erreur;
+          return write(sb.from("clients").update(saisie).eq("id", client.id), "");
+        });
+      let { data: cree, error: erreur } = await sb.from("clients").insert(saisie).select().single();
+      (erreur && sansCoordonnees(erreur) && ({ data: cree, error: erreur } = await sb.from("clients").insert(saisie).select().single()));
       if (erreur) throw erreur;
       (depuisVente && (S.vente.client_id = cree.id),
         await refresh(),
@@ -2176,12 +2311,16 @@ const EXP = {
     clients: () =>
       csv(
         "clients",
-        ["Nom", "Cercle", "T\xE9l\xE9phone", "E-mail", "Notes"],
+        ["Nom", "Cercle", "T\xE9l\xE9phone", "E-mail", "Adresse", "Code postal", "Ville", "SIRET", "Notes"],
         S.d.clients.map((client) => [
           client.nom,
           client.cercle,
           client.telephone,
           client.email,
+          client.adresse,
+          client.code_postal,
+          client.ville,
+          client.siret,
           client.notes,
         ]),
       ),
@@ -2229,6 +2368,68 @@ const twoStep = async (bouton, confirmation, action) => {
       bouton.isConnected && (delete bouton.dataset.armed, (bouton.textContent = texte));
     }, 4e3));
 };
+// ---------- Déconnexion : rien ne reste sur l'appareil (AP-BUG-003, AP-US-027) ----------
+// Purge seulement sur une déconnexion demandée : une session expirée (SIGNED_OUT automatique) garde la file.
+async function purgerLocal() {
+  for (const module of [typeof HL != "undefined" && HL, typeof PH != "undefined" && PH])
+    module?.fermer && (await module.fermer().catch(() => {}));
+  const suffixe = window.APIDOO?.env === "recette" ? "-recette" : "",
+    bases = ["apidoo-hors-ligne" + suffixe, "apidoo-photos" + suffixe];
+  await Promise.all(
+    bases.map(
+      (nom) =>
+        new Promise((fini) => {
+          try {
+            const requete = indexedDB.deleteDatabase(nom);
+            requete.onsuccess = requete.onerror = requete.onblocked = () => fini();
+          } catch {
+            fini();
+          }
+        }),
+    ),
+  );
+  // Clés apidoo-* de cet environnement. La recette et la production partagent l'origine : on laisse les clés
+  // propres à l'autre environnement (suffixe -recette vu depuis la production).
+  try {
+    Object.keys(localStorage)
+      .filter((cle) => cle.startsWith("apidoo-") && (suffixe || !cle.endsWith("-recette")))
+      .forEach((cle) => localStorage.removeItem(cle));
+    sessionStorage.clear();
+  } catch {}
+  Object.assign(S, { d: null, sim: null, ruche: null, visite: null, vente: null, route: "dash" });
+}
+async function deconnecter() {
+  $sheet.open && $sheet.close();
+  // Hors ligne, signOut ne joint pas le serveur : on ferme au moins la session sur l'appareil.
+  try {
+    const { error: erreur } = await sb.auth.signOut();
+    if (erreur) throw erreur;
+  } catch {
+    await sb.auth.signOut({ scope: "local" }).catch(() => {});
+  }
+  await purgerLocal();
+  // En ligne : on recharge pour repartir de zéro. Hors ligne, le rechargement pourrait échouer : on affiche
+  // l'écran de connexion, et la page sera rechargée à la prochaine connexion (bases locales rouvertes).
+  if (navigator.onLine !== !1) return location.replace(location.pathname);
+  ((S.purge = !0), (S.session = null), render());
+}
+sb.auth.onAuthStateChange((evenement) => {
+  evenement === "SIGNED_IN" && S.purge && location.reload();
+});
+function ficheDeconnexion(alerte) {
+  const nombre = HL.nb(),
+    aCorriger = HL.nbCorriger();
+  (($sheetForm.onsubmit = (evt) => evt.preventDefault()),
+    ($sheetForm.innerHTML = `<h2>Se d\xE9connecter ?</h2>
+    <p>${nombre > 1 ? nombre + " saisies ne sont" : "Une saisie n\u2019est"} pas encore enregistr\xE9e${nombre > 1 ? "s" : ""} sur le serveur${aCorriger ? ` (dont ${aCorriger} \xE0 corriger)` : ""}.</p>
+    <p class="small">Si tu te d\xE9connectes maintenant, ${nombre > 1 ? "elles seront supprim\xE9es" : "elle sera supprim\xE9e"} de cet appareil avec toutes les donn\xE9es gard\xE9es pour le hors ligne.</p>
+    ${alerte ? `<p class="notice" role="status">${esc(alerte)}</p>` : ""}
+    <button type="button" class="btn main block" data-act="decoenvoyer">Envoyer d\u2019abord</button>
+    ${aCorriger ? '<button type="button" class="btn block" data-act="hlcorriger">Voir les saisies \xE0 corriger</button>' : ""}
+    <button type="button" class="btn block danger" data-act="decoforcer">Supprimer quand m\xEAme</button>
+    <button type="button" class="btn" data-act="closesheet">Annuler</button>`),
+    $sheet.open || $sheet.showModal());
+}
 function quickSheet() {
   const choix = [
     ["newvisite", "Visite"],
@@ -2249,8 +2450,13 @@ const ACT = {
     ((S.authMode = valeur), (S.authMsg = ""), authView());
   },
   logout: async () => {
-    await sb.auth.signOut();
+    if (typeof HL != "undefined" && HL.nb() > 0) return ficheDeconnexion();
+    await deconnecter();
   },
+  decoenvoyer: async () => {
+    (await HL.envoyer(), HL.nb() ? ficheDeconnexion("Il reste des saisies : le r\xE9seau manque ou certaines sont \xE0 corriger.") : await deconnecter());
+  },
+  decoforcer: (valeur, cle, bouton) => twoStep(bouton, "Confirmer : supprimer et se d\xE9connecter", deconnecter),
   ruche: (valeur) => {
     ((S.ruche = valeur), go("ruche"));
   },
@@ -2360,6 +2566,7 @@ const ACT = {
   },
   entree: (valeur) => {
     const article = byId(S.d.articles, valeur);
+    let entreeId = "";
     sheet({
       title: "Entr\xE9e de stock : " + article.nom,
       label: "Ajouter",
@@ -2381,6 +2588,36 @@ const ACT = {
         },
       ],
       submit: async (saisie) => {
+        // AP-BUG-005 : incrément en base et dépense dans la même transaction (ajouter_stock, migration 012).
+        // L'identifiant de dépense est tiré une fois par fiche : un double envoi ne crée qu'une dépense.
+        const depenseId = (entreeId ||= nouvelIdLocal()),
+          reglages = cfg(),
+          posteDeduit = /pot|couvercle|étiquette/i.test(article.nom)
+            ? "Pots & \xE9tiquettes"
+            : /candy|sirop/i.test(article.nom)
+              ? "Alimentation"
+              : /varroa/i.test(article.nom)
+                ? "Traitements"
+                : "Mat\xE9riel",
+          { error: erreurRpc } = await sb.rpc("ajouter_stock", {
+            p: {
+              article_id: article.id,
+              quantite: num(saisie.q),
+              depense: num(saisie.cout)
+                ? {
+                    id: depenseId,
+                    libelle: article.nom,
+                    categorie: reglages.postes.includes(posteDeduit) ? posteDeduit : reglages.postes[0],
+                    montant: num(saisie.cout),
+                    date_depense: today(),
+                    fournisseur_id: article.fournisseur_id || "",
+                  }
+                : null,
+            },
+          });
+        if (erreurRpc && !["PGRST202", "42883"].includes(erreurRpc.code)) throw erreurRpc;
+        if (!erreurRpc) return (await refresh(), toast("Stock mis \xE0 jour"));
+        // Repli si la migration 012 manque : ancienne écriture en deux temps.
         const { error: erreur } = await sb
           .from("articles")
           .update({ stock: Number(article.stock) + num(saisie.q) })
@@ -2433,13 +2670,7 @@ const ACT = {
   },
   savesim: () => saveCfg({ sim: S.sim }, "Hypoth\xE8ses enregistr\xE9es"),
   resetsim: async () => {
-    const donnees = { ...((S.d.reglages[0] || {}).data || {}) };
-    (delete donnees.sim,
-      (S.sim = null),
-      await write(
-        sb.from("reglages").update({ data: donnees }).eq("id", 1),
-        "Valeurs recalcul\xE9es",
-      ));
+    ((S.sim = null), await saveCfg({ sim: null }, "Valeurs recalcul\xE9es"));
   },
   exp: (valeur) => {
     (EXP[valeur](), toast("Fichier pr\xE9par\xE9"));
@@ -2545,6 +2776,7 @@ function showTip(evt) {
               typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params)
             )("creer_vente", {
               p: {
+                id: vente.id, // fourni quand on corrige une vente gardée sur le téléphone (AP-BUG-001)
                 client_id: vente.client_id,
                 date_vente: vente.date_vente,
                 lignes: lignes,
