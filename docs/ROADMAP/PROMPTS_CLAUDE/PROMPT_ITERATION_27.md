@@ -3,24 +3,24 @@
 > Copier tout le bloc ci-dessous dans Claude Code, à la racine du dépôt `apidoo/apidoo.github.io`.
 
 ```text
-Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase, GitHub Pages).
+Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase ; publiée sur le web et, à partir d'IT-30, en applications iOS et Android construites avec Capacitor depuis le même code ; voir docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
 Mission de cette session : réaliser UNIQUEMENT l'itération IT-27 — Plans et abonnements. Ne commence aucune autre itération.
 
 A. CONTEXTE
 - Vision : docs/ROADMAP/00_VISION_PRODUIT.md. État de l'existant : docs/ROADMAP/01_AUDIT_EXISTANT.md.
 - Architecture cible : docs/ROADMAP/03_ARCHITECTURE_CIBLE.md ; modèle de données : docs/ROADMAP/04_MODELE_DONNEES_CIBLE.md.
 - Fiche de l'itération (à lire en entier) : docs/ROADMAP/ITERATIONS/ITERATION_27.md.
-- Objectif : Proposer une offre gratuite et une offre payante sans dégrader l'expérience gratuite.
+- Objectif : Proposer une offre gratuite et une offre payante, sur le web et par achat intégré dans les applications iOS et Android, sans dégrader l'expérience gratuite. Règles des stores et commissions : docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md §4 et §5 (à revérifier : elles changent souvent).
 - Règles du dépôt (CLAUDE.md) : branche claude/…, pull request, rien n'est fusionné, publié ni appliqué sur la base apidoo (production) sans l'accord de Pierre-Louis ; toute migration d'abord sur apidoo-test ; aucun secret dans le dépôt.
 - À préserver : Données des utilisateurs gratuits ; les 18 tests de bout en bout ; le circuit recette → production.
 
 B. PÉRIMÈTRE
-- À réaliser : AP-FEAT-117 Offres et limites ; AP-FEAT-118 Abonnement et paiement ; AP-FEAT-119 Suivi de l'usage.
-- User stories et critères (source de vérité, docs/ROADMAP/06_BACKLOG_MASTER.md) : AP-US-130, AP-US-131, AP-US-132.
+- À réaliser : AP-FEAT-117 Offres et limites ; AP-FEAT-118 Abonnement et paiement ; AP-FEAT-119 Suivi de l'usage ; AP-FEAT-125 Achats intégrés et droits multicanaux.
+- User stories et critères (source de vérité, docs/ROADMAP/06_BACKLOG_MASTER.md) : AP-US-130, AP-US-131, AP-US-132, AP-US-140.
 - Explicitement exclu : Facturation à l'usage. Si un besoin hors périmètre apparaît, note-le dans le rapport final, ne le réalise pas.
 
 C. ANALYSE PRÉALABLE OBLIGATOIRE (avant toute modification)
-1. Lis les fichiers concernés qui existent déjà (les autres sont à créer) : supabase/functions/facturation, migrations/034-abonnements.sql, src/domaines/compte.
+1. Lis les fichiers concernés qui existent déjà (les autres sont à créer) : supabase/functions/facturation, supabase/functions/stores, migrations/034-abonnements.sql, src/domaines/compte, ios/, android/.
 2. Identifie, pour chaque écran touché, TOUTES les définitions successives (recherche window.<nom> = et ACT.<nom>) et l'ordre de chargement dans index.html.
 3. Vérifie le modèle SQL : migrations/000 puis migrations/004 à la dernière ; ne suppose pas que la base réelle y correspond. Si tu as un accès Supabase, relève l'état d'apidoo-test en lecture seule.
 4. Liste les risques de régression et les tests existants qui couvrent la zone (tests/etapes_*.txt).
@@ -39,7 +39,7 @@ D. DÉVELOPPEMENT
 - Documentation : CHANGELOG (version, migration, rubrique « À vérifier »), migrations/README.md, a-appliquer-en-production.txt, statuts dans 06_BACKLOG_MASTER.md, docs/TECHNIQUE.md si l'architecture change.
 
 E. VALIDATION
-- Scénarios : Webhooks rejoués sans double effet. ; Dépassement de limite : lecture toujours possible..
+- Scénarios : Webhooks rejoués sans double effet. ; Dépassement de limite : lecture toujours possible. ; Achat en bac à sable Apple et Google reconnu sur le web, résiliation propagée.
 - Critères d'acceptation : chaque GIVEN/WHEN/THEN des user stories du périmètre, plus : CGV publiées..
 - Non-régression : sh scripts/assembler-site.sh . . _site puis sh tests/lancer.sh _site/recette ; tous verts.
 - Sécurité : aucune donnée d'une autre exploitation visible ; aucun secret ajouté ; garde-fous d'assemblage intacts.

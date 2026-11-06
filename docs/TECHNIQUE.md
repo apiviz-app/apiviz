@@ -53,7 +53,7 @@
 - **Source de `app.js`** : la source d'origine n'existe plus. La version lisible a été reconstituée en novembre 2026
   (IT-00) par formatage Prettier (`.prettierrc`) puis renommage des variables locales, chaque étape vérifiée par
   `scripts/comparer-ast.js` (même arbre syntaxique) et par les 18 tests.
-- **Mobile** : un seul code pour le web et le téléphone, installé depuis le site. Choix et étapes vers les stores : `MOBILE.md`.
+- **Mobile** : un seul code pour le web et le téléphone. Aujourd'hui installé depuis le site ; cible (révision du 6 nov. 2026) : applications iOS et Android construites avec Capacitor et publiées sur les stores, site sur un domaine propre. Voir `MOBILE.md` et `ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md`.
 - **Configuration** : `config.js` (adresse et clé publique Supabase, environnement).
 - **Données** : Supabase (Postgres + Auth + Storage). Depuis la migration 008, chaque donnée porte un `exploitation_id` ;
   la RLS de chaque table compare cette colonne à `exploitation_courante()` (exploitation choisie dans l'en-tête

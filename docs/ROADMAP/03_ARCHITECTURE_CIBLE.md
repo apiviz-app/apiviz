@@ -1,6 +1,6 @@
 # 03 — Architecture cible
 
-Principe : **garder la pile, changer la structure.** Aucune migration technologique globale n'est proposée ; chaque évolution répond à un risque de l'audit (R-xx) ou à un besoin du backlog.
+Principe : **garder la pile, changer la structure.** Aucune migration technologique globale n'est proposée ; chaque évolution répond à un risque de l'audit (R-xx) ou à un besoin du backlog. Révision du 6 nov. 2026 : le même code est aussi publié en applications iOS et Android, et le site quitte GitHub Pages (§11 et `12_DISTRIBUTION_ET_MONETISATION.md`).
 
 ## 1. Pile retenue
 
@@ -12,7 +12,9 @@ Principe : **garder la pile, changer la structure.** Aucune migration technologi
 | Base | Postgres Supabase, RLS par exploitation | idem + **fonctions métier transactionnelles** pour toute opération multi-tables, clés composites d'exploitation | R-11, R-13 |
 | Hors ligne | file des créations, IndexedDB | **file d'opérations** idempotentes (création, modification, suppression), quarantaine, conflits | R-02 |
 | Serveur | aucun | **Edge Functions Supabase** pour : notifications push, assistant IA, nettoyage, sauvegardes | Besoins qui exigent un secret ou une exécution planifiée |
-| Hébergement | GitHub Pages | GitHub Pages (inchangé) | 0 €, suffisant |
+| Hébergement | GitHub Pages | **domaine propre chez un hébergeur autorisant un usage commercial** (Cloudflare recommandé, D-12) ; GitHub garde le code et les Actions | conditions de GitHub Pages incompatibles avec un SaaS ; domaine nécessaire aux applications (IT-29) |
+| Applications mobiles | aucune (PWA installable) | **Capacitor** : le site assemblé embarqué dans des applications iOS et Android, modules natifs (photo, QR, position, notifications, achats intégrés) | une vraie application sans deuxième code (IT-30) |
+| Paiements | aucun | une table de droits par exploitation, alimentée par le web, l'App Store et Google Play | règles des stores (IT-27, 12 §5) |
 | Tests | Playwright + base simulée | + **tests unitaires** (`node --test`) + **tests SQL/RLS** sur Postgres local en CI | R-07 |
 | Supervision | `console.error` | table `journal_erreurs` alimentée par le client + tableau simple | Voir les erreurs des utilisateurs |
 
@@ -20,7 +22,8 @@ Principe : **garder la pile, changer la structure.** Aucune migration technologi
 
 | Alternative | Pour | Contre | Décision |
 |---|---|---|---|
-| Réécriture en framework (React, Svelte, Expo) | écosystème, composants | réécriture de ≈ 600 Ko, arrêt des livraisons plusieurs mois, perte des 18 tests | **Écartée.** Réévaluer seulement si le noyau ne suffit pas |
+| Réécriture en framework (React, Svelte, Expo) | écosystème, composants ; Expo donnerait des applications plus « natives » | réécriture de ≈ 600 Ko, arrêt des livraisons plusieurs mois, perte des 18 tests | **Écartée.** Réévaluée au jalon J7 si Capacitor ne suffit pas sur vrais téléphones |
+| Trusted Web Activity (Google Play seulement) | aucun code natif | Android seulement, chaîne d'outils distincte d'iOS | **Abandonnée** le 6 nov. 2026 au profit de Capacitor pour les deux stores |
 | Étape de compilation (Vite, esbuild) | typage, minification, imports | complexité de déploiement, deux codes (source et produit) | **Reportée.** Les modules ES natifs suffisent ; à réexaminer à > 1 Mo de JS |
 | Backend applicatif dédié (Node) | logique serveur riche | coût, sécurité à gérer, doublon avec RLS | **Écartée.** Fonctions SQL + Edge Functions |
 | Synchronisation type CRDT / base locale complète (PowerSync, RxDB) | hors ligne total | dépendance lourde, coût, refonte du modèle | **Écartée pour l'instant.** File d'opérations suffisante pour l'usage terrain |
@@ -102,11 +105,12 @@ Ordre conseillé : compte et navigation → accueil → ruchers/colonies → vis
 
 | Fonction | Rôle | Itération |
 |---|---|---|
-| `notifier` | push Web (VAPID) des rappels du jour, planifiée | IT-15 |
+| `notifier` | push Web (VAPID) des rappels du jour, planifiée ; notifications natives (APNs, FCM) pour les applications | IT-15 |
 | `nettoyer-stockage` | supprime les fichiers sans fiche | IT-11 |
 | `assistant` | appelle le modèle de langage avec les outils de lecture de l'utilisateur (son JWT, donc sa RLS) | IT-24 |
 | `exporter` | export complet (JSON + CSV + photos) d'une exploitation | IT-26 |
 | `facturation` | webhooks du prestataire de paiement | IT-27 |
+| `stores` | notifications serveur App Store et Google Play (abonnements) | IT-27 |
 
 Secrets uniquement dans Supabase (jamais dans le dépôt public).
 
@@ -127,3 +131,24 @@ Conservé (doc 10) : recette `apidoo-test` puis production `apidoo`, mise en lig
 - `journal_erreurs` (date, version, écran, message, exploitation hachée) alimenté par `window.onerror` et `fail()`.
 - Écran « Santé de l'application » réservé au responsable technique : erreurs récentes, file d'envoi moyenne, espace photos, volumétrie.
 - Contrôle de santé du workflow de mise en ligne conservé.
+
+## 11. Web et applications mobiles (révision du 6 nov. 2026)
+
+```text
+                 scripts/assembler-site.sh
+                           │  un seul dossier web
+          ┌────────────────┼─────────────────┐
+          ▼                ▼                 ▼
+   site (domaine)    app iOS (Capacitor)  app Android (Capacitor)
+   recette / prod    TestFlight → App Store   test interne → Google Play
+          └────────────────┼─────────────────┘
+                           ▼
+              Supabase (Auth, Postgres, Storage, Edge Functions)
+```
+
+- **Fichiers embarqués** dans les applications (pas de chargement de l'adresse du site) : ouverture hors ligne au premier lancement, condition de la revue Apple (règle 4.2).
+- **`src/noyau/plateforme.js`** est le seul endroit qui connaît la plateforme ; les écrans appellent des services (`photo`, `scanner`, `position`, `notifications`, `achats`) qui choisissent l'implémentation web ou native.
+- **Version minimale acceptée** lue dans la base au démarrage : les anciennes versions installées restent en circulation des semaines, toute migration doit rester compatible avec elles (doc 10 §8).
+- **Liens d'e-mail** (Auth) : domaines associés (`apple-app-site-association`, `assetlinks.json`) sur le domaine propre ; repli vers le site.
+- **Signature** : certificats et clés uniquement dans les secrets GitHub ; le dépôt est public.
+

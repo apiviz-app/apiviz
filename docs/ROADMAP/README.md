@@ -2,6 +2,8 @@
 
 Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f`) et d'un relevé en lecture seule des bases `apidoo` et `apidoo-test`. Aucune ligne de code applicatif, aucune migration et aucune donnée n'ont été modifiées.
 
+**Révision du 6 novembre 2026 — application web et stores.** Apidoo devient une application disponible sur le web (domaine propre, hors GitHub Pages) et sur l'App Store et Google Play, monétisable à terme, toujours à partir d'un seul code. Référence : [12_DISTRIBUTION_ET_MONETISATION.md](12_DISTRIBUTION_ET_MONETISATION.md). Nouvelles itérations IT-29 (domaine) et IT-30 (applications), IT-28 avancée en phase 2 (publication gratuite), IT-31 (international, ex-IT-28), IT-27 étendue aux achats intégrés.
+
 ## 1. Contenu
 
 | Fichier | Rôle |
@@ -18,10 +20,11 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 | [09_STRATEGIE_TESTS.md](09_STRATEGIE_TESTS.md) | Pyramide de tests, non-régression, définition de terminé |
 | [10_STRATEGIE_DEPLOIEMENT.md](10_STRATEGIE_DEPLOIEMENT.md) | Environnements, migrations, sauvegardes, retour arrière |
 | [11_FONCTIONNALITES_DIFFERENCIANTES.md](11_FONCTIONNALITES_DIFFERENCIANTES.md) | Ce qui peut faire d'Apidoo une référence |
-| [ITERATIONS/](ITERATIONS/) | 29 fiches (IT-00 à IT-28), 18 rubriques chacune |
-| [PROMPTS_CLAUDE/](PROMPTS_CLAUDE/) | 29 prompts prêts à coller dans Claude Code, un par itération |
+| [12_DISTRIBUTION_ET_MONETISATION.md](12_DISTRIBUTION_ET_MONETISATION.md) | Web sur domaine propre, applications iOS et Android, règles des stores, paiements, coûts |
+| [ITERATIONS/](ITERATIONS/) | 32 fiches (IT-00 à IT-31), 18 rubriques chacune |
+| [PROMPTS_CLAUDE/](PROMPTS_CLAUDE/) | 32 prompts prêts à coller dans Claude Code, un par itération |
 
-**Chiffres :** 19 domaines · 47 epics · 121 fonctionnalités · 7 anomalies · 134 user stories · 377 tâches techniques · 29 itérations en 10 phases. Priorités : 13 P0, 49 P1, 44 P2, 18 P3, 4 P4.
+**Chiffres :** 19 domaines · 47 epics · 125 fonctionnalités · 8 anomalies · 141 user stories · 408 tâches techniques · 32 itérations en 10 phases. Priorités des fonctionnalités et anomalies : 13 P0, 53 P1, 45 P2, 17 P3, 5 P4 (AP-BUG-008 compris).
 
 ## 2. Réponses rapides
 
@@ -35,6 +38,7 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 | Dans quel ordre ? Quelles dépendances ? | 08 §1–4 |
 | Que contient chaque itération, quand est-elle terminée ? | ITERATIONS/ (§3 à §14) |
 | Comment tester sans casser l'existant ? | 09 |
+| Web, stores, paiements : quel plan ? | 12 |
 | Quel prompt donner à Claude Code ? | PROMPTS_CLAUDE/ |
 
 ## 3. Conventions de mise à jour
@@ -53,14 +57,18 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 |---|---|---|---|
 | D-01 | ~~La source non minifiée de `app.js` existe-t-elle ?~~ **Non (réponse du 6 nov. 2026) : source reconstituée en IT-00** | — | IT-00 |
 | D-02 | ~~Autoriser l'application de 010 et 011 en production~~ **Accordée et réalisée le 5 nov. 2026** | — | IT-02 |
-| D-03 | Où stocker les sauvegardes chiffrées (hors dépôt public) et qui détient la clé | Pas de sauvegarde automatique sur l'offre gratuite | IT-02 |
+| D-03 | Où stocker les sauvegardes chiffrées (hors dépôt public) et qui détient la clé | Pas de sauvegarde automatique sur l'offre gratuite (Supabase Pro en ferait une partie, voir 12 §6) | IT-02 |
 | D-04 | Confirmer le tutoiement dans toute l'application | Charte de ton | IT-03 |
 | D-05 | Facturation électronique 2027 : export Factur-X, partenaire agréé, ou hors périmètre (Apidoo ne facture qu'aux particuliers) | Obligation d'émission pour les PME au 1er sept. 2027 | IT-21 |
 | D-06 | Cible des 12 prochains mois : amateurs et passionnés (recommandé), ou professionnels d'emblée | Ordre des phases 4 à 7 | IT-05 |
 | D-07 | Budget et fournisseur du modèle de langage pour l'assistant | Coût par question | IT-24 |
-| D-08 | Modèle économique (gratuit, freemium, payant) et calendrier | Phase 9 | IT-27 |
+| D-08 | Modèle économique (gratuit, freemium, payant) et calendrier ; recommandation : freemium (12 §9) | Phase 9 | IT-27 |
 | D-09 | Usage commercial d'Open-Meteo, Nominatim et des tuiles OpenStreetMap : offres payantes ou alternatives | Conditions d'usage à respecter dès qu'Apidoo devient payant | IT-22 |
 | D-10 | Ouvrir les inscriptions à tous, ou garder une liste d'adresses autorisées | Charge de support, données de tiers | après IT-04 |
+| D-11 | Nom de domaine d'Apidoo | Adresse définitive du site, des liens d'e-mail et des applications | IT-29 |
+| D-12 | Hébergeur web (recommandé : Cloudflare Workers, fichiers statiques) | GitHub Pages exclut un usage commercial | IT-29 |
+| D-13 | Structure juridique et comptes développeur (personnel ou organisation) | Comptes Apple et Google, test fermé Google, CGV, TVA, prestataire de paiement | IT-30 (comptes), IT-28 (publication) |
+| D-14 | Prestataire de paiement web et stratégie mobile (achats intégrés seuls, ou aussi lien vers le web dans l'UE) | Commissions et règles des stores (12 §5) | IT-27 |
 
 ## 5. Sources réglementaires consultées (5 nov. 2026)
 

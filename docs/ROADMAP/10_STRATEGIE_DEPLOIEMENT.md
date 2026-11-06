@@ -6,7 +6,7 @@ Le circuit actuel (`docs/PROCESSUS.md`) est **conservé** : il est sûr et adapt
 
 | | Développement | Recette | Production |
 |---|---|---|---|
-| Où | poste ou session Claude Code, site assemblé en local | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
+| Où | poste ou session Claude Code, site assemblé en local | https://apidoo.github.io/recette/, puis sous-domaine de recette du domaine propre après IT-29 | https://apidoo.github.io/, puis domaine propre après IT-29 |
 | Base | aucune (base simulée) ou Postgres local (tests SQL) | Supabase `apidoo-test`, données de démonstration | Supabase `apidoo`, données réelles |
 | Qui publie | — | Actions › Mise en ligne › recette | Actions › Mise en ligne › production, après accord du responsable |
 | Repère | branche `claude/…` | étiquette `recette` | étiquette `deploiement` |
@@ -29,6 +29,7 @@ Le circuit actuel (`docs/PROCESSUS.md`) est **conservé** : il est sûr et adapt
 - **Ne jamais supposer** que la base réelle correspond aux fichiers : relevé de structure avant chaque migration sensible (comparaison automatisée après IT-04).
 - **Réversible quand c'est possible** : un script `down` est fourni pour les migrations additives ; pour les autres, le retour arrière est la restauration de la sauvegarde (doit être écrit dans la fiche).
 - Une migration non rétrocompatible (modèle 008) part **avec** la version d'app correspondante, file hors ligne purgée au préalable.
+- **Dès que des applications mobiles sont publiées (IT-28)**, une migration non rétrocompatible n'est appliquée qu'après publication **et adoption** d'une version mobile compatible, et relèvement de la version minimale acceptée (§8).
 
 ## 4. Sauvegardes
 
@@ -60,3 +61,24 @@ Relevé du 5 nov. 2026 : la v5.14 est déjà publiée et 008 appliquée en produ
 - `journal_erreurs` consulté à J+1 et J+7 (après IT-03).
 - Réveil quotidien des projets (existant).
 - Espace photos et volumétrie relevés chaque mois.
+
+## 8. Applications iOS et Android (à partir d'IT-30)
+
+Voir `12_DISTRIBUTION_ET_MONETISATION.md` §7.
+
+| | Test | Production |
+|---|---|---|
+| iOS | TestFlight (interne puis externe) | App Store, après revue d'Apple |
+| Android | test interne puis test fermé Google Play | Google Play, après revue de Google |
+| Base | `apidoo-test` (build de recette) | `apidoo` |
+| Qui publie | workflow de build mobile, déclenché à la main | soumission par le responsable ou avec son accord explicite |
+
+Promotion d'une version mobile :
+
+1. Même PR que le web : une fonctionnalité est livrée une fois pour les trois plateformes.
+2. Build de recette (pointant `apidoo-test`) → TestFlight et test interne → rubrique « À vérifier » sur un iPhone et un Android réels.
+3. Mise en production web d'abord (circuit §2), puis build de production → soumission aux stores avec l'accord du responsable.
+4. Après publication : suivre l'adoption ; relever la version minimale acceptée seulement quand la version précédente n'est plus nécessaire.
+
+Retour arrière : on ne retire pas une version installée. Corriger par une nouvelle version (revue accélérée possible chez Apple en cas de défaut grave), et en attendant, désactiver la fonction fautive côté base ou par un réglage. Les clés de signature et certificats sont dans les secrets GitHub, sauvegardés hors dépôt (perdre la clé Android empêche toute mise à jour).
+

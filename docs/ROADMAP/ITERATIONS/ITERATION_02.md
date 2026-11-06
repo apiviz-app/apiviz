@@ -118,4 +118,4 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 
 ## 18. Itération suivante
 
-[IT-03 — Noyau applicatif](ITERATION_03.md)
+[IT-29 — Domaine propre et hébergement commercial](ITERATION_29.md)

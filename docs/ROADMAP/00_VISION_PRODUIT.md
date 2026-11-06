@@ -4,6 +4,8 @@
 
 **Apidoo est le carnet de bord et le tableau de pilotage de l'apiculteur : on note au rucher en moins de deux minutes, même sans réseau, et l'application en déduit ce qu'il faut faire, ce que l'on a produit et ce que cela rapporte.**
 
+Apidoo est **une seule application**, disponible sur le web et sur les stores (iPhone, Android), gratuite pour démarrer et **payante pour aller plus loin** (révision du 6 nov. 2026, voir `12_DISTRIBUTION_ET_MONETISATION.md`).
+
 ## 2. Constat de départ
 
 Apidoo est né pour une exploitation familiale réelle (6 ruches au départ, « Bee's Brothers ») et s'est enrichi très vite : en 5 jours de versions, il couvre déjà le terrain, le miel, la gestion et le registre. Le passage au multi-exploitation (migration 008) ouvre la voie à d'autres apiculteurs. La vision ci-dessous assume ce changement : **passer d'un outil personnel très bien fait à un produit que d'autres peuvent adopter seuls.**
@@ -46,7 +48,7 @@ Apidoo répond aux questions de l'apiculteur, du terrain au bureau :
 5. **Des faits, puis des conseils sourcés.** Apidoo distingue toujours la donnée, l'hypothèse et la recommandation. Aucun seuil sanitaire ni obligation sans source datée.
 6. **Progressivité.** Les fonctions avancées (élevage, transhumance, équipe) restent masquées tant qu'on n'en a pas besoin.
 7. **Un écran, une implémentation.** Pas de nouvelle couche sur l'ancienne : on remplace et on supprime.
-8. **Gratuit à faire tourner tant que possible.** Toute dépense d'infrastructure est justifiée par un besoin utilisateur.
+8. **Sobre à faire tourner.** Toute dépense d'infrastructure est justifiée par un besoin utilisateur ou par une obligation (conditions d'hébergement, stores, sauvegardes).
 9. **Données à l'utilisateur.** Export complet à tout moment, suppression réelle.
 
 ## 6. Niveaux d'usage
@@ -79,10 +81,12 @@ Le niveau ne change **pas** le modèle de données, seulement ce que l'interface
 
 | # | Décision | Justification |
 |---|---|---|
-| V-1 | Conserver JS sans framework, PWA, Supabase, GitHub Pages | Fonctionne, 0 €, l'équipe le maîtrise ; aucun besoin utilisateur n'exige un framework (cf. `MOBILE.md`) |
+| V-1 | Conserver JS sans framework, PWA, Supabase. ~~GitHub Pages~~ : remplacé par un domaine propre (V-8) | Fonctionne, l'équipe le maîtrise ; aucun besoin utilisateur n'exige un framework. Révisée le 6 nov. 2026 : GitHub Pages exclut un usage commercial |
 | V-2 | Remplacer les surcharges par un noyau d'écrans enregistrés, module par module | Arrêter l'accumulation sans réécriture |
 | V-3 | La table `ruches` devient la **colonie** ; ajout de `ruchers`, `contenants`, `reines` | Garde tous les liens existants (visites, récoltes, photos) |
 | V-4 | Traitements, comptages varroa et nourrissements deviennent des **opérations** distinctes de la visite | Une opération concerne souvent plusieurs colonies ; registre fiable |
 | V-5 | Pas de facturation électronique agréée en propre ; export et partenaire le moment venu | Obligation d'émission PME au 1er sept. 2027, coût d'agrément disproportionné |
 | V-6 | Assistant IA en lecture seule d'abord, actions seulement avec validation | Sécurité et confiance |
 | V-7 | Monétisation après stabilisation du produit (phase 9) | Pas de valeur à facturer avant le socle |
+| V-8 | **Un seul code, trois vitrines** : web sur domaine propre, applications iOS et Android (Capacitor) publiées sur les stores | Être une vraie application sans maintenir deux codes ; décidé le 6 nov. 2026 (12 §3) |
+| V-9 | **Distribution tôt, paiement tard** : domaine en phase 0, stores gratuits en phase 2, abonnement (web et achats intégrés) en phase 9 | Chaque nouvel utilisateur rend la bascule de domaine plus coûteuse ; la présence en store n'attend pas la monétisation (12 §8) |

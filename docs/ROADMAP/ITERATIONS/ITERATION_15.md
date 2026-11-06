@@ -1,4 +1,4 @@
-<!-- Généré depuis la structure du backlog le 5 nov. 2026. Après génération, ce fichier est maintenu à la main (voir README). -->
+<!-- Généré depuis la structure du backlog le 5 nov. 2026. Après génération, ce fichier est maintenu à la main (voir README). Révisée le 6 nov. 2026 (application web et stores, voir 12_DISTRIBUTION_ET_MONETISATION.md). -->
 
 # IT-15 — Tâches récurrentes, calendrier et notifications
 
@@ -7,7 +7,7 @@
 | Identifiant | IT-15 |
 | Phase | Phase 3 — Santé et conduite du rucher |
 | Taille | L |
-| Hypothèse de taille | Récurrence et calendrier côté app ; notifications push via Edge Function planifiée (VAPID) — premier service serveur. |
+| Hypothèse de taille | Récurrence et calendrier côté app ; notifications push via Edge Function planifiée (VAPID) — premier service serveur ; dans les applications iOS et Android (IT-30), notifications natives par le même service. |
 | Migration | `024` |
 
 ## 1. Objectif
@@ -50,6 +50,8 @@ Vue calendrier, tâches répétées, tâches générées (fin de traitement, dé
 - AP-TECH-294 (AP-FEAT-092) — Table abonnements_push.
 - AP-TECH-295 (AP-FEAT-092) — Edge Function planifiée.
 - AP-TECH-296 (AP-FEAT-092) — Gestion push dans sw.js.
+- AP-TECH-407 (AP-FEAT-092) — Notifications natives (APNs, FCM) via le module Capacitor, si IT-30 est faite ; jetons dans abonnements_push avec la plateforme.
+- AP-TECH-408 (AP-FEAT-092) — Edge Function notifier : envoi web ou natif selon la plateforme de chaque abonnement.
 - AP-TECH-297 (AP-FEAT-093) — Préférences par abonnement.
 - AP-TECH-298 (AP-FEAT-093) — Respect dans notifier.
 

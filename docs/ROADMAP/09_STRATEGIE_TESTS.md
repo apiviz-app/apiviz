@@ -58,4 +58,5 @@ Une fonctionnalité est terminée seulement si :
 - [ ] les régressions sont vérifiées ;
 - [ ] la documentation (CHANGELOG, migrations, backlog, TECHNIQUE) est à jour ;
 - [ ] l'interface est utilisable sur mobile ;
+- [ ] à partir d'IT-30, le parcours est vérifié dans les applications iOS et Android (build de recette) quand il touche une fonction native, le hors ligne ou le démarrage ;
 - [ ] les limites connues sont écrites.
