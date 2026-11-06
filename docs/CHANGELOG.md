@@ -1,5 +1,32 @@
 # Notes de version
 
+## v5.16 · à essayer en recette · correctifs de fiabilité (IT-01)
+Migration : `migrations/012-correctifs.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026**, à appliquer sur `apidoo`
+avant de publier en production. Elle n'ajoute que des colonnes et des fonctions : l'ancienne version reste compatible.
+Sans elle, la nouvelle version marche aussi (réglages, entrée de stock et clients retombent sur l'ancienne écriture).
+
+- **Plus de données tronquées** : toutes les tables sont lues par tranches de 1 000 (plafond de Supabase). Au-delà de
+  1 000 visites, rien ne manque à l'écran, au registre ni dans les exports.
+- **Saisie refusée par le serveur** (hors ligne puis retour du réseau) : elle n'est plus effacée. Elle passe « à
+  corriger », avec le motif, une pastille sur le bandeau et une fiche Modifier / Renvoyer / Abandonner.
+- **Déconnexion** : les données gardées sur l'appareil (hors ligne, photos, préférences) sont effacées. Si des saisies
+  ne sont pas encore envoyées, l'app le dit et propose de les envoyer d'abord.
+- **Supprimer une ruche** efface aussi les fichiers photo de ses visites.
+- **À plusieurs** : deux membres qui changent des réglages ou entrent du stock en même temps ne s'écrasent plus.
+- **Factures** : adresse, code postal, ville et SIRET du client (nouveaux champs de la fiche client).
+- **Messages d'erreur en français**, compréhensibles ; le détail technique est gardé dans un journal sur l'appareil.
+- Le nom par défaut de l'exploitation n'est plus « Bee’s Brothers » mais celui de ton exploitation.
+
+**À vérifier**
+1. Le téléphone reprend la nouvelle version (`VERSION` de `sw.js`), l'accueil s'affiche.
+2. Vrai téléphone, mode avion : saisir une vente de plus de pots qu'il n'en reste (faire vendre les pots depuis un autre
+   compte entre-temps), remettre le réseau : la vente apparaît « à corriger », la corriger, elle part.
+3. Se déconnecter avec une saisie en attente : l'avertissement s'affiche ; « Envoyer d'abord » puis se déconnecter.
+   Se reconnecter : rien de l'ancienne session ne reste (Safari et Chrome).
+4. Fiche client : saisir une adresse, ouvrir une facture : l'adresse complète y figure.
+5. Réglages enregistrés depuis deux téléphones à la fois : les deux modifications restent.
+6. Supprimer une ruche de test qui a des photos : la place utilisée par les photos baisse.
+
 ## v5.15 · à essayer en recette · mise à plat (IT-00)
 Aucune migration. Aucun changement visible : l'ancienne version et la nouvelle se comportent pareil.
 

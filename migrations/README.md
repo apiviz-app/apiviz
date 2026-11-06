@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -29,12 +29,15 @@ ci-dessus sur une base Postgres vide en mémoire et compare la structure obtenue
 | 005-securite-et-ping.sql | `est_membre()` réservée aux connectés, fonction `ping()` | 3 nov. 2026 (regroupée) | 3 nov. 2026 (en deux temps : 005 puis `ping`) |
 | 006-hors-ligne.sql | `creer_visite` et `creer_vente` acceptent un identifiant fourni par le téléphone | 3 nov. 2026 (regroupée) | 3 nov. 2026 |
 | 007-registre.sql | Visites : dose, fin de traitement prévue, ordonnance gardée | 3 nov. 2026 (regroupée) | 3 nov. 2026 |
-| 009-colonie-varroa-recolte-livraison.sql | Reine, hausses, équipement, événements de ruche, méthode varroa, récolte et traçabilité, note de livraison | 3 nov. 2026, **incomplète** (écart E1) | 3 nov. 2026 |
+| 009-colonie-varroa-recolte-livraison.sql | Reine, hausses, équipement, événements de ruche, méthode varroa, récolte et traçabilité, note de livraison | 3 nov. 2026 ; section 6 (fonctions) relancée le 6 nov. 2026 à 01 h 12 (`009_relance_fonctions_ap_bug_008`) : écart E1 corrigé | 3 nov. 2026 |
 | 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | 3 nov. 2026 | présente, **date inconnue** (appliquée hors historique, écart E2) |
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
+| 012-correctifs.sql | Adresse, code postal, ville, SIRET des clients ; `regler()` (réglages clé par clé) ; `ajouter_stock()` (entrée de stock atomique et idempotente) ; `photos_orphelines()` (lecture seule). Additive, ne casse pas l'ancienne version | 6 nov. 2026 (vérifiée : deux `regler` simultanés gardent les deux clés, refus hors exploitation, `ajouter_stock` renvoyé deux fois = une dépense) | **à appliquer**, après accord |
 
-Aucune migration en attente : `a-appliquer-en-production.txt` est vide.
+En attente pour la production : `012-correctifs.sql` (voir `a-appliquer-en-production.txt`).
+
+Tests SQL de 012 sur une base en mémoire : `node tests/sql/test_012.mjs` (lancé aussi par `tests/lancer.sh`).
 
 ## Relevé des deux bases — 6 novembre 2026
 
@@ -121,7 +124,8 @@ La plus grosse table compte aujourd'hui 8 lignes : aucun risque immédiat, voir 
 
 ### Écarts constatés
 
-- **E1 — Recette : `creer_visite` et `creer_vente` en retard sur 009.** Sur `apidoo-test`, la 009 enregistrée dans
+- **E1 — Recette : `creer_visite` et `creer_vente` en retard sur 009.** *Corrigé le 6 nov. 2026 (AP-BUG-008) : la
+  section 6 de 009 a été relancée sur `apidoo-test` ; empreintes des deux fonctions identiques à la production.* Sur `apidoo-test`, la 009 enregistrée dans
   l'historique ne contient pas la nouvelle version de ces deux fonctions (section 6 du fichier). Les colonnes
   existent, mais la recette n'enregistre pas `varroa_methode` ni `varroa_abeilles` à la création d'une visite, ni
   `livraison` à la création d'une vente : ces valeurs envoyées par l'application sont ignorées sans message.

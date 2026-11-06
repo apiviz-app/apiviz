@@ -7,8 +7,9 @@
     page.fill("textarea[name=adresse]", "12 rue des Abeilles\n21000 Dijon")
     page.click("form[data-form=reglages] .btn.main")
     page.wait_for_selector(".toast >> text=Réglages enregistrés", timeout=5000)
-    corps = [x for x in patchs if x[0] == "reglages"]
-    verif(corps and corps[-1][1]["data"]["adresse"] == "12 rue des Abeilles\n21000 Dijon" and corps[-1][1]["data"]["origine"] == "France", "adresse et origine enregistrées")
+    # Depuis IT-01 : regler() (clé par clé) ; l'ancienne écriture PATCH reste acceptée.
+    corps = [x[1]["data"] for x in patchs if x[0] == "reglages"] + [b["p_modifs"] for n, b in recu["rpc"] if n == "regler"]
+    verif(corps and corps[-1]["adresse"] == "12 rue des Abeilles\n21000 Dijon" and corps[-1]["origine"] == "France", "adresse et origine enregistrées")
     page.evaluate("ACT.go('miel')"); page.click("[data-act=etiq]")
     page.click("#sheetForm .btn.main")
     page.wait_for_selector(".toast.err >> text=DDM", timeout=5000)
