@@ -59,8 +59,27 @@
   la RLS de chaque table compare cette colonne à `exploitation_courante()` (exploitation choisie dans l'en-tête
   `x-exploitation`, dont l'utilisateur doit être membre). Créations atomiques par `creer_visite` et `creer_vente`.
   L'API renvoie au plus 1 000 lignes par requête (« Max rows ») ; détail dans `migrations/README.md`.
-- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 011, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
-- **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette.
+- **Migrations** : `migrations/`, numérotées, uniquement additives. Recréer une base : 000 puis 004 à 012, **009 avant 008** ; état réel des deux bases et contrôle par `scripts/rejouer-migrations.mjs` : `migrations/README.md`. `schema.sql` n'est plus utilisé.
+- **Tests** : `tests/` (Playwright, base Supabase simulée), voir `tests/README.md`. Lancés automatiquement sur chaque pull request de la recette. Tests SQL des migrations (Postgres en mémoire) : `tests/sql/`, lancés par `tests/lancer.sh`. La base simulée
+  rend au plus 1 000 lignes par requête, comme Supabase.
+- **Lecture des données** (IT-01) : `lireTout(table, tri)` dans `app.js` lit par tranches de 1 000 (`range`), tri
+  complété par une clé unique (`id`, ou `annee, poste` pour `budgets`), total `count=exact` comme garde-fou. `loadAll`
+  et `PH.load` l'utilisent. Une lecture incomplète est notée au journal et signalée à l'écran.
+- **Erreurs** (IT-01) : `fail(e)` affiche `messageErreur(e)` (codes SQLSTATE, PostgREST et Auth traduits ; messages
+  `raise exception` en français affichés tels quels ; sinon message par défaut) et passe le détail à `journaliser()`.
+  Le journal est pour l'instant sur l'appareil (clé `apidoo-journal`, 50 entrées) ; IT-03 le branchera sur
+  `journal_erreurs`.
+- **File hors ligne** (IT-01) : une saisie refusée par le serveur prend `statut: "quarantaine"` (motif, date) au lieu
+  d'être supprimée ; elle n'est plus appliquée aux chiffres, les suivantes partent. `HL.nbCorriger()`, pastille du
+  bandeau et fiche « À corriger » (`HL.ficheCorriger`, actions `hlmodifier`, `hlrenvoyer`, `hlabandonner`). Une vente
+  ou une visite corrigée garde son identifiant : `HL.rpc` remplace la saisie d'origine.
+- **Déconnexion** (IT-01) : `ACT.logout` → `ficheDeconnexion()` si `HL.nb() > 0`, sinon `deconnecter()` :
+  `signOut` (repli `scope: "local"`), `purgerLocal()` (ferme puis supprime les bases du téléphone, retire les clés
+  `apidoo-*` de l'environnement, vide `S`), rechargement. Jamais sur un `SIGNED_OUT` automatique (session expirée).
+  Limite : recette et production partagent l'origine ; quelques clés sans suffixe (`apidoo-exploitation`…) sont
+  communes aux deux.
+- **Écritures à plusieurs** (IT-01) : `saveCfg` appelle `regler(p_modifs)` (fusion en base, `null` retire la clé),
+  l'entrée de stock `ajouter_stock(p)` ; repli sur l'ancienne écriture si la migration 012 manque.
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).
