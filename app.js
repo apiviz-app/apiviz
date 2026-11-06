@@ -217,6 +217,9 @@ function journaliser(type, detail) {
     (liste.push(entree), localStorage.setItem("apidoo-journal", JSON.stringify(liste.slice(-50))));
   } catch {}
 }
+// Erreurs JavaScript non rattrapées : au journal seulement (l'écran n'en dit rien de plus).
+(addEventListener("error", (evt) => journaliser("script", evt.error || evt.message)),
+  addEventListener("unhandledrejection", (evt) => journaliser("promesse", evt.reason)));
 // Codes Postgres (SQLSTATE) et PostgREST les plus courants -> ce que l'utilisateur doit comprendre et faire.
 const ERREURS_FR = {
   42501: "Ton r\xF4le ne permet pas cette action.",
@@ -234,6 +237,19 @@ const ERREURS_FR = {
   PGRST116: "Cet \xE9l\xE9ment n\u2019existe plus : un autre membre l\u2019a peut-\xEAtre supprim\xE9.",
   PGRST301: "Ta session a expir\xE9 : reconnecte-toi.",
   PGRST303: "Ta session a expir\xE9 : reconnecte-toi.",
+  // Codes de Supabase Auth (connexion, inscription, mot de passe).
+  invalid_credentials: "E-mail ou mot de passe incorrect.",
+  email_not_confirmed: "Confirme d\u2019abord ton adresse gr\xE2ce \xE0 l\u2019e-mail re\xE7u.",
+  user_already_exists: "Ce compte existe d\xE9j\xE0.",
+  email_exists: "Ce compte existe d\xE9j\xE0.",
+  weak_password: "Mot de passe trop faible : 8 caract\xE8res au moins, en m\xE9langeant lettres et chiffres.",
+  same_password: "Choisis un mot de passe diff\xE9rent de l\u2019ancien.",
+  email_address_invalid: "Cette adresse e-mail n\u2019est pas valide.",
+  over_email_send_rate_limit: "Trop d\u2019e-mails envoy\xE9s : attends quelques minutes avant de r\xE9essayer.",
+  over_request_rate_limit: "Trop d\u2019essais : attends une minute avant de r\xE9essayer.",
+  signup_disabled: "Les inscriptions sont ferm\xE9es pour le moment.",
+  session_not_found: "Ta session a expir\xE9 : reconnecte-toi.",
+  refresh_token_not_found: "Ta session a expir\xE9 : reconnecte-toi.",
 };
 const MESSAGE_PAR_DEFAUT =
   "Une erreur est survenue. R\xE9essaie ; si elle revient, note l\u2019heure et pr\xE9viens le responsable.";
@@ -255,6 +271,7 @@ function traduireErreur(erreur) {
   if (/foreign key/i.test(message)) return { texte: ERREURS_FR[23503], connu: !0 };
   if (/unique|duplicate/i.test(message)) return { texte: ERREURS_FR[23505], connu: !0 };
   if (AUTH_FR[message]) return { texte: AUTH_FR[message], connu: !0 };
+  if (erreur?.status === 429) return { texte: ERREURS_FR.over_request_rate_limit, connu: !0 };
   // Erreur levée par l'application elle-même (new Error("Choisis une ruche")) : déjà en français.
   if (erreur instanceof Error && !code && erreur.name === "Error" && !erreur.status && message)
     return { texte: message, connu: !0 };
@@ -381,7 +398,7 @@ async function submitAuth(formulaire) {
       return;
     }
   } catch (erreur) {
-    S.authMsg = AUTH_FR[erreur.message] || erreur.message;
+    ((S.authMsg = messageErreur(erreur)), traduireErreur(erreur).connu || journaliser("connexion", erreur));
   }
   authView();
 }

@@ -62,7 +62,7 @@ const VR = (() => {
       const { data, error, local: hl } = await appel("creer_visite", { p: { ...reste, ruche_id: id, couvain: s.couvain === "Non vu" ? "" : s.couvain, intrants } });
       if (error) {
         if (!faites.length) throw error;
-        toast(`${faites.length} visite(s) enregistrée(s), arrêt sur ${byId(S.d.ruches, id)?.nom} : ${error.message}`, true);
+        toast(`${faites.length} visite(s) enregistrée(s), arrêt sur ${byId(S.d.ruches, id)?.nom} : ${messageErreur(error)}`, true);
         break;
       }
       faites.push({ id: data, ruche: id }); local = local || !!hl;
