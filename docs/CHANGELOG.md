@@ -2,11 +2,12 @@
 
 **État au 6 nov. 2026.** Production et recette publient la **v5.14** (commit `554f98f`, constaté au relevé du
 5 nov. 2026) : les v5.0 à v5.14 sont donc en production. Les v5.15 et v5.16 sont sur `main`, pas encore publiées.
-Base `apidoo` : 000 à 011 ; `012-correctifs.sql` en attente (`migrations/a-appliquer-en-production.txt`).
-Base `apidoo-test` : 000 à 012.
+Bases `apidoo` et `apidoo-test` : 000 à 012, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-012.json`).
+Aucune migration en attente.
 
 ## IT-02 · réalignement de la production (6 nov. 2026)
 Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de `sw.js` que la v5.16).
+**`012-correctifs.sql` appliquée sur `apidoo` le 6 nov. 2026** (relevé avant/après : production identique à la recette).
 
 - Notes de version corrigées : les v5.0 à v5.14 étaient marquées « à essayer en recette » alors qu'elles sont en
   production ; 010 et 011 sont appliquées sur les deux bases depuis le 5 nov. 2026.
@@ -18,15 +19,15 @@ Aucune migration nouvelle, aucun changement de l'application (même `VERSION` de
 - Sauvegardes automatiques : **reportées** (décision du 6 nov. 2026, D-03 non tranchée).
 
 **À vérifier**
-1. Avant 012 en production : export « Sauvegarde complète » depuis Réglages, gardé hors du dépôt.
-2. Après 012 sur `apidoo` : relevé de structure de la production identique à
-   `migrations/releves/structure-2026-11-06-recette-apres-012.json`.
-3. En production, avec les données d'essai : Déplacer des ruches, Noter une intervention, Créer la facture, puis
-   nettoyage (`tests/production/README.md`).
+1. Fait le 6 nov. 2026 : 012 sur `apidoo`, relevé de la production identique à la recette. Pas de sauvegarde
+   préalable (décision du responsable ; 012 n'ajoute que des colonnes et des fonctions).
+2. Production, v5.14 avec 012 : l'app fonctionne comme avant (012 n'est utilisée qu'à partir de la v5.16).
+3. Fait le 6 nov. 2026 : en production (v5.14), avec les données d'essai, Déplacer des ruches, Noter une intervention et
+   Créer la facture (F-2026-0001) validés par le responsable et vérifiés en base ; données d'essai retirées ensuite,
+   numéro de facture libéré, base revenue à son état d'avant l'essai.
 
 ## v5.16 · à publier en recette · correctifs de fiabilité (IT-01)
-Migration : `migrations/012-correctifs.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026**, à appliquer sur `apidoo`
-avant de publier en production. Elle n'ajoute que des colonnes et des fonctions : l'ancienne version reste compatible.
+Migration : `migrations/012-correctifs.sql`, **appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026**. Elle n'ajoute que des colonnes et des fonctions : l'ancienne version reste compatible.
 Sans elle, la nouvelle version marche aussi (réglages, entrée de stock et clients retombent sur l'ancienne écriture).
 
 - **Plus de données tronquées** : toutes les tables sont lues par tranches de 1 000 (plafond de Supabase). Au-delà de

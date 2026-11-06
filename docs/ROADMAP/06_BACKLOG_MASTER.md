@@ -200,7 +200,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Fonctionnalité |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | EN COURS — 010 et 011 sur les deux bases (5 nov. 2026) ; CHANGELOG, GUIDE, contrôle de structure et écart E5 faits en IT-02 (6 nov. 2026) ; reste 012 sur `apidoo`, relevé de la production et essai des parcours en production (accord du responsable) |
+| Statut actuel | FAIT (6 nov. 2026, IT-02) — 010, 011 et 012 sur les deux bases, structure identique aux fichiers ; déplacement, intervention et facture validés en production ; CHANGELOG, GUIDE et contrôle de structure à jour. Publication de la v5.16 : cycle normal recette puis production |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -226,7 +226,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 **Tâches techniques**
 
 - AP-TECH-013 — Appliquer 010 puis 011 sur apidoo-test, puis sur apidoo (accord du responsable). **Fait le 5 nov. 2026.**
-- AP-TECH-014 — Corriger migrations/README.md, a-appliquer-en-production.txt et les statuts « à essayer en recette » du CHANGELOG. **Fait le 6 nov. 2026 (IT-02)** ; la liste d'attente garde 012 jusqu'à son application sur `apidoo`.
+- AP-TECH-014 — Corriger migrations/README.md, a-appliquer-en-production.txt et les statuts « à essayer en recette » du CHANGELOG. **Fait le 6 nov. 2026 (IT-02)** ; 012 appliquée sur `apidoo` le même jour, liste d'attente vide.
 - AP-TECH-015 — Ajouter au workflow de mise en ligne un contrôle automatique de structure (IT-04). **Partiel, 6 nov. 2026 (IT-02)** : « Vérifier » rejoue les migrations et compare à chaque relevé de `migrations/releves/` ; la comparaison directe avec les bases réelles reste pour IT-04 (secret de connexion).
 - AP-TECH-016 — Mettre à jour GUIDE.md (v5). **Fait le 6 nov. 2026 (IT-02).**
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
