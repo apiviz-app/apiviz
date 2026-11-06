@@ -4,6 +4,13 @@
     EXPL["miennes"][0]["role"] = "lecteur"
     DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R1, "date_visite": "2026-11-01", "activite": "Normale", "provisions": "Moyennes", "reine": "Vue",
         "couvain": "Normal", "poids_kg": 40, "varroa": None, "note": "Calme", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False}]
+    # IT-05 : un rucher de la table, avec téléphone du propriétaire.
+    RV = str(uuid.uuid4())
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": 47.32, "lng": 5.04, "acces": "Portail vert", "proprietaire": "M. Durand", "proprietaire_tel": "0612345678",
+                        "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}]
+    DATA["ruches"][0].update({"rucher_id": RV, "lat": 47.32, "lng": 5.04})
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.abort())
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif(page.evaluate("document.documentElement.classList.contains('lecteur')"), "le rôle lecteur est appliqué à l'interface")
     verif(page.locator(".ex-lecture >> text=Lecture seule").count() == 1, "repère « Lecture seule » sous le titre")
@@ -15,13 +22,17 @@
     verif(visibles(".fab") == 0 and visibles("[data-act=newvisite]") == 0 and visibles("[data-act=newvente]") == 0, "accueil : ni « + », ni « Nouvelle visite », ni « Nouvelle vente »")
     if cap: page.screenshot(path=cap + "/lc-accueil-375.png", full_page=True)
     # Écrans de consultation : rien à saisir, mais tout se lit.
-    for route, texte in (("ruches", "Ruche 1"), ("clients", "pots en stock"), ("miel", "L26-01"), ("agenda", "")):
+    for route, texte in (("ruches", "Ruche 1"), ("carte", "Verger"), ("clients", "pots en stock"), ("miel", "L26-01"), ("agenda", "")):
         page.evaluate("r => ACT.go(r)", route); page.wait_for_timeout(400)
         boutons = page.locator(".wrap .btn[data-act], .wrap .chips button[data-act]").evaluate_all(
             "l => l.filter(e => e.offsetParent !== null).map(e => e.dataset.act)")
         permis = page.evaluate("Regles.compte.ACTIONS_LECTEUR")
         verif(all(b in permis for b in boutons), f"{route} : aucun bouton de saisie visible ({', '.join(b for b in boutons if b not in permis) or 'rien'})")
         if texte: verif(page.locator(f"text={texte}").count() >= 1, f"{route} : les données restent lisibles")
+    # Fiche rucher (IT-05) : ni Renommer, ni Infos, ni Archiver ; l'appel et l'itinéraire restent.
+    page.evaluate("ACT.alrucher('Verger')"); page.wait_for_selector("h1 >> text=Verger", timeout=5000)
+    verif(visibles("[data-act=rcrenommer]") + visibles("[data-act=rcarchiver]") + visibles("[data-act=rcinfos]") == 0, "fiche rucher : ni Renommer, ni Infos, ni Archiver")
+    verif(visibles("a[href='tel:0612345678']") >= 1 and visibles("a.u-lienbtn[href*='destination=']") >= 1, "fiche rucher : Appeler et Itinéraire restent")
     page.evaluate("ACT.ruche(arguments[0])" if False else f"ACT.ruche('{R1}')"); page.wait_for_timeout(400)
     verif(page.locator("text=Calme").count() >= 1, "fiche de la ruche : le journal des visites se lit")
     verif(visibles("[data-act=delvisite]") == 0, "fiche de la ruche : pas de lien « Supprimer »")

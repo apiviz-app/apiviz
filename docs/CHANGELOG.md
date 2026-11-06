@@ -5,6 +5,55 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.19 · à publier en recette · ruchers (IT-05)
+Migration : `migrations/015-ruchers.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé avant/après
+`migrations/releves/structure-2026-11-06-recette-apres-015.json` : seulement les ajouts de 015 ; structure identique aux
+fichiers ; 8 colonies reprises dans 2 ruchers, aucune sans rucher ; aucune donnée incohérente), à appliquer sur
+`apidoo` après 014 et après accord. **Ne casse pas l'ancienne version** : `ruches.rucher` reste rempli et à jour, et un
+nom de rucher tapé dans l'ancienne version retrouve ou crée le rucher. Seules différences visibles pour elle : les
+variantes « Verger » / « verger » / « Verger  » sont regroupées sous un seul nom ; une nouvelle ruche sans position prend
+celle de son rucher ; un rucher archivé refuse toute nouvelle ruche. La v5.19 fonctionne aussi sur une base sans 015
+(retour au regroupement par texte), mais la production doit avoir 015 (la mise en ligne le vérifie).
+
+Pour l'apiculteur :
+- **Le rucher devient une vraie fiche** : « Nouveau rucher » (même sans ruche), **Renommer** en une fois (toutes ses
+  colonies suivent), section **Infos** repliée : accès (lisible sans ouvrir), propriétaire avec bouton **Appeler**,
+  capacité, environnement, ressources, point d'eau, notes ; **Itinéraire** vers le rucher.
+- **Archiver** un rucher vide (il reste consultable, « Rouvrir ») ; un rucher avec des colonies ne s'archive pas.
+- **On place le rucher, pas chaque ruche** : « Placer sur la carte » ou « Ma position », y compris sans réseau
+  (envoi au retour du réseau). Toutes ses colonies ont la météo de ce lieu.
+- **Carte des ruchers** : un repère par rucher, de la couleur de la colonie la plus mal en point, avec le nombre de
+  colonies ; les ruchers sans colonie apparaissent aussi.
+- **Rucher en 3 questions** : le rucher et ses ruches sont créés d'un coup, sans doublon possible après une coupure.
+
+Sous le capot :
+- `src/domaines/ruchers/` : règles pures testées (`regles.js`), fiche et actions (`fiche.js`) ; actions `rc*` déclarées
+  une seule fois par l'écran « rucher » (`noyau/actions.js`). Aucune nouvelle surcharge de `render`, `shell` ou `view*`.
+- Tests : SQL `test_015.mjs` (42 vérifications), matrice d'isolation 300 (table `ruchers`), unitaires `ruchers.test.mjs`,
+  bout en bout `etapes_ru` (fiche) et `etapes_rc` (carte, placement hors ligne) ; `etapes_ex` vérifie le rucher en
+  3 questions ; `etapes_dl` : 17 lectures à l'ouverture (table `ruchers`).
+- Fond de carte OpenStreetMap : conditions relevées dans `docs/TECHNIQUE.md` ; à remplacer avant les applications des
+  stores (IT-30).
+
+**À vérifier**
+1. Ruchers : chaque rucher existant apparaît une seule fois, avec toutes ses ruches et sa météo ; aucune ruche sous
+   « Sans rucher » si elle avait un rucher.
+2. Ruchers › Nouveau rucher « Essai » : la fiche s'ouvre (« Aucune colonie pour l'instant ») ; « Ajouter des ruches
+   ici » propose « Essai » ; un deuxième « essai » est refusé (« Ce rucher existe déjà »).
+3. Fiche d'un rucher › Renommer : le nouveau nom apparaît sur la fiche de chaque ruche, dans la tournée et le registre.
+4. Fiche › Infos du rucher › Modifier les infos : saisir l'accès et le téléphone du propriétaire ; la section reste
+   repliée et montre l'accès ; **Appeler** ouvre le téléphone ; **Itinéraire** ouvre le GPS sur le bon lieu.
+5. **Au rucher, sans réseau** : Carte › choisir le rucher › « Ma position » : « Gardé sur le téléphone » ; au retour du
+   réseau, la position part, la carte et la météo du rucher suivent.
+6. Archiver un rucher qui a des ruches : refusé avec un message clair ; archiver « Essai » vide : il passe dans
+   « Ruchers archivés », « Rouvrir » le ramène.
+7. Carte : un repère par rucher, couleur et nombre justes ; un rucher sans position est signalé « à placer ».
+8. Nouveau compte, rucher en 3 questions avec « Ma position » : le rucher et ses ruches sont créés, placés, avec météo.
+9. Compte en lecture seule : aucun bouton Nouveau rucher / Renommer / Infos / Archiver / Placer ; Appeler et
+   Itinéraire restent.
+10. Ancienne version (production v5.17 ou v5.18) sur une base avec 015 : ajouter une ruche dans un rucher existant en
+    tapant son nom en minuscules : elle rejoint le bon rucher.
+
 ## v5.18 · à publier en recette · sécurité de la base, rôles et tests SQL (IT-04)
 Migration : `migrations/014-roles-audit.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé avant/après :
 seulement les ajouts de 014 ; empreintes de structure identiques au rejeu des fichiers ; aucune donnée incohérente),
