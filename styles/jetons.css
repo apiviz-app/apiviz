@@ -1,0 +1,32 @@
+/* Apidoo — jetons : couleurs, durées, courbes, ombre, rayon, bandeau (IT-03, AP-FEAT-015).
+   Les trois blocs :root d'index.html, fusionnés : un jeton se change ici et nulle part ailleurs. */
+:root{
+  --ink:#1B2420;
+  --muted:#55605A;
+  --ground:#F4F6F0;
+  --card:#fff;
+  --line:#DEE2D8;
+  --line2:#C4CABD;
+  --pine:#1E2B24;
+  --pine2:#2C3D33;
+  --honey:#E3A008;
+  --honeysoft:#FBEFC9;
+  --good:#2F6B4F;
+  --watch:#7D5200;
+  --crit:#A61B1B;
+  --duree-rapide:.15s;
+  --duree:.24s;
+  --duree-lente:.42s;
+  --sortie:cubic-bezier(.22,1,.36,1);
+  --ressort:cubic-bezier(.34,1.56,.64,1);
+  --shadow:0 1px 2px rgba(30,43,36,.05),0 10px 28px -20px rgba(30,43,36,.28);
+  --radius:14px;
+  --goodbg:#DFEDE4;
+  --watchbg:#FBEFC9;
+  --critbg:#F8E3E0;
+  --bandeau:#FBEFC9;
+  --bandeau-texte:#1B2420;
+  --bandeau-lien:#3F4A44;
+  --bandeau-actif:#fff;
+  --bandeau-survol:rgba(255,255,255,.55);
+}

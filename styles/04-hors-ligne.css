@@ -1,0 +1,16 @@
+/* Hors ligne */
+.hl-band{display:flex;align-items:center;gap:10px;margin:-28px -32px 20px;padding:10px 32px;font-size:13px;font-weight:600}
+.hl-band svg{flex:none}
+.hl-band.off{background:var(--watchbg);color:#7D5200}
+.hl-band.sync{background:var(--goodbg);color:#145238}
+.hl-band.corr{background:var(--critbg);color:var(--crit)}
+.hl-band>span{flex:1;min-width:0}
+.hl-pastille{flex:none;min-height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--crit);color:#fff;font-weight:700;font-size:13px}
+.hl-corr{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #EDEFE7}
+.hl-corr:first-of-type{border-top:0}
+.hl-motif{margin:4px 0;padding:8px 10px;border-radius:8px;background:var(--critbg);color:var(--crit);font-size:13px}
+.hl-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #EDEFE7}
+.hl-row:first-of-type{border-top:0}
+.hl-row>span:first-child{display:flex;flex-direction:column;min-width:0}
+.hl-tag{margin-top:4px}
+@media (max-width:800px){.hl-band{margin:-18px -16px 14px;padding:10px 16px}}

@@ -1,0 +1,8 @@
+/* ---------- Petits gestes ---------- */
+.er-ariane{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:14px;color:var(--muted)}
+.er-ariane .u-retour{margin:0;padding:0;min-height:32px;font-weight:600}
+.er-vide{align-self:flex-start;margin:8px 10px 12px;min-height:44px}
+tbody tr:has([data-act]){cursor:pointer}
+tbody tr:has([data-act]):hover{background:var(--ground)}
+tbody tr[hidden]{display:none}
+.btn[aria-busy=true]{opacity:.7}

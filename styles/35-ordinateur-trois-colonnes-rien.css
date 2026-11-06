@@ -1,0 +1,37 @@
+/* Ordinateur : trois colonnes, rien de vide */
+@media (min-width:1100px){
+  .tn-haut{padding:10px 32px;min-height:68px}
+  .tn-logo{display:block}
+  .tn-grille{flex-direction:row;display:grid;grid-template-columns:280px minmax(0,1fr) 320px;gap:18px;padding:18px 32px 32px;align-items:stretch}
+  .tn-grille.seule{grid-template-columns:minmax(0,720px);justify-content:center}
+  .tn-cote{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .tn-cote .tn-carte{border-radius:18px;padding:16px 18px}
+  .tn-m{gap:12px}
+  .tn-m.sombre{border-radius:18px;padding-top:12px;overflow:hidden}
+  .tn-haut.sombre{background:var(--bandeau);color:var(--bandeau-texte)}
+  .tn-onglets{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:3px;background:#E7EAE1;border-radius:13px}
+  .tn-m.sombre .tn-onglets{margin:0 16px;background:var(--pine2)}
+  .tn-onglets button{min-height:44px;border:0;border-radius:10px;background:none;color:inherit;font:500 14px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+  .tn-onglets button.on{background:var(--pine);color:#fff;font-weight:600}
+  .tn-m.sombre .tn-onglets button.on{background:var(--honey);color:var(--ink)}
+  .tn-suivi{background:none;padding:0 2px;display:none}
+  .tn-corps{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;border-bottom:0;padding:18px}
+  .tn-m.sombre .tn-corps{background:none;border:0;padding:12px 16px}
+  .tn-pied{position:static;border:1px solid var(--line);border-top:0;border-radius:0 0 18px 18px;padding:10px 18px 18px}
+  .tn-m.sombre .tn-pied{border:0;border-radius:0}
+  .tn-ruches{flex:1}
+  .tn-ruches button{flex:1;display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:8px 10px;border:0;border-radius:12px;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
+  .tn-ruches button.on{background:var(--honeysoft)}
+  .tn-ruches span{display:flex;flex-direction:column}
+  .tn-ruches b{font-weight:600}.tn-ruches small{font-size:13px;color:var(--muted)}
+  .tn-heures{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .tn-heures span{display:flex;flex-direction:column;align-items:center;padding:6px 0;background:var(--ground);border-radius:9px;font-size:13px}
+  .tn-heures b{font:700 16px 'Bricolage Grotesque',system-ui,sans-serif}
+  .tn-barres{display:flex;align-items:flex-end;gap:6px;height:64px}
+  .tn-barres i{flex:1;background:var(--line2);border-radius:3px 3px 0 0}
+  .tn-barres i.on{background:var(--pine)}
+  .tn-e-manuel .tn-corps{gap:10px}
+  /* Formulaire complet de visite sur toute la largeur */
+  .u-visite-form{max-width:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .u-visite-form>.v3-tournee,.u-visite-form>.u-haut,.u-visite-form>.vx-entree,.u-visite-form>.u-barre{grid-column:1/-1}
+}

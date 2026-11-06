@@ -1,0 +1,32 @@
+/* ---------- Registre, lot, facture, saison ---------- */
+.er-onglets{display:inline-flex;flex-wrap:wrap;gap:6px;align-self:flex-start;background:#E7EAE1;border-radius:13px;padding:3px}
+.er-onglets button{min-height:42px;padding:0 14px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer}
+.er-onglets button.on{background:var(--pine);color:#fff;font-weight:600}
+.er-act{margin:0}
+.er-dl{display:grid;grid-template-columns:120px 1fr;gap:8px 16px;margin:0 0 14px}
+.er-dl dt{color:var(--muted);font-size:14px}.er-dl dd{margin:0}
+.er-fiche{margin-left:6px;font-size:13px}
+.er-fil{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.er-etape{display:flex;flex-direction:column;gap:4px;min-width:0;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.er-etape b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;letter-spacing:-.01em}
+.er-deux2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+body[data-route=lot] .card,body[data-route=saison] .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:none;padding:18px 20px}
+.er-feuille{display:flex;flex-direction:column;gap:16px;max-width:760px;width:100%;padding:32px 34px;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 10px 26px rgba(20,28,24,.12);font-size:14px}
+.er-feuille h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px}
+.er-f-t{display:flex;justify-content:space-between;gap:24px}
+.er-f-t p{margin:0}.er-f-t>div{text-align:right}.er-d{text-align:right}
+.er-feuille table{width:100%;border-collapse:collapse}
+.er-feuille th{padding:7px 0;text-align:left;font-size:13px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.er-feuille td{padding:8px 0;border-bottom:1px solid var(--line)}
+.er-feuille .m{text-align:right;font-variant-numeric:tabular-nums}
+.er-f-total{display:flex;justify-content:flex-end;gap:24px;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:700}
+.er-manque{color:#7D5200;font-weight:600}
+.er-mois{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}
+.er-mois button{min-height:44px;border:0;border-radius:10px;background:#EDF0E8;font:inherit;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.er-mois button.on{background:var(--pine);color:#fff;font-weight:700}
+@media print{
+  body.print-facture #sheet,body.print-facture .side,body.print-facture .topbar,body.print-facture .bottom,body.print-facture .head,body.print-facture .er-ariane,body.print-facture .toast,body.print-facture .er-brouillon{display:none!important}
+  body.print-facture{background:#fff}
+  body.print-facture .er-feuille{max-width:none;border:0;box-shadow:none;padding:0}
+}
+@media (max-width:800px){.er-fil,.er-deux2{grid-template-columns:minmax(0,1fr)}.er-mois{grid-template-columns:repeat(6,minmax(0,1fr))}.er-feuille{padding:18px}.er-f-t{flex-direction:column;gap:8px}.er-f-t>div,.er-d{text-align:left}}

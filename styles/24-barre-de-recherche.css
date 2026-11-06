@@ -1,0 +1,25 @@
+/* ---------- Barre de recherche ---------- */
+.er-barre{position:relative;flex:1 1 280px;max-width:420px;min-width:0;margin-left:auto}
+.side .nav[data-v=saisir]{margin-left:8px}
+.er-cherche{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:44px;margin:0;padding:0 8px 0 12px;background:#fff;border:1px solid #EBD9A6;border-radius:13px;color:var(--muted);font-weight:400}
+.er-cherche:hover{border-color:#7D5200}
+.er-cherche:focus-within{border-color:var(--pine);box-shadow:0 0 0 3px var(--honey)}
+.er-cherche svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;display:block!important}
+.er-cherche input{flex:1;min-width:0;width:auto;min-height:0;margin:0;padding:0;border:0;outline:0;box-shadow:none;background:none;font:inherit;font-size:15px;color:var(--ink)}
+.er-cherche input::-webkit-search-cancel-button{display:none}
+.er-cherche input::placeholder{color:var(--muted);opacity:1}
+kbd{font-family:inherit;font-size:12px;font-weight:600;color:#3F4A44;background:#E9ECE4;border-radius:6px;padding:2px 6px;white-space:nowrap}
+#erRes{position:absolute;right:0;top:calc(100% + 8px);width:min(560px,calc(100vw - 48px));max-height:calc(100vh - 100px);display:flex;flex-direction:column;background:#fff;border-radius:14px;box-shadow:0 24px 60px rgba(20,28,24,.35);color:var(--ink);overflow:hidden;z-index:30}
+#erRes[hidden]{display:none}
+.er-liste{overflow:auto;padding-bottom:6px}
+.er-liste h3{margin:0;padding:12px 16px 4px;font-size:13px;font-weight:600;color:var(--muted)}
+.er-aide{padding:14px 16px 8px}
+.er-r{display:flex;flex-direction:column;justify-content:center;width:100%;min-height:48px;padding:6px 16px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.er-r b{font-weight:600}
+.er-r:hover,.er-r.sel{background:var(--honeysoft)}
+.er-r mark{background:#EBD9A6;color:inherit;border-radius:3px;padding:0 1px}
+.er-pied{display:flex;flex-wrap:wrap;gap:14px;margin:0;padding:10px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.er-pied span{display:inline-flex;align-items:center;gap:5px}
+body.er-ouvert::after{content:"";position:fixed;inset:0;z-index:15;background:rgba(27,36,32,.28)}
+@media (max-width:800px){.er-barre{display:none}}
+@media (max-width:1100px){.er-barre kbd{display:none}}
