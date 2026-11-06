@@ -1225,26 +1225,28 @@ body[data-route=lot] .card,body[data-route=saison] .card{background:#fff;border:
 <body>
 <div id="app"></div>
 <dialog id="sheet"><form id="sheetForm"></form></dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="./config.js"></script>
-<script src="./app.js"></script>
-<script src="./photos.js"></script>
-<script src="./registre.js"></script>
-<script src="./rappels.js"></script>
-<script src="./visites-groupees.js"></script>
-<script src="./etiquettes.js"></script>
-<script src="./exploitations.js"></script>
-<script src="./ux.js"></script>
-<script src="./offline.js"></script>
-<script src="./v3.js"></script>
-<script src="./nav4.js"></script>
-<script src="./meteo.js"></script>
-<script src="./api-compagnon.js"></script>
-<script src="./alveoles.js"></script>
-<script src="./voix.js"></script>
-<script src="./ergonomie.js"></script>
-<script src="./essentiels.js"></script>
-<script src="./tournee.js"></script>
-<script src="./demarrage.js"></script>
+<!-- Tous les scripts sont « defer » : ils s'exécutent dans l'ordre du document, modules ES compris (IT-03). -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script type="module" src="./src/passerelle.js"></script>
+<script defer src="./config.js"></script>
+<script defer src="./app.js"></script>
+<script defer src="./photos.js"></script>
+<script defer src="./registre.js"></script>
+<script defer src="./rappels.js"></script>
+<script defer src="./visites-groupees.js"></script>
+<script defer src="./etiquettes.js"></script>
+<script defer src="./exploitations.js"></script>
+<script defer src="./ux.js"></script>
+<script defer src="./offline.js"></script>
+<script defer src="./v3.js"></script>
+<script defer src="./nav4.js"></script>
+<script defer src="./meteo.js"></script>
+<script defer src="./api-compagnon.js"></script>
+<script defer src="./alveoles.js"></script>
+<script defer src="./voix.js"></script>
+<script defer src="./ergonomie.js"></script>
+<script defer src="./essentiels.js"></script>
+<script defer src="./tournee.js"></script>
+<script defer src="./demarrage.js"></script>
 </body>
 </html>

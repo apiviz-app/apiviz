@@ -156,8 +156,9 @@ const UX = (() => {
     reine: { Vue: "good", "Non vue": "watch" }, couvain: { "Réduit": "watch", Normal: "good", Abondant: "good" },
   };
   // Taux pour 100 abeilles quand on connaît le nombre d'abeilles prélevées (sucre glace, lavage).
-  const tauxVarroa = (v) => (v && v.varroa != null && v.varroa_abeilles > 0 && v.varroa_methode !== "Lange" ? v.varroa / v.varroa_abeilles * 100 : null);
-  const seuilVarroa = () => Number(cfg().varroaSeuil) || 3;
+  // Règles sanitaires : src/domaines/sante/regles.js (IT-03, testées unitairement).
+  const tauxVarroa = Regles.sante.tauxVarroa;
+  const seuilVarroa = () => Regles.sante.seuilVarroa(cfg());
   function chipVarroa(v) {
     const t = tauxVarroa(v);
     if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");

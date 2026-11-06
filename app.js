@@ -156,30 +156,8 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     sim: null,
     venteFiltre: "toutes",
   },
-  esc = (valeur) =>
-    String(valeur ?? "").replace(
-      /[&<>"']/g,
-      (car) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[car],
-    ),
-  n = (valeur, decimales = 1) =>
-    Number(valeur || 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }),
-  eur = (montant) => n(montant, 2) + " \u20AC",
-  eur0 = (montant) => n(montant, 0) + " \u20AC",
-  today = () => {
-    const maintenant = new Date();
-    return new Date(maintenant - maintenant.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-  },
-  dfr = (date) =>
-    date ? date.slice(8, 10) + "/" + date.slice(5, 7) + "/" + date.slice(0, 4) : "\u2013",
-  dshort = (date) => (date ? date.slice(8, 10) + "/" + date.slice(5, 7) : "\u2013"),
-  byId = (liste, id) => liste.find((element) => element.id === id),
-  sum = (liste, valeurDe) =>
-    liste.reduce((total, element) => total + Number(valeurDe(element) || 0), 0),
-  days = (date) => Math.floor((new Date(today()) - new Date(date)) / 864e5),
-  yr = (date) => Number(String(date).slice(0, 4)),
-  mo = (date) => Number(String(date).slice(5, 7)) - 1,
-  num = (valeur) => (valeur === "" || valeur === void 0 || valeur === null ? null : Number(valeur)),
-  orNull = (valeur) => valeur || null,
+  // Formats : fonctions pures de src/noyau/format.js (IT-03, testées unitairement).
+  { esc, n, eur, eur0, today, dfr, dshort, byId, sum, days, yr, mo, num, orNull } = Regles,
   etatClass = (etat) => (etat === "Bonne" ? "good" : etat === "Critique" ? "crit" : "watch"),
   // Nom affiché : celui des réglages, sinon celui de l'exploitation ouverte, sinon « Mon exploitation » (AP-BUG-006).
   nomExploitation = () =>
@@ -512,11 +490,7 @@ const table = (colonnes, lignes, siVide) =>
     window.innerWidth <= 800
       ? Math.max(280, window.innerWidth - 66)
       : Math.min(1e3, window.innerWidth - 300);
-function niceMax(valeur) {
-  if (valeur <= 0) return 1;
-  const puissance = 10 ** Math.floor(Math.log10(valeur));
-  return [1, 2, 2.5, 5, 10].map((palier) => palier * puissance).find((palier) => palier >= valeur);
-}
+const niceMax = Regles.niceMax;
 const legend = (series) =>
     series.length > 1
       ? `<div class="legend">${series.map((serie) => `<span><i style="background:${serie.color}"></i>${esc(serie.name)}</span>`).join("")}</div>`
@@ -644,20 +618,11 @@ function hbars(lignes, couleur = C.honey) {
     )
     .join("")}</div>`;
 }
+// Règles financières : src/domaines/finances/regles.js (IT-03, testées unitairement).
 function stock() {
-  const donnees = S.d;
-  return {
-    pots: sum(donnees.lots, (lot) => lot.pots_restants),
-    kg: sum(donnees.lots, (lot) => (lot.pots_restants * lot.format_g) / 1e3),
-    kgPots: sum(donnees.lots, (lot) => (lot.pots_initiaux * lot.format_g) / 1e3),
-    valeur: sum(donnees.lots, (lot) => lot.pots_restants * lot.prix),
-  };
+  return Regles.finances.stock(S.d);
 }
-const venteTotal = (vente) =>
-    sum(
-      S.d.lignes.filter((ligne) => ligne.vente_id === vente.id),
-      (ligne) => ligne.quantite * ligne.prix_unitaire,
-    ),
+const venteTotal = (vente) => Regles.finances.venteTotal(S.d, vente),
   lastVisit = (rucheId) => S.d.visites.find((visite) => visite.ruche_id === rucheId),
   years = () => {
     const donnees = S.d,
@@ -671,96 +636,10 @@ const venteTotal = (vente) =>
     );
   };
 function fin(annee) {
-  const donnees = S.d,
-    ventes = donnees.ventes.filter((vente) => yr(vente.date_vente) === annee),
-    depenses = donnees.depenses.filter((depense) => yr(depense.date_depense) === annee),
-    recoltes = donnees.recoltes.filter((recolte) => yr(recolte.date_recolte) === annee),
-    idsVentes = new Set(ventes.map((vente) => vente.id)),
-    lignes = donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
-    ca = sum(lignes, (ligne) => ligne.quantite * ligne.prix_unitaire),
-    encaisse = sum(
-      ventes.filter((vente) => vente.paye),
-      venteTotal,
-    ),
-    charges = sum(depenses, (depense) => depense.montant),
-    kgRecolte = sum(recoltes, (recolte) => recolte.kg),
-    kgVendu = sum(
-      lignes,
-      (ligne) => (ligne.quantite * (byId(donnees.lots, ligne.lot_id)?.format_g || 0)) / 1e3,
-    ),
-    moisCa = Array(12).fill(0),
-    moisEncaisse = Array(12).fill(0),
-    moisDepenses = Array(12).fill(0),
-    moisPots = Array(12).fill(0);
-  (ventes.forEach((vente) => {
-    const total = venteTotal(vente);
-    ((moisCa[mo(vente.date_vente)] += total),
-      vente.paye && (moisEncaisse[mo(vente.date_vente)] += total),
-      (moisPots[mo(vente.date_vente)] += sum(
-        donnees.lignes.filter((ligne) => ligne.vente_id === vente.id),
-        (ligne) => ligne.quantite,
-      )));
-  }),
-    depenses.forEach((depense) => {
-      moisDepenses[mo(depense.date_depense)] += Number(depense.montant);
-    }));
-  const report =
-    sum(
-      donnees.ventes.filter((vente) => yr(vente.date_vente) < annee && vente.paye),
-      venteTotal,
-    ) -
-    sum(
-      donnees.depenses.filter((depense) => yr(depense.date_depense) < annee),
-      (depense) => depense.montant,
-    );
-  let cumul = report;
-  const dernierMois =
-      new Date().getFullYear() === annee
-        ? new Date().getMonth()
-        : annee > new Date().getFullYear()
-          ? -1
-          : 11,
-    tresorerie = moisEncaisse.map(
-      (encaisse, mois) => (
-        (cumul += encaisse - moisDepenses[mois]),
-        mois <= dernierMois ? cumul : null
-      ),
-    );
-  return {
-    ventes: ventes,
-    dep: depenses,
-    lignes: lignes,
-    ca: ca,
-    encaisse: encaisse,
-    aEncaisser: ca - encaisse,
-    charges: charges,
-    resultat: ca - charges,
-    kgRec: kgRecolte,
-    kgVendu: kgVendu,
-    mCa: moisCa,
-    mEnc: moisEncaisse,
-    mDep: moisDepenses,
-    mPots: moisPots,
-    treso: tresorerie,
-    report: report,
-    tresoFin: report + encaisse - charges,
-    coutKg: kgRecolte ? charges / kgRecolte : null,
-    prixKg: kgVendu ? ca / kgVendu : null,
-  };
+  return Regles.finances.fin(S.d, annee);
 }
 function rythme() {
-  const donnees = S.d,
-    depuis = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10),
-    idsVentes = new Set(
-      donnees.ventes.filter((vente) => vente.date_vente >= depuis).map((vente) => vente.id),
-    ),
-    potsParMois =
-      sum(
-        donnees.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
-        (ligne) => ligne.quantite,
-      ) / 3,
-    pots = stock().pots;
-  return { mois: potsParMois, moisRestants: potsParMois > 0 ? pots / potsParMois : null };
+  return Regles.finances.rythme(S.d);
 }
 function todos() {
   const donnees = S.d,
@@ -2856,6 +2735,10 @@ async function boot() {
   }
   render();
 }
+// Démarrage après tous les scripts (DOMContentLoaded) : avec « defer » (IT-03), readyState vaut déjà « interactive »
+// pendant l'exécution des scripts, il ne suffit plus à savoir s'ils sont tous chargés.
+let scriptsCharges = document.readyState === "complete";
+addEventListener("DOMContentLoaded", () => { scriptsCharges = !0; }, { once: !0 });
 (sb.auth.onAuthStateChange((evenement) => {
   if (evenement === "PASSWORD_RECOVERY") {
     ((S.recovery = !0), render());
@@ -2865,10 +2748,8 @@ async function boot() {
     ((evenement === "SIGNED_IN" || evenement === "SIGNED_OUT") &&
       setTimeout(
         () =>
-          document.readyState === "loading"
-            ? addEventListener("DOMContentLoaded", () => boot(), { once: !0 })
-            : boot(),
+          scriptsCharges ? boot() : addEventListener("DOMContentLoaded", () => boot(), { once: !0 }),
         0,
       ));
 }),
-  document.readyState === "loading" ? addEventListener("DOMContentLoaded", () => boot()) : boot());
+  scriptsCharges ? boot() : addEventListener("DOMContentLoaded", () => boot(), { once: !0 }));

@@ -3,6 +3,7 @@
 const VERSION = "apidoo-2026-11-06-v5-16-correctifs";
 const COQUILLE = [
   "./", "./index.html", "./app.js", "./photos.js", "./offline.js", "./registre.js", "./rappels.js", "./visites-groupees.js", "./etiquettes.js", "./exploitations.js", "./ux.js", "./v3.js", "./nav4.js", "./meteo.js", "./api-compagnon.js", "./alveoles.js", "./voix.js", "./ergonomie.js", "./essentiels.js", "./tournee.js", "./demarrage.js", "./config.js", "./manifest.webmanifest",
+  "./src/passerelle.js", "./src/noyau/format.js", "./src/domaines/finances/regles.js", "./src/domaines/sante/regles.js", "./src/domaines/meteo/regles.js",
   "./logo-apidoo.svg", "./logo-apidoo-clair.svg", "./symbole-apidoo.svg", "./icone-apidoo.svg",
   "./icone-180.png", "./icone-192.png", "./icone-512.png", "./icone-maskable-192.png", "./icone-maskable-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
