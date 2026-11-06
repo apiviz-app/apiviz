@@ -1,0 +1,33 @@
+    # IT-04 — Supprimé récemment et restauration (AP-US-024), écran Activité, réservé aux responsables.
+    import os
+    cap = os.environ.get("CAPTURES")
+    V = {"id": str(uuid.uuid4()), "ruche_id": R1, "date_visite": "2026-11-02", "activite": "Forte", "provisions": "Bonnes", "reine": "Vue", "couvain": "Normal",
+         "poids_kg": 41, "varroa": None, "note": "Visite effacée par erreur", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False,
+         "exploitation_id": E1, "created_at": "2026-11-02T09:00:00Z", "auteur": "ami@apidoo.fr"}
+    DATA["journal_audit"] = [
+        {"id": 7, "table_nom": "visites", "avant": V, "auteur": "ami@apidoo.fr", "cree_le": "2026-11-05T18:30:00Z", "restaure_le": None},
+        {"id": 8, "table_nom": "visite_intrants", "avant": {"visite_id": V["id"]}, "auteur": "ami@apidoo.fr", "cree_le": "2026-11-05T18:30:00Z", "restaure_le": None},
+        {"id": 9, "table_nom": "clients", "avant": {"nom": "M. Durand"}, "auteur": "test@apidoo.fr", "cree_le": "2026-11-04T10:00:00Z", "restaure_le": None},
+    ]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('activite')"); page.wait_for_selector(".au-supprimes .au-ligne", timeout=10000)
+    t = page.locator(".au-supprimes").inner_text()
+    verif("Visite · Ruche 1" in t and "Client · M. Durand" in t, "supprimé récemment : la visite et le client, avec leur contenu")
+    verif(page.locator(".au-ligne").count() == 2, "les intrants supprimés avec la visite ne font pas une ligne à part")
+    verif(page.locator(".au-ligne:has-text('Client') [data-act=v3restaurer]").count() == 0, "un client se consulte, seules visites, ventes et dépenses se restaurent")
+    if cap: page.screenshot(path=cap + "/au-activite-375.png", full_page=True)
+    page.click("[data-act=v3restaurer]"); page.click("[data-act=v3restaurer] >> text=Confirmer")
+    page.wait_for_selector(".toast >> text=Visite restaurée", timeout=10000)
+    verif(any(n == "restaurer" and b == {"p_id": 7} for n, b in recu["rpc"]), "restaurer(7) appelée")
+    verif(any(v["id"] == V["id"] for v in DATA["visites"]), "la visite est revenue")
+    page.wait_for_selector(".au-fait >> text=Restauré", timeout=10000)
+    verif(page.locator(".au-fait").count() == 1, "la ligne affiche « Restauré »")
+    page.set_viewport_size({"width": 1280, "height": 900})
+    if cap: page.screenshot(path=cap + "/au-activite-1280.png", full_page=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    # Un simple membre ne voit pas cette rubrique.
+    EXPL["miennes"][0]["role"] = "membre"
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('activite')"); page.wait_for_timeout(600)
+    verif(page.locator(".au-supprimes").count() == 0, "un membre (non responsable) ne voit pas « Supprimé récemment »")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

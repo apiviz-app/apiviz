@@ -422,6 +422,7 @@ const V3 = (() => {
   const majMicro = () => { const b = document.querySelector(".v3-micro"); if (b) b.outerHTML = boutonDictee(); };
   ACT.v3dicter = () => {
     if (dictee) { dictee.stop(); return; }
+    if (typeof VX != "undefined" && VX.avantDictee && !VX.dicteeAcceptee()) return VX.avantDictee(() => ACT.v3dicter());
     const zone = document.getElementById("v_note");
     if (!zone || !Reco) return;
     const r = new Reco();
@@ -517,8 +518,65 @@ const V3 = (() => {
       jour = j;
       return `${h}<button type="button" class="u-todo" ${v ? `data-act="${act}" data-v="${esc(v)}"` : "disabled"}><span class="u-todo-t"><b>${esc(titre)}</b><span class="small">${esc([sous, qui ? U.qui(qui) : "", String(t).length > 10 ? new Date(t).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : ""].filter(Boolean).join(" · "))}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`;
     }).join("");
-    shell("Activité récente", "Qui a fait quoi", "", html ? `<section class="card u-liste v3-fil">${html}</section>` : '<p class="small">Rien pour le moment.</p>');
+    shell("Activité récente", "Qui a fait quoi", "", (html ? `<section class="card u-liste v3-fil">${html}</section>` : '<p class="small">Rien pour le moment.</p>') + supprimes());
   }
+
+  // ---------- Supprimé récemment (IT-04, AP-US-024) ----------
+  // Journal d'audit de la migration 014, lu par les responsables seulement (la base filtre aussi).
+  // Visites, ventes et dépenses se restaurent ; le reste se consulte pour ressaisir au besoin.
+  const audit = { pour: null, lignes: null, erreur: "" };
+  const RESTAURABLES = { visites: "Visite", ventes: "Vente", depenses: "Dépense" };
+  const ENFANTS = new Set(["visite_intrants", "vente_lignes", "visite_photos"]);
+  function decrireSupprime(l) {
+    const a = l.avant || {}, d = S.d;
+    switch (l.table_nom) {
+      case "visites": return `Visite · ${rucheDe(a.ruche_id)?.nom || "ruche supprimée"} · ${U.dateCourte(a.date_visite)}`;
+      case "ventes": return `Vente · ${byId(d.clients, a.client_id)?.nom || "client"} · ${U.dateCourte(a.date_vente)}`;
+      case "depenses": return `Dépense · ${a.libelle || ""} · ${eur(a.montant)}`;
+      case "ruches": return `Ruche · ${a.nom || ""}`;
+      case "recoltes": return `Récolte · ${n(a.kg)} kg`;
+      case "lots": return `Lot · ${a.code || ""}`;
+      case "clients": return `Client · ${a.nom || ""}`;
+      case "fournisseurs": return `Fournisseur · ${a.nom || ""}`;
+      case "articles": return `Article · ${a.nom || ""}`;
+      case "taches": return `Tâche · ${a.titre || ""}`;
+      case "ruche_evenements": return `${TYPES[a.type] || "Événement"} · ${rucheDe(a.ruche_id)?.nom || "ruche"}`;
+      case "budgets": return `Budget ${a.annee || ""} · ${a.poste || ""}`;
+      default: return "Élément supprimé";
+    }
+  }
+  async function chargerSupprimes() {
+    const ex = EX.courante();
+    audit.pour = ex; audit.erreur = "";
+    const depuis = new Date(Date.now() - 30 * 864e5).toISOString();
+    const r = await sb.from("journal_audit").select("id, table_nom, avant, auteur, cree_le, restaure_le")
+      .eq("operation", "DELETE").gte("cree_le", depuis).order("cree_le", { ascending: false }).limit(60);
+    if (r.error) { audit.lignes = []; audit.erreur = messageErreur(r.error); }
+    else audit.lignes = (r.data || []).filter((l) => !ENFANTS.has(l.table_nom)).slice(0, 30);
+    if (S.route === "activite") redessiner("activite");
+  }
+  function supprimes() {
+    if (typeof EX == "undefined" || !EX.responsable()) return "";
+    if (typeof HL != "undefined" && HL.horsLigne()) return '<section class="card"><h2>Supprimé récemment</h2><p class="small">Demande le réseau.</p></section>';
+    if (audit.pour !== EX.courante() || audit.lignes === null) {
+      if (audit.pour !== EX.courante() || !audit.charge) { audit.charge = true; audit.lignes = null; chargerSupprimes().catch((e) => { audit.lignes = []; audit.erreur = messageErreur(e); }).finally(() => { audit.charge = false; }); }
+      return '<section class="card"><h2>Supprimé récemment</h2><p class="small">Chargement…</p></section>';
+    }
+    const lignes = audit.lignes.map((l) => {
+      const action = l.restaure_le ? '<span class="au-fait">Restauré</span>'
+        : RESTAURABLES[l.table_nom] ? `<button type="button" class="btn sm" data-act="v3restaurer" data-v="${l.id}">Restaurer</button>` : "";
+      return `<div class="au-ligne"><span class="u-todo-t"><b>${esc(decrireSupprime(l))}</b><span class="small">${esc([U.dateCourte(l.cree_le.slice(0, 10)), new Date(l.cree_le).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), l.auteur ? U.qui(l.auteur) : ""].filter(Boolean).join(" · "))}</span></span>${action}</div>`;
+    }).join("");
+    return `<section class="card au-supprimes"><h2>Supprimé récemment</h2><p class="small">Les 30 derniers jours. Les visites, ventes et dépenses se restaurent ; les photos d’une visite supprimée ne reviennent pas.</p>
+      ${audit.erreur ? `<p class="small crit">${esc(audit.erreur)}</p>` : lignes || '<p class="small">Rien n’a été supprimé.</p>'}</section>`;
+  }
+  ACT.v3restaurer = (id, _k, btn) => twoStep(btn, "Confirmer", async () => {
+    const { data, error } = await sb.rpc("restaurer", { p_id: Number(id) });
+    if (error) throw error;
+    audit.lignes = null; audit.pour = null;
+    await refresh();
+    toast(`${RESTAURABLES[data?.table] || "Élément"} restaurée`);
+  });
 
   // ---------- Recherche ----------
   let requete = "";
