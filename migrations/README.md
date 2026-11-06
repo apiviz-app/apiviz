@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013 → 014
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -45,9 +45,32 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | 013-noyau-resume-et-journal.sql | Vue `colonies_resume` (dernière visite, dernier poids, dernier comptage varroa, nombre de visites par colonie ; `security_invoker`) ; table `journal_erreurs` (RLS sans politique : aucun accès par l'API) ; `journaliser_erreur()` (écriture regroupée par minute, e-mails masqués, purge à 90 jours). Additive, ne casse pas l'ancienne version (IT-03) | 6 nov. 2026 (relevé avant/après ; `revoke` de la vue relancé à part après ajout au fichier) | 6 nov. 2026 (accord du responsable ; relevé avant/après, structure identique à la recette) |
 | (correction E5, sans fichier) | `revoke execute … from public` sur `creer_visite` et `creer_vente` : aligne la recette sur la production | 6 nov. 2026 (entrée d'historique `e5_retrait_execution_public`) | déjà dans cet état |
 
-En attente pour la production : aucune (`a-appliquer-en-production.txt` est vide depuis le 6 nov. 2026).
+| 014-roles-audit.sql | Rôle `lecteur` (politiques séparées lecture / ajout / modification / suppression sur les 16 tables et l'espace photos) ; invitations avec `role`, `usages_max`, `usages`, `revoque_le` (vérifiés par `rejoindre()` ; `invitation_info()` renvoie aussi `etat` et `role`) ; `creer_visite` et `creer_vente` contrôlent ruche, client, articles et lots ; 14 clés étrangères composites « même exploitation » ; `incoherences_exploitation()` ; table `journal_audit` (déclencheur `auditer()`, lecture par les responsables, purge à 1 an) et `restaurer()` ; `exploitations.demo`, `creer_exploitation_demo()`, `indicateurs_usage()` ; `empreinte_structure()` (lisible sans connexion, empreintes md5 seulement). Additive, ne casse pas l'ancienne version (IT-04) | 6 nov. 2026 (relevé avant/après `releves/structure-2026-11-06-recette-apres-014.json` ; empreintes identiques au rejeu ; aucune incohérence, 14 clés validées) | à faire, après accord |
 
-Tests SQL de 012 et 013 sur une base en mémoire : `node tests/sql/test_012.mjs`, `node tests/sql/test_013.mjs` (lancés aussi par `tests/lancer.sh`).
+En attente pour la production : `014-roles-audit.sql`. Avant de l'appliquer sur `apidoo`, lancer en lecture seule
+`select * from public.incoherences_exploitation();` **après** la migration (ou la requête équivalente avant) : une ligne
+non nulle signifie qu'une clé composite est restée « non validée » (la migration passe quand même et l'écrit en
+avertissement). Production relevée le 6 nov. 2026 : 0 visite, 0 vente, 7 récoltes, 1 dépense, aucune donnée d'une autre
+exploitation possible (une seule exploitation).
+
+Tests SQL sur une base en mémoire (IT-04, AP-FEAT-008) : `sh tests/sql/lancer.sh` lance tous les `tests/sql/test_*.mjs` et
+les contrôles de structure ; « Vérifier » les lance dans un job à part (« Tests SQL »).
+
+| Fichier | Ce qu'il vérifie |
+|---|---|
+| `tests/sql/socle.mjs` | Socle commun : Postgres en mémoire, `auth.jwt()` simulé, ordre des migrations, deux exploitations avec une ligne dans chaque table |
+| `test_isolation.mjs` | Matrice tables × rôles × opérations (285 vérifications) : un membre de A avec l'en-tête de B ne lit ni n'écrit rien ; membre écrit, lecteur non ; fonctions refusées au lecteur ; rattachements croisés refusés ; visiteur non connecté |
+| `test_014.mjs` | Relance de 010 à 014, invitations (usage unique, révocation, expiration, liens anciens), audit et restauration, purge, migration sur données incohérentes, démo, empreinte |
+| `test_demo.mjs` | Chargement de l'exploitation de démonstration par les mêmes opérations que `scripts/demo.mjs` |
+| `test_012.mjs`, `test_013.mjs`, `test_donnees_essai.mjs` | Migrations 012 et 013, scripts d'essai de `tests/production` |
+
+Ajouter une migration : l'ajouter à `ORDRE` dans `tests/sql/socle.mjs` **et** dans `scripts/rejouer-migrations.mjs`,
+et à `RELANCABLES` si elle est relançable. La matrice d'isolation doit rester verte ; toute nouvelle table qui porte
+`exploitation_id` s'ajoute à `TABLES` et à `donnees()` du socle.
+
+**Contrôle de structure avant production** (AP-TECH-042) : `node scripts/controler-structure.mjs config.js` rejoue les
+migrations en mémoire et compare `empreinte_structure()` à la base de production, avec la clé publique (aucune écriture).
+La mise en ligne en production le lance et refuse de partir en cas d'écart ; la case « migrations faites » a disparu.
 
 ## Relevé des deux bases — 6 novembre 2026
 

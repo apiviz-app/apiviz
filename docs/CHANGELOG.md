@@ -3,7 +3,55 @@
 **État au 6 nov. 2026, 15 h 10.** Production et recette publient la **v5.17** (commit `bc66584`, recette puis production
 le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jusqu'au 4 nov.
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
-Aucune migration en attente.
+`apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
+
+## v5.18 · à publier en recette · sécurité de la base, rôles et tests SQL (IT-04)
+Migration : `migrations/014-roles-audit.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé avant/après :
+seulement les ajouts de 014 ; empreintes de structure identiques au rejeu des fichiers ; aucune donnée incohérente),
+à appliquer sur `apidoo` après accord. **Ne casse pas l'ancienne version** : membres et responsables gardent les mêmes
+droits, les liens d'invitation existants restent valables, `invitation_info()` garde ses colonnes. La v5.18 a besoin
+de 014 (la mise en ligne en production le vérifie désormais toute seule).
+
+Pour l'apiculteur :
+- **Inviter en lecture seule** (conjoint, comptable, mentor) : il voit tout, ne peut rien saisir ni supprimer ; la base
+  le refuse, et l'application ne lui montre aucun bouton de saisie (« Lecture seule » sous le titre).
+- **Liens d'invitation maîtrisés** : à la création, on choisit le rôle (membre ou lecture seule) et « une seule
+  personne » ou « plusieurs ». Gestion › Membres liste les liens actifs avec **Révoquer**. Une deuxième personne sur un
+  lien à usage unique voit « Ce lien a déjà servi ». Le rôle d'un membre se change en trois choix.
+- **Supprimé récemment** (Activité, responsables) : ce qui a été supprimé ces 30 derniers jours, par qui et quand ;
+  **Restaurer** une visite (avec ses intrants), une vente (si les pots sont encore là) ou une dépense. Les photos d'une
+  visite supprimée ne reviennent pas.
+- **Confidentialité** : page « Où vont mes données » (menu du compte, écran de présentation) ; avant la première
+  dictée, un message explique que l'audio peut partir chez le fournisseur du navigateur, avec « Saisir au doigt ».
+
+Sous le capot :
+- **Tests SQL** (job « Tests SQL » de Vérifier, moins d'une minute) : matrice tables × rôles × opérations
+  (285 vérifications), migration 014 (55), démonstration (12) ; relance de 010 à 014.
+- **Intégrité** : une visite, une récolte, une vente… ne peut plus être rattachée à un objet d'une autre exploitation,
+  même par l'API (14 clés composites ; contrôle dans `creer_visite` et `creer_vente`).
+- **Journal d'audit** de toutes les suppressions et modifications des tables métier, purgé à 1 an.
+- **Mise en ligne** : la case « migrations faites » disparaît ; la production compare la structure de la base aux
+  fichiers et refuse de partir en cas d'écart.
+- **Démonstration reproductible** : `tests/demo/exploitation-demo.json` (3 ruchers, 20 colonies, 2 saisons) et
+  `scripts/demo.mjs` (refuse la production).
+
+**À vérifier**
+1. Gestion › Membres (responsable) : créer un lien « Lecture seule » pour une seule personne ; l'ouvrir sur un autre
+   téléphone avec un autre compte : l'écran dit « en lecture seule », la personne rejoint ; un troisième compte qui
+   ouvre le même lien voit « Ce lien a déjà servi ».
+2. Avec le compte lecteur : accueil, ruchers, fiche ruche, miel, ventes, gestion : aucun bouton « + », « Nouvelle
+   visite », « Supprimer » ; les données se lisent ; le menu du compte indique « Lecture seule ». « Quitter » marche.
+3. Révoquer un lien encore valable, puis l'ouvrir : refusé (« révoqué »).
+4. Changer le rôle d'un membre (Membre → Lecture seule → Membre) : son application suit après rechargement.
+5. Supprimer une visite avec un intrant, puis Activité › Supprimé récemment › Restaurer : la visite revient au
+   journal, le stock de l'intrant baisse de nouveau.
+6. Première dictée sur un téléphone : le message s'affiche une fois ; « Saisir au doigt » ne lance rien ; « Continuer »
+   lance la dictée et le message ne revient plus.
+7. Menu du compte › Confidentialité : la page s'ouvre, lisible, avec le bouton « Revenir à Apidoo ».
+8. Saisie hors ligne (membre) : couper le réseau, enregistrer une visite, rétablir : elle part (la 014 ne change rien
+   pour un membre).
+9. **Avant la production** : compléter dans `confidentialite.html` et `docs/CONFIDENTIALITE.md` le responsable du
+   traitement et l'adresse de contact (« [à compléter] »).
 
 ## v5.17 · 6 nov. 2026 · en production · noyau applicatif (IT-03)
 Migration : `migrations/013-noyau-resume-et-journal.sql`, **appliquée sur `apidoo-test` puis `apidoo` le 6 nov. 2026**
