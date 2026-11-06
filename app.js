@@ -750,235 +750,6 @@ function todos() {
     liste
   );
 }
-function honeycomb(ruches) {
-  const parLigne = window.innerWidth <= 800 ? 3 : 4,
-    rangees = [];
-  for (let debut = 0; debut < ruches.length; debut += parLigne)
-    rangees.push(ruches.slice(debut, debut + parLigne));
-  const cellule = (ruche) =>
-      `<button class="cell bg-${etatClass(ruche.etat)}" data-act="ruche" data-v="${ruche.id}" aria-label="Ouvrir ${esc(ruche.nom)}, \xE9tat ${esc(ruche.etat)}"><span>${esc(ruche.nom)}</span></button>`,
-    legende = ETATS.map((etat) => [etat, ruches.filter((ruche) => ruche.etat === etat).length])
-      .filter((compte) => compte[1])
-      .map(
-        ([etat, nombre]) =>
-          `<span class="tag ${etatClass(etat)}">${nombre} ${etat === "Bonne" ? "en bon \xE9tat" : esc(etat.toLowerCase())}</span>`,
-      )
-      .join("");
-  return `<div class="comb">${rangees.map((rangee) => `<div class="comb-row">${rangee.map(cellule).join("")}</div>`).join("")}</div><div class="comb-legend">${legende}</div>`;
-}
-function viewDash() {
-  const donnees = S.d,
-    reglages = cfg(),
-    stockMiel = stock(),
-    annee = new Date().getFullYear(),
-    finances = fin(annee),
-    etapes = [
-      [donnees.ruches.length > 0, "Ajouter vos ruches", "newruches"],
-      [donnees.articles.length > 0, "Renseigner votre mat\xE9riel", "gomateriel"],
-      [donnees.recoltes.length > 0, "Saisir une r\xE9colte", "newrecolte"],
-      [donnees.lots.length > 0, "Cr\xE9er vos lots de pots", "newlot"],
-      [donnees.clients.length > 0, "Ajouter un client", "newclient"],
-      [donnees.ventes.length > 0, "Enregistrer une vente", "newvente"],
-    ],
-    faites = etapes.filter((etape) => etape[0]).length,
-    demarrage =
-      faites < etapes.length
-        ? `<section class="card">
-    <h2>Bien d\xE9marrer</h2><p class="small">${faites} sur ${etapes.length} \xE9tapes termin\xE9es</p><div class="track"><i style="width:${Math.round((faites / etapes.length) * 100)}%"></i></div>
-    <div class="steps">${etapes.map(([fait, libelle, action]) => `<button class="step ${fait ? "ok" : ""}" ${fait ? "disabled" : `data-act="${action}"`}><span class="dot">${fait ? "\u2713" : ""}</span>${esc(libelle)}</button>`).join("")}</div>
-  </section>`
-        : "",
-    rayon = honeycomb(donnees.ruches),
-    aFaire = todos()
-      .slice(0, 7)
-      .map(
-        ([titre, classe, texte, cible]) =>
-          `<button class="todo" data-act="${cible.startsWith("ruche:") ? "ruche" : "go"}" data-v="${cible.replace("ruche:", "")}"><b class="${classe}">${esc(titre)}</b><span>${esc(texte)}</span></button>`,
-      )
-      .join(""),
-    tachesOuvertes = donnees.taches.filter((tache) => !tache.faite).length,
-    aSurveiller = donnees.ruches.filter((ruche) => ruche.etat !== "Bonne").length,
-    resume = [
-      `${donnees.ruches.length} ruche${donnees.ruches.length > 1 ? "s" : ""}`,
-      aSurveiller ? `${aSurveiller} \xE0 surveiller` : "",
-      tachesOuvertes ? `${tachesOuvertes} t\xE2che${tachesOuvertes > 1 ? "s" : ""} \xE0 faire` : "",
-    ]
-      .filter(Boolean)
-      .join(" \xB7 "),
-    heure = new Date().getHours();
-  shell(
-    heure < 18 ? "Bonjour" : "Bonsoir",
-    resume,
-    '<button class="btn honey" data-act="newvisite">Nouvelle visite</button><button class="btn ghost" data-act="newvente">Nouvelle vente</button>',
-    `
-    ${demarrage}
-    ${typeof HL != "undefined" ? HL.section() : ""}
-    <div class="grid">
-      ${kpi("Miel en stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
-      ${kpi("Ventes " + annee, eur0(finances.ca), finances.aEncaisser > 0 ? eur0(finances.aEncaisser) + " \xE0 encaisser" : finances.ventes.length + " vente(s)")}
-      ${kpi("R\xE9sultat " + annee, eur0(finances.resultat), "apr\xE8s " + eur0(finances.charges) + " de d\xE9penses")}
-      ${kpi("Tr\xE9sorerie", eur0(finances.tresoFin), "encaiss\xE9 moins d\xE9pens\xE9")}
-    </div>
-    <div class="grid2">
-      <section class="card"><h2>\xC9tat des ruches</h2>${donnees.ruches.length ? rayon : '<p class="small">Aucune ruche pour le moment.</p><button class="btn" data-act="newruches">Ajouter des ruches</button>'}</section>
-      <section class="card"><h2>\xC0 faire</h2>${aFaire || '<p class="small">Rien \xE0 signaler.</p>'}</section>
-    </div>`,
-    reglages.nom +
-      " \xB7 " +
-      new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }),
-  );
-}
-function viewPlus() {
-  shell(
-    "Plus",
-    "",
-    "",
-    `<section class="card menu">${[
-      ["membres", "Exploitation et membres"],
-      ["agenda", "Agenda et t\xE2ches"],
-      ["registre", "Registre d\u2019\xE9levage"],
-      ["previsions", "Pr\xE9visions et budget"],
-      ["compta", "D\xE9penses"],
-      ["fournisseurs", "Fournisseurs"],
-      ["reglages", "R\xE9glages et exports"],
-    ]
-      .map(
-        ([route, libelle]) =>
-          `<button data-act="go" data-v="${route}">${icon(route)}<span>${libelle}</span></button>`,
-      )
-      .join(
-        "",
-      )}<button data-act="logout">${icon("plus")}<span>Se d\xE9connecter</span></button></section>`,
-  );
-}
-function viewRuches() {
-  const donnees = S.d;
-  if (!donnees.ruches.length)
-    return shell(
-      "Ruches",
-      "",
-      "",
-      emptyState(
-        "Ajoutez votre premi\xE8re ruche",
-        "Une par une ou plusieurs d\u2019un coup. Vous pourrez les renommer et les regrouper par rucher.",
-        "Ajouter des ruches",
-        "newruches",
-      ),
-    );
-  const parRucher = {};
-  donnees.ruches.forEach((ruche) => {
-    (parRucher[ruche.rucher || "Sans rucher"] =
-      parRucher[ruche.rucher || "Sans rucher"] || []).push(ruche);
-  });
-  const sections = Object.keys(parRucher)
-      .sort()
-      .map(
-        (rucher) =>
-          `<section class="card"><h2>${esc(rucher)} <span class="small">\xB7 ${parRucher[rucher].length} ruche(s)</span></h2><div class="rlist">${parRucher[
-            rucher
-          ]
-            .map((ruche) => {
-              const derniere = lastVisit(ruche.id);
-              return `<button class="rcard" data-act="ruche" data-v="${ruche.id}"><span class="hex small-hex bg-${etatClass(ruche.etat)}"></span><span class="rmain"><b>${esc(ruche.nom)}</b><span class="small">${derniere ? "Visite il y a " + days(derniere.date_visite) + " j" : "Jamais visit\xE9e"}</span></span><span class="num"><b>${n(
-                sum(
-                  donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
-                  (recolte) => recolte.kg,
-                ),
-              )} kg</b><span class="small tag ${etatClass(ruche.etat)}">${esc(ruche.etat)}</span></span></button>`;
-            })
-            .join("")}</div></section>`,
-      )
-      .join(""),
-    lignesRecoltes = donnees.recoltes.map(
-      (recolte) =>
-        `<tr><td><button class="link" data-act="editrecolte" data-v="${recolte.id}">${dfr(recolte.date_recolte)}</button>${recolte._attente ? ' <span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${recolte.ruche_id ? esc(byId(donnees.ruches, recolte.ruche_id)?.nom) : "Toutes les ruches"}</td><td class="num">${n(recolte.kg)} kg</td></tr>`,
-    );
-  shell(
-    "Ruches",
-    donnees.ruches.length + " ruche(s)",
-    '<button class="btn main" data-act="newvisite">Nouvelle visite</button><button class="btn" data-act="newrecolte">R\xE9colte</button><button class="btn" data-act="newruches">Ajouter</button>',
-    `
-    ${sections}
-    <section class="card tbl"><h2>R\xE9coltes</h2>${table(["Date", "Origine", "#Quantit\xE9"], lignesRecoltes, "Aucune r\xE9colte saisie.")}</section>`,
-  );
-}
-function viewRuche() {
-  const donnees = S.d,
-    ruche = byId(donnees.ruches, S.ruche);
-  if (!ruche) return ((S.route = "ruches"), render());
-  const visites = donnees.visites.filter((visite) => visite.ruche_id === ruche.id),
-    journal = visites.map((visite) => {
-      const intrants = donnees.intrants
-        .filter((intrant) => intrant.visite_id === visite.id)
-        .map((intrant) => {
-          const article = byId(donnees.articles, intrant.article_id);
-          return `${n(intrant.quantite)} ${esc(article?.unite)} ${esc(article?.nom)}`;
-        })
-        .join(", ");
-      return `<tr><td>${dfr(visite.date_visite)}${visite._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>Activit\xE9 ${esc(visite.activite.toLowerCase())}, provisions ${esc(visite.provisions.toLowerCase())}, reine ${esc(visite.reine.toLowerCase())}${visite.couvain ? ", couvain " + esc(visite.couvain.toLowerCase()) : ""}${visite.poids_kg ? ", " + n(visite.poids_kg) + " kg" : ""}${visite.varroa !== null && visite.varroa !== void 0 ? ", varroa " + visite.varroa : ""}${visite.note ? '<br><span class="small">' + esc(visite.note) + "</span>" : ""}${typeof RG != "undefined" ? RG.journal(visite) : ""}${typeof PH != "undefined" ? PH.vignettes(visite.id) : ""}</td><td>${intrants || "\u2013"}</td><td class="num"><button class="link" data-act="delvisite" data-v="${visite.id}">Supprimer</button></td></tr>`;
-    }),
-    kgRecoltes = sum(
-      donnees.recoltes.filter((recolte) => recolte.ruche_id === ruche.id),
-      (recolte) => recolte.kg,
-    ),
-    pesees = visites
-      .filter((visite) => visite.poids_kg)
-      .slice()
-      .reverse(),
-    taches = donnees.taches.filter((tache) => tache.ruche_id === ruche.id && !tache.faite);
-  shell(
-    ruche.nom,
-    [ruche.rucher, ruche.type_ruche, ruche.annee_reine ? "reine " + ruche.annee_reine : ""]
-      .filter(Boolean)
-      .join(" \xB7 ") || "Fiche de la ruche",
-    `<button class="btn main" data-act="newvisite" data-v="${ruche.id}">Nouvelle visite</button><button class="btn" data-act="newtache" data-v="${ruche.id}">T\xE2che</button><button class="btn" data-act="editruche" data-v="${ruche.id}">Modifier</button>`,
-    `
-    <div class="grid">
-      ${kpi("\xC9tat", ruche.etat, "", etatClass(ruche.etat))}
-      ${kpi("Miel r\xE9colt\xE9", n(kgRecoltes) + " kg", "")}
-      ${kpi("Derni\xE8re visite", visites[0] ? "Il y a " + days(visites[0].date_visite) + " j" : "\u2013", visites[0] ? dfr(visites[0].date_visite) : "Aucune visite")}
-      ${kpi("Visites", visites.length, "")}
-    </div>
-    ${ruche.notes ? `<section class="card">${esc(ruche.notes)}</section>` : ""}
-    ${taches.length ? `<section class="card"><h2>T\xE2ches pr\xE9vues</h2>${taches.map(taskRow).join("")}</section>` : ""}
-    ${pesees.length > 1 ? `<section class="card"><h2>\xC9volution du poids</h2>${lineChart({ labels: pesees.map((visite) => dshort(visite.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.map((visite) => Number(visite.poids_kg)) }], fmt: (visite) => n(visite) + " kg", title: "\xC9volution du poids de la ruche", h: 180 })}</section>` : ""}
-    <section class="card tbl"><h2>Journal des visites</h2>${table(["Date", "Observations", "Intrants", "#"], journal, "Aucune visite enregistr\xE9e.")}</section>`,
-  );
-}
-function viewVisite() {
-  const visite = S.visite,
-    donnees = S.d,
-    choix = (titre, cle, options) =>
-      `<div class="field"><div class="t">${titre}</div><div class="seg" style="grid-template-columns:repeat(${options.length},minmax(0,1fr))">${options.map((option) => `<button type="button" class="${visite[cle] === option ? "on" : ""}" aria-pressed="${visite[cle] === option}" data-act="vset" data-k="${cle}" data-v="${option}">${option}</button>`).join("")}</div></div>`,
-    intrants = consommables()
-      .map((article) => {
-        const pas = ["kg", "L"].includes(article.unite) ? 0.5 : 1;
-        return `<div class="stepper"><div><b>${esc(article.nom)}</b><div class="small">${n(article.stock)} ${esc(article.unite)} en stock</div></div><div class="ctl"><button type="button" aria-label="Diminuer ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${-pas}">\u2212</button><span>${n(visite.q[article.id] || 0)}</span><button type="button" aria-label="Augmenter ${esc(article.nom)}" data-act="vstep" data-k="${article.id}" data-v="${pas}">+</button></div></div>`;
-      })
-      .join("");
-  shell(
-    "Nouvelle visite",
-    "Au rucher",
-    '<button class="btn" data-act="cancel">Annuler</button>',
-    `
-    <form data-form="visite" class="form">
-      ${typeof VR != "undefined" ? VR.pick(visite) : `<div class="field"><div class="t">Ruche visit\xE9e</div><div class="pick">${donnees.ruches.map((ruche) => `<button type="button" class="${visite.ruche_id === ruche.id ? "on" : ""}" aria-pressed="${visite.ruche_id === ruche.id}" data-act="vset" data-k="ruche_id" data-v="${ruche.id}">${esc(ruche.nom)}</button>`).join("")}</div></div>`}
-      <label>Date<input type="date" id="v_date" value="${esc(visite.date_visite)}" max="${today()}" required></label>
-      ${choix("Activit\xE9 \xE0 l\u2019entr\xE9e", "activite", ["Faible", "Normale", "Forte"])}
-      ${choix("Provisions", "provisions", ["Faibles", "Moyennes", "Bonnes"])}
-      ${choix("Reine", "reine", ["Vue", "Non vue", "Non cherch\xE9e"])}
-      ${choix("Couvain", "couvain", ["Non vu", "R\xE9duit", "Normal", "Abondant"])}
-      ${choix("\xC9tat de la ruche apr\xE8s la visite", "etat", ETATS)}
-      <section class="card"><h2>Ce que vous avez utilis\xE9</h2>${intrants || '<p class="small">Ajoutez vos consommables dans Mat\xE9riel pour les suivre ici.</p>'}</section>
-      <div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(visite.poids_kg)}"></label>
-      <label>Varroas compt\xE9s<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(visite.varroa)}"></label></div>
-      ${typeof RG != "undefined" ? RG.formSection(visite) : ""}
-      ${typeof PH != "undefined" ? PH.formSection() : ""}
-      <label>Note<textarea id="v_note">${esc(visite.note)}</textarea></label>
-      <button class="btn main block" ${S.busy ? "disabled" : ""}>${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le t\xE9l\xE9phone" : "Enregistrer la visite"}</button>
-    </form>`,
-  );
-}
 function viewMiel() {
   const donnees = S.d,
     stockMiel = stock(),
@@ -1053,56 +824,6 @@ function viewMateriel() {
       `
     <section class="card tbl"><h2>Consommables</h2>${table(["Article", "#Stock", "#Seuil", "\xC9tat", "#"], lignesConsommables, "Aucun consommable : candy, sirop, pots, \xE9tiquettes\u2026")}${ajoutRapide("Consommable")}</section>
     <section class="card tbl"><h2>\xC9quipement</h2>${table(["\xC9quipement", "#Qt\xE9", "#Valeur", "Fournisseur"], lignesEquipements, "Aucun \xE9quipement enregistr\xE9.")}${ajoutRapide("\xC9quipement")}</section>`,
-  );
-}
-function viewClients() {
-  const donnees = S.d,
-    ventesAffichees = donnees.ventes.filter((vente) => S.venteFiltre === "toutes" || !vente.paye),
-    lignesClients = donnees.clients.map((client) => {
-      const ventesClient = donnees.ventes.filter((vente) => vente.client_id === client.id);
-      return `<tr><td><button class="link" data-act="editclient" data-v="${client.id}">${esc(client.nom)}</button></td><td>${esc(client.cercle)}</td><td>${client.telephone ? `<a href="tel:${esc(client.telephone)}">${esc(client.telephone)}</a>` : "\u2013"}</td><td class="num">${eur(sum(ventesClient, venteTotal))}</td><td>${ventesClient[0] ? dfr(ventesClient[0].date_vente) : "Jamais"}</td></tr>`;
-    }),
-    lignesVentes = ventesAffichees.slice(0, 25).map((vente) => {
-      const pots = donnees.lignes
-        .filter((ligne) => ligne.vente_id === vente.id)
-        .map(
-          (ligne) => `${ligne.quantite} \xD7 ${n(byId(donnees.lots, ligne.lot_id)?.format_g, 0)} g`,
-        )
-        .join(", ");
-      return `<tr><td>${dfr(vente.date_vente)}${vente._attente ? '<br><span class="tag watch hl-tag">en attente</span>' : ""}</td><td>${esc(byId(donnees.clients, vente.client_id)?.nom)}</td><td>${esc(pots)}</td><td class="num">${eur(venteTotal(vente))}</td><td><button class="link ${vente.paye ? "" : "watch"}" data-act="togglepaye" data-v="${vente.id}">${vente.paye ? "Pay\xE9e" + (vente.mode ? " \xB7 " + esc(vente.mode) : "") : "\xC0 encaisser"}</button></td><td class="num"><button class="link" data-act="delvente" data-v="${vente.id}">Supprimer</button></td></tr>`;
-    });
-  if (!donnees.clients.length)
-    return shell(
-      "Clients & ventes",
-      "",
-      "",
-      emptyState(
-        "Ajoutez votre premier client",
-        "Famille, amis, coll\xE8gues : retrouvez qui a achet\xE9 quoi.",
-        "Ajouter un client",
-        "newclient",
-      ),
-    );
-  const aEncaisser = sum(
-    donnees.ventes.filter((vente) => !vente.paye),
-    venteTotal,
-  );
-  shell(
-    "Clients & ventes",
-    donnees.clients.length +
-      " client(s)" +
-      (aEncaisser ? " \xB7 " + eur(aEncaisser) + " \xE0 encaisser" : ""),
-    '<button class="btn main" data-act="newvente">Nouvelle vente</button><button class="btn" data-act="newclient">Ajouter un client</button>',
-    `
-    <section class="card tbl">${table(["Client", "Cercle", "T\xE9l\xE9phone", "#Total", "Dernier achat"], lignesClients, "Aucun client.")}</section>
-    <section class="card tbl"><h2>Ventes</h2><div class="pad">${subtabs(
-      [
-        ["toutes", "Toutes"],
-        ["impayees", "\xC0 encaisser"],
-      ],
-      S.venteFiltre,
-      "vfiltre",
-    )}</div>${table(["Date", "Client", "Pots", "#Montant", "Paiement", "#"], lignesVentes, "Aucune vente.")}</section>`,
   );
 }
 function viewVente() {
@@ -1607,30 +1328,10 @@ function rendreEcran() {
       '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apidoo.svg" alt=""></div>';
     return;
   }
-  // Écran enregistré dans le noyau (IT-03, src/domaines/…) : il remplace toute l'ancienne chaîne de cet écran.
-  // Sinon, ou avec ?ancien=1, l'ancien chemin ci-dessous.
-  // Avec ?ancien=1, seuls les écrans qui ont encore une ancienne chaîne (liste ci-dessous) la reprennent ; les autres
-  // n'ont jamais eu qu'une implémentation, celle de la table.
-  const anciens = {
-    dash: viewDash,
-    plus: viewPlus,
-    agenda: viewAgenda,
-    ruches: viewRuches,
-    ruche: viewRuche,
-    visite: viewVisite,
-    miel: viewMiel,
-    materiel: viewMateriel,
-    clients: viewClients,
-    vente: viewVente,
-    fournisseurs: viewFournisseurs,
-    compta: viewCompta,
-    pilotage: viewPilotage,
-    previsions: viewPrevisions,
-    reglages: viewReglages,
-    membres: () => EX.vue(),
-  };
-  const migre = window.Noyau?.ecran?.(S.route) || (!(S.route in anciens) && window.Noyau?.ecranEnregistre?.(S.route)),
-    vues = migre ? migre.rendu : anciens[S.route];
+  // Table des écrans du noyau (IT-03, src/domaines/*/ecrans.js) : une seule implémentation par écran.
+  // Route inconnue : l'accueil, plutôt qu'une page blanche.
+  const ecran = window.Noyau.ecran(S.route) || ((S.route = "dash"), window.Noyau.ecran("dash")),
+    vues = ecran.rendu;
   (vues(),
     S.lastRoute !== S.route &&
       (window.scrollTo?.(0, 0), document.querySelector(".wrap")?.classList.add("enter")),
@@ -2346,19 +2047,6 @@ function ficheDeconnexion(alerte) {
     <button type="button" class="btn" data-act="closesheet">Annuler</button>`),
     $sheet.open || $sheet.showModal());
 }
-function quickSheet() {
-  const choix = [
-    ["newvisite", "Visite"],
-    ["newvente", "Vente"],
-    ["newrecolte", "R\xE9colte"],
-    ["newdepense", "D\xE9pense"],
-    ["newtache", "T\xE2che"],
-    ["newclient", "Client"],
-  ];
-  (($sheetForm.onsubmit = (evt) => evt.preventDefault()),
-    ($sheetForm.innerHTML = `<h2>Ajouter</h2><div class="quick">${choix.map(([action, libelle]) => `<button type="button" class="btn" data-act="qk" data-v="${action}">${libelle}</button>`).join("")}</div><button type="button" class="btn" data-act="closesheet">Annuler</button>`),
-    $sheet.showModal());
-}
 const ACT = {
   go: (valeur) => go(valeur),
   gomateriel: () => go("materiel"),
@@ -2772,9 +2460,6 @@ async function boot() {
   }
   render();
 }
-// Écrans d'app.js tels qu'écrits ici, pris avant que d'autres modules ne réaffectent window.view* (IT-03) :
-// le noyau (src/domaines/…) les appelle sans passer par les anciennes chaînes.
-const ECRANS_APP = Object.freeze({ viewAgenda, viewMiel, viewMateriel, viewVente, viewFournisseurs, viewCompta, viewPilotage, viewPrevisions });
 // Démarrage après tous les scripts (DOMContentLoaded) : avec « defer » (IT-03), readyState vaut déjà « interactive »
 // pendant l'exécution des scripts, il ne suffit plus à savoir s'ils sont tous chargés.
 let scriptsCharges = document.readyState === "complete";

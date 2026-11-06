@@ -74,9 +74,6 @@ const ER = (() => {
     table.insertAdjacentHTML("beforebegin", `<section class="ab-chiffres er-c${chiffres.length}" aria-label="Chiffres des dépenses">${chiffres.map(([l, v]) => `<div class="ab-chiffre"><span class="small">${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</section>${puces}`);
     filtrerPostes();
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const comptaAvant = window.viewCompta;
-  window.viewCompta = function () { comptaAvant(); completerDepenses(); };
   function filtrerPostes() {
     document.querySelectorAll(".wrap .card.tbl tbody tr").forEach((tr) => { tr.hidden = S.erDepense !== "Tout" && tr.children[2]?.textContent !== S.erDepense; });
   }
@@ -295,6 +292,5 @@ const ER = (() => {
     revient = false;
   });
 
-  window.viewPlus = ecranGestion; // ancien chemin (?ancien=1), retiré à la fin d'IT-03
   return { fermerDoux, bloc, jauge, ecranGestion, completerDepenses };
 })();

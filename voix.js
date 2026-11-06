@@ -191,8 +191,5 @@ const VX = (() => {
     if (!Reco() || !S.visite?.ruche_id || S.visite.multi) return;
     document.querySelector('form[data-form="visite"]')?.insertAdjacentHTML("afterbegin", `<button type="button" class="btn honey block vx-entree" data-act="vxouvrir">Visiter à la voix</button>`);
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const visiteAvant = window.viewVisite;
-  window.viewVisite = function (...a) { visiteAvant(...a); completerVisite(...a); };
   return { lire, completerVisite };
 })();

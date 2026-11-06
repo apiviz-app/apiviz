@@ -4,11 +4,9 @@ import assert from "node:assert/strict";
 import * as R from "../../src/noyau/routeur.js";
 import * as A from "../../src/noyau/actions.js";
 
-const memoire = () => { const m = new Map(); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)) }; };
 beforeEach(() => { R._reinitialiser(); A._reinitialiser(); });
 
 test("un écran enregistré est trouvé ; un autre non", () => {
-  R.ancien("", memoire());
   const rendu = () => "ruches";
   R.enregistrer({ id: "ruches", rendu });
   assert.equal(R.ecran("ruches").rendu, rendu);
@@ -20,17 +18,6 @@ test("un écran ne peut pas être enregistré deux fois", () => {
   R.enregistrer({ id: "ruches", rendu: () => {} });
   assert.throws(() => R.enregistrer({ id: "ruches", rendu: () => {} }), /déjà enregistré/);
   assert.throws(() => R.enregistrer({ id: "x" }), /obligatoires/);
-});
-
-test("?ancien=1 : la table est ignorée, et le drapeau tient pour l'onglet", () => {
-  const m = memoire();
-  assert.equal(R.ancien("?ancien=1", m), true);
-  R.enregistrer({ id: "ruches", rendu: () => {} });
-  assert.equal(R.ecran("ruches"), null);
-  R._reinitialiser();
-  assert.equal(R.ancien("", m), true, "toujours actif après navigation dans le même onglet");
-  R._reinitialiser();
-  assert.equal(R.ancien("?ancien=0", m), false, "?ancien=0 le retire");
 });
 
 test("actions : une seule déclaration, remplacement explicite", () => {

@@ -131,11 +131,10 @@ const ES = (() => {
     document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apidoo-clair.svg" : "logo-apidoo.svg"; });
   }
   appliquerBandeau();
-  const reglagesAvant = window.viewReglages;
   // Écran « reglages » : enregistré dans le noyau (src/domaines/compte/ecrans.js, ES.ecranReglages).
   function ecranReglages() {
     if (S.rgForm) {
-      reglagesAvant();
+      viewReglages();
       document.querySelector(".wrap .u-retour, .wrap .er-ariane")?.remove();
       retour("errgblocs", "", "Réglages");
       return;
@@ -152,7 +151,6 @@ const ES = (() => {
       ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
     </div>`);
   }
-  window.viewReglages = ecranReglages; // ancien chemin (?ancien=1), retiré à la fin d'IT-03
   ACT.errgblocs = () => { S.rgForm = false; render(); };
   ACT.errgform = () => { S.rgForm = true; render(); window.scrollTo(0, 0); };
   ACT.errgexpl = () => {
@@ -231,9 +229,6 @@ const ES = (() => {
   function completerMiel() {
     document.querySelectorAll('.wrap td button[data-act="editlot"]').forEach((b) => b.insertAdjacentHTML("afterend", ` <button type="button" class="link er-fiche" data-act="erlot" data-v="${b.dataset.v}" aria-label="Fiche du lot">Fiche</button>`));
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const mielAvant = window.viewMiel;
-  window.viewMiel = function () { mielAvant(); completerMiel(); };
   VUES.lot = function () {
     const d = S.d, l = byId(d.lots, S.lotId), c = cfg();
     if (!l) { S.route = "miel"; return render(); }

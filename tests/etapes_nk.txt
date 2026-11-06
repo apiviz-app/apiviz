@@ -1,14 +1,18 @@
     # AP-FEAT-002 / AP-US-006 et AP-US-007 : noyau d'écrans enregistrés (IT-03).
+    # Les anciennes définitions window.view* ont été retirées : on vérifie qu'aucune n'existe plus.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     ids = page.evaluate("Noyau.ecrans()")
     verif(len(ids) == 30 and len(set(ids)) == 30, "30 écrans enregistrés, chacun une seule fois : %s" % len(ids))
     # Un écran enregistré : render() l'utilise et aucune autre définition n'est appelée.
-    page.evaluate("""() => { window.appels = []; for (const v of ["viewRuches", "viewDash", "viewRuche", "viewVisite", "viewMiel", "viewClients", "viewVente", "viewPlus", "viewCompta", "viewReglages"]) {
+    restes = page.evaluate("""() => ["viewDash", "viewPlus", "viewRuches", "viewRuche", "viewVisite", "viewClients"].filter((v) => v in window)""")
+    verif(restes == [], "anciennes définitions recouvertes supprimées : %s" % restes)
+    # Les écrans d'app.js encore utilisés (une seule définition chacun) : on les espionne, le noyau doit passer par eux une fois.
+    page.evaluate("""() => { window.appels = []; for (const v of ["viewMiel", "viewVente", "viewCompta", "viewReglages"]) {
       const f = window[v]; window[v] = function (...a) { appels.push(v); return f.apply(this, a); }; } }""")
     for route in ["ruches", "dash", "miel", "clients", "plus", "compta", "reglages"]:
         page.evaluate(f"go('{route}')"); page.wait_for_timeout(150)
     page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()"); page.wait_for_timeout(200)
-    verif(page.evaluate("appels") == [], "aucune ancienne définition window.view* appelée : %s" % page.evaluate("appels"))
+    verif(sorted(page.evaluate("appels")) == ["viewCompta", "viewMiel", "viewVente"], "chaque écran passe par sa seule définition : %s" % page.evaluate("appels"))
     verif(page.locator("form[data-form=vente]").count() == 1, "l'écran Nouvelle vente est affiché par le noyau")
     # AP-US-007 : la même action ouverte depuis l'accueil, la fiche ou le bouton API ouvre le même formulaire.
     formulaire = """() => { const f = document.querySelector('form[data-form=visite]'); return f && JSON.stringify([S.visite.ruche_id, S.visite.date_visite, S.visite.activite, S.visite.varroa_methode, f.querySelectorAll('input,select,textarea,button').length]); }"""
@@ -23,13 +27,7 @@
     page.click("#sheet[open] [data-act=n4q][data-v=newvisite]"); page.wait_for_selector("form[data-form=visite]")
     depuis_api = page.evaluate(formulaire)
     verif(depuis_accueil == depuis_fiche == depuis_api and depuis_api, "même formulaire, mêmes valeurs depuis l'accueil, la fiche et le bouton API : %s / %s / %s" % (depuis_accueil, depuis_fiche, depuis_api))
-    # ?ancien=1 : l'ancien chemin est repris, sans erreur.
-    page.goto(url + "?ancien=1"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    verif(page.evaluate("Noyau.ancien() && Noyau.ecran('ruches') === null"), "?ancien=1 : la table est ignorée")
-    page.evaluate("""() => { window.appels = []; const f = window.viewRuches; window.viewRuches = function () { appels.push('viewRuches'); return f(); }; }""")
-    page.evaluate("go('ruches')"); page.wait_for_timeout(200)
-    verif(page.evaluate("appels") == ["viewRuches"] and page.locator(".wrap h1").count() >= 1, "?ancien=1 : l'écran passe par l'ancienne définition, sans erreur")
-    page.evaluate("go('meteo')"); page.wait_for_timeout(200)
-    verif(page.locator(".wrap").count() == 1, "?ancien=1 : un écran sans ancienne chaîne s'ouvre quand même")
-    page.goto(url + "?ancien=0"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    verif(not page.evaluate("Noyau.ancien()"), "?ancien=0 rétablit le noyau")
+    # Route inconnue : l'accueil, sans erreur (plus d'ancien chemin depuis la fin d'IT-03).
+    page.evaluate("go('route-inconnue')"); page.wait_for_timeout(200)
+    verif(page.evaluate("S.route") == "dash" and page.locator(".wrap").count() == 1, "route inconnue : l'accueil s'affiche, sans erreur")
+    verif(page.evaluate("typeof Noyau.ancien") == "undefined", "plus de drapeau ?ancien=1")

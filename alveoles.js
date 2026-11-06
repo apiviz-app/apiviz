@@ -110,9 +110,6 @@ const AL = (() => {
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const dashAvant = window.viewDash;
-  window.viewDash = function () { dashAvant(); completerAccueil(); };
   // ---------- Accueil sur ordinateur : la priorité, quatre chiffres, puis ruchers, à faire, activité ----------
   const surOrdinateur = matchMedia("(min-width:801px)");
   surOrdinateur.addEventListener("change", () => { if (S.route === "dash") redessiner("dash"); });
@@ -242,9 +239,6 @@ const AL = (() => {
     });
     if (cartes.length) { const g = document.createElement("div"); g.className = "al-grille"; cartes[0].before(g); g.append(...cartes); }
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const ruchesAvant = window.viewRuches;
-  window.viewRuches = function () { ruchesAvant(); completerRuchers(); };
 
   // Changer d'onglet réaffiche la fiche depuis ux.js : on garde la courbe ouverte.
   // Onglets de la fiche : ux.js redessine la fiche complète par le noyau (redessiner), plus besoin de le refaire ici (IT-03).
@@ -285,9 +279,6 @@ const AL = (() => {
     pli?.querySelector("polyline")?.setAttribute("pathLength", "1");
     S.alCourbe = S.ruche;
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const rucheAvant = window.viewRuche;
-  window.viewRuche = function () { rucheAvant(); completerFiche(); };
 
   // ---------- Transitions : l'alvéole touchée devient l'en-tête de la fiche ----------
   const fluide = () => document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -350,9 +341,6 @@ const AL = (() => {
     });
     S.alMiel = suite;
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const clientsAvant = window.viewClients;
-  window.viewClients = function () { clientsAvant(); completerClients(); };
   // Vente : les clients récents à portée de pouce.
   // Écran « vente » : complément de l'écran, appelé par src/domaines/ (IT-03).
   function completerVente() {
@@ -363,9 +351,6 @@ const AL = (() => {
     if (noms.length < 3) S.d.clients.forEach((c) => { if (noms.length < 3 && !noms.includes(c)) noms.push(c); });
     champ.closest("label").insertAdjacentHTML("beforebegin", `<div class="chips al-recents" role="group" aria-label="Clients récents">${noms.map((c) => `<button type="button" class="chip ${champ.value === c.id ? "on" : ""}" data-act="alclient" data-v="${c.id}">${esc(c.nom)}</button>`).join("")}</div>`);
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const venteAvant = window.viewVente;
-  window.viewVente = function () { venteAvant(); completerVente(); };
   ACT.alclient = (id) => {
     const c = document.getElementById("s_client");
     if (c) { c.value = id; c.dispatchEvent(new Event("change", { bubbles: true })); }

@@ -183,9 +183,6 @@ const DM = (() => {
     if (avant) avant.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
     if (matchMedia("(min-width:801px)").matches && !installee()) relais();
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const dashAvant = window.viewDash;
-  window.viewDash = function () { dashAvant(); completerAccueil(); };
   function arrivee(wrap) {
     if (memo(cle("arrivee"))) return;
     const d = S.d, lignes = d.visites.slice(0, 2).map((v) => `<li class="small">${esc(byId(d.ruches, v.ruche_id)?.nom || "Ruche")} visitée le ${esc(dshort(v.date_visite))}</li>`).join("");

@@ -173,15 +173,6 @@ const V3 = (() => {
     },
   });
 
-  // Ruches sorties en bas de la liste des ruches.
-  const ruchesAvant = window.viewRuches;
-  window.viewRuches = function () {
-    ruchesAvant();
-    const rs = S.d.ruchesSorties || [];
-    if (!rs.length) return;
-    document.querySelector(".wrap")?.insertAdjacentHTML("beforeend", `<details class="card u-pli"><summary><h2>Ruches sorties · ${rs.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
-      ${rs.map((r) => `<button type="button" class="u-todo" data-act="ruche" data-v="${r.id}"><span class="u-dot bg-crit" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>`);
-  };
 
   // ---------- Varroa ----------
   const mesures = (id) => S.d.visites.filter((v) => v.ruche_id === id && v.varroa != null);
@@ -365,9 +356,6 @@ const V3 = (() => {
     b.insertAdjacentHTML("beforebegin", `<div class="field"><div class="t">Remise des pots</div><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="${livre ? "on" : ""}" aria-pressed="${livre}" data-act="v3remise" data-v="1">Remis maintenant</button><button type="button" class="${livre ? "" : "on"}" aria-pressed="${!livre}" data-act="v3remise" data-v="0">À livrer</button></div></div>
       ${livre ? "" : `<label>Où et quand (facultatif)<input id="s_livraison" value="${esc(e.livraison || "")}" placeholder="Ex. jeudi au bureau" autocomplete="off"></label>`}`);
   }
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03.
-  const venteAvant = window.viewVente;
-  window.viewVente = function () { venteAvant(); completerVente(); };
   const venteLire = window.readSaleForm;
   window.readSaleForm = function () {
     venteLire();

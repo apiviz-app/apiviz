@@ -593,19 +593,6 @@ const UX = (() => {
     return i < 0 ? comparaison() + html : html.slice(0, i + 6) + comparaison() + html.slice(i + 6);
   };
 
-  // ---------- Menu Plus ----------
-  function viewPlus() {
-    const items = [["recherche", "Rechercher"], ["pilotage", "Pilotage"], ["agenda", "Agenda et tâches"], ["carte", "Carte des ruchers"], ["varroa", "Suivi varroa"],
-      ["registre", "Registre d’élevage"], ["declaration", "Déclaration des ruches"], ["activite", "Activité récente"],
-      ["previsions", "Prévisions et budget"], ["compta", "Dépenses"], ["fournisseurs", "Fournisseurs"], ["reglages", "Réglages et exports"]];
-    if (typeof EX != "undefined") items.unshift(["membres", "Exploitation et membres"]);
-    shell("Plus", "", "", `<section class="card menu">${items.filter(([k]) => ICON[k]).map(([k, t]) => `<button data-act="go" data-v="${k}">${icon(k)}<span>${t}</span></button>`).join("")}
-      ${typeof V3 != "undefined" ? V3.boutonSoleil() : ""}
-      <button data-act="logout">${icon("plus")}<span>Se déconnecter</span></button></section>`);
-  }
-
-  // Ancien chemin (?ancien=1), retiré à la fin d'IT-03 ; le noyau appelle UX.ecrans.
-  Object.assign(window, { viewDash, viewRuche, viewVisite, viewClients, viewPlus });
   return {
     ecrans: { accueil: viewDash, fiche: viewRuche, visite: viewVisite, clients: viewClients },
     carte, meteoHtml, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
