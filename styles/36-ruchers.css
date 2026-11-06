@@ -10,3 +10,17 @@
 @media (max-width:800px){
   .rc-info{grid-template-columns:minmax(0,1fr);gap:2px}
 }
+
+/* Emplacements, déplacements, ruches physiques (IT-06). */
+.dp-rucher .u-entete h2{margin:0}
+.dp-pick{margin-top:8px}
+.dp-pick button{min-height:48px}
+.dp-resume{margin:4px 0 0}
+.cl-ou{margin-left:auto}
+.cl-statut .u-entete,.cl-contenant .u-entete,.cl-emplacements .u-entete{align-items:center}
+.cl-statut .u-deux,.cl-statut p{margin-top:8px}
+.ct-liste .u-entete h2{margin:0}
+.cl-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #EDEFE7}
+.cl-ligne:first-of-type{border-top:0}
+.cl-ligne > span:first-child{display:flex;flex-direction:column;min-width:0}
+.cl-emplacements > .small:last-child{margin-top:6px}

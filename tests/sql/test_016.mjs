@@ -133,16 +133,16 @@ verif(await nb(`select count(*) n from public.ruches x where (select count(*) fr
   "toujours un seul emplacement ouvert par colonie");
 
 // --- Statut (AP-US-034, AP-US-035, AP-TECH-108) ---
-await val(`select public.changer_statut($1)`, [{ id: douze[3], statut: "orpheline" }]);
+await val(`select public.changer_statut($1)`, [{ colonie_id: douze[3], statut: "orpheline" }]);
 r = await val(`select statut, sortie from public.ruches where id = $1`, [douze[3]]);
 verif(r.statut === "orpheline" && r.sortie === "", "orpheline : statut noté, toujours active pour l'ancienne version (sortie vide)");
-await val(`select public.changer_statut($1)`, [{ id: douze[4], statut: "morte", date: "2026-07-01", detail: "Varroa" }]);
-await val(`select public.changer_statut($1)`, [{ id: douze[4], statut: "morte", date: "2026-07-01", detail: "Varroa" }]);
+await val(`select public.changer_statut($1)`, [{ colonie_id: douze[4], statut: "morte", date: "2026-07-01", detail: "Varroa" }]);
+await val(`select public.changer_statut($1)`, [{ colonie_id: douze[4], statut: "morte", date: "2026-07-01", detail: "Varroa" }]);
 r = await val(`select statut, sortie, date_sortie::text d from public.ruches where id = $1`, [douze[4]]);
 verif(r.statut === "morte" && r.sortie === "Morte" && r.d === "2026-07-01", "morte : sortie « Morte » au 1er juillet pour l'ancienne version");
 verif(await nb(`select count(*) n from public.ruche_evenements where ruche_id = $1 and type = 'sortie' and detail = 'Morte · Varroa'`, [douze[4]]) === 1,
   "morte, saisie renvoyée : une seule ligne « sortie » au registre");
-await val(`select public.changer_statut($1)`, [{ id: douze[5], statut: "perdue" }]);
+await val(`select public.changer_statut($1)`, [{ colonie_id: douze[5], statut: "perdue" }]);
 verif((await val(`select sortie from public.ruches where id = $1`, [douze[5]])).sortie === "Perdue", "perdue : sortie « Perdue »");
 await db.query(`update public.ruches set sortie = 'Vendue', date_sortie = '2026-07-02' where id = $1`, [douze[6]]);
 verif((await val(`select statut from public.ruches where id = $1`, [douze[6]])).statut === "vendue", "ancienne version, sortie « Vendue » : statut vendue");
@@ -152,7 +152,7 @@ await db.query(`update public.ruches set sortie = '' where id = $1`, [douze[3]])
 verif((await val(`select statut from public.ruches where id = $1`, [douze[3]])).statut === "orpheline", "sortie inchangée (vide) : une orpheline le reste");
 verif(await nb(`select count(*) n from public.ruches where statut in ('active','orpheline')`) === await nb(`select count(*) n from public.ruches where sortie = ''`),
   "colonies actives (statut) = colonies sans sortie (ancienne version)");
-e = await erreur(db, `select public.changer_statut($1)`, [{ id: douze[3], statut: "reunie" }]);
+e = await erreur(db, `select public.changer_statut($1)`, [{ colonie_id: douze[3], statut: "reunie" }]);
 verif(/réunion/.test(e?.message || ""), "réunie par changer_statut : refusé (passe par la réunion)");
 
 // --- Contenants (AP-US-036) ---
@@ -182,7 +182,7 @@ verif(/contenants_code_uidx|unique|duplicate/.test(e?.message || ""), "deux cont
 
 // --- Lecteur, visiteur, autre exploitation ---
 await en(db, "l@x.fr", E1);
-for (const [f, p] of [["deplacer_colonies", { rucher_id: U(1), colonies: [douze[0]] }], ["changer_statut", { id: douze[0], statut: "orpheline" }],
+for (const [f, p] of [["deplacer_colonies", { rucher_id: U(1), colonies: [douze[0]] }], ["changer_statut", { colonie_id: douze[0], statut: "orpheline" }],
   ["affecter_contenant", { colonie_id: douze[0], contenant_id: U(12) }]]) {
   e = await erreur(db, `select public.${f}($1)`, [p]);
   verif(/lecture seule/.test(e?.message || ""), `lecteur : ${f} refusé`);

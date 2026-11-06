@@ -52,7 +52,8 @@ const V3 = (() => {
     4: ["Vert", "#2E7D32"], 9: ["Vert", "#2E7D32"], 5: ["Bleu", "#1565C0"], 0: ["Bleu", "#1565C0"] };
   const EQUIP = ["Grille à reine", "Nourrisseur", "Plateau grillagé", "Réducteur d’entrée", "Chasse-abeilles", "Partition"];
   const ORIGINES = ["", "Élevée par la colonie", "Essaim naturel", "Achetée", "Élevage maison"];
-  const TYPES = { installation: "Installation", division: "Division", essaimage: "Essaimage", reunion: "Réunion", reine: "Nouvelle reine", sortie: "Sortie", reactivation: "Remise en service" };
+  const TYPES = { installation: "Installation", division: "Division", essaimage: "Essaimage", reunion: "Réunion", reine: "Nouvelle reine", sortie: "Sortie", reactivation: "Remise en service",
+    deplacement: "Déplacement", intervention: "Intervention" }; // lignes du registre (010) : libellé plutôt que le code
   const tousLesRuches = () => [...S.d.ruches, ...(S.d.ruchesSorties || [])];
   const rucheDe = (id) => byId(tousLesRuches(), id);
   const evt = (ruche_id, type, detail = "", autre_ruche_id = null, date_evenement = today()) => ({ ruche_id, type, detail, autre_ruche_id, date_evenement });
@@ -158,7 +159,7 @@ const V3 = (() => {
     v3sortie: (id) => {
       const r = rucheDe(id);
       sheet({ title: "Sortie de " + r.nom, intro: "La ruche quitte tes ruches actives et la déclaration. Son historique reste consultable.",
-        fields: [{ name: "motif", label: "Motif", type: "select", options: ["Morte", "Vendue"], value: "Morte" },
+        fields: [{ name: "motif", label: "Motif", type: "select", options: ["Morte", "Vendue", ...("statut" in r ? ["Perdue"] : [])], value: "Morte" }, // « Perdue » : base avec 016 (IT-06)
           { name: "date", label: "Date", type: "date", required: true, value: today() },
           { name: "detail", label: "Précision (facultatif)", value: "" }],
         submit: async (f) => {

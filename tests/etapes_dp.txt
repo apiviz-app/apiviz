@@ -1,0 +1,89 @@
+
+    # IT-06 — Déplacer 12 colonies vers un autre rucher en une opération (AP-US-033), retrouvée au registre ; emplacements
+    # successifs sur la fiche colonie et rucher d'une visite à sa date (AP-US-032) ; déplacement sans réseau, envoyé une fois.
+    import os
+    cap = os.environ.get("CAPTURES")
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    RV, RL, RB = (str(uuid.uuid4()) for _ in range(3))
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": 47.32, "lng": 5.04, **vide}, {"id": RL, "nom": "Lande", "lat": 47.6, "lng": 5.4, **vide},
+                       {"id": RB, "nom": "Bois", "lat": None, "lng": None, **vide}]
+    DATA["ruches"][0].update({"rucher": "Bois", "rucher_id": RB, "statut": "active", "sortie": ""})
+    col = lambda nom: {"id": str(uuid.uuid4()), "nom": nom, "rucher": "Verger", "rucher_id": RV, "etat": "Bonne", "type_ruche": "",
+                       "annee_reine": None, "notes": "", "lat": 47.32, "lng": 5.04, "statut": "active", "sortie": ""}
+    douze = [col("V%d" % i) for i in range(1, 13)]
+    DATA["ruches"] += douze
+    DATA["colonie_emplacements"] = [{"id": str(uuid.uuid4()), "colonie_id": c["id"], "rucher_id": c["rucher_id"], "du": "2026-03-01", "au": None, "deplacement_id": None}
+                                    for c in DATA["ruches"]]
+    DATA["visites"].append({"id": str(uuid.uuid4()), "ruche_id": douze[0]["id"], "date_visite": "2026-05-15", "activite": "Normale", "provisions": "Moyennes",
+                            "reine": "Vue", "couvain": "", "etat": "Bonne", "poids_kg": None, "varroa": None, "note": "Visite de mai"})
+    jour = __import__("datetime").date.today().isoformat()
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Depuis le registre (onglet Mouvements) : « Déplacer des ruches » ouvre l'écran Déplacer.
+    page.evaluate("S.annee = new Date().getFullYear(); S.rgTab = 'mouvements'; ACT.go('registre')"); page.wait_for_selector(".er-onglets")
+    page.click("[data-act=erdeplacer]"); page.wait_for_selector(".dp-form", timeout=5000)
+    verif(page.locator(".dp-rucher").count() == 2, "colonies regroupées par rucher (Verger, Bois)")
+    verif(page.locator("[data-act=dpvalider]").is_disabled(), "rien de coché : bouton désactivé")
+    page.click(".dp-rucher:has(h2:has-text('Verger')) [data-act=dptout]")
+    verif(page.locator(".dp-pick button.on").count() == 12, "« Tout cocher » au Verger : 12 colonies cochées")
+    page.select_option("#dp_dest", RL); page.wait_for_timeout(200)
+    page.fill("#dp_date", jour); page.select_option("#dp_motif", "Transhumance"); page.fill("#dp_notes", "Colza")
+    verif("12 colonies vers Lande" in page.locator(".dp-resume").inner_text(), "résumé : 12 colonies vers Lande")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(300)
+            page.screenshot(path=f"{cap}/dp-deplacer-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+    page.click("[data-act=dpvalider]")
+    page.wait_for_selector(".toast >> text=12 colonies déplacées vers Lande", timeout=10000)
+    envois = [b["p"] for n, b in recu["rpc"] if n == "deplacer_colonies"]
+    verif(len(envois) == 1 and sorted(envois[0]["colonies"]) == sorted(c["id"] for c in douze) and envois[0]["rucher_id"] == RL
+          and envois[0]["motif"] == "transhumance" and envois[0]["notes"] == "Colza" and envois[0]["id"], "une seule opération envoyée : 12 colonies, Lande, motif, note, identifiant")
+    verif(all(c["rucher_id"] == RL for c in douze), "base : les 12 colonies sont à la Lande")
+    verif(page.locator("h1 >> text=Lande").count() == 1, "retour sur la fiche du rucher de destination")
+    verif(len(DATA["deplacements"]) == 1 and DATA["deplacements"][0]["nb_colonies"] == 12, "une ligne de déplacement")
+
+    # Registre : les 12 lignes, au format habituel.
+    page.evaluate("S.rgTab = 'mouvements'; ACT.go('registre')"); page.wait_for_selector(".er-tb", timeout=5000)
+    t = page.locator(".er-tb").inner_text()
+    verif(t.count("Verger vers Lande, transhumance, Colza") == 12, "registre des mouvements : 12 lignes « Verger vers Lande, transhumance, Colza »")
+
+    # Fiche colonie : emplacements successifs et rucher de la visite de mai.
+    page.evaluate("ACT.ruche('%s')" % douze[0]["id"]); page.wait_for_selector(".u-visite", timeout=5000)
+    verif(page.locator(".u-visite .cl-ou >> text=au Verger").count() == 1, "journal : la visite du 15 mai indique le Verger")
+    page.evaluate("ACT.uronglet('colonie')"); page.wait_for_selector(".cl-emplacements", timeout=5000)
+    em = page.locator(".cl-emplacements").inner_text()
+    verif(em.index("Lande") < em.index("Verger") and "transhumance" in em and "01/03/2026" in em, "fiche colonie : Lande puis Verger, avec le motif")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(300)
+            page.screenshot(path=f"{cap}/dp-fiche-colonie-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    # Sans réseau : 2 colonies vers le Bois, gardées sur le téléphone, envoyées une fois au retour du réseau.
+    page.evaluate("ACT.dpouvrir('%s')" % RL); page.wait_for_selector(".dp-form", timeout=5000)
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.click(".dp-pick button >> text=V1"); page.click(".dp-pick button >> text=V2")
+    page.select_option("#dp_dest", RB); page.wait_for_timeout(200)
+    page.click("[data-act=dpvalider]")
+    page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+    verif(page.evaluate("S.d.ruches.filter(r => ['V1','V2'].includes(r.nom)).every(r => r.rucher === 'Bois')"), "sans réseau : les 2 colonies apparaissent tout de suite au Bois")
+    verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif(page.evaluate("S.d.ruches.filter(r => ['V1','V2'].includes(r.nom)).every(r => r.rucher === 'Bois')"), "après rechargement sans réseau : toujours au Bois")
+    verif(not [1 for n, b in recu["rpc"] if n == "deplacer_colonies" and b["p"]["rucher_id"] == RB], "rien envoyé sans réseau")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=/envoyée|envoyées/", timeout=20000)
+    vers_bois = [b["p"] for n, b in recu["rpc"] if n == "deplacer_colonies" and b["p"]["rucher_id"] == RB]
+    verif(len(vers_bois) == 1 and len(vers_bois[0]["colonies"]) == 2, "retour du réseau : déplacement envoyé une fois")
+    # Renvoi de la même opération (coupure pendant l'envoi) : la base ne l'applique qu'une fois.
+    page.evaluate("sb.rpc('deplacer_colonies', { p: %s })" % json.dumps(vers_bois[0])); page.wait_for_timeout(300)
+    verif(len(DATA["deplacements"]) == 2 and len([e for e in DATA["ruche_evenements"] if e.get("deplacement_id") == vers_bois[0]["id"]]) == 2,
+          "même opération renvoyée : appliquée une seule fois")
+
+    # Retour arrière : la fenêtre de la v5.10 reste disponible derrière le drapeau.
+    page.evaluate("localStorage.setItem('apidoo-deplacement-v510', '1'); S.rgTab = 'mouvements'; ACT.go('registre')"); page.wait_for_selector(".er-onglets")
+    page.click("[data-act=erdeplacer]"); page.wait_for_selector("#sheet[open] [name=vers]", timeout=5000)
+    verif(True, "drapeau « apidoo-deplacement-v510 » : ancienne fenêtre de déplacement")
+    page.evaluate("$sheet.close(); localStorage.removeItem('apidoo-deplacement-v510')")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

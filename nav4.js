@@ -129,7 +129,9 @@ const N4 = (() => {
   function ecranRuchers() {
     const d = S.d;
     const ls = U.lieux(), archives = (d.ruchers || []).filter((r) => r.archive_le);
-    const entete = '<button class="btn" data-act="rcnouveau">Nouveau rucher</button><button class="btn" data-act="newruches">Ajouter des ruches</button>';
+    // « Déplacer » (IT-06) : transhumance d'un lot de colonies, écran src/domaines/ruchers/deplacer.js.
+    const entete = '<button class="btn" data-act="rcnouveau">Nouveau rucher</button><button class="btn" data-act="newruches">Ajouter des ruches</button>'
+      + (d.ruches.length && typeof ACT.dpouvrir == "function" ? '<button class="btn" data-act="dpouvrir" data-v="">Déplacer</button>' : "");
     if (!ls.length) return shell("Ruchers", "", entete, emptyState("Crée ton premier rucher", "Un nom, un emplacement, puis tes ruches. Tu pourras le placer sur la carte et noter comment y accéder.", "Nouveau rucher", "rcnouveau"));
     const seuil = U.seuilVarroa();
     // Un bloc par rucher de la table (IT-05), y compris sans colonie ; data-k : clé lue par AL.completerRuchers.
@@ -154,8 +156,14 @@ const N4 = (() => {
         <div class="n4-ruches">${lignes}</div>
         <div class="u-deux">${action}${lieu}</div></section>`;
     }).join("");
-    const rr = d.ruchesSorties || [];
-    const sorties = rr.length ? `<details class="card u-pli"><summary><h2>Ruches sorties · ${rr.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
+    // Ruches sorties, filtrées par statut (IT-06, AP-TECH-109) : mortes, vendues, réunies, perdues.
+    const tousSortis = d.ruchesSorties || [], C = Regles.colonies;
+    const presents = Object.keys(C.STATUTS).filter((k) => tousSortis.some((r) => C.statut(r) === k));
+    const filtre = presents.includes(S.filtreSortie) ? S.filtreSortie : "";
+    const rr = C.parStatut(tousSortis, filtre);
+    const puces = presents.length > 1 ? `<div class="u-puces" role="group" aria-label="Filtrer par statut">${[["", "Toutes", tousSortis.length], ...presents.map((k) => [k, C.STATUTS[k] + "s", tousSortis.filter((r) => C.statut(r) === k).length])]
+      .map(([k, t, nb]) => `<button type="button" class="${filtre === k ? "on" : ""}" aria-pressed="${filtre === k}" data-act="clfsortie" data-v="${k}">${esc(t)} · ${nb}</button>`).join("")}</div>` : "";
+    const sorties = tousSortis.length ? `<details class="card u-pli" ${S.filtreSortie !== undefined ? "open" : ""}><summary><h2>Ruches sorties · ${tousSortis.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>${puces}
       ${rr.map((r) => `<button type="button" class="u-todo" data-act="ruche" data-v="${r.id}"><span class="u-dot bg-crit" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
     // Ruchers archivés (AP-TECH-096) : gardés pour l'historique, rouvrables depuis leur fiche.
     const arch = archives.length ? `<details class="card u-pli"><summary><h2>Ruchers archivés · ${archives.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
