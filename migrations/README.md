@@ -29,7 +29,7 @@ ci-dessus sur une base Postgres vide en mémoire et compare la structure obtenue
 | 005-securite-et-ping.sql | `est_membre()` réservée aux connectés, fonction `ping()` | 3 nov. 2026 (regroupée) | 3 nov. 2026 (en deux temps : 005 puis `ping`) |
 | 006-hors-ligne.sql | `creer_visite` et `creer_vente` acceptent un identifiant fourni par le téléphone | 3 nov. 2026 (regroupée) | 3 nov. 2026 |
 | 007-registre.sql | Visites : dose, fin de traitement prévue, ordonnance gardée | 3 nov. 2026 (regroupée) | 3 nov. 2026 |
-| 009-colonie-varroa-recolte-livraison.sql | Reine, hausses, équipement, événements de ruche, méthode varroa, récolte et traçabilité, note de livraison | 3 nov. 2026, **incomplète** (écart E1) | 3 nov. 2026 |
+| 009-colonie-varroa-recolte-livraison.sql | Reine, hausses, équipement, événements de ruche, méthode varroa, récolte et traçabilité, note de livraison | 3 nov. 2026, partie 6 relancée le 6 nov. 2026 (écart E1 corrigé) | 3 nov. 2026 |
 | 008-exploitations.sql | Plusieurs exploitations : membres avec rôles, invitations, données séparées par exploitation | 3 nov. 2026 | présente, **date inconnue** (appliquée hors historique, écart E2) |
 | 010-registre-factures.sql | Déplacements et interventions au registre, numéro de facture | 5 nov. 2026 | 5 nov. 2026 |
 | 011-invitation-avant-connexion.sql | Le nom de l'exploitation s'affiche sur le lien d'invitation avant la connexion | 5 nov. 2026 | 5 nov. 2026 |
@@ -125,14 +125,24 @@ La plus grosse table compte aujourd'hui 8 lignes : aucun risque immédiat, voir 
   l'historique ne contient pas la nouvelle version de ces deux fonctions (section 6 du fichier). Les colonnes
   existent, mais la recette n'enregistre pas `varroa_methode` ni `varroa_abeilles` à la création d'une visite, ni
   `livraison` à la création d'une vente : ces valeurs envoyées par l'application sont ignorées sans message.
-  La production et les fichiers ont la bonne version. Correction proposée (non faite, hors périmètre d'IT-00) :
+  La production et les fichiers ont la bonne version. Correction proposée (hors périmètre d'IT-00) :
   relancer `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test` (relançable, n'ajoute rien d'autre). Suivi : AP-BUG-008.
+  **Corrigé le 6 nov. 2026** (accord du responsable) en relançant **la partie 6 seulement** (entrée d'historique
+  `009_relance_fonctions_ap_bug_008`) ; empreintes de `creer_visite` et `creer_vente` identiques à la production.
+  Attention : « relançable » n'est vrai que sur une base sans 008. Après 008, relancer 009 en entier remettrait la vue
+  `lots_stock` en version 009 et recréerait des politiques `membres_tout` (avec `est_membre()`, supprimée par 008) ;
+  un essai a échoué sur ce point et a été entièrement annulé.
 - **E2 — Production : 008 absente de l'historique des migrations.** La structure de 008 est bien en place, mais elle a
   été appliquée par l'éditeur SQL : sa date n'est pas connue. Aucune action nécessaire ; à savoir avant tout outil
   qui se fierait à l'historique de Supabase.
 - **E3 — Fins de ligne.** 10 fonctions de la production ont des fins de ligne Windows. Sans effet sur le comportement.
 - **E4 — Historiques différents.** La recette regroupe 004 à 007 en une seule entrée ; la production sépare 006 en deux
   (`006_ping`, `006_hors_ligne`). Sans effet : seule la structure compte, et elle est identique.
+- **E5 — Recette : `creer_visite` et `creer_vente` exécutables par tous (`PUBLIC`).** Constaté le 6 nov. 2026, antérieur
+  à la correction de E1 (droits conservés par `create or replace`). La production ne donne ce droit qu'à `authenticated`
+  et `service_role`. Sans effet pratique (security invoker, aucune politique pour `anon`). Correction possible :
+  `revoke execute on function public.creer_visite(jsonb), public.creer_vente(jsonb) from public;` sur `apidoo-test`
+  (accord requis). `maj_stock_achat`, `maj_stock_intrant` et `numeroter_facture` sont exécutables par tous sur les deux bases.
 
 ### Points de vigilance (hors périmètre, à décider)
 

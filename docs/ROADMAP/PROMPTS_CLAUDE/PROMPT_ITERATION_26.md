@@ -3,7 +3,7 @@
 > Copier tout le bloc ci-dessous dans Claude Code, à la racine du dépôt `apidoo/apidoo.github.io`.
 
 ```text
-Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase, GitHub Pages).
+Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase ; publiée sur le web et, à partir d'IT-30, en applications iOS et Android construites avec Capacitor depuis le même code ; voir docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
 Mission de cette session : réaliser UNIQUEMENT l'itération IT-26 — Rôles avancés, RGPD, documents et exports. Ne commence aucune autre itération.
 
 A. CONTEXTE
@@ -15,8 +15,8 @@ A. CONTEXTE
 - À préserver : Rôles responsable/membre/lecteur ; les 18 tests de bout en bout ; le circuit recette → production.
 
 B. PÉRIMÈTRE
-- À réaliser : AP-FEAT-012 Rôle saisonnier et droits fins ; AP-FEAT-022 Journal d'activité par membre ; AP-FEAT-023 Gérer ses exploitations ; AP-FEAT-020 Suppression du compte et de l'exploitation ; AP-FEAT-101 Coffre de documents ; AP-FEAT-024 Export complet de l'exploitation ; AP-FEAT-102 Exports métier enrichis.
-- User stories et critères (source de vérité, docs/ROADMAP/06_BACKLOG_MASTER.md) : AP-US-020, AP-US-021, AP-US-022, AP-US-025, AP-US-111, AP-US-112, AP-US-113.
+- À réaliser : AP-FEAT-012 Rôle saisonnier et droits fins ; AP-FEAT-022 Journal d'activité par membre ; AP-FEAT-023 Gérer ses exploitations ; AP-FEAT-101 Coffre de documents ; AP-FEAT-024 Export complet de l'exploitation ; AP-FEAT-102 Exports métier enrichis.
+- User stories et critères (source de vérité, docs/ROADMAP/06_BACKLOG_MASTER.md) : AP-US-020, AP-US-021, AP-US-022, AP-US-111, AP-US-112, AP-US-113.
 - Explicitement exclu : SSO. Si un besoin hors périmètre apparaît, note-le dans le rapport final, ne le réalise pas.
 
 C. ANALYSE PRÉALABLE OBLIGATOIRE (avant toute modification)
@@ -39,7 +39,7 @@ D. DÉVELOPPEMENT
 - Documentation : CHANGELOG (version, migration, rubrique « À vérifier »), migrations/README.md, a-appliquer-en-production.txt, statuts dans 06_BACKLOG_MASTER.md, docs/TECHNIQUE.md si l'architecture change.
 
 E. VALIDATION
-- Scénarios : Export complet réimportable dans un projet vide. ; Suppression : délai de grâce et confirmation..
+- Scénarios : Export complet réimportable dans un projet vide..
 - Critères d'acceptation : chaque GIVEN/WHEN/THEN des user stories du périmètre, plus : Politique de confidentialité publiée..
 - Non-régression : sh scripts/assembler-site.sh . . _site puis sh tests/lancer.sh _site/recette ; tous verts.
 - Sécurité : aucune donnée d'une autre exploitation visible ; aucun secret ajouté ; garde-fous d'assemblage intacts.

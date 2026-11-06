@@ -3,7 +3,7 @@
 > Copier tout le bloc ci-dessous dans Claude Code, à la racine du dépôt `apidoo/apidoo.github.io`.
 
 ```text
-Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase, GitHub Pages).
+Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase ; publiée sur le web et, à partir d'IT-30, en applications iOS et Android construites avec Capacitor depuis le même code ; voir docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
 Mission de cette session : réaliser UNIQUEMENT l'itération IT-15 — Tâches récurrentes, calendrier et notifications. Ne commence aucune autre itération.
 
 A. CONTEXTE
@@ -39,7 +39,7 @@ D. DÉVELOPPEMENT
 - Documentation : CHANGELOG (version, migration, rubrique « À vérifier »), migrations/README.md, a-appliquer-en-production.txt, statuts dans 06_BACKLOG_MASTER.md, docs/TECHNIQUE.md si l'architecture change.
 
 E. VALIDATION
-- Scénarios : Tâche récurrente régénérée après complétion. ; Push reçu sur Android et iPhone installé (manuel)..
+- Scénarios : Tâche récurrente régénérée après complétion. ; Push reçu sur Android et iPhone installé (manuel). ; si IT-30 est faite : notification native reçue dans les applications iOS et Android (AP-TECH-407, AP-TECH-408).
 - Critères d'acceptation : chaque GIVEN/WHEN/THEN des user stories du périmètre, plus : Préférences de notification par sujet..
 - Non-régression : sh scripts/assembler-site.sh . . _site puis sh tests/lancer.sh _site/recette ; tous verts.
 - Sécurité : aucune donnée d'une autre exploitation visible ; aucun secret ajouté ; garde-fous d'assemblage intacts.

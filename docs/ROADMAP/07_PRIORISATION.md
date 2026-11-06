@@ -16,10 +16,10 @@ Une fonctionnalité intéressante techniquement mais sans problème utilisateur 
 | Priorité | Nombre | Itérations principales |
 |---|---|---|
 | P0 | 13 | IT-00, IT-01, IT-02, IT-03, IT-04, IT-12, IT-13 |
-| P1 | 49 | IT-01, IT-03, IT-04, IT-05, IT-06, IT-07, IT-08, IT-09, IT-10, IT-11, IT-12, IT-13, IT-14, IT-15, IT-16, IT-18, IT-19, IT-20, IT-21, IT-23, IT-24, IT-26 |
-| P2 | 44 | IT-01, IT-03, IT-05, IT-06, IT-08, IT-09, IT-10, IT-11, IT-12, IT-13, IT-14, IT-15, IT-16, IT-17, IT-18, IT-19, IT-20, IT-21, IT-22, IT-23, IT-24, IT-25, IT-26 |
-| P3 | 18 | IT-08, IT-12, IT-15, IT-17, IT-20, IT-21, IT-22, IT-23, IT-25, IT-26, IT-27, IT-28 |
-| P4 | 4 | IT-25, IT-27, IT-28 |
+| P1 | 53 | IT-01, IT-03, IT-04, IT-05, IT-06, IT-07, IT-08, IT-09, IT-10, IT-11, IT-12, IT-13, IT-14, IT-15, IT-16, IT-18, IT-19, IT-20, IT-21, IT-23, IT-24, IT-26, IT-28, IT-29, IT-30 |
+| P2 | 45 | IT-01, IT-03, IT-05, IT-06, IT-08, IT-09, IT-10, IT-11, IT-12, IT-13, IT-14, IT-15, IT-16, IT-17, IT-18, IT-19, IT-20, IT-21, IT-22, IT-23, IT-24, IT-25, IT-26, IT-28 |
+| P3 | 17 | IT-08, IT-12, IT-15, IT-17, IT-20, IT-21, IT-22, IT-23, IT-25, IT-26, IT-27, IT-31 |
+| P4 | 5 | IT-25, IT-27, IT-31 |
 
 ## 3. Tableau complet
 
@@ -68,7 +68,7 @@ Une fonctionnalité intéressante techniquement mais sans problème utilisateur 
 | AP-FEAT-018 | Données de démonstration reproductibles | P1 | 3 | S | Faible | 3.0 | IT-04 |
 | AP-FEAT-011 | Rôle lecteur | P1 | 3 | S | Moyen | 3.0 | IT-04 |
 | AP-FEAT-019 | Journal d'audit des modifications sensibles | P1 | 3 | S | Faible | 3.0 | IT-04 |
-| AP-FEAT-020 | Suppression du compte et de l'exploitation | P1 | 3 | S | Élevé | 3.0 | IT-26 |
+| AP-FEAT-020 | Suppression du compte et de l'exploitation | P1 | 3 | S | Élevé | 3.0 | IT-28 |
 | AP-FEAT-009 | Intégrité entre exploitations | P1 | 4 | M | Moyen | 2.7 | IT-04 |
 | AP-FEAT-028 | Historique des emplacements | P1 | 4 | M | Moyen | 2.7 | IT-06 |
 | AP-FEAT-029 | Déplacement groupé (transhumance) | P1 | 4 | M | Moyen | 2.7 | IT-06 |
@@ -147,12 +147,27 @@ Une fonctionnalité intéressante techniquement mais sans problème utilisateur 
 | AP-FEAT-050 | Note vocale enregistrée | P3 | 2 | S | Moyen | 2.0 | IT-25 |
 | AP-FEAT-023 | Gérer ses exploitations | P3 | 2 | S | Faible | 2.0 | IT-26 |
 | AP-FEAT-102 | Exports métier enrichis | P3 | 2 | S | Faible | 2.0 | IT-26 |
-| AP-FEAT-120 | Publication Google Play | P3 | 3 | M | Moyen | 2.0 | IT-28 |
-| AP-FEAT-100 | Échéances réglementaires et cadre par pays | P3 | 2 | M | Moyen | 1.3 | IT-28 |
+| AP-FEAT-100 | Échéances réglementaires et cadre par pays | P3 | 2 | M | Moyen | 1.3 | IT-31 |
 | AP-FEAT-111 | Analyse de photo assistée | P4 | 3 | M | Élevé | 2.0 | IT-25 |
 | AP-FEAT-117 | Offres et limites | P4 | 3 | M | Moyen | 2.0 | IT-27 |
 | AP-FEAT-118 | Abonnement et paiement | P4 | 3 | L | Élevé | 1.2 | IT-27 |
-| AP-FEAT-121 | Internationalisation des textes | P4 | 2 | L | Moyen | 0.8 | IT-28 |
+| AP-FEAT-125 | Achats intégrés et droits multicanaux | P4 | 3 | L | Élevé | 1.2 | IT-27 |
+| AP-FEAT-121 | Internationalisation des textes | P4 | 2 | L | Moyen | 0.8 | IT-31 |
+
+Ajouts de la révision du 6 nov. 2026 (application web et stores, voir `12_DISTRIBUTION_ET_MONETISATION.md`) :
+
+| ID | Titre | Prio | Valeur | Effort | Risque | Score | Itération |
+|---|---|---|---|---|---|---|---|
+| AP-FEAT-122 | Domaine propre et hébergement compatible avec un usage commercial | P1 | 4 | S | Moyen | 4.0 | IT-29 |
+| AP-FEAT-124 | Liens de connexion et d'invitation ouverts dans l'application | P1 | 4 | M | Moyen | 2.7 | IT-30 |
+| AP-FEAT-123 | Applications iOS et Android (Capacitor) | P1 | 5 | L | Élevé | 2.0 | IT-30 |
+| AP-FEAT-120 | Publication Google Play et App Store (P3 → P2) | P2 | 4 | M | Moyen | 2.7 | IT-28 |
+
+Ajout d'IT-00 (6 nov. 2026), absent jusqu'ici de ce tableau :
+
+| ID | Titre | Prio | Valeur | Effort | Risque | Score | Itération |
+|---|---|---|---|---|---|---|---|
+| AP-BUG-008 | Recette : méthode varroa et livraison non enregistrées (corrigé le 6 nov. 2026) | P1 | 3 | XS | Faible | 6.0 | IT-01 |
 
 ## 4. Arbitrages de priorité
 
@@ -160,4 +175,5 @@ Une fonctionnalité intéressante techniquement mais sans problème utilisateur 
 - **Modèle de données avant écrans** : ruchers, colonies, reines (phase 1) avant santé et élevage, qui en dépendent.
 - **Sanitaire et réglementaire en P0 quand une donnée est présentée comme un conseil ou une obligation** (seuils varroa, registre) : risque de nuire à l'utilisateur.
 - **IA et monétisation tardives** : forte valeur perçue, mais elles exigent un socle de données fiable et un produit stable.
+- **Distribution tôt, paiement tard** (6 nov. 2026) : le domaine propre (IT-29) passe en phase 0 parce que la bascule coûte plus cher à chaque nouvel utilisateur ; les applications (IT-30) et la publication gratuite (IT-28) viennent après l'expérience terrain (phase 2), car c'est elle qui justifie l'application aux yeux d'Apple ; le paiement reste en phase 9.
 - **Contenants (ruches physiques) en P2** : indispensables au professionnel, inutiles à l'amateur ; le modèle les prévoit dès la phase 1.

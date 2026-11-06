@@ -9,7 +9,7 @@ Statuts de départ : ceux de l'audit (`01_AUDIT_EXISTANT.md`). Valeur métier 1�
 Conventions de mise à jour : voir `README.md` §3.
 
 
-**Totaux :** 19 domaines · 47 epics · 121 fonctionnalités · 7 anomalies · 134 user stories · 377 tâches techniques.
+**Totaux :** 19 domaines · 47 epics · 125 fonctionnalités · 8 anomalies · 141 user stories · 408 tâches techniques (révision du 6 nov. 2026 « application web et stores » : AP-FEAT-122 à 125, AP-US-136 à 141, AP-TECH-380 à 408 ; voir `12_DISTRIBUTION_ET_MONETISATION.md`).
 
 
 ## Sommaire
@@ -165,7 +165,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Type | Anomalie |
 | Domaine | D01 Socle technique et qualité |
 | Epic parent | AP-EPIC-001 |
-| Statut actuel | NON IMPLÉMENTÉ — constaté au relevé du 6 nov. 2026 (IT-00, écart E1 de `migrations/README.md`) |
+| Statut actuel | EN PRODUCTION — corrigé le 6 nov. 2026 sur `apidoo-test` (partie 6 de 009 seulement, voir description) ; constaté au relevé du 6 nov. 2026 (IT-00, écart E1) |
 | Priorité | P1 |
 | Valeur métier | 3/5 |
 | Complexité | XS |
@@ -174,7 +174,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 | Dépendances | AP-FEAT-004 |
 | Modules impactés | base `apidoo-test`, `migrations/009` |
 
-**Description.** Sur `apidoo-test`, la 009 enregistrée ne contient pas la section 6 (nouvelles versions de `creer_visite` et `creer_vente`). Relancer `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test` (fichier relançable, aucune autre modification).
+**Description.** Sur `apidoo-test`, la 009 enregistrée ne contient pas la section 6 (nouvelles versions de `creer_visite` et `creer_vente`). Correction : relancer **la partie 6 seulement** de `009-colonie-varroa-recolte-livraison.sql` sur `apidoo-test`. Relancer le fichier entier est **à proscrire** sur une base où 008 est passée : il remettrait la vue `lots_stock` en version 009 et tenterait de recréer les politiques `membres_tout` avec `est_membre()`, que 008 a supprimée (essai du 6 nov. 2026 : échec, entièrement annulé).
 
 **Problème résolu.** En recette, `varroa_methode`, `varroa_abeilles` (visite) et `livraison` (vente) sont ignorés sans message : une vérification faite en recette peut conclure à tort à un défaut de l'application, ou masquer un vrai défaut. La production est correcte.
 
@@ -189,7 +189,7 @@ Rendre le code et la base lisibles, documentés et alignés avec la réalité, p
 
 **Tâches techniques**
 
-- AP-TECH-378 — Relancer 009 sur `apidoo-test` (accord du responsable).
+- AP-TECH-378 — ~~Relancer 009 sur `apidoo-test`~~ Fait le 6 nov. 2026 avec l'accord du responsable : partie 6 de 009 (`creer_visite`, `creer_vente`), entrée d'historique `009_relance_fonctions_ap_bug_008` ; empreintes identiques à la production.
 - AP-TECH-379 — Ajouter à la vérification de mise en ligne une comparaison d'empreintes des fonctions entre recette et production.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
@@ -945,8 +945,8 @@ Intégrité des données entre exploitations, traçabilité des modifications, d
 | Valeur métier | 3/5 |
 | Complexité | S |
 | Risque | Élevé |
-| Itération cible | [IT-26](ITERATIONS/ITERATION_26.md) |
-| Dépendances | AP-FEAT-024 |
+| Itération cible | [IT-28](ITERATIONS/ITERATION_28.md) (avancée depuis IT-26 le 6 nov. 2026 : exigée par Apple, règle 5.1.1(v)) |
+| Dépendances | — (l'export actuel suffit ; AP-FEAT-024 l'enrichira en IT-26) |
 | Modules impactés | `supabase/functions`, `src/domaines/compte` |
 
 **Description.** Suppression demandée depuis l'app, délai de grâce de 30 jours, photos comprises.
@@ -3821,7 +3821,7 @@ Planifier, répéter, répartir.
 | Dépendances | AP-FEAT-090 |
 | Modules impactés | `sw.js`, `supabase/functions/notifier`, `essentiels.js` |
 
-**Description.** Rappels envoyés par le serveur (tâches du jour, fin de traitement, créneau météo), même application fermée.
+**Description.** Rappels envoyés par le serveur (tâches du jour, fin de traitement, créneau météo), même application fermée. Push web (VAPID) sur le site ; notifications natives (APNs, FCM) dans les applications iOS et Android.
 
 **Problème résolu.** Les rappels n'apparaissent que quand l'app est ouverte : ils ne rappellent pas.
 
@@ -3840,6 +3840,8 @@ Planifier, répéter, répartir.
 - AP-TECH-294 — Table abonnements_push.
 - AP-TECH-295 — Edge Function planifiée.
 - AP-TECH-296 — Gestion push dans sw.js.
+- AP-TECH-407 — Notifications natives (APNs, FCM) via le module Capacitor ; jetons dans abonnements_push avec la plateforme.
+- AP-TECH-408 — Edge Function notifier : envoi web ou natif selon la plateforme de chaque abonnement.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
 ### AP-FEAT-093 — Préférences de notification
@@ -4090,7 +4092,7 @@ Obligations réglementaires accompagnées et sourcées.
 | Valeur métier | 2/5 |
 | Complexité | M |
 | Risque | Moyen |
-| Itération cible | [IT-28](ITERATIONS/ITERATION_28.md) |
+| Itération cible | [IT-31](ITERATIONS/ITERATION_31.md) |
 | Dépendances | AP-FEAT-098 |
 | Modules impactés | `réglementation` |
 
@@ -4852,7 +4854,7 @@ Autonomie des nouveaux utilisateurs.
 
 ## AP-EPIC-046 — Plans et abonnements
 
-Monétisation, le moment venu.
+Monétisation, le moment venu, sur le web et dans les applications (12 §5).
 
 
 ### AP-FEAT-117 — Offres et limites
@@ -4962,12 +4964,50 @@ Monétisation, le moment venu.
 - AP-TECH-372 — Mention dans la politique.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
+### AP-FEAT-125 — Achats intégrés et droits multicanaux
+
+| Champ | Valeur |
+|---|---|
+| Type | Fonctionnalité |
+| Domaine | D19 SaaS et distribution |
+| Epic parent | AP-EPIC-046 |
+| Statut actuel | NON IMPLÉMENTÉ |
+| Priorité | P4 |
+| Valeur métier | 3/5 |
+| Complexité | L |
+| Risque | Élevé |
+| Itération cible | [IT-27](ITERATIONS/ITERATION_27.md) |
+| Dépendances | AP-FEAT-118, AP-FEAT-120 |
+| Modules impactés | `supabase/functions/stores`, `src/domaines/compte`, `ios/`, `android/` |
+
+**Description.** Abonnement vendu aussi par achat intégré dans les applications iOS (obligatoire, règle 3.1.1) et Android ; une seule table de droits par exploitation, alimentée par les trois canaux ; un abonnement acheté sur un canal est reconnu sur tous (règle 3.1.3(b)).
+
+**Problème résolu.** Sans achat intégré, l'application iOS ne peut pas débloquer l'offre payante ; sans droits uniques, un utilisateur paierait deux fois.
+
+**Risques.** Refus Apple ; double abonnement ; commissions et règles qui changent (12 §5).
+
+**Tests nécessaires.** Achats en bac à sable Apple et Google ; reconnaissance sur le web ; résiliation propagée ; rejeu des notifications sans double effet.
+
+**User stories et critères d'acceptation**
+
+- **AP-US-140** — En tant que responsable d'exploitation sur iPhone ou Android, je veux m'abonner dans l'application et retrouver mon abonnement sur le web afin de ne payer qu'une fois.
+  - GIVEN je m'abonne par achat intégré sur iPhone · WHEN je me connecte sur le web · THEN mon exploitation est à l'offre payante et aucun paiement ne m'est proposé ; si je résilie dans l'App Store, l'offre prend fin à l'échéance partout
+
+**Tâches techniques**
+
+- AP-TECH-397 — Décision D-14 ; programme Small Business d'Apple ; produits d'abonnement créés dans les deux consoles.
+- AP-TECH-398 — Achats intégrés natifs via un module Capacitor, ou service tiers unifiant Apple, Google et web (à évaluer).
+- AP-TECH-399 — Edge Functions : notifications serveur App Store et notifications en temps réel Google Play, idempotentes, vers la table abonnements (colonne canal).
+- AP-TECH-400 — Restauration des achats ; aucun bouton de paiement externe dans l'app iOS hors pays et autorisations prévus par Apple.
+- AP-TECH-401 — CGV et conditions d'abonnement affichées avant l'achat dans les trois canaux.
+- Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
+
 ## AP-EPIC-047 — Distribution et international
 
-Stores et autres pays.
+Web sur domaine propre, applications iOS et Android, stores, autres pays (12).
 
 
-### AP-FEAT-120 — Publication Google Play
+### AP-FEAT-120 — Publication Google Play et App Store
 
 | Champ | Valeur |
 |---|---|
@@ -4975,32 +5015,39 @@ Stores et autres pays.
 | Domaine | D19 SaaS et distribution |
 | Epic parent | AP-EPIC-047 |
 | Statut actuel | NON IMPLÉMENTÉ |
-| Priorité | P3 |
-| Valeur métier | 3/5 |
+| Priorité | P2 (P3 avant la révision du 6 nov. 2026) |
+| Valeur métier | 4/5 |
 | Complexité | M |
 | Risque | Moyen |
 | Itération cible | [IT-28](ITERATIONS/ITERATION_28.md) |
-| Dépendances | AP-FEAT-005 |
-| Modules impactés | `scripts/assembler-site.sh` |
+| Dépendances | AP-FEAT-123, AP-FEAT-124, AP-FEAT-020 |
+| Modules impactés | `ios/`, `android/`, `docs/CONFIDENTIALITE.md` |
 
-**Description.** Trusted Web Activity, assetlinks.json, fiche store, test fermé (docs/MOBILE.md).
+**Description.** Publication gratuite des applications construites en IT-30 sur l'App Store et Google Play : fiches, confidentialité, compte de démonstration pour la revue, test fermé Google si compte personnel. La Trusted Web Activity prévue par `docs/MOBILE.md` est abandonnée au profit de Capacitor pour les deux stores.
 
-**Problème résolu.** Être trouvé là où les apiculteurs cherchent des applications.
+**Problème résolu.** Être trouvé là où les apiculteurs cherchent des applications ; préalable à la monétisation dans les applications.
 
-**Risques.** Refus ; test fermé de 14 jours.
+**Risques.** Refus Apple (règle 4.2) ; test fermé de 14 jours.
 
-**Tests nécessaires.** Test fermé.
+**Tests nécessaires.** Publication effective sur les deux stores.
 
 **User stories et critères d'acceptation**
 
 - **AP-US-133** — En tant qu'apiculteur, je veux installer Apidoo depuis le Play Store afin de le trouver facilement.
   - GIVEN la fiche publiée · WHEN j'installe · THEN Apidoo s'ouvre en plein écran avec mes données
+- **AP-US-141** — En tant qu'apiculteur sur iPhone, je veux installer Apidoo depuis l'App Store afin de l'utiliser comme mes autres applications.
+  - GIVEN la fiche publiée · WHEN j'installe puis me connecte · THEN je retrouve mes ruchers et je peux saisir une visite sans réseau
 
 **Tâches techniques**
 
-- AP-TECH-373 — Bubblewrap.
-- AP-TECH-374 — assetlinks.json.
-- AP-TECH-375 — Test fermé 12 testeurs.
+- AP-TECH-373 — ~~Bubblewrap~~ ABANDONNÉ le 6 nov. 2026 (Capacitor pour les deux stores, AP-FEAT-123).
+- AP-TECH-374 — assetlinks.json (réalisé avec AP-TECH-394).
+- AP-TECH-375 — Test fermé 12 testeurs (inutile avec un compte organisation, D-13).
+- AP-TECH-402 — Fiches store : textes, captures téléphone et tablette, catégorie, classification d'âge.
+- AP-TECH-403 — Politique de confidentialité publiée ; étiquettes de confidentialité Apple ; section « Sécurité des données » Google.
+- AP-TECH-404 — Compte de démonstration pour les équipes de revue, documenté hors dépôt.
+- AP-TECH-405 — Notes de revue Apple : fonctions natives et hors ligne mises en avant (règle 4.2).
+- AP-TECH-406 — Procédure de publication d'une version mobile dans `10_STRATEGIE_DEPLOIEMENT.md`.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
 ### AP-FEAT-121 — Internationalisation des textes
@@ -5015,7 +5062,7 @@ Stores et autres pays.
 | Valeur métier | 2/5 |
 | Complexité | L |
 | Risque | Moyen |
-| Itération cible | [IT-28](ITERATIONS/ITERATION_28.md) |
+| Itération cible | [IT-31](ITERATIONS/ITERATION_31.md) |
 | Dépendances | AP-FEAT-002 |
 | Modules impactés | `tous les écrans` |
 
@@ -5036,4 +5083,122 @@ Stores et autres pays.
 
 - AP-TECH-376 — Fonction t().
 - AP-TECH-377 — Extraction progressive.
+- Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
+
+### AP-FEAT-122 — Domaine propre et hébergement compatible avec un usage commercial
+
+| Champ | Valeur |
+|---|---|
+| Type | Fonctionnalité |
+| Domaine | D19 SaaS et distribution |
+| Epic parent | AP-EPIC-047 |
+| Statut actuel | NON IMPLÉMENTÉ |
+| Priorité | P1 |
+| Valeur métier | 4/5 |
+| Complexité | S |
+| Risque | Moyen |
+| Itération cible | [IT-29](ITERATIONS/ITERATION_29.md) |
+| Dépendances | AP-FEAT-005 |
+| Modules impactés | `.github/workflows`, `scripts/assembler-site.sh`, `sw.js`, `offline.js` |
+
+**Description.** Publier le site sur un domaine propre (D-11) chez un hébergeur qui autorise un usage commercial (D-12) ; recette sur sous-domaine ; ancienne adresse redirigée sans perte des saisies locales.
+
+**Problème résolu.** Les conditions de GitHub Pages excluent un SaaS commercial ; les données locales sont liées au domaine, donc la bascule est d'autant plus sûre qu'elle est faite tôt ; les applications mobiles ont besoin du domaine.
+
+**Risques.** Saisies locales laissées sur l'ancienne adresse ; liens d'e-mail cassés pendant la transition.
+
+**Tests nécessaires.** Bascule avec file d'envoi non vide ; liens d'e-mail réels ; e2e sur la nouvelle recette.
+
+**User stories et critères d'acceptation**
+
+- **AP-US-136** — En tant qu'apiculteur déjà inscrit, je veux retrouver Apidoo à sa nouvelle adresse sans rien perdre afin de continuer à travailler normalement.
+  - GIVEN une visite saisie hors ligne sur l'ancienne adresse · WHEN le réseau revient · THEN la visite est envoyée, puis je suis redirigé vers la nouvelle adresse où je me reconnecte et la retrouve
+
+**Tâches techniques**
+
+- AP-TECH-380 — Décisions D-11 et D-12 ; achat du domaine.
+- AP-TECH-381 — Publication par le workflow vers l'hébergeur ; jeton dans les secrets GitHub.
+- AP-TECH-382 — Adresses de redirection Supabase Auth des deux projets.
+- AP-TECH-383 — Page de bascule sur l'ancienne adresse (file vide d'abord).
+- AP-TECH-384 — Désinscription de l'ancien service worker ; en-têtes de sécurité et de cache.
+- AP-TECH-385 — Documentation et adresses des tests e2e réels.
+- Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
+
+### AP-FEAT-123 — Applications iOS et Android (Capacitor)
+
+| Champ | Valeur |
+|---|---|
+| Type | Fonctionnalité |
+| Domaine | D19 SaaS et distribution |
+| Epic parent | AP-EPIC-047 |
+| Statut actuel | NON IMPLÉMENTÉ |
+| Priorité | P1 |
+| Valeur métier | 5/5 |
+| Complexité | L |
+| Risque | Élevé |
+| Itération cible | [IT-30](ITERATIONS/ITERATION_30.md) |
+| Dépendances | AP-FEAT-122, AP-FEAT-005 |
+| Modules impactés | `ios/`, `android/`, `src/noyau/plateforme.js`, `photos.js`, `voix.js`, `tournee.js` |
+
+**Description.** Le site assemblé est embarqué dans des applications iOS et Android (Capacitor) ; ouverture hors ligne dès le premier lancement ; appareil photo, QR, géolocalisation et partage natifs ; version minimale acceptée ; builds signés en CI, distribués en test interne.
+
+**Problème résolu.** Être une vraie application (stores, fonctions natives, notifications fiables sur iPhone) sans maintenir un deuxième code.
+
+**Risques.** Écarts de comportement des vues web ; clés de signature ; refus Apple si l'application ressemble à un site.
+
+**Tests nécessaires.** Recette manuelle sur iPhone et Android réels, premier lancement en mode avion.
+
+**User stories et critères d'acceptation**
+
+- **AP-US-137** — En tant qu'apiculteur, je veux ouvrir l'application au rucher sans réseau, même juste après l'avoir installée, afin de saisir ma visite.
+  - GIVEN l'application installée et une première connexion faite · WHEN je l'ouvre en mode avion · THEN je saisis une visite, elle part au retour du réseau
+- **AP-US-138** — En tant qu'apiculteur, je veux prendre une photo et scanner un QR code avec les outils natifs de mon téléphone afin d'aller vite avec des gants.
+  - GIVEN une visite en cours dans l'application · WHEN je touche « Photo » ou « Scanner » · THEN l'outil natif s'ouvre et le résultat revient dans la visite
+
+**Tâches techniques**
+
+- AP-TECH-386 — Projets Capacitor `ios/` et `android/` ; le dossier web assemblé est la seule source.
+- AP-TECH-387 — Détection de la plateforme dans le noyau.
+- AP-TECH-388 — Modules natifs : appareil photo, QR, géolocalisation, partage.
+- AP-TECH-389 — IndexedDB et file d'envoi vérifiées dans les vues web.
+- AP-TECH-390 — Version minimale acceptée ; écran « mise à jour nécessaire ».
+- AP-TECH-391 — Builds signés par GitHub Actions ; secrets uniquement.
+- AP-TECH-392 — Comptes développeur (D-13) ; TestFlight et test interne.
+- AP-TECH-393 — Icônes, écran de lancement, zones sûres.
+- Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
+
+### AP-FEAT-124 — Liens de connexion et d'invitation ouverts dans l'application
+
+| Champ | Valeur |
+|---|---|
+| Type | Fonctionnalité |
+| Domaine | D19 SaaS et distribution |
+| Epic parent | AP-EPIC-047 |
+| Statut actuel | NON IMPLÉMENTÉ |
+| Priorité | P1 |
+| Valeur métier | 4/5 |
+| Complexité | M |
+| Risque | Moyen |
+| Itération cible | [IT-30](ITERATIONS/ITERATION_30.md) |
+| Dépendances | AP-FEAT-122 |
+| Modules impactés | `/.well-known/`, `src/domaines/compte` |
+
+**Description.** Les liens des e-mails (confirmation, mot de passe, invitation) ouvrent l'application si elle est installée, le site sinon.
+
+**Problème résolu.** Sans cela, un utilisateur de l'application est renvoyé dans le navigateur et doit se reconnecter.
+
+**Risques.** Configuration des domaines associés ; versions anciennes de l'application.
+
+**Tests nécessaires.** E-mails réels sur iPhone et Android, avec et sans application installée.
+
+**User stories et critères d'acceptation**
+
+- **AP-US-139** — En tant qu'apiculteur invité, je veux que le lien reçu par e-mail ouvre l'application si elle est installée afin de rejoindre l'exploitation sans passer par le navigateur.
+  - GIVEN l'application installée et une invitation reçue · WHEN je touche le lien · THEN l'application s'ouvre sur l'écran d'invitation avec le nom de l'exploitation
+
+**Tâches techniques**
+
+- AP-TECH-394 — Fichiers apple-app-site-association et assetlinks.json sur le domaine.
+- AP-TECH-395 — Adresses de redirection Supabase Auth de l'application ; traitement des liens à l'ouverture.
+- AP-TECH-396 — Repli vers le site sans application installée.
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.

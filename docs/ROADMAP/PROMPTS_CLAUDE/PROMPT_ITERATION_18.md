@@ -3,7 +3,7 @@
 > Copier tout le bloc ci-dessous dans Claude Code, à la racine du dépôt `apidoo/apidoo.github.io`.
 
 ```text
-Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase, GitHub Pages).
+Tu travailles sur Apidoo, application de gestion apicole (PWA JavaScript sans framework, Supabase ; publiée sur le web et, à partir d'IT-30, en applications iOS et Android construites avec Capacitor depuis le même code ; voir docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
 Mission de cette session : réaliser UNIQUEMENT l'itération IT-18 — Récolte, extraction, lots et traçabilité. Ne commence aucune autre itération.
 
 A. CONTEXTE

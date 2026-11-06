@@ -116,4 +116,4 @@ Edge Function désactivable.
 
 ## 18. Itération suivante
 
-[IT-12 — Santé : varroa et observations sanitaires](ITERATION_12.md)
+[IT-30 — Applications iOS et Android : socle](ITERATION_30.md)
