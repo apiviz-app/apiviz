@@ -2648,6 +2648,7 @@ function showTip(evt) {
               typeof HL != "undefined" ? HL.rpc : (nom, params) => sb.rpc(nom, params)
             )("creer_vente", {
               p: {
+                id: vente.id, // fourni quand on corrige une vente gardée sur le téléphone (AP-BUG-001)
                 client_id: vente.client_id,
                 date_vente: vente.date_vente,
                 lignes: lignes,
