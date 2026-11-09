@@ -106,7 +106,7 @@
     page.click("[data-act=ertoutvu]"); page.wait_for_timeout(100)
     verif(page.locator(".er-cloche em").count() == 0, "tout vu : cloche sans pastille")
     page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".g-bloc")
-    verif(page.locator(".g-bloc").count() == 6, "réglages en blocs")
+    verif(page.locator(".g-bloc").count() == 7, "réglages en blocs (dont Ruches physiques, IT-06)")
     page.click(".g-bloc[data-act=errgexpl]"); page.wait_for_selector("#sheet[open]")
     page.fill("#sheet [name=siret]", "12345678900011"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     page.click(".g-bloc[data-act=errgmeteo]"); page.wait_for_selector("#sheet[open]")
@@ -124,8 +124,9 @@
     verif(True, "listes et exports puis retour aux blocs")
     # Registre, lots, factures, saison
     page.evaluate("S.annee = new Date().getFullYear(); S.rgTab = 'mouvements'; ACT.go('registre')"); page.wait_for_selector(".er-onglets")
-    page.click("[data-act=erdeplacer]"); page.wait_for_selector("#sheet[open]")
-    page.fill("#sheet [name=vers]", "Bois"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+    # « Déplacer des ruches » ouvre l'écran Déplacer (IT-06, parcours complet dans etapes_dp.txt).
+    page.click("[data-act=erdeplacer]"); page.wait_for_selector(".dp-form")
+    page.click("[data-act=dpannuler]"); page.evaluate("ACT.go('registre')"); page.wait_for_selector(".er-onglets")
     page.click(".er-onglets [data-v=exploitation]"); page.wait_for_selector(".er-dl")
     verif(page.locator(".er-dl dt").count() == 5, "fiche exploitation")
     L = page.evaluate("S.d.lots[0].id")

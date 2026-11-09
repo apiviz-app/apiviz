@@ -147,6 +147,7 @@ const ES = (() => {
       ${b("", "Factures", num, "Prochain numéro", `<span class="small">${esc(c.mention_tva ? "Mention de TVA renseignée" : "Mention de TVA à renseigner")}, paiement à ${esc(c.delai_paiement || "réception")}</span>`, "", "errgfact")}
       ${b("", "Météo", `${s.ouvrir} °C`, "Seuil pour ouvrir une ruche", `<span class="small">Vent ${s.vent} km/h, pluie ${s.pluie} %, de ${s.debut} h à ${s.fin} h</span>`, "", "errgmeteo")}
       ${b("", "Apparence", BANDEAUX[bandeau()][0], "Couleur du bandeau sur cet appareil", `<span class="er-pastilles" aria-hidden="true">${Object.entries(BANDEAUX).map(([k, [, v]]) => `<i class="${k === bandeau() ? "on" : ""}" style="background:${v["--bandeau"] || "#FBEFC9"}"></i>`).join("")}</span>`, "", "errgcouleur")}
+      ${b("", "Ruches physiques", c.contenants ? "Suivies" : "Non suivies", "Niveau Professionnel : caisses numérotées", `<span class="small">${c.contenants ? "Section dans Matériel, transferts depuis la fiche de la ruche" : "Pour suivre tes caisses et les transferts de colonies"}</span>`, "", "errgcontenants")}
       ${b("rappels", "Rappels", nouveaux().length ? U.pluriel(nouveaux().length, "rappel") : "À jour", "Notifications et sujets suivis")}
       ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
     </div>`);
@@ -167,6 +168,13 @@ const ES = (() => {
     sheet({ title: "Seuils météo", fields: [champ("ouvrir", "Ouvrir à partir de (°C)", s.ouvrir), champ("rapide", "Visite rapide à partir de (°C)", s.rapide), champ("vent", "Vent maximum (km/h)", s.vent), champ("pluie", "Risque de pluie maximum (%)", s.pluie), champ("debut", "Première heure", s.debut), champ("fin", "Dernière heure", s.fin)],
       submit: (v) => saveCfg({ meteo: Object.fromEntries(Object.entries(v).map(([k, x]) => [k, Number(x)])) }, "Seuils enregistrés") });
   };
+  // Ruches physiques (IT-06, AP-TECH-113) : désactivé par défaut ; activé, Matériel et la fiche de la ruche les montrent.
+  ACT.errgcontenants = () => {
+    const c = cfg();
+    sheet({ title: "Ruches physiques", intro: "Pour les exploitations qui numérotent leurs caisses : suivre quelle colonie est dans quelle caisse, et les transferts.",
+      fields: [{ name: "contenants", label: "Suivre mes ruches physiques", type: "select", options: [["1", "Oui"], ["", "Non"]], value: c.contenants ? "1" : "" }],
+      submit: (v) => saveCfg({ contenants: !!v.contenants }, v.contenants ? "Ruches physiques suivies : section dans Matériel" : "Ruches physiques masquées") });
+  };
   ACT.errgcouleur = () => {
     sheet({ title: "Apparence", fields: [{ name: "bandeau", label: "Couleur du bandeau", type: "select", options: Object.entries(BANDEAUX).map(([k, [t]]) => [k, t]), value: bandeau() }], submit: async (v) => { memo("apidoo-bandeau", v.bandeau); appliquerBandeau(); render(); } });
   };
@@ -174,7 +182,11 @@ const ES = (() => {
   // ---------- 4. Registre complet et déplacements ----------
   const ONGLETS = [["traitements", "Traitements"], ["mouvements", "Mouvements"], ["interventions", "Interventions"], ["exploitation", "Exploitation"]];
   const MVT = { installation: "Entrée", division: "Division", essaimage: "Essaimage", reunion: "Réunion", sortie: "Sortie", reactivation: "Remise en service", deplacement: "Déplacement" };
-  const evenements = (types, an) => (S.d.evenements || []).filter((e) => types.includes(e.type) && yr(e.date_evenement) === an);
+  // Mouvements : lus avec les déplacements (table deplacements, IT-06, src/domaines/colonies/regles.js) ; mêmes lignes
+  // qu'avant 016. Les autres parties du registre (interventions) lisent les événements directement.
+  const evenements = (types, an) => (types.includes("deplacement") && Regles.colonies
+    ? Regles.colonies.lignesMouvements(S.d, types, an)
+    : (S.d.evenements || []).filter((e) => types.includes(e.type) && yr(e.date_evenement) === an));
   const nomRuche = (id) => byId(S.d.ruches, id)?.nom || S.d.toutes?.find?.((r) => r.id === id)?.nom || "Ruche retirée";
   VUES.registre = function () {
     const tab = S.rgTab || "traitements", an = S.annee, c = cfg();
@@ -206,7 +218,11 @@ const ES = (() => {
   };
   ACT.errgtab = (k) => { S.rgTab = k; render(); };
   EXP.mouvements = () => csv(`mouvements-${S.annee}`, ["Date", "Ruche", "Mouvement", "Détail"], evenements(Object.keys(MVT), S.annee).map((e) => [e.date_evenement, nomRuche(e.ruche_id), MVT[e.type], e.detail]));
-  ACT.erdeplacer = () => {
+  // « Déplacer des ruches » ouvre l'écran Déplacer (IT-06, src/domaines/ruchers/deplacer.js). La fenêtre de la v5.10
+  // ci-dessous reste disponible pour le retour arrière : localStorage « apidoo-deplacement-v510 » = « 1 ».
+  const deplacementV510 = () => { try { return localStorage.getItem("apidoo-deplacement-v510") === "1"; } catch { return false; } };
+  ACT.erdeplacer = () => (deplacementV510() || !window.Noyau?.ecran?.("deplacer") ? deplacerV510() : ACT.dpouvrir(""));
+  const deplacerV510 = () => {
     const rs = U.ruchers(), choix = [...rs.map(([k, l]) => [`r:${k}`, `Tout ${U.nomRucher(k)} (${l.length})`]), ...S.d.ruches.map((r) => [r.id, r.nom])];
     sheet({ title: "Déplacer des ruches", label: "Déplacer", fields: [{ name: "quoi", label: "Ruches", type: "select", options: choix }, { name: "vers", label: "Vers le rucher", required: !0, list: rs.map(([k]) => k).filter(Boolean) }, { name: "date", label: "Date", type: "date", required: !0, value: today() }, { name: "note", label: "Note", value: "" }],
       submit: async (v) => {

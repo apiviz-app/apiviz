@@ -99,6 +99,13 @@ const HL = (() => {
         if (!r) continue;
         Object.assign(r, { lat: p.lat, lng: p.lng });
         (d.ruches || []).forEach((x) => { if (x.rucher_id === p.id) Object.assign(x, { lat: p.lat, lng: p.lng }); });
+      } else if (it.type === "rpc" && it.nom === "deplacer_colonies") {
+        // Déplacement sans réseau (IT-06) : colonies, emplacements et registre, comme le fera la base (migration 016).
+        Regles.colonies.appliquerDeplacement(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "changer_statut") {
+        Regles.colonies.appliquerStatut(d, it.args.p);
+      } else if (it.type === "rpc" && it.nom === "affecter_contenant") {
+        Regles.colonies.appliquerContenant(d, it.args.p);
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
@@ -271,6 +278,18 @@ const HL = (() => {
     if (it.type === "rpc" && it.nom === "creer_rucher") return ["Rucher · " + (it.args.p.nom || ""), "créé"];
     if (it.type === "rpc" && it.nom === "placer_rucher") {
       return ["Position · " + ((d.ruchers || []).find((x) => x.id === it.args.p.id)?.nom || "rucher"), "placé sur la carte"];
+    }
+    if (it.type === "rpc" && it.nom === "deplacer_colonies") {
+      const p = it.args.p, dest = (d.ruchers || []).find((x) => x.id === p.rucher_id)?.nom || "rucher";
+      return ["Déplacement · " + pluriel((p.colonies || []).length, "colonie") + " vers " + dest, dfr(p.date)];
+    }
+    if (it.type === "rpc" && it.nom === "changer_statut") {
+      const p = it.args.p, r = byId([...(d.ruches || []), ...(d.ruchesSorties || [])], p.colonie_id);
+      return ["Statut · " + (r?.nom || "colonie"), (Regles.colonies.STATUTS[p.statut] || p.statut).toLowerCase() + " · " + dfr(p.date)];
+    }
+    if (it.type === "rpc" && it.nom === "affecter_contenant") {
+      const p = it.args.p, r = byId(d.ruches || [], p.colonie_id), c = (d.contenants || []).find((x) => x.id === p.contenant_id);
+      return ["Ruche physique · " + (r?.nom || "colonie"), (c ? "n° " + c.code : "sortie de sa caisse") + " · " + dfr(p.date)];
     }
     const l = it.lignes[0] || {};
     if (it.table === "recoltes") return ["Récolte · " + n(l.kg) + " kg", dfr(l.date_recolte)];

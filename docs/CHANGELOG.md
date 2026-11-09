@@ -5,6 +5,69 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.20 · à publier en recette · emplacements, transhumance et ruches physiques (IT-06)
+Migration : `migrations/016-emplacements-contenants.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé
+avant/après `migrations/releves/structure-2026-11-06-recette-apres-016.json` : avant, structure identique aux fichiers
+000 à 015 ; après, les six empreintes de `empreinte_structure()` identiques au rejeu des fichiers 000 à 016 ; 8 colonies
+reprises, toutes actives, un emplacement ouvert chacune ; registre inchangé ; 24 rattachements, aucun croisé ;
+déplacement de 2 colonies essayé dans un bloc annulé, sous RLS), à appliquer sur `apidoo` après accord.
+**Ne casse pas l'ancienne version** : tout est ajouté ; `ruches.sortie` reste rempli et suit le statut ; un déplacement
+fait par la v5.10 (événements puis texte du rucher) reste accepté et l'emplacement suit à la date du jour. Seule
+différence visible pour elle : une sortie « Perdue » (nouvelle version) s'affiche telle quelle. La v5.20 fonctionne
+aussi sur une base sans 016 (tables lues comme facultatives, pas de statut ni de « Perdue »), mais la production doit
+avoir 016 (la mise en ligne le vérifie). Extension `btree_gist` installée dans le schéma `extensions`.
+
+Pour l'apiculteur :
+- **Déplacer des colonies en une fois** (transhumance, hivernage, pollinisation, vente) : écran « Déplacer » depuis
+  Ruchers, la fiche d'un rucher, la fiche d'une colonie ou le registre. Colonies regroupées par rucher avec « Tout
+  cocher », destination, date, motif, note. Une seule opération, notée au registre des mouvements (une ligne par
+  colonie, comme avant). **Sans réseau** : gardée sur le téléphone, visible tout de suite, envoyée une seule fois.
+- **Où était la colonie** : la fiche colonie (onglet Colonie) montre ses emplacements successifs ; dans le journal,
+  une visite faite ailleurs qu'au rucher actuel indique « au Verger ». L'historique antérieur à cette version n'est pas
+  reconstitué : il est connu depuis le dernier déplacement noté, ou l'installation.
+- **Colonie orpheline** : « Marquer orpheline » (fiche colonie) ; elle apparaît en tête des alertes de l'accueil et
+  une tâche « Remérer … » est proposée (sans échéance imposée). « Elle a de nouveau une reine » la remet active.
+- **Colonies mortes, vendues, réunies, perdues** : ne comptent plus (comme avant) ; « Ruches sorties » se filtre par
+  statut. Nouvelle sortie « Perdue ».
+- **Ruches physiques** (niveau Professionnel, désactivé par défaut : Réglages › Ruches physiques) : caisses numérotées
+  dans Matériel (plusieurs d'un coup, type, état, lien avec un article d'équipement) ; depuis la fiche colonie,
+  « Choisir » ou « Transférer » : l'ancienne caisse devient libre, l'historique de la colonie ne bouge pas.
+
+Sous le capot :
+- 016 : `colonie_emplacements` (périodes sans chevauchement : contrainte d'exclusion), `deplacements`,
+  `ruche_evenements.deplacement_id`, `contenants`, `colonie_contenants` (une colonie par caisse, une caisse par
+  colonie) ; `ruches.statut`, `origine`, `date_creation`, `code` ; `deplacer_colonies()`, `changer_statut()`,
+  `affecter_contenant()` (transactionnelles, `security invoker`, idempotentes par l'identifiant du téléphone, lecteur
+  refusé) ; `rucher_a_date()` ; déclencheurs sortie ↔ statut et suivi de l'emplacement. Reprise des événements
+  « deplacement » de 010 (texte inchangé).
+- Écran `deplacer` enregistré dans le noyau (`src/domaines/ruchers/deplacer.js`) ; compléments de la fiche colonie et
+  de Matériel dans `src/domaines/colonies/` ; règles pures `src/domaines/colonies/regles.js` (`Regles.colonies`).
+  Aucune nouvelle surcharge de `render`, `shell` ou `view*`. **Retour arrière** : la fenêtre de déplacement de la
+  v5.10 reste disponible avec `localStorage.setItem("apidoo-deplacement-v510", "1")`.
+- Tests : SQL `test_016.mjs` (61 vérifications : atomicité, idempotence, chevauchement refusé, registre identique
+  avant/après, reprise sortie → statut, ancienne version, isolation), matrice d'isolation 360 ; unitaires
+  `colonies.test.mjs` (7) ; bout en bout `etapes_dp` (déplacement de 12 colonies, hors ligne, drapeau v5.10) et
+  `etapes_ct` (statut, ruches physiques). `etapes_dl` : 21 lectures à l'ouverture (4 tables de plus).
+
+**À vérifier**
+1. Ruchers › Déplacer : « Tout cocher » sur un rucher, choisir la destination, Déplacer : la fiche du rucher de
+   destination s'ouvre avec toutes les colonies ; la météo et la carte suivent si le rucher est placé.
+2. Gestion › Registre › Mouvements : une ligne par colonie déplacée (« Verger vers Lande, transhumance… ») ; les
+   mouvements d'avant cette version sont tous là, identiques ; l'export Excel aussi.
+3. **Au rucher, sans réseau** : déplacer 2 colonies : « Gardé sur le téléphone », elles apparaissent tout de suite au
+   nouveau rucher ; recharger l'application sans réseau : toujours là ; au retour du réseau, l'envoi part une fois.
+4. Fiche d'une colonie déplacée › onglet Colonie › Emplacements : nouveau rucher puis ancien ; dans le Journal, une
+   visite d'avant le déplacement indique « au <ancien rucher> ».
+5. Fiche colonie › Marquer orpheline (avec la tâche) : l'accueil la montre en tête des alertes, la tâche « Remérer… »
+   est dans l'agenda ; « Elle a de nouveau une reine » la retire des alertes.
+6. Sortie « Perdue » d'une colonie : elle quitte les ruches comptées ; Ruchers › Ruches sorties › filtre par statut.
+7. Réglages › Ruches physiques : tant que c'est « Non », rien dans Matériel ni sur la fiche colonie. Passer à « Oui »,
+   ajouter les caisses 1 à 5 dans Matériel, mettre une colonie dans la 1 puis la transférer dans la 2 : la 1 est
+   « Libre », la 2 « Occupée par … ».
+8. Compte en lecture seule : aucun bouton Déplacer, Marquer orpheline, Transférer, Ajouter (ruches physiques).
+9. Ancienne version (production v5.17 à v5.19) sur une base avec 016 : « Déplacer des ruches » (fenêtre) et « Sortie »
+   fonctionnent comme avant.
+
 ## v5.19 · à publier en recette · ruchers (IT-05)
 Migration : `migrations/015-ruchers.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé avant/après
 `migrations/releves/structure-2026-11-06-recette-apres-015.json` : seulement les ajouts de 015 ; structure identique aux

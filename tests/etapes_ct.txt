@@ -1,0 +1,89 @@
+
+    # IT-06 — Statut de la colonie (orpheline AP-US-034, mortes non comptées AP-US-035, filtre par statut) et ruches
+    # physiques (AP-US-036) : masquées tant que le suivi n'est pas activé (niveau Essentiel), puis transfert 12 → 13.
+    import os
+    cap = os.environ.get("CAPTURES")
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    RV = str(uuid.uuid4())
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": 47.32, "lng": 5.04, **vide}]
+    DATA["ruches"][0].update({"rucher_id": RV, "statut": "active", "sortie": ""})
+    col = lambda nom, statut, sortie: {"id": str(uuid.uuid4()), "nom": nom, "rucher": "Verger", "rucher_id": RV, "etat": "Bonne", "type_ruche": "",
+                                       "annee_reine": None, "notes": "", "lat": 47.32, "lng": 5.04, "statut": statut, "sortie": sortie, "date_sortie": "2026-03-01" if sortie else None}
+    DATA["ruches"] += [col("Ruche 2", "active", ""), col("Ruche 3", "active", ""), col("Morte A", "morte", "Morte"), col("Morte B", "morte", "Morte"), col("Vendue", "vendue", "Vendue")]
+    R1 = DATA["ruches"][0]["id"]
+    DATA["colonie_emplacements"] = [{"id": str(uuid.uuid4()), "colonie_id": c["id"], "rucher_id": RV, "du": "2026-03-01", "au": None} for c in DATA["ruches"]]
+    ART = str(uuid.uuid4()); DATA["articles"].append({"id": ART, "nom": "Corps Dadant", "type": "Équipement", "unite": "unité", "stock": 4, "seuil": 0})
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Mortes et vendue ne comptent plus ; leur historique reste consultable, filtrable par statut.
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".head", timeout=5000)
+    verif("3 colonies" in page.locator(".head").inner_text(), "Ruchers : 3 colonies actives comptées sur 6")
+    page.locator("details.u-pli:has-text('Ruches sorties')").evaluate("d => d.open = true")
+    page.click("[data-act=clfsortie][data-v=morte]"); page.wait_for_timeout(200)
+    t = page.locator("details.u-pli:has-text('Ruches sorties')").inner_text()
+    verif("Morte A" in t and "Morte B" in t and "Vendue ·" not in t.split("Mortes")[-1].split("\n", 1)[-1], "filtre « Mortes » : les deux colonies mortes, consultables")
+
+    # Niveau Essentiel : aucun écran de ruche physique.
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".wrap", timeout=5000)
+    verif(page.locator(".ct-liste").count() == 0, "Matériel : pas de section Ruches physiques sans le réglage")
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_selector(".u-ruche-tete", timeout=5000)
+    page.evaluate("ACT.uronglet('colonie')"); page.wait_for_selector(".cl-statut", timeout=5000)
+    verif(page.locator(".cl-contenant").count() == 0, "fiche colonie : pas de ruche physique sans le réglage")
+
+    # Orpheline : alerte de l'accueil et tâche de remérage proposée.
+    page.click("[data-act=clorpheline]"); page.wait_for_selector("#sheet[open]")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=/orpheline|Tâche/", timeout=10000)
+    page.wait_for_timeout(500)
+    st = [b["p"] for n, b in recu["rpc"] if n == "changer_statut"]
+    verif(len(st) == 1 and st[0]["colonie_id"] == R1 and st[0]["statut"] == "orpheline" and st[0]["id"] != R1, "changer_statut envoyé (identifiant de saisie distinct de la colonie)")
+    verif(any(x.get("titre") == "Remérer Ruche 1" and x.get("ruche_id") == R1 for x in DATA["taches"]), "tâche « Remérer Ruche 1 » ajoutée, sans échéance imposée")
+    verif(page.locator(".cl-orph").count() == 1, "fiche : étiquette « Orpheline »")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector("text=/Bonjour|Bonsoir/")
+    page.evaluate("ACT.utfiltre('tout'); ACT.utout()"); page.wait_for_timeout(200)
+    verif(page.locator(".u-todo >> text=/Ruche 1.*orpheline/i").count() >= 1, "accueil : Ruche 1 orpheline dans les alertes")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(300)
+            page.screenshot(path=f"{cap}/ct-accueil-orpheline-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    # Activer le suivi des ruches physiques (Réglages), créer les caisses 12 et 13 dans Matériel.
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".g-bloc[data-act=errgcontenants]")
+    page.click(".g-bloc[data-act=errgcontenants]"); page.wait_for_selector("#sheet[open]")
+    page.select_option("#sheet [name=contenants]", "1"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+    verif(page.evaluate("cfg().contenants") is True, "réglage « Suivre mes ruches physiques » enregistré")
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ct-liste", timeout=5000)
+    page.click("[data-act=ctajouter]"); page.wait_for_selector("#sheet[open]")
+    page.fill("#sheet [name=code]", "12"); page.fill("#sheet [name=jusqua]", "13"); page.fill("#sheet [name=type]", "Dadant 10 cadres")
+    page.select_option("#sheet [name=article_id]", ART)
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=2 ruches physiques ajoutées", timeout=10000)
+    verif(sorted(c["code"] for c in DATA.get("contenants", [])) == ["12", "13"] and all(c["article_id"] == ART for c in DATA["contenants"]), "caisses 12 et 13 créées, liées à l'article « Corps Dadant »")
+    C12, C13 = (next(c["id"] for c in DATA["contenants"] if c["code"] == k) for k in ("12", "13"))
+
+    # Colonie A dans le 12, puis transférée dans le 13 : le 12 devient libre, le 13 occupé, historique gardé.
+    page.evaluate("ACT.ruche('%s'); ACT.uronglet('colonie')" % R1); page.wait_for_selector(".cl-contenant", timeout=5000)
+    page.click("[data-act=clcontenant]"); page.wait_for_selector("#sheet[open]")
+    page.select_option("#sheet [name=contenant_id]", C12); page.fill("#sheet [name=date]", "2026-04-01"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Ruche physique enregistrée", timeout=10000)
+    page.wait_for_selector(".cl-contenant >> text=N° 12", timeout=5000)
+    page.click("[data-act=clcontenant]"); page.wait_for_selector("#sheet[open]")
+    page.select_option("#sheet [name=contenant_id]", C13); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Ruche physique enregistrée", timeout=10000)
+    page.wait_for_selector(".cl-contenant >> text=N° 13", timeout=5000)
+    occ = DATA["colonie_contenants"]
+    verif(len(occ) == 2 and next(o for o in occ if o["contenant_id"] == C12)["au"] and not next(o for o in occ if o["contenant_id"] == C13)["au"], "base : 12 fermé, 13 ouvert")
+    verif("N° 12" in page.locator(".cl-contenant").inner_text(), "fiche : l'historique garde le 12")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(300)
+            page.screenshot(path=f"{cap}/ct-fiche-colonie-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ct-liste", timeout=5000)
+    l = page.locator(".ct-liste").inner_text()
+    verif("N° 12 · Dadant 10 cadres\nLibre" in l and "Occupée par Ruche 1" in l, "Matériel : le 12 est libre, le 13 occupé par Ruche 1")
+    if cap:
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(300)
+            page.screenshot(path=f"{cap}/ct-materiel-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

@@ -37,9 +37,14 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     budgets: ["budgets"],
     reglages: ["reglages"],
     ruchers: ["ruchers", "nom"],
+    // IT-06 (migration 016) : emplacements successifs, déplacements, ruches physiques et leur occupation.
+    emplacements: ["colonie_emplacements", "du", !1],
+    deplacements: ["deplacements", "date_deplacement", !1],
+    contenants: ["contenants", "code"],
+    occupations: ["colonie_contenants", "du", !1],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -701,6 +706,10 @@ function todos() {
           "materiel",
         ]),
       ),
+    // Colonies orphelines (IT-06, AP-US-034) : en tête des alertes jusqu'au remérage.
+    donnees.ruches
+      .filter((ruche) => ruche.statut === "orpheline")
+      .forEach((ruche) => liste.push([ruche.nom, "crit", "Orpheline : remérage à prévoir", "ruche:" + ruche.id])),
     donnees.ruches
       .filter((ruche) => ruche.etat !== "Bonne")
       .forEach((ruche) =>

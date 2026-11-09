@@ -36,7 +36,7 @@ export function completerFiche() {
   if (tel) wrap.querySelector(".head .actions")?.insertAdjacentHTML("afterbegin", `<a class="btn u-lienbtn" href="${e(tel)}" aria-label="Appeler ${e(r.proprietaire || "le propriétaire")}">Appeler</a>`);
   const gestion = r.archive_le
     ? `<button type="button" class="btn" data-act="rcrouvrir" data-v="${e(r.id)}">Rouvrir ce rucher</button>`
-    : `<button type="button" class="btn" data-act="rcrenommer" data-v="${e(r.id)}">Renommer</button><button type="button" class="btn" data-act="rcarchiver" data-v="${e(r.id)}">Archiver</button>`;
+    : `<button type="button" class="btn" data-act="dpouvrir" data-v="${e(r.id)}">Déplacer des colonies</button><button type="button" class="btn" data-act="rcrenommer" data-v="${e(r.id)}">Renommer</button><button type="button" class="btn" data-act="rcarchiver" data-v="${e(r.id)}">Archiver</button>`;
   const fiche = wrap.querySelector(".al-fiche");
   (fiche || wrap.lastElementChild)?.insertAdjacentHTML(fiche ? "beforebegin" : "afterend", infosHtml(r));
   wrap.insertAdjacentHTML("beforeend", `<section class="card rc-gestion"><h2>Gérer ce rucher</h2><div class="u-deux">${gestion}</div></section>`);

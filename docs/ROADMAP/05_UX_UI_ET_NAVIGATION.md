@@ -36,6 +36,8 @@ Compte (avatar) : exploitations · installer · plein soleil · aide · se déco
 * visible au niveau Professionnel ou après activation
 ```
 
+**IT-06 (6 nov. 2026)** : écran « Déplacer des colonies » sous Ruchers (pas de nouvelle rubrique), ouvert depuis Ruchers, la fiche rucher, la fiche colonie et le registre ; il utilise le `Sélecteur de colonies` (§5). Ruches physiques : section de Matériel, visible seulement au niveau Professionnel (réglage).
+
 **Arborescence gelée depuis IT-03 (6 nov. 2026)** : toute modification passe par la roadmap (`docs/PROCESSUS.md`, règles de contenu). État en v5.17 : Registre et déclaration ont leur entrée dans Gestion (bloc et lien « ‹ Gestion ») ; Opérations est réservée, l'écran n'existe pas encore (hors périmètre d'IT-03).
 
 Changement par rapport à la v5 : **Opérations** et **Registre** obtiennent une entrée stable dans Gestion (aujourd'hui sous Ruchers › Santé selon la version) ; la fiche ruche devient **fiche colonie** avec deux onglets nouveaux (Santé, Reine & lignée).

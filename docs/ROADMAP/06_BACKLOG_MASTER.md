@@ -1175,7 +1175,7 @@ Historique des emplacements et déplacements de lots de colonies.
 | Type | Fonctionnalité |
 | Domaine | D03 Ruchers et emplacements |
 | Epic parent | AP-EPIC-006 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-06-emplacements` (v5.20, migration 016 appliquée sur apidoo-test) : colonie_emplacements sans chevauchement, reprise (un emplacement ouvert par colonie), rucher_a_date(), emplacements sur la fiche colonie, rucher de la visite à sa date ; historique antérieur non reconstitué ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | M |
@@ -1211,7 +1211,7 @@ Historique des emplacements et déplacements de lots de colonies.
 | Type | Fonctionnalité |
 | Domaine | D03 Ruchers et emplacements |
 | Epic parent | AP-EPIC-006 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-06-emplacements` (v5.20) : deplacer_colonies() transactionnelle et idempotente, écran Déplacer (sélecteur par rucher, hors ligne), reprise des événements « deplacement » de 010, registre lu avec deplacements ; fenêtre v5.10 derrière un drapeau ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | M |
@@ -1259,7 +1259,7 @@ Distinguer la colonie biologique de la ruche physique.
 | Type | Fonctionnalité |
 | Domaine | D04 Colonies, ruches physiques et reines |
 | Epic parent | AP-EPIC-007 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-06-emplacements` (v5.20) : ruches.statut, origine, date_creation, code ; reprise depuis sortie ; déclencheur sortie ↔ statut ; orpheline (alerte d'accueil, tâche de remérage proposée), sortie « Perdue », filtre des sorties par statut ; saisie de l'origine et du code pas encore à l'écran ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -1297,7 +1297,7 @@ Distinguer la colonie biologique de la ruche physique.
 | Type | Fonctionnalité |
 | Domaine | D04 Colonies, ruches physiques et reines |
 | Epic parent | AP-EPIC-007 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 6 nov. 2026 sur `claude/it-06-emplacements` (v5.20) : contenants et colonie_contenants, affecter_contenant(), lien avec un article d'équipement, section Matériel et transfert depuis la fiche colonie, masqué tant que le réglage « Ruches physiques » est désactivé ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | M |
