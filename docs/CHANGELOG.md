@@ -6,7 +6,9 @@ Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migr
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
 ## v5.21 · à publier en recette · Apidoo devient Apiviz (identité visuelle)
-Aucune migration. **Ne casse rien** : adresse du site, bases, clés du stockage local et cache hors ligne inchangés.
+Aucune migration. Bases, clés du stockage local et cache hors ligne inchangés. Le dépôt ayant été renommé
+`apiviz-app/apiviz`, le manifeste passe en chemins relatifs (`./`) et le contrôle « Le site répond ? » de la mise en
+ligne déduit l'adresse du dépôt (https://apiviz-app.github.io/apiviz/).
 
 Pour l'apiculteur :
 - **Nouveau nom, nouveau logo** : « apiviz », les points des deux « i » sont deux alvéoles de miel. Bandeau, barre

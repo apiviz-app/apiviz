@@ -8,9 +8,11 @@ Planche complète (logos, couleurs, polices, maquettes) : https://claude.ai/arti
 **api** : l'abeille en latin, et le nom du compagnon. **viz** : voir, visualiser. Signature : « Voir clair dans ses ruches. »
 Dans une phrase, on écrit **Apiviz** (jamais APIVIZ ni ApiViz). Le logo, lui, est en minuscules.
 
-Ce qui ne change pas : l'adresse du site (`apidoo.github.io`), les bases Supabase (`apidoo`, `apidoo-test`), les clés
-du stockage local (`apidoo-…`) et le nom du cache hors ligne. Les renommer déconnecterait les téléphones et perdrait les
-saisies en attente. Le nom de domaine pourra changer plus tard, avec une redirection.
+Le dépôt est devenu `apiviz-app/apiviz` : le site est servi à https://apiviz-app.github.io/apiviz/ (recette :
+`…/apiviz/recette/`). Le manifeste utilise des chemins relatifs (`./`) pour fonctionner sous ce sous-dossier.
+
+Ce qui ne change pas : les bases Supabase (`apidoo`, `apidoo-test`), les clés du stockage local (`apidoo-…`) et le nom
+du cache hors ligne. Les renommer déconnecterait les comptes et perdrait les saisies en attente.
 
 ## Logos (racine du dépôt)
 
@@ -65,7 +67,11 @@ Apiviz tutoie, phrases courtes, un chiffre plutôt qu'un adjectif. Détail : `CH
 
 ## Hors du dépôt (à faire à la main)
 
+- Supabase, Authentication › URL Configuration, sur `apidoo` et `apidoo-test` : mettre la nouvelle adresse dans
+  « Site URL » et « Redirect URLs » (`https://apiviz-app.github.io/apiviz/**`), sinon le lien de connexion reçu par
+  e-mail renvoie vers l'ancienne adresse.
+
 - Supabase, Authentication › Emails : nom d'expéditeur et modèles des e-mails de connexion à passer de « Apidoo » à
   « Apiviz » (le texte de l'application dit déjà « l'expéditeur est Apiviz »), sur `apidoo` et `apidoo-test`.
-- Sur un téléphone où l'application est déjà installée, l'icône et le nom se mettent à jour d'eux-mêmes après quelques
-  jours (Android) ; sur iPhone, il faut retirer l'icône et réinstaller.
+- L'adresse ayant changé, une application déjà installée sur un téléphone pointe vers l'ancienne : la retirer et
+  réinstaller Apiviz depuis la nouvelle adresse (puis se reconnecter).

@@ -4,7 +4,7 @@ Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en li
 
 | | Recette | Production |
 |---|---|---|
-| Adresse | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
+| Adresse | https://apiviz-app.github.io/apiviz/recette/ | https://apiviz-app.github.io/apiviz/ |
 | Base | Supabase `apidoo-test` (données fictives) | Supabase `apidoo` (vraies données) |
 | Repère de version | étiquette git `recette` | étiquette git `deploiement` |
 | Reconnaissable | étiquette « RECETTE » en haut de l'écran, mêmes couleurs que la production | aucun |
