@@ -4,7 +4,7 @@ Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en li
 
 | | Recette | Production |
 |---|---|---|
-| Adresse | https://apidoo.github.io/recette/ | https://apidoo.github.io/ |
+| Adresse | https://apiviz-app.github.io/apiviz/recette/ | https://apiviz-app.github.io/apiviz/ |
 | Base | Supabase `apidoo-test` (données fictives) | Supabase `apidoo` (vraies données) |
 | Repère de version | étiquette git `recette` | étiquette git `deploiement` |
 | Reconnaissable | étiquette « RECETTE » en haut de l'écran, mêmes couleurs que la production | aucun |
@@ -45,4 +45,4 @@ Revenir à une version antérieure en passant par le même circuit (revert, rece
 
 - Web sur GitHub Pages (Gladoo : Cloudflare, avec son nom de domaine).
 - Migrations appliquées par Claude via l'accès Supabase, recette puis production (Gladoo : par la mise en ligne, avec la CLI Supabase).
-- Pas d'application mobile compilée : Apidoo s'installe depuis le site (Gladoo : Expo). Le choix et la suite sont dans `MOBILE.md`.
+- Pas d'application mobile compilée : Apiviz s'installe depuis le site (Gladoo : Expo). Le choix et la suite sont dans `MOBILE.md`.

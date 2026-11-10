@@ -1,4 +1,4 @@
-# Apidoo — confidentialité et services tiers
+# Apiviz — confidentialité et services tiers
 
 Version du 6 novembre 2026 (IT-04, AP-FEAT-021). Ce texte est la source de la page publiée `confidentialite.html`
 (racine du site) : toute modification se fait dans les deux fichiers, dans la même pull request
@@ -10,7 +10,7 @@ Version du 6 novembre 2026 (IT-04, AP-FEAT-021). Ce texte est la source de la pa
 
 ## Qui traite vos données
 
-Apidoo est un carnet de bord pour apiculteurs. Le responsable du traitement est [à compléter : nom, adresse].
+Apiviz est un carnet de bord pour apiculteurs. Le responsable du traitement est [à compléter : nom, adresse].
 Pour toute question ou demande : [à compléter : adresse e-mail de contact].
 
 ## Ce que nous enregistrons
@@ -48,7 +48,7 @@ Certaines fonctions passent par votre navigateur ou une autre application, seule
 
 - **Dictée** : la reconnaissance vocale est celle de votre navigateur. Selon l'appareil, l'audio peut être envoyé au
   fournisseur du navigateur (Google pour Chrome et Android, Apple pour Safari et l'iPhone) pour être transformé en texte.
-  Apidoo ne reçoit et ne garde que le texte que vous relisez et enregistrez. Un message vous l'explique avant la
+  Apiviz ne reçoit et ne garde que le texte que vous relisez et enregistrez. Un message vous l'explique avant la
   première dictée, avec le choix de saisir au doigt.
 - **Itinéraire** : le bouton ouvre Google Maps avec la position du rucher.
 - **Déclaration de ruches** : le lien ouvre le service officiel du ministère de l'Agriculture ; rien n'est envoyé

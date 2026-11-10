@@ -5,6 +5,23 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.21 · à publier en recette · Apidoo devient Apiviz (identité visuelle)
+Aucune migration. Bases, clés du stockage local et cache hors ligne inchangés. Le dépôt ayant été renommé
+`apiviz-app/apiviz`, le manifeste passe en chemins relatifs (`./`) et le contrôle « Le site répond ? » de la mise en
+ligne déduit l'adresse du dépôt (https://apiviz-app.github.io/apiviz/).
+
+Pour l'apiculteur :
+- **Nouveau nom, nouveau logo** : « apiviz », les points des deux « i » sont deux alvéoles de miel. Bandeau, barre
+  latérale, tournée, connexion, page de confidentialité et écran de chargement l'affichent.
+- **Nouvelle icône** : l'œil-alvéole (alvéole miel, pupille sapin, reflet cire) sur fond sapin, pour l'écran
+  d'accueil, l'onglet du navigateur et les notifications.
+- **API a les yeux de la marque** : deux petites alvéoles avec un reflet, dans tous ses états.
+- Tous les textes disent Apiviz (installer, partager une invitation, notifications, export d'agenda).
+
+Technique : `logo-apiviz*.svg`, `symbole-apiviz.svg`, `icone-apiviz.svg` remplacent les fichiers `*-apidoo.svg` ;
+PNG régénérés ; jetons `--cire` et `--honey-light` ajoutés ; objet global `Apiviz` (ex-`Apidoo`) pour le compagnon.
+Charte : `docs/CHARTE_GRAPHIQUE.md`. À faire hors dépôt : nom d'expéditeur des e-mails dans Supabase.
+
 ## v5.20 · à publier en recette · emplacements, transhumance et ruches physiques (IT-06)
 Migration : `migrations/016-emplacements-contenants.sql`, **appliquée sur `apidoo-test` le 6 nov. 2026** (relevé
 avant/après `migrations/releves/structure-2026-11-06-recette-apres-016.json` : avant, structure identique aux fichiers

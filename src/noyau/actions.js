@@ -1,4 +1,4 @@
-// Apidoo — actions par écran (IT-03, AP-FEAT-002).
+// Apiviz — actions par écran (IT-03, AP-FEAT-002).
 // Les boutons gardent data-act : app.js appelle ACT[nom]. Un écran migré déclare ses actions ici, une seule fois ;
 // une action déjà définie ailleurs n'est remplacée que si l'écran le dit (remplace: [noms]), pour que chaque
 // remplacement soit visible dans le code de l'écran qui le fait.

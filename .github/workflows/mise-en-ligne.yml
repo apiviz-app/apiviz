@@ -124,8 +124,12 @@ jobs:
       - name: Le site répond ?
         env:
           CIBLE: ${{ inputs.cible }}
+          PROPRIO: ${{ github.repository_owner }}
+          DEPOT: ${{ github.event.repository.name }}
         run: |
-          url=https://apidoo.github.io/; [ "$CIBLE" = recette ] && url=https://apidoo.github.io/recette/
+          # Adresse GitHub Pages déduite du dépôt : <proprio>.github.io/ si le dépôt porte ce nom, sinon /<dépôt>/.
+          url="https://$PROPRIO.github.io/"; [ "$DEPOT" = "$PROPRIO.github.io" ] || url="$url$DEPOT/"
+          [ "$CIBLE" = recette ] && url="${url}recette/"
           for i in 1 2 3 4 5 6; do
             curl -fsS -o /dev/null "$url" && { echo "$url répond."; exit 0; }
             sleep 10

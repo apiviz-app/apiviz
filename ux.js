@@ -1,4 +1,4 @@
-// Apidoo — version 2 de l'interface : accueil « terrain d'abord », fiche ruche en journal de cartes,
+// Apiviz — version 2 de l'interface : accueil « terrain d'abord », fiche ruche en journal de cartes,
 // visite en sections repliables, ventes en cartes avec reçu et relance, carte des ruchers, barre du bas à 5 boutons.
 // Remplace des écrans de app.js sans le modifier. S'appuie sur app.js et, s'ils sont là, sur PH, RG, VR, HL, EX.
 const UX = (() => {
@@ -552,7 +552,7 @@ const UX = (() => {
         await placer(cle, pos.coords.latitude, pos.coords.longitude);
       } catch (e) { fail(e); }
       ok();
-    }, () => { toast("Position indisponible : autorise la localisation pour Apidoo", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+    }, () => { toast("Position indisponible : autorise la localisation pour Apiviz", true); ok(); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   });
 
   // ---------- Tableaux lisibles sur téléphone ----------

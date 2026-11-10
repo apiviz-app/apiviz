@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine ventes (IT-03).
+// Apiviz — écrans du domaine ventes (IT-03).
 export default [
   // Clients et ventes : ux.js (cartes, reçu, relance), complété par Alvéoles (pots par format).
   { id: "clients", titre: "Ventes", rubrique: "ventes", rendu: () => { UX.ecrans.clients(); AL.completerClients(); } },

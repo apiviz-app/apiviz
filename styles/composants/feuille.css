@@ -1,4 +1,4 @@
-/* Apidoo — composant Feuille : fenêtre de saisie (#sheet) et visionneuse (IT-03, AP-FEAT-015).
+/* Apiviz — composant Feuille : fenêtre de saisie (#sheet) et visionneuse (IT-03, AP-FEAT-015).
    Toutes ses règles sont ici (elles étaient en cinq endroits d'index.html) ; valeurs finales inchangées. */
 dialog{border:0;padding:0;width:min(460px,calc(100vw - 24px));max-height:calc(100vh - 40px);color:var(--ink);border-radius:18px;box-shadow:0 24px 60px rgba(20,28,24,.35);overflow:auto}
 dialog::backdrop{background:rgba(20,28,24,.45);backdrop-filter:blur(2px)}

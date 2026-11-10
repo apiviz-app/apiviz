@@ -1,4 +1,4 @@
-// Apidoo — compléments de la fiche colonie (IT-06) : statut (orpheline, AP-US-034), emplacements successifs
+// Apiviz — compléments de la fiche colonie (IT-06) : statut (orpheline, AP-US-034), emplacements successifs
 // (AP-FEAT-028), rucher d'une visite à sa date (AP-US-032), ruche physique (contenant, AP-US-036, si le suivi est
 // activé dans les réglages : niveau Professionnel, AP-TECH-113). Complète l'écran « ruche » rendu par ux.js puis
 // alveoles.js. Saisies terrain par la file d'envoi (offline.js) : changer_statut(), affecter_contenant() (migration 016).

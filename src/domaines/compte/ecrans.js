@@ -1,4 +1,4 @@
-// Apidoo — écrans transversaux : gestion, réglages, membres, activité, recherche (IT-03).
+// Apiviz — écrans transversaux : gestion, réglages, membres, activité, recherche (IT-03).
 export default [
   // Gestion (route « plus ») : ergonomie.js (blocs), seule implémentation encore utilisée.
   { id: "plus", titre: "Gestion", rubrique: "plus", rendu: () => ER.ecranGestion() },

@@ -1,4 +1,4 @@
-// Apidoo — table des écrans (IT-03, AP-FEAT-002).
+// Apiviz — table des écrans (IT-03, AP-FEAT-002).
 // Chaque écran est enregistré une seule fois : { id, titre, rubrique, rendu }. render() d'app.js consulte cette table
 // (seule liste des écrans depuis la fin d'IT-03 ; le drapeau ?ancien=1 de la transition a été retiré).
 

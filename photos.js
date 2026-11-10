@@ -1,4 +1,4 @@
-// Apidoo — photos de visite.
+// Apiviz — photos de visite.
 // Prise de photo, réduction automatique, envoi différé si le réseau manque,
 // vignettes dans le journal de la ruche. S'appuie sur app.js (S, sb, esc, toast…).
 const PH = (() => {

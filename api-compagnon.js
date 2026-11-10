@@ -1,4 +1,4 @@
-/* API, le compagnon d'Apidoo. Élément <api-compagnon etat="repos" taille="64">. Aucune dépendance. */
+/* API, le compagnon d'Apiviz. Ses yeux reprennent l'œil-alvéole du symbole (pupille sapin, reflet cire). Élément <api-compagnon etat="repos" taille="64">. Aucune dépendance. */
 (function (racine) {
   var CORPS = "M108 68L84 30H36L12 68l24 38h48z";
   var ETATS = {
@@ -37,6 +37,7 @@
     ".api-tige{fill:none;stroke:var(--api-trait);stroke-width:5;stroke-linecap:round;transition:stroke .4s ease}" +
     ".api-bout{fill:var(--api-trait);transition:fill .4s ease}" +
     ".api-pupille{fill:var(--api-yeux)}" +
+    ".api-reflet{fill:var(--cire,#FFF8E7)}" +
     ".api-arc{fill:none;stroke:var(--api-yeux);stroke-width:6;stroke-linecap:round}" +
     ".api-sourcil{fill:none;stroke:var(--api-yeux);stroke-width:5;stroke-linecap:round}" +
     ".api-ant-g,.api-ant-g-i{transform-origin:47px 27px}.api-ant-d,.api-ant-d-i{transform-origin:73px 27px}" +
@@ -128,8 +129,8 @@
       '<path class="api-corps" d="' + CORPS + '"/>' +
       '<g class="api-regard"><g class="api-regard-i">' +
         '<g class="api-ouvert">' +
-          '<g class="api-oeil api-oeil-g"><g class="api-pau api-pau-g"><ellipse class="api-pupille" cx="48" cy="64" rx="7" ry="10"/></g></g>' +
-          '<g class="api-oeil api-oeil-d"><g class="api-pau api-pau-d"><ellipse class="api-pupille" cx="72" cy="64" rx="7" ry="10"/></g></g>' +
+          '<g class="api-oeil api-oeil-g"><g class="api-pau api-pau-g"><path class="api-pupille" d="' + HEX(48, 64, 9) + '"/><path class="api-reflet" d="' + HEX(50.5, 60.5, 2.6) + '"/></g></g>' +
+          '<g class="api-oeil api-oeil-d"><g class="api-pau api-pau-d"><path class="api-pupille" d="' + HEX(72, 64, 9) + '"/><path class="api-reflet" d="' + HEX(74.5, 60.5, 2.6) + '"/></g></g>' +
         "</g>" +
         '<path class="api-arc api-rieur" d="M39 67q9-11 18 0M63 67q9-11 18 0"/>' +
         '<path class="api-arc api-dort" d="M39 63q9 8 18 0M63 63q9 8 18 0"/>' +
@@ -200,4 +201,4 @@
   racine.compagnon = function (etat, taille, fond) {
     return '<api-compagnon etat="' + (etat || "repos") + '" taille="' + (taille || 62) + '"' + (fond ? ' fond="' + fond + '"' : "") + "></api-compagnon>";
   };
-})(window.Apidoo = window.Apidoo || {});
+})(window.Apiviz = window.Apiviz || {});

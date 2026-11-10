@@ -1,4 +1,4 @@
-// Apidoo — formats (IT-03, AP-FEAT-013). Fonctions pures : aucune dépendance au navigateur ni à l'état.
+// Apiviz — formats (IT-03, AP-FEAT-013). Fonctions pures : aucune dépendance au navigateur ni à l'état.
 // Reprises telles quelles d'app.js ; testées par tests/unitaires/format.test.mjs.
 
 const ENTITES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };

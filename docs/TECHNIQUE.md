@@ -137,11 +137,11 @@
   s'attendre à perdre l'accès à tout moment, et la page renvoie vers des fournisseurs payants. Exigences : HTTPS,
   attribution visible (faite : « © OpenStreetMap » sur la carte et sous la carte), en-tête Referer valide pour le web,
   User-Agent propre à l'application pour une application installée, respect du cache ; téléchargement en masse et
-  « carte hors ligne » interdits. Apidoo est conforme pour le site tant que l'usage reste modeste. **À trancher avant
+  « carte hors ligne » interdits. Apiviz est conforme pour le site tant que l'usage reste modeste. **À trancher avant
   les applications des stores (IT-30) et l'abonnement payant** : passer à un fournisseur de tuiles qui autorise
   l'usage commercial (ou des tuiles hébergées), la vue web de Capacitor ne permettant pas un User-Agent propre simple.
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).
-  - Pluie : ces sources disent de ne pas ouvrir sous la pluie, sans chiffre. Apidoo refuse dès 30 % de risque ou de la pluie prévue.
-  - Vent : elles disent d'éviter le vent, sans chiffre. Apidoo refuse dès 25 km/h. Ces deux valeurs sont des choix, à ajuster à l'usage.
+  - Pluie : ces sources disent de ne pas ouvrir sous la pluie, sans chiffre. Apiviz refuse dès 30 % de risque ou de la pluie prévue.
+  - Vent : elles disent d'éviter le vent, sans chiffre. Apiviz refuse dès 25 km/h. Ces deux valeurs sont des choix, à ajuster à l'usage.

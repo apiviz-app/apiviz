@@ -1,9 +1,9 @@
-// Apidoo — prise en main : présentation avant le compte, création du rucher en trois questions,
+// Apiviz — prise en main : présentation avant le compte, création du rucher en trois questions,
 // guide de démarrage selon la saison, premier succès, écrans vides utiles. Chargé en dernier.
 const DM = (() => {
   const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
   const cle = (k) => `apidoo-dm-${k}-${typeof EX != "undefined" ? EX.courante() : ""}`;
-  const api = (etat, t) => (typeof Apidoo != "undefined" ? Apidoo.compagnon(etat, t) : "");
+  const api = (etat, t) => (typeof Apiviz != "undefined" ? Apiviz.compagnon(etat, t) : "");
   document.head.insertAdjacentHTML("beforeend", `<style>
   .dm-ecran{min-height:100dvh;display:flex;flex-direction:column;gap:14px;max-width:460px;margin:0 auto;padding:24px 20px;background:var(--ground);color:var(--ink)}
   .dm-sombre{background:var(--pine);color:#fff;max-width:none}.dm-sombre>*{width:100%;max-width:420px;margin-inline:auto}
@@ -38,7 +38,7 @@ const DM = (() => {
     if (S.authMsg && /^Compte créé/.test(S.authMsg)) {
       $app.innerHTML = `<div class="dm-ecran">${api("repond", 56)}<h1 class="dm-say">Ouvre le lien reçu${mail ? ` à ${esc(mail)}` : " par e-mail"}.</h1>
         <p class="small">Ouvre-le sur cet appareil pour continuer.</p>
-        <section class="card dm-grand"><h2>Pas de message ?</h2><p class="small">Regarde dans les indésirables : l’expéditeur est Apidoo.</p>
+        <section class="card dm-grand"><h2>Pas de message ?</h2><p class="small">Regarde dans les indésirables : l’expéditeur est Apiviz.</p>
         <div class="dm-liste">${mail ? '<button type="button" class="btn block" data-act="dmrenvoyer">Renvoyer le lien</button>' : ""}<button type="button" class="btn block" data-act="dmcorriger">Corriger mon adresse</button></div></section>
         <button type="button" class="dm-lien" data-act="dmconnexion">J’ai confirmé, me connecter</button></div>`;
       return;
@@ -128,7 +128,7 @@ const DM = (() => {
       [d.ruches.some((r) => r.lat != null), "Placer ton rucher sur la carte", "dmcarte"],
       [d.visites.length > 0, "Noter une première visite", "dmvisite"],
       [!!memo(cle("invite")), "Inviter ton associé (facultatif)", "dminviter"],
-      [installee() || !!memo(cle("installe")), "Installer Apidoo sur ton téléphone", "dminstaller"]];
+      [installee() || !!memo(cle("installe")), "Installer Apiviz sur ton téléphone", "dminstaller"]];
   }
   function saison() {
     const d = S.d, m = new Date().getMonth();
@@ -191,7 +191,7 @@ const DM = (() => {
     const haut = wrap.querySelector(".hero-head, .head, .hero");
     const sec = `<section class="card dm-guide"><div class="u-entete"><h2>Tu fais partie de ${esc(cfg().nom)}</h2><button type="button" class="link" data-act="dmarrivee">Fermer</button></div>
       <p class="small">${d.ruches.length} ruche${d.ruches.length > 1 ? "s" : ""} déjà en place, rien à ressaisir.</p>${lignes ? `<ul class="dm-liste">${lignes}</ul>` : ""}
-      ${installee() ? "" : '<button type="button" class="btn block" data-act="dminstaller">Installer Apidoo sur ton téléphone</button>'}</section>`;
+      ${installee() ? "" : '<button type="button" class="btn block" data-act="dminstaller">Installer Apiviz sur ton téléphone</button>'}</section>`;
     if (haut) haut.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
   }
   ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); redessiner("dash"); };

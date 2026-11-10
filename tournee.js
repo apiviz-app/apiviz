@@ -1,4 +1,4 @@
-// Apidoo — tournée en parcours : départ, saisie (libre, questions ou manuelle), vérification, bilan.
+// Apiviz — tournée en parcours : départ, saisie (libre, questions ou manuelle), vérification, bilan.
 // Rien n'est enregistré sans vérification. Les visites passent par creer_visite : hors ligne et registre ne changent pas.
 // S'appuie sur app.js, offline.js (HL), v3.js (S.tournee, formulaire complet), meteo.js (MT), voix.js (VX) et essentiels.js (ES).
 const TN = (() => {
@@ -357,7 +357,7 @@ const TN = (() => {
           return `<div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b><small>${f.etat !== "vide" ? { notee: "Notée", passee: "Passée", enregistree: "Enregistrée" }[f.etat] : d ? (d.reine === "Non vue" ? "Reine pas vue à la dernière visite" : "Dernière visite " + esc(U.dateCourte(d.date_visite))) : "Première visite"}</small></span>${c === "crit" ? '<em class="tn-tag c">Urgent</em>' : c === "watch" ? '<em class="tn-tag w">Priorité</em>' : ""}</div>`;
         }).join("")}</section>
         <h2 class="tn-h2">Comment veux-tu noter ?</h2>
-        <section class="tn-modes" aria-label="Choisir le mode">${MODES.map(([k, a, b]) => `<button type="button" class="tn-mode ${k === S.tn.mode ? "on" : ""}" data-act="tnmode" data-v="${k}"><span class="tn-mi">${k === "manuel" ? PLUS : Apidoo.compagnon(k === "libre" ? "ecoute" : "repond", 40).replace("<api-compagnon ", "<api-compagnon muet ")}</span><span><b>${a}</b><small>${b}</small></span></button>`).join("")}</section>`,
+        <section class="tn-modes" aria-label="Choisir le mode">${MODES.map(([k, a, b]) => `<button type="button" class="tn-mode ${k === S.tn.mode ? "on" : ""}" data-act="tnmode" data-v="${k}"><span class="tn-mi">${k === "manuel" ? PLUS : Apiviz.compagnon(k === "libre" ? "ecoute" : "repond", 40).replace("<api-compagnon ", "<api-compagnon muet ")}</span><span><b>${a}</b><small>${b}</small></span></button>`).join("")}</section>`,
         pied: `<button type="button" class="tn-b miel" data-act="tnmode" data-v="${S.tn.mode}">${S.tn.mode === "manuel" ? "" : MICRO}${faites ? "Reprendre" : m[3]}</button>${faites ? '<button type="button" class="tn-lien" data-act="tnzero">Recommencer la tournée</button>' : ""}`,
       };
     },
@@ -366,7 +366,7 @@ const TN = (() => {
       const ondes = [12, 26, 38, 20, 32, 14, 28, 40, 18, 30, 12, 24, 36, 16].map((h) => `<i style="height:${h}px"></i>`).join("");
       return {
         titre: S.tn.ecoute ? "API t’écoute" : "Ta dictée", sombre: true, onglets: true, suivi: suivi(`${esc(nomDe(courante()))} en cours`),
-        corps: `<div class="tn-ecoute">${Apidoo.compagnon(S.tn.ecoute ? "ecoute" : "repos", 56, "sombre").replace("<api-compagnon ", "<api-compagnon muet ")}<div class="tn-ondes ${S.tn.ecoute ? "actif" : ""}" aria-hidden="true">${ondes}</div></div>
+        corps: `<div class="tn-ecoute">${Apiviz.compagnon(S.tn.ecoute ? "ecoute" : "repos", 56, "sombre").replace("<api-compagnon ", "<api-compagnon muet ")}<div class="tn-ondes ${S.tn.ecoute ? "actif" : ""}" aria-hidden="true">${ondes}</div></div>
         ${S.tn.alerte ? `<p class="tn-alerte">${esc(S.tn.alerte)}</p>` : !ok ? '<p class="tn-alerte">Sur cet appareil, utilise le micro du clavier pour dicter ici.</p>' : ""}
         <textarea id="tn_texte" class="tn-dicte" rows="4" aria-label="Ta dictée" placeholder="Dis le nom de la ruche, puis ce que tu vois. Exemple : Ruche 2, reine vue, provisions bonnes, 38 kilos.">${esc(S.tn.texte || "")}</textarea>
         <section class="tn-compris" aria-label="Ce qu’API a compris">${htmlCompris()}</section>`,
@@ -378,7 +378,7 @@ const TN = (() => {
       const notes = qs.filter((x) => f.vu[x.k] && x.k !== "oeufs").map((x) => (f[x.k] ? [x.k, x.k === "poids_kg" ? n(f.poids_kg) + " kg" : `${NOMS[x.k]} ${String(f[x.k]).toLowerCase()}`] : null)).filter(Boolean);
       return {
         titre: esc(nomDe(id)), droite: `Question ${rang} sur ${qs.length}`, onglets: true, suivi: suivi(`Ruche ${T().i + 1} sur ${T().ids.length}`),
-        corps: `<div class="tn-bulle" aria-live="polite">${Apidoo.compagnon("repond", 40).replace("<api-compagnon ", "<api-compagnon muet ")}<b>${esc(q.q)}</b><small>${esc(q.aide)}</small></div>
+        corps: `<div class="tn-bulle" aria-live="polite">${Apiviz.compagnon("repond", 40).replace("<api-compagnon ", "<api-compagnon muet ")}<b>${esc(q.q)}</b><small>${esc(q.aide)}</small></div>
         ${q.poids ? `<div class="tn-seul">${pas(f)}<button type="button" class="tn-b main" data-act="tnrep" data-k="poids_kg">Valider le poids</button></div>`
           : `<div class="tn-reps">${q.rep.map((o) => `<button type="button" data-act="tnrep" data-k="${q.k}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`}
         <div class="tn-carte tn-note"><small>Déjà noté pour ${esc(nomDe(id))}</small><div class="tn-tags">${notes.length ? notes.map(([k, x]) => `<button type="button" data-act="tnrevoir" data-v="${k}">${esc(x)}</button>`).join("") : "<span>Rien pour l’instant</span>"}</div></div>`,
@@ -413,7 +413,7 @@ const TN = (() => {
           if (f.etat === "notee") return `<section class="tn-carte"><div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b></span><button type="button" class="tn-lien" data-act="tnmodif" data-v="${i}">Modifier</button></div><dl class="tn-dl">${["activite", "reine", "couvain", "provisions", "poids_kg"].map((k) => ligne(k, f, id)).join("")}</dl>${f.note ? `<p class="small">${esc(f.note)}</p>` : ""}</section>`;
           return `<section class="tn-carte"><div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b><small>${{ vide: "Pas de saisie, elle ne sera pas enregistrée", passee: "Passée", enregistree: "Déjà enregistrée" }[f.etat]}</small></span>${f.etat === "enregistree" ? "" : `<button type="button" class="tn-lien" data-act="tnmodif" data-v="${i}">Ajouter</button>`}</div></section>`;
         }).join("")}
-        ${S.tn.taches.filter((x) => !x.envoyee).map((x, i) => `<div class="tn-prop">${Apidoo.compagnon("repond", 32).replace("<api-compagnon ", "<api-compagnon muet ")}<span><b>Tâche proposée :</b> ${esc(x.titre)}${x.echeance ? `, pour le ${esc(U.dateCourte(x.echeance))}` : ""}</span><button type="button" class="tn-lien" data-act="tngarder" data-v="${esc(x.titre)}" aria-pressed="${x.garder}">${x.garder ? "Gardée" : "Retirée"}</button></div>`).join("")}</div>`,
+        ${S.tn.taches.filter((x) => !x.envoyee).map((x, i) => `<div class="tn-prop">${Apiviz.compagnon("repond", 32).replace("<api-compagnon ", "<api-compagnon muet ")}<span><b>Tâche proposée :</b> ${esc(x.titre)}${x.echeance ? `, pour le ${esc(U.dateCourte(x.echeance))}` : ""}</span><button type="button" class="tn-lien" data-act="tngarder" data-v="${esc(x.titre)}" aria-pressed="${x.garder}">${x.garder ? "Gardée" : "Retirée"}</button></div>`).join("")}</div>`,
         pied: `<div class="tn-deux"><button type="button" class="tn-b" data-act="tnretour">Revenir</button><button type="button" class="tn-b main" data-act="tnenreg" ${notees.length && !S.busy ? "" : "disabled"}>${horsLigne() ? "Garder sur le téléphone" : `Enregistrer ${notees.length > 1 ? `les ${notees.length} ruches` : notees.length ? "la ruche" : ""}`}</button></div>`,
       };
     },
@@ -421,7 +421,7 @@ const TN = (() => {
       const b = S.tn.bilan, faites = b.ids.filter((id) => b.fiches[id]?.etat === "enregistree"), arevoir = b.taches.find((t) => t.echeance);
       return {
         titre: "Tournée terminée", plein: true,
-        corps: `<div class="tn-fin">${Apidoo.compagnon("fait", 84)}</div>
+        corps: `<div class="tn-fin">${Apiviz.compagnon("fait", 84)}</div>
         <p class="tn-say tn-c">${arevoir ? `C’est noté. ${esc(nomDe(arevoir.ruche_id))} reste à revoir.` : "C’est noté, tes ruches sont à jour."}</p>
         ${b.local ? '<p class="tn-alerte">Gardé sur le téléphone, envoi au retour du réseau.</p>' : ""}
         <section class="tn-chiffres"><div><b>${faites.length}</b><small>ruche${faites.length > 1 ? "s" : ""} vue${faites.length > 1 ? "s" : ""}</small></div><div><b>${b.minutes}</b><small>minute${b.minutes > 1 ? "s" : ""}</small></div><div><b>${b.taches.length}</b><small>tâche${b.taches.length > 1 ? "s" : ""} créée${b.taches.length > 1 ? "s" : ""}</small></div></section>
@@ -439,7 +439,7 @@ const TN = (() => {
     const e = S.tn.etape, x = E[e](), cotes = !x.plein && T();
     const fermer = e === "bilan" ? "" : `<button type="button" class="tn-x" data-act="tnquitter" aria-label="Quitter la tournée">${CROIX}</button>`;
     $app.innerHTML = `<div class="tn-app tn-e-${e}">
-      <header class="tn-haut ${x.sombre ? "sombre" : ""}"><img class="tn-logo" src="logo-apidoo.svg" alt="Apidoo" height="28"><h1>${x.titre}</h1>${x.droite ? `<span class="small">${x.droite}</span>` : ""}${fermer}</header>
+      <header class="tn-haut ${x.sombre ? "sombre" : ""}"><img class="tn-logo" src="logo-apiviz.svg" alt="Apiviz" height="28"><h1>${x.titre}</h1>${x.droite ? `<span class="small">${x.droite}</span>` : ""}${fermer}</header>
       <div class="tn-grille ${cotes ? "" : "seule"}">
         ${cotes ? `<aside class="tn-cote">${colonneGauche()}</aside>` : ""}
         <div class="tn-m ${x.sombre ? "sombre" : ""}">${x.onglets ? onglets() : ""}${x.suivi || ""}<div class="tn-corps">${x.corps}</div><footer class="tn-pied">${x.pied}</footer></div>

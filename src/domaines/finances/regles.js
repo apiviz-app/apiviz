@@ -1,4 +1,4 @@
-// Apidoo — règles financières (IT-03, AP-FEAT-013). Fonctions pures, reprises d'app.js (fin, rythme, stock).
+// Apiviz — règles financières (IT-03, AP-FEAT-013). Fonctions pures, reprises d'app.js (fin, rythme, stock).
 // `d` a la forme de S.d : { ventes, lignes, depenses, recoltes, lots }. `maintenant` permet de tester une date fixe.
 import { sum, byId, yr, mo } from "../../noyau/format.js";
 

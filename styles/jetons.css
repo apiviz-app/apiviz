@@ -1,16 +1,19 @@
-/* Apidoo — jetons : couleurs, durées, courbes, ombre, rayon, bandeau (IT-03, AP-FEAT-015).
+/* Apiviz — jetons : couleurs, durées, courbes, ombre, rayon, bandeau (IT-03, AP-FEAT-015).
+   Charte Apiviz (docs/CHARTE_GRAPHIQUE.md) : sapin, miel, miel doux, cire, prairie. Noms d'usage en commentaire.
    Les trois blocs :root d'index.html, fusionnés : un jeton se change ici et nulle part ailleurs. */
 :root{
-  --ink:#1B2420;
-  --muted:#55605A;
-  --ground:#F4F6F0;
+  --ink:#1B2420; /* encre */
+  --muted:#55605A; /* lichen : texte secondaire */
+  --ground:#F4F6F0; /* prairie : fond */
   --card:#fff;
   --line:#DEE2D8;
   --line2:#C4CABD;
-  --pine:#1E2B24;
+  --pine:#1E2B24; /* sapin : marque, actions */
   --pine2:#2C3D33;
-  --honey:#E3A008;
-  --honeysoft:#FBEFC9;
+  --honey:#E3A008; /* miel : alvéoles, API, à surveiller */
+  --honeysoft:#FBEFC9; /* miel doux : bandeau */
+  --honey-light:#F6C453; /* miel clair : texte miel sur sapin uniquement */
+  --cire:#FFF8E7; /* cire : reflet de l'œil, logo sur sapin */
   --good:#2F6B4F;
   --watch:#7D5200;
   --crit:#A61B1B;

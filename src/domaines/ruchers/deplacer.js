@@ -1,4 +1,4 @@
-// Apidoo — écran « Déplacer des colonies » (IT-06, AP-FEAT-029, AP-TECH-104) : transhumance d'un lot de colonies en
+// Apiviz — écran « Déplacer des colonies » (IT-06, AP-FEAT-029, AP-TECH-104) : transhumance d'un lot de colonies en
 // une opération. Sélecteur de colonies par rucher (tout cocher), destination, date, motif. Envoi par deplacer_colonies()
 // (migration 016) en passant par la file d'envoi (offline.js) : sans réseau, la saisie est gardée et montrée tout de
 // suite. Les globales d'app.js (S, sb, shell, esc, today, toast, refresh, render, go) ne sont lues qu'à l'appel.

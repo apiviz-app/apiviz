@@ -1,4 +1,4 @@
-// Apidoo — créneaux météo (IT-03, AP-FEAT-013). Fonctions pures, reprises de meteo.js.
+// Apiviz — créneaux météo (IT-03, AP-FEAT-013). Fonctions pures, reprises de meteo.js.
 // Les seuils (et leurs sources) restent dans meteo.js et docs/TECHNIQUE.md ; ils sont passés en paramètre.
 
 /** 0 : ne pas ouvrir, 1 : visite rapide, 2 : bonnes conditions. */

@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine colonies (IT-03, complété en IT-06).
+// Apiviz — écrans du domaine colonies (IT-03, complété en IT-06).
 import { completerFiche, actions } from "./fiche.js";
 
 export default [

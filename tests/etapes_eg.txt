@@ -116,7 +116,7 @@
     page.click(".g-bloc[data-act=errgcouleur]"); page.wait_for_selector("#sheet[open]")
     page.select_option("#sheet [name=bandeau]", "sapin"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     page.wait_for_timeout(300)
-    verif("logo-apidoo-clair" in page.locator(".side .brand img").get_attribute("src"), "bandeau sapin et logo clair")
+    verif("logo-apiviz-clair" in page.locator(".side .brand img").get_attribute("src"), "bandeau sapin et logo clair")
     if CAP: page.screenshot(path=CAP + ".reglages.png")
     page.evaluate("localStorage.setItem('apidoo-bandeau', 'miel'); render()")
     page.click(".g-bloc[data-act=errgform]"); page.wait_for_selector("form[data-form=reglages]")

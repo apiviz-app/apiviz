@@ -1,4 +1,4 @@
-// Apidoo — ruches physiques (contenants), section de l'écran Matériel (IT-06, AP-FEAT-031, AP-TECH-110 à 113).
+// Apiviz — ruches physiques (contenants), section de l'écran Matériel (IT-06, AP-FEAT-031, AP-TECH-110 à 113).
 // Visible seulement si le suivi est activé dans les réglages (niveau Professionnel) : sinon, aucun écran contenant.
 // Une ruche physique : numéro peint sur la caisse, type, état, date d'achat, lien facultatif vers un article
 // d'équipement du matériel. L'occupation (quelle colonie dedans) se change depuis la fiche de la colonie.

@@ -1,4 +1,4 @@
-// Apidoo — rappels (version bêta).
+// Apiviz — rappels (version bêta).
 // Les tâches datées partent dans l'agenda du téléphone (fichier .ics avec alerte à 9 h),
 // et l'icône de l'app affiche le nombre de points à surveiller.
 const RP = (() => {
@@ -24,12 +24,12 @@ const RP = (() => {
       const r = t.ruche_id ? byId(S.d.ruches, t.ruche_id)?.nom : "";
       return ["BEGIN:VEVENT", `UID:tache-${t.id}@apidoo`, `DTSTAMP:${maintenant}`,
         `DTSTART:${jour(t.echeance)}T090000`, `DTEND:${jour(t.echeance)}T093000`,
-        `SUMMARY:${echap("Apidoo · " + t.titre)}`,
+        `SUMMARY:${echap("Apiviz · " + t.titre)}`,
         `DESCRIPTION:${echap([nom, r && "Ruche : " + r, t.assigne && "Qui : " + t.assigne].filter(Boolean).join("\n"))}`,
         "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${echap(t.titre)}`, "TRIGGER:PT0M", "END:VALARM",
         "END:VEVENT"];
     }).flat();
-    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Apidoo//Taches//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", ...ev, "END:VCALENDAR"]
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Apiviz//Taches//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", ...ev, "END:VCALENDAR"]
       .map(plier).join("\r\n") + "\r\n";
   }
 

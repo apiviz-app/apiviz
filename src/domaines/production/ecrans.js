@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine production (IT-03).
+// Apiviz — écrans du domaine production (IT-03).
 export default [
   // Stock de miel : app.js, complété par nav4.js (récoltes) puis par essentiels.js (fiche de lot, étiquettes).
   { id: "miel", titre: "Miel", rubrique: "ventes", rendu: () => { viewMiel(); N4.completerMiel(); ES.completerMiel(); } },

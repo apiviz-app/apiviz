@@ -1,4 +1,4 @@
-// Apidoo — règles des rôles (IT-04, AP-FEAT-011). Fonctions pures, testées par tests/unitaires/compte.test.mjs.
+// Apiviz — règles des rôles (IT-04, AP-FEAT-011). Fonctions pures, testées par tests/unitaires/compte.test.mjs.
 // La base refuse déjà toute écriture d'un lecteur (migration 014) ; ces règles servent à l'interface :
 // n'afficher aucun bouton de saisie et refuser poliment une action qui en serait une.
 
