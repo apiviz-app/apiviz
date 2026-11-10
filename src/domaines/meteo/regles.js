@@ -42,3 +42,32 @@ export function analyse(seuils, j, secours = new Date()) {
     }) }));
   return { temp, vent, verdict, code: c.weather_code ?? 3, creneau, jours, auj };
 }
+
+/**
+ * Pourquoi une heure est (ou n'est pas) favorable, en quelques mots, pour l'apiculteur.
+ * Même ordre que niveau() : la pluie, puis le vent, puis la température. Chaîne vide si tout va bien.
+ */
+export function raison(seuils, t, risque, vent, pluie = 0) {
+  if (pluie > 0) return "Il pleut";
+  if (risque >= seuils.pluie) return `Pluie probable (${Math.round(risque)} %)`;
+  if (vent >= seuils.vent) return `Trop de vent (${Math.round(vent)} km/h)`;
+  if (t < seuils.rapide) return `Trop frais (${Math.round(t)}°)`;
+  if (t < seuils.ouvrir) return "Un peu frais : visite courte";
+  return "";
+}
+
+/**
+ * Regroupe des heures consécutives favorables ({ h, n }, n de niveau()) en plages : [{ debut, fin, n }],
+ * `fin` exclue (10 → 13 couvre 10 h, 11 h et 12 h). n est le niveau le plus bas de la plage :
+ * une plage « bonne » (2) ne contient que des heures bonnes ; une heure rapide coupe une plage bonne.
+ */
+export function plages(heures) {
+  const res = [];
+  for (const x of heures) {
+    if (!(x?.n > 0)) continue;
+    const der = res[res.length - 1];
+    if (der && der.fin === x.h && der.n === x.n) der.fin = x.h + 1;
+    else res.push({ debut: x.h, fin: x.h + 1, n: x.n });
+  }
+  return res;
+}

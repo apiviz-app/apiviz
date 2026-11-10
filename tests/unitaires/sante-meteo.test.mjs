@@ -65,3 +65,22 @@ test("aucun créneau : pluie partout, et réponse vide", () => {
   assert.equal(v.creneau, null);
   assert.deepEqual(v.jours, []);
 });
+
+test("raison d'une heure défavorable, dans l'ordre pluie, vent, température", async () => {
+  const { raison } = await import("../../src/domaines/meteo/regles.js");
+  assert.equal(raison(S, 18, 0, 5), "");
+  assert.equal(raison(S, 18, 0, 5, 0.4), "Il pleut");
+  assert.equal(raison(S, 18, 45, 40), "Pluie probable (45 %)", "la pluie passe avant le vent");
+  assert.equal(raison(S, 18, 10, 31.6), "Trop de vent (32 km/h)");
+  assert.equal(raison(S, 11.4, 0, 5), "Trop frais (11°)");
+  assert.equal(raison(S, 14, 0, 5), "Un peu frais : visite courte");
+});
+
+test("plages d'heures favorables", async () => {
+  const { plages } = await import("../../src/domaines/meteo/regles.js");
+  const h = (n) => n.map((x, i) => ({ h: 10 + i, n: x }));
+  assert.deepEqual(plages(h([0, 2, 2, 2, 0, 1])), [{ debut: 11, fin: 14, n: 2 }, { debut: 15, fin: 16, n: 1 }]);
+  assert.deepEqual(plages(h([1, 2, 2, 1])), [{ debut: 10, fin: 11, n: 1 }, { debut: 11, fin: 13, n: 2 }, { debut: 13, fin: 14, n: 1 }], "une heure rapide coupe une plage bonne");
+  assert.deepEqual(plages(h([0, null, 0])), []);
+  assert.deepEqual(plages([{ h: 10, n: 2 }, { h: 12, n: 2 }]), [{ debut: 10, fin: 11, n: 2 }, { debut: 12, fin: 13, n: 2 }], "un trou coupe la plage");
+});

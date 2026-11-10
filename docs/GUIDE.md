@@ -30,7 +30,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Gestion).
 - **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; onglets Journal, Colonie (reine, hausses,
   équipement, division, essaimage, réunion, sortie), Photos ; courbe de poids.
-- **Météo** : depuis un rucher, « Voir heure par heure » sur cinq jours, puis Prévoir une visite.
+- **Météo** : depuis un rucher, « Voir heure par heure » : ce qu'il en est maintenant et pourquoi, les heures pour ouvrir de chaque jour, la frise de la journée (touche une heure pour son détail), les créneaux avec « Prévoir ».
 
 ## Saisir (API)
 

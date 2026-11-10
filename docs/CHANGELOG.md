@@ -5,6 +5,43 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.22 · à publier en recette · météo lisible (chantier des écrans, étape 1)
+Aucune migration. Même service météo (Open-Meteo), mêmes seuils réglables. Premier lot du chantier des écrans tirés
+des maquettes UX/UI du 10 nov. 2026 (`docs/ROADMAP/CHANTIER_ECRANS.md`).
+
+Pour l'apiculteur :
+- **Maintenant au rucher** : un bandeau vert, miel ou gris dit tout de suite si l'on peut ouvrir, **pourquoi**
+  (« Trop de vent (31 km/h) », « Un peu frais : visite courte »…) et le prochain créneau, en plage horaire.
+- **Les jours** : chaque jour montre une jauge et le nombre d'heures pour ouvrir (« 6 h pour ouvrir », « Pas de
+  créneau »). Sur téléphone, les jours défilent d'un geste.
+- **La frise de la journée**, de 8 h à 20 h : une case par heure (verte, miel, grise, hachurée hors des heures de
+  visite), la courbe de température, les barres de pluie, le vent (en rouge au-delà du seuil) et l'heure actuelle.
+  Toucher une heure ouvre son détail : température, pluie, vent, rafales, humidité, la raison, et « Prévoir une
+  visite à … h » quand l'heure s'y prête.
+- **Créneaux du jour** : les plages favorables (« 12 h – 14 h, bonnes conditions ») avec leur bouton « Prévoir », qui
+  préremplit la tâche au bon jour et à la bonne heure. Un jour sans créneau renvoie vers le prochain jour favorable.
+- **Carte du rucher (accueil, Ruchers)** : une petite frise d'aujourd'hui sous la température, lisible d'un coup d'œil.
+- Le tableau complet heure par heure reste là, replié. Les seuils se règlent depuis l'écran météo.
+- Animations courtes (frise qui se remplit, courbe qui se trace), coupées par le réglage « moins d'animations ».
+
+Correction : la phrase du jour (« Tu peux ouvrir entre … ») ne regroupe plus des heures séparées par une heure
+défavorable.
+
+Technique : `Regles.meteo.raison()` et `Regles.meteo.plages()` (testées, `tests/unitaires/sante-meteo.test.mjs`) ;
+`MT.parHeure()` donne aussi la pluie en mm, la raison, les plages et le décompte des heures ; `MT.friseCourte()` ;
+styles `styles/37-meteo-lisible.css` ; scénario `tests/etapes_mt.txt` (captures à 390 et 1 280 px avec `CAPTURES=`).
+
+**À vérifier**
+1. Accueil : sous la température d'un rucher placé, la petite frise d'aujourd'hui (cases vertes là où l'on peut
+   ouvrir, l'heure actuelle entourée).
+2. « Voir heure par heure » : le bandeau du haut dit si l'on peut ouvrir maintenant et pourquoi ; le prochain
+   créneau correspond au bouton « Prévoir une visite » du haut.
+3. Toucher plusieurs heures de la frise : le détail change sans que l'écran saute ; une heure défavorable n'a pas
+   de bouton « Prévoir ».
+4. Choisir un autre jour, puis « Prévoir » sur une plage : la tâche est datée de ce jour, avec l'heure dans le titre.
+5. Au téléphone, en plein soleil : les couleurs de la frise et des jours restent distinctes.
+6. Réglages du téléphone › réduire les animations : tout s'affiche d'un coup, sans mouvement.
+
 ## v5.21 · à publier en recette · Apidoo devient Apiviz (identité visuelle)
 Aucune migration. Bases, clés du stockage local et cache hors ligne inchangés. Le dépôt ayant été renommé
 `apiviz-app/apiviz`, le manifeste passe en chemins relatifs (`./`) et le contrôle « Le site répond ? » de la mise en

@@ -48,10 +48,23 @@ const MT = (() => {
     if (Date.now() - e.at > DUREE) charger(cle, l);
     const a = analyse(e.data);
     const lienHeures = `<button type="button" class="link al-heures" data-act="ermeteo" data-v="${esc(cle)}">Voir heure par heure</button>`;
-    if (nbJours === 0) return `<div class="al-temps court">${icone(a.code)}<b>${a.temp}°</b><strong>${esc(a.verdict)}</strong></div><p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
+    if (nbJours === 0) return `<div class="al-temps court">${icone(a.code)}<b>${a.temp}°</b><strong>${esc(a.verdict)}</strong></div>${friseCourte(cle, rs)}<p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
     return `<div class="al-temps">${icone(a.code)}<b>${a.temp}°</b><span><strong>${esc(a.verdict)}</strong>Vent ${a.vent} km/h</span></div>
       <div class="al-jours n${nbJours}">${a.jours.slice(0, nbJours).map((x) => `<span class="al-jour ${x.ok ? "ok" : ""}">${esc(nomJour(x.t))}${icone(x.code)}${x.max}°</span>`).join("")}</div>
-      <p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
+      ${friseCourte(cle, rs)}<p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
+  }
+
+  // Frise courte d'aujourd'hui (heures de recherche du créneau) : une case par heure, verte si l'on peut ouvrir,
+  // miel pour une visite rapide, grise sinon, hachurée une fois passée. Lisible d'un coup d'œil sur la carte du rucher.
+  function friseCourte(cle, rs) {
+    const m = parHeure(cle, rs), j = m?.jours?.[0];
+    if (!j || j.t !== m.auj) return "";
+    const hs = j.heures.filter((x) => x.n != null);
+    if (!hs.length || hs.every((x) => x.passee && !x.maintenant)) return "";
+    const lib = (x) => `${x.h} h, ${x.n === 2 ? "on peut ouvrir" : x.n === 1 ? "visite rapide" : x.raison.toLowerCase() || "défavorable"}${x.passee && !x.maintenant ? ", passée" : ""}`;
+    return `<div class="mt-frise-c" style="--n:${hs.length}" role="img" aria-label="Aujourd’hui : ${esc(hs.map(lib).join(" ; "))}">
+      ${hs.map((x) => `<i class="n${x.n}${x.passee && !x.maintenant ? " passee" : ""}${x.maintenant ? " now" : ""}"></i>`).join("")}
+      <span>${hs[0].h} h</span><span>${hs[hs.length - 1].h + 1} h</span></div>`;
   }
 
   // Détail par heure, de 8 h à 20 h, pour chaque jour connu.
@@ -71,11 +84,18 @@ const MT = (() => {
         const dedans = hh >= SEUILS.debut && hh < SEUILS.fin;
         heures.push({ h: hh, temp: Math.round(temp), risque: Math.round(risque), vent: Math.round(vent), rafales: h.wind_gusts_10m ? Math.round(h.wind_gusts_10m[i] ?? 0) : null,
           hum: h.relative_humidity_2m ? Math.round(h.relative_humidity_2m[i] ?? 0) : null, code: h.weather_code?.[i] ?? 3,
-          n: dedans ? niveau(temp, risque, vent, h.precipitation?.[i] ?? 0) : null, passee: String(x).slice(0, 13) < maintenant });
+          n: dedans ? niveau(temp, risque, vent, h.precipitation?.[i] ?? 0) : null, passee: String(x).slice(0, 13) < maintenant,
+          pluie: Math.round((h.precipitation?.[i] ?? 0) * 10) / 10, raison: Regles.meteo.raison(SEUILS, temp, risque, vent, h.precipitation?.[i] ?? 0),
+          maintenant: String(x).slice(0, 13) === maintenant });
       });
-      return { t, max: Math.round(d.temperature_2m_max?.[i0] ?? 0), code: d.weather_code?.[i0] ?? 3, heures };
+      // Plages favorables du jour (heures à venir seulement) et nombre d'heures bonnes : le résumé du jour.
+      const avenir = heures.filter((x) => !x.passee || x.maintenant);
+      const plagesJour = Regles.meteo.plages(avenir.filter((x) => x.n != null));
+      return { t, max: Math.round(d.temperature_2m_max?.[i0] ?? 0), code: d.weather_code?.[i0] ?? 3, heures,
+        plages: plagesJour, bonnes: avenir.filter((x) => x.n === 2).length, rapides: avenir.filter((x) => x.n === 1).length };
     });
-    return { jours, creneau: a.creneau, auj: a.auj };
+    return { jours, creneau: a.creneau, auj: a.auj, temp: a.temp, vent: a.vent, verdict: a.verdict, code: a.code,
+      maintenant: jours[0]?.heures.find((x) => x.maintenant) || null };
   }
 
   // Position du rucher (AP-US-029) : celle de la table ruchers, sinon la moyenne des ruches placées. Arrondie à
@@ -116,5 +136,5 @@ const MT = (() => {
     return l && e?.data && e.lat === l.lat && e.lng === l.lng ? analyse(e.data).creneau : null;
   }
 
-  return { creneauConnu, SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
+  return { creneauConnu, friseCourte, SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
 })();
