@@ -17,7 +17,6 @@ const DM = (() => {
   .dm-exemple{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--pine);color:#fff;font-size:13px;font-weight:600}.dm-exemple button{margin-left:auto;min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--honey);color:var(--ink);font-weight:700}
   .dm-astuce{display:flex;flex-direction:column;gap:8px;padding:14px;margin-bottom:12px;border-radius:14px;background:var(--honeysoft)}.dm-astuce .u-entete{align-items:center}
   .dm-qr{display:flex;gap:14px;align-items:center}.dm-qr svg{width:112px;height:112px;flex:none}.dm-liste{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
-  .dm-invite{margin:8px 0 0}
   @media (min-width:801px){.dm-guide .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.dm-sombre>*{max-width:560px}}</style>`);
 
   // ---------- Avant le compte ----------
@@ -61,12 +60,17 @@ const DM = (() => {
     }
     if (S.authMsg) S.authMsg = S.authMsg.replace(/Compte créé\..*/, "Compte créé. Ouvre le lien reçu par e-mail sur ce téléphone pour continuer.");
     authAvant();
-    const sub = document.querySelector(".auth .sub");
-    if (invit && sub) {
-      // État du lien (migration 014) : déjà servi, révoqué ou expiré.
+    if (invit) {
+      // État du lien (migration 014) : déjà servi, révoqué ou expiré. La phrase existe deux fois (téléphone, ordinateur).
       const raison = { epuise: "Ce lien a déjà servi.", revoque: "Ce lien a été révoqué." }[inv?.etat] || "Ce lien n’est plus valable.";
-      sub.outerHTML = inv && !inv.valide ? `<h1 class="dm-say dm-invite">${raison}</h1><p class="small">Demande un nouveau lien à la personne qui t’a invité.</p>`
-        : `<h1 class="dm-say dm-invite">Tu es invité à rejoindre ${inv ? esc(inv.nom) : "une exploitation"}${inv?.role === "lecteur" ? " en lecture seule" : ""}.</h1><p class="small">${inv?.role === "lecteur" ? "Tu verras les ruches, les visites et le miel, sans rien modifier." : "Les ruches, les visites et le miel t’attendent, rien à ressaisir."}</p>`;
+      const [titre, sous] = inv && !inv.valide ? [raison, "Demande un nouveau lien à la personne qui t’a invité."]
+        : [`Tu es invité à rejoindre ${inv ? esc(inv.nom) : "une exploitation"}${inv?.role === "lecteur" ? " en lecture seule" : ""}.`,
+           inv?.role === "lecteur" ? "Tu verras les ruches, les visites et le miel, sans rien modifier." : "Les ruches, les visites et le miel t’attendent, rien à ressaisir."];
+      document.querySelectorAll(".auth .cx-phrase").forEach((bloc) => {
+        bloc.classList.add("dm-invite");
+        bloc.querySelector(".cx-say").innerHTML = titre;
+        bloc.querySelector(".sub").textContent = sous;
+      });
     }
   };
   ACT.dmentrer = (v) => { memo("apidoo-dm-entree", "1"); S.authMode = v; S.authMsg = ""; authView(); };

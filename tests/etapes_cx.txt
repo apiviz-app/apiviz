@@ -1,0 +1,63 @@
+    # v5.24 — Page de connexion : bandeau miel doux, rayon d'alvéoles, feuille blanche, API ; deux colonnes sur ordinateur.
+    import os
+    cap = os.environ.get("CAPTURES")
+    def photo(nom):
+        if cap: page.wait_for_timeout(250); page.screenshot(path=cap + "/cx-" + nom + ".png", full_page=True)
+    def large(px): return page.evaluate("document.documentElement.scrollWidth") <= px
+    def visible(sel): return page.locator(sel).first.is_visible()
+    page.emulate_media(reduced_motion="reduce")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.goto(url); page.wait_for_selector("[data-act=dmentrer][data-v=in]", timeout=15000)
+    page.click("[data-act=dmentrer][data-v=in]"); page.wait_for_selector(".auth.cx form[data-form=auth]")
+    # Téléphone : la phrase est dans le bandeau, le formulaire dans la feuille.
+    verif(page.locator(".auth.cx").get_attribute("data-mode") == "in", "écran de connexion affiché")
+    verif("Tes ruches t’attendent." in page.locator(".cx-tete .cx-say").inner_text() and visible(".cx-tete .cx-phrase"), "téléphone : phrase dans le bandeau")
+    verif(not visible(".cx-vitrine") and not visible("form .cx-phrase"), "téléphone : ni vitrine ni phrase en double")
+    verif(page.locator(".cx-rayon i").count() == 12 and page.locator(".cx-rayon img[src='symbole-apiviz.svg']").count() == 1, "rayon : douze alvéoles et le symbole")
+    page.wait_for_selector(".cx-api api-compagnon svg.api")
+    verif(page.locator(".cx-api api-compagnon svg.api").count() == 1, "API regarde par-dessus la feuille")
+    verif(page.locator("a.cx-confid[href='confidentialite.html']:visible").count() == 1, "un seul lien « Où vont mes données » visible")
+    verif(large(390), "téléphone : rien ne dépasse en largeur")
+    feuille = page.locator(".auth.cx form").bounding_box()
+    verif(abs(feuille["x"]) < 1 and abs(feuille["width"] - 390) < 1 and abs(feuille["y"] + feuille["height"] - 844) < 2, "téléphone : la feuille va d'un bord à l'autre, jusqu'en bas")
+    photo("connexion-390")
+    # Afficher / masquer le mot de passe.
+    page.fill("input[name=password]", "abeille-1234"); page.click(".cx-voir")
+    verif(page.locator("input[name=password]").get_attribute("type") == "text" and page.locator(".cx-voir").inner_text() == "Masquer", "« Afficher » montre le mot de passe")
+    page.click(".cx-voir")
+    verif(page.locator("input[name=password]").get_attribute("type") == "password" and page.locator(".cx-voir").get_attribute("aria-pressed") == "false", "« Masquer » le cache à nouveau")
+    # Mot de passe refusé : message d'erreur en tête de feuille.
+    page.fill("input[name=email]", "moi@exemple.fr")
+    page.route("**/auth/v1/token**", lambda r: r.fulfill(status=400, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+               body=json.dumps({"code": 400, "error_code": "invalid_credentials", "msg": "Invalid login credentials"})))
+    page.click("form[data-form=auth] .btn.main"); page.wait_for_selector(".cx-erreur[role=alert]", timeout=10000)
+    verif("E-mail ou mot de passe incorrect." in page.locator(".cx-erreur").inner_text(), "erreur : « E-mail ou mot de passe incorrect. »")
+    page.unroute("**/auth/v1/token**")
+    photo("erreur-390")
+    # Créer mon compte : l'e-mail saisi est gardé.
+    page.fill("input[name=email]", "moi@exemple.fr")
+    page.click("form[data-form=auth] [data-act=authmode][data-v=up]"); page.wait_for_selector(".auth.cx[data-mode=up]")
+    verif(page.locator("input[name=email]").input_value() == "moi@exemple.fr", "création : l'e-mail déjà saisi est gardé")
+    verif("trois questions" in page.locator(".cx-tete .cx-say").inner_text() and page.locator(".cx-erreur").count() == 0, "création : phrase du bandeau, plus d'erreur")
+    verif(page.locator("form[data-form=auth] .btn.main").inner_text() == "Créer mon compte" and "8 caractères" in page.locator(".cx-aide").inner_text(), "création : bouton et aide du mot de passe")
+    photo("creer-390")
+    # Mot de passe oublié.
+    page.click("form[data-form=auth] [data-act=authmode][data-v=in]"); page.wait_for_selector(".auth.cx[data-mode=in]")
+    page.click(".cx-oubli"); page.wait_for_selector(".auth.cx[data-mode=reset]")
+    verif(page.locator("input[name=password]").count() == 0 and page.locator("form[data-form=auth] .btn.main").inner_text() == "Recevoir le lien", "oubli : e-mail seul et « Recevoir le lien »")
+    page.click("form[data-form=auth] .btn.main"); page.wait_for_selector(".cx-info[role=status]", timeout=10000)
+    verif("un lien vient de partir" in page.locator(".cx-info").inner_text(), "oubli : confirmation de l'envoi")
+    photo("oubli-390")
+    # Ordinateur : deux colonnes, la phrase passe dans la carte.
+    page.click("form[data-form=auth] [data-act=authmode][data-v=in]"); page.wait_for_selector(".auth.cx[data-mode=in]")
+    page.set_viewport_size({"width": 1280, "height": 900})
+    verif(visible(".cx-vitrine") and page.locator(".cx-promesses li").count() == 3, "ordinateur : la signature et trois phrases à gauche")
+    verif(visible("form .cx-phrase") and not visible(".cx-tete .cx-phrase"), "ordinateur : la phrase est dans la carte")
+    tete = page.locator(".cx-tete").bounding_box(); carte = page.locator(".auth.cx form").bounding_box()
+    verif(tete["x"] + tete["width"] <= carte["x"] and carte["width"] <= 440, "ordinateur : carte à droite du panneau, 440 px au plus")
+    verif(page.locator("a.cx-confid:visible").count() == 1 and large(1280), "ordinateur : un seul lien de confidentialité, rien ne dépasse")
+    photo("connexion-1280")
+    page.set_viewport_size({"width": 820, "height": 900}); verif(large(820), "820 px : rien ne dépasse"); photo("connexion-820")
+    page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

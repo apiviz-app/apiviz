@@ -5,6 +5,41 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.24 · à publier en recette · une page de connexion dans l'air de l'application
+Aucune migration. Maquette : https://claude.ai/artifact/5PRMioYfLHfGFUT9DMWT1e
+
+Pour l'apiculteur :
+- **Fini le rectangle blanc sur fond sapin.** La page de connexion reprend les codes de l'application : bandeau miel
+  doux, rayon d'alvéoles avec l'œil-alvéole, feuille blanche qui monte du bas, et API qui regarde le formulaire
+  par-dessus la feuille.
+- **Une phrase par situation** : « Tes ruches t'attendent. » (connexion), « Ton rucher en trois questions. »
+  (création), « Un lien pour repartir. » (mot de passe oublié), « Choisis ton nouveau mot de passe. ».
+- **Sur ordinateur**, deux colonnes : à gauche la signature « Voir clair dans ses ruches. » et trois phrases sur ce que
+  fait Apiviz (« Tu parles, API note », « Le bon jour pour ouvrir tes ruches », « Ton miel, de la récolte au pot
+  vendu »), à droite le formulaire dans une carte.
+- **Afficher / Masquer** le mot de passe pendant la saisie.
+- L'e-mail déjà saisi est gardé en passant de « Se connecter » à « Créer mon compte » ou « Mot de passe oublié ».
+- Une erreur (« E-mail ou mot de passe incorrect. ») s'affiche en rouge en tête de feuille ; une information (lien
+  envoyé) reste en miel doux.
+- « Voir un rucher d'exemple » et « Où vont mes données » sont accessibles depuis la page de connexion.
+- À la première ouverture, API monte derrière la feuille une fois l'envol du logo terminé (rien ne bouge avec le
+  réglage « moins d'animations »).
+
+Technique : `authView()` d'`app.js` réécrite (classe `cx`, modes `in`, `up`, `reset`, `recovery` dans `data-mode`) ;
+`S.authErr` distingue une erreur d'une information ; action `cxvoir` ; styles `styles/39-connexion.css` ; la phrase
+existe deux fois dans la page (`.cx-tel` dans le bandeau, `.cx-ordi` dans la carte), une seule est affichée ;
+`demarrage.js` et `exploitations.js` adaptés pour l'invitation ; scénario `tests/etapes_cx.txt`. L'écran de
+présentation (première visite, fond sapin) n'est pas modifié.
+
+**À vérifier**
+1. Se déconnecter : la page de connexion est claire, le logo joue son envol, puis API apparaît derrière la feuille.
+2. Saisir un mauvais mot de passe : message rouge en haut de la feuille, l'e-mail reste saisi.
+3. Toucher « Afficher » : le mot de passe se lit, « Masquer » le cache.
+4. « Créer mon compte », « Mot de passe oublié », « J'ai déjà un compte » : la phrase du bandeau change, l'e-mail suit.
+5. Sur ordinateur : deux colonnes, rien ne se chevauche en réduisant la fenêtre.
+6. Ouvrir un lien d'invitation sans être connecté : « Tu es invité à rejoindre … » remplace la phrase.
+7. Se connecter pour de bon : l'application s'ouvre comme avant.
+
 ## v5.23 · à publier en recette · du logo à API, en mouvement
 Aucune migration. Six petites animations relient le logo, le symbole et API. Planche de démonstration :
 https://claude.ai/artifact/CQkJaztnC3GpCySnVT71g2
