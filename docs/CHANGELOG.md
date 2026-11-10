@@ -5,71 +5,69 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.24 · à publier en recette · une page de connexion dans l'air de l'application
-Aucune migration. Maquette : https://claude.ai/artifact/5PRMioYfLHfGFUT9DMWT1e
+## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
+Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
+la vue d'ensemble ne change pas. La prise en main (exploitation sans ruche ou sans visite) ne change pas non plus.
 
-Pour l'apiculteur :
-- **Fini le rectangle blanc sur fond sapin.** La page de connexion reprend les codes de l'application : bandeau miel
-  doux, rayon d'alvéoles avec l'œil-alvéole, feuille blanche qui monte du bas, et API qui regarde le formulaire
-  par-dessus la feuille.
-- **Une phrase par situation** : « Tes ruches t'attendent. » (connexion), « Ton rucher en trois questions. »
-  (création), « Un lien pour repartir. » (mot de passe oublié), « Choisis ton nouveau mot de passe. ».
-- **Sur ordinateur**, deux colonnes : à gauche la signature « Voir clair dans ses ruches. » et trois phrases sur ce que
-  fait Apiviz (« Tu parles, API note », « Le bon jour pour ouvrir tes ruches », « Ton miel, de la récolte au pot
-  vendu »), à droite le formulaire dans une carte.
-- **Afficher / Masquer** le mot de passe pendant la saisie.
-- L'e-mail déjà saisi est gardé en passant de « Se connecter » à « Créer mon compte » ou « Mot de passe oublié ».
-- Une erreur (« E-mail ou mot de passe incorrect. ») s'affiche en rouge en tête de feuille ; une information (lien
-  envoyé) reste en miel doux.
-- « Voir un rucher d'exemple » et « Où vont mes données » sont accessibles depuis la page de connexion.
-- À la première ouverture, API monte derrière la feuille une fois l'envol du logo terminé (rien ne bouge avec le
-  réglage « moins d'animations »).
+Sur téléphone, l'accueil suit maintenant les maquettes du 10 nov. 2026, dans cet ordre :
+1. **Bonjour**, sur fond sapin : l'exploitation et la date, le résumé du jour (ruches, à surveiller, tâches),
+   **Nouvelle visite** et **Nouvelle vente**.
+2. **La priorité du jour, dite par API**, sur fond miel : la phrase, d'où elle vient (« D'après 3 pesées de
+   Ruche 5 »), **Voir Ruche 5**, et la tournée proposée avec « Plus tard ».
+3. **Quatre chiffres** qui ouvrent leur écran : miel en stock (kg et pots), ventes de l'année et à encaisser,
+   résultat après charges, trésorerie (encaissé moins dépensé).
+4. **État des ruches** : les alvéoles par rucher, avec les lentilles et la météo de chaque rucher, comme avant.
+5. **Prochain créneau de visite** : le rucher de la priorité, ses 5 jours (heures pour ouvrir, ou pourquoi pas :
+   pluie, vent, frais), le meilleur jour en avant ; toucher un jour ouvre sa météo heure par heure.
+6. **À faire**, étiqueté (« Ruche 5 », « Stock bas », « À encaisser »…) : six points, la colonie critique en tête,
+   puis « Voir les autres ».
+7. **Dernières actions** : qui a fait quoi, avec l'initiale de la personne.
 
-Technique : `authView()` d'`app.js` réécrite (classe `cx`, modes `in`, `up`, `reset`, `recovery` dans `data-mode`) ;
-`S.authErr` distingue une erreur d'une information ; action `cxvoir` ; styles `styles/39-connexion.css` ; la phrase
-existe deux fois dans la page (`.cx-tel` dans le bandeau, `.cx-ordi` dans la carte), une seule est affichée ;
-`demarrage.js` et `exploitations.js` adaptés pour l'invitation ; scénario `tests/etapes_cx.txt`. L'écran de
-présentation (première visite, fond sapin) n'est pas modifié.
+Le bloc « Saison » disparaît du téléphone : les quatre chiffres le remplacent.
 
-**À vérifier**
-1. Se déconnecter : la page de connexion est claire, le logo joue son envol, puis API apparaît derrière la feuille.
-2. Saisir un mauvais mot de passe : message rouge en haut de la feuille, l'e-mail reste saisi.
-3. Toucher « Afficher » : le mot de passe se lit, « Masquer » le cache.
-4. « Créer mon compte », « Mot de passe oublié », « J'ai déjà un compte » : la phrase du bandeau change, l'e-mail suit.
-5. Sur ordinateur : deux colonnes, rien ne se chevauche en réduisant la fenêtre.
-6. Ouvrir un lien d'invitation sans être connecté : « Tu es invité à rejoindre … » remplace la phrase.
-7. Se connecter pour de bon : l'application s'ouvre comme avant.
+Prénom : aucun n'est enregistré aujourd'hui, l'accueil dit donc « Bonjour » ou « Bonsoir » seul. Il affichera
+le prénom une fois qu'on pourra le saisir (prévu à l'étape Réglages).
 
-## v5.23 · à publier en recette · du logo à API, en mouvement
-Aucune migration. Six petites animations relient le logo, le symbole et API. Planche de démonstration :
-https://claude.ai/artifact/CQkJaztnC3GpCySnVT71g2
-
-Pour l'apiculteur :
-- **Chargement** : l'œil-alvéole se réveille. Sa pupille se dédouble en deux yeux, les antennes poussent, API salue,
-  puis redevient le symbole. En dessous, le logo et **une alvéole par ruche** qui se remplit de miel (« Mise à jour
-  de tes 6 ruches » ; le nombre est celui de la dernière ouverture).
-- **Connexion** : à la première apparition, les deux points du logo s'envolent, deviennent API à côté du mot, qui
-  salue, puis ils reprennent leur place. Toucher le logo rejoue le mouvement.
-- **Écrans vides** (« Aucune vente », « Ajoute ta première ruche »…) : le symbole suit le doigt ou la souris et cligne.
-- **Saisie réussie** : la confirmation trace une coche et quelques alvéoles jaillissent (API saute toujours dans la barre).
-- **Bouton API** : il s'enfonce sous le doigt, quitte la barre, arrive par le bas dans « Que veux-tu faire ? », et
-  revient à sa place quand la feuille se ferme.
-- Tout se fige avec le réglage « moins d'animations » du téléphone : chaque écran reste lisible sans mouvement.
-
-Technique : `mouvement.js` (éléments `<mv-eveil>`, `<mv-logo>`, `<mv-oeil>`, chargé avant `app.js` pour servir dès le
-premier écran ; coche et bouton API branchés une fois tous les scripts chargés) ; styles `styles/38-mouvement.css` ;
-trois lignes d'`app.js` (chargement, connexion, écran vide) ; clé locale `apidoo-nb-ruches` ; scénario
-`tests/etapes_mv.txt`. Le logo animé est lu depuis `logo-apiviz.svg`, pas recomposé.
+Technique : `accueil.js`, dernier complément de l'écran « dash » (`src/domaines/accueil/ecrans.js`), réarrange
+et habille les blocs déjà construits (ux.js, alveoles.js, demarrage.js) ; styles `styles/39-accueil.css` ;
+scénario `tests/etapes_ac.txt` (captures à 390 px). Tests `al`, `n4`, `v2` mis à jour pour la nouvelle mise en page.
 
 **À vérifier**
-1. Ouvrir l'application déjà connecté : pendant le chargement, le symbole devient API, six alvéoles se remplissent.
-2. Se déconnecter : sur la page de connexion, les deux points du logo s'envolent une fois et API apparaît à droite du
-   mot ; toucher le logo rejoue. Se tromper de mot de passe ne relance pas l'animation.
-3. Un écran vide (une exploitation sans vente, par exemple) : la pupille suit le doigt, puis reprend sa ronde.
-4. Enregistrer une visite ou une vente : coche tracée et éclats sur la confirmation ; un message d'erreur n'en a pas.
-5. Toucher API dans la barre du bas : il disparaît de la barre, arrive dans la feuille, revient à la fermeture
-   (croix, touche Retour, ou choix d'une tuile).
-6. Réglages du téléphone › réduire les animations : rien ne bouge, tout reste lisible.
+1. Sur téléphone, l'accueil se lit dans l'ordre ci-dessus ; sur ordinateur, rien n'a bougé.
+2. La carte d'API nomme la bonne ruche ; « Voir … » ouvre sa fiche ; « Plus tard » retire la tournée pour la journée.
+3. Les quatre chiffres correspondent au Bilan (Gestion › Bilan) et ouvrent le bon écran.
+4. Le créneau correspond à la météo du rucher ; toucher un jour ouvre ce jour en heure par heure.
+5. À faire : la ruche critique en premier, puis « Voir les autres ».
+6. En lecture seule, le repère « Lecture seule » reste sous le bonjour.
+
+## v5.23 · à publier en recette · transitions entre écrans (chantier des écrans, étapes 2 et 3)
+Aucune migration. S'appuie sur la v5.22 (météo lisible).
+
+Étape 2, barre du bas : rien à changer. Elle correspond déjà aux maquettes : Accueil, Ruchers, API au centre, Miel,
+Gestion, sur le bandeau miel doux.
+
+Pour l'apiculteur (étape 3) :
+- **Aller** (ouvrir un écran depuis un autre) : le contenu arrive de la droite.
+- **Retour** (« ‹ Gestion », « ‹ Verger »…, ou revenir à l'écran d'avant) : il arrive de la gauche.
+- **Changer de rubrique** (barre du bas, menu de côté) ou de sous-onglet (Liste, Carte, Santé) : il monte en fondu.
+- Les barres du haut et du bas ne bougent pas. Les feuilles qui montent du bas et les messages qui descendent du
+  haut restent comme avant ; l'alvéole qui devient l'en-tête de la fiche ruche aussi.
+- **Sur ordinateur, Échap** revient à l'écran précédent, jamais pendant une saisie (champ actif, visite, vente, tournée).
+- Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `transitions.js` (chargé en dernier) enveloppe `render()` : l'écran change tout de suite, comme avant,
+et seul le contenu neuf (`.wrap`) joue son entrée selon `<html data-vt>` (`styles/38-transitions.css`). Choix fait
+après essai des transitions de vue du navigateur : elles retardent l'écran d'une image, ce que du code et des tests
+existants ne supportent pas. Cette version marche aussi sur Firefox. Scénario `tests/etapes_vt.txt` ; attentes
+ajoutées dans `etapes_n4.txt` et `etapes_v2.txt`.
+
+**À vérifier**
+1. Gestion › Fournisseurs puis « ‹ Gestion » : l'écran arrive de la droite, puis revient de la gauche.
+2. Barre du bas, de rubrique en rubrique : fondu court ; la barre elle-même reste immobile.
+3. Ruchers › Liste, Carte, Santé : fondu, pas de glissement.
+4. Ouvrir une ruche depuis Ruchers : l'alvéole grossit en en-tête comme avant, sans saccade.
+5. Sur ordinateur, Échap dans Fournisseurs : retour à Gestion ; Échap dans une visite en cours : rien ne change.
+6. Réglages du téléphone › réduire les animations : les écrans changent d'un coup.
 
 ## v5.22 · à publier en recette · météo lisible (chantier des écrans, étape 1)
 Aucune migration. Même service météo (Open-Meteo), mêmes seuils réglables. Premier lot du chantier des écrans tirés

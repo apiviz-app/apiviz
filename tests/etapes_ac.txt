@@ -1,0 +1,76 @@
+    # v5.24 — Accueil sur téléphone d'après les maquettes : bonjour et deux actions, priorité d'API, quatre chiffres,
+    # état des ruches, prochain créneau de visite, À faire étiqueté, dernières actions. L'ordinateur ne change pas.
+    # Avec CAPTURES=<dossier>, enregistre l'accueil à 390 px (haut, milieu, bas).
+    import datetime, pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    for r in DATA["ruches"]: r.update({"lat": 47.32, "lng": 5.04})
+    DATA["ruche_evenements"] = []
+    cap = os.environ.get("CAPTURES")
+    jours = [(datetime.date.today() + datetime.timedelta(days=k)).isoformat() for k in range(6)]
+    def h(k, hh):  # aujourd'hui : pluie ; demain : bon de 10 h à 16 h ; puis frais, vent, bon
+        return [(13, 80, 10), (20, 5, 9), (14, 5, 9), (18, 5, 36), (19, 5, 8), (19, 5, 8)][k]
+    time, T, P, V = [], [], [], []
+    for k, j in enumerate(jours):
+        for hh in range(24):
+            t, p, v = h(k, hh); time.append(f"{j}T{hh:02d}:00"); T.append(t); P.append(p); V.append(v)
+    meteo = {"current": {"time": f"{jours[0]}T09:00", "temperature_2m": 12, "wind_speed_10m": 10, "precipitation": 0.4, "weather_code": 61},
+             "hourly": {"time": time, "temperature_2m": T, "precipitation_probability": P, "precipitation": [0.5 if p >= 60 else 0 for p in P],
+                        "wind_speed_10m": V, "wind_gusts_10m": [v + 10 for v in V], "relative_humidity_2m": [60] * len(T), "weather_code": [61 if p >= 60 else 2 for p in P]},
+             "daily": {"time": jours, "temperature_2m_max": [13, 20, 14, 18, 19, 19], "weather_code": [61, 1, 3, 3, 2, 2]}}
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, body=json.dumps(meteo)))
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    hero = page.locator(".ac-hero")
+    verif(hero.locator("h1").inner_text() in ("Bonjour", "Bonsoir"), "bonjour sans prénom inventé : " + hero.locator("h1").inner_text())
+    verif("6 ruches · 1 à surveiller" in hero.inner_text() or "6 ruches · 2 à surveiller" in hero.inner_text(), "résumé du jour : " + hero.locator(".ac-resume").inner_text())
+    verif("2 tâches à faire" in hero.inner_text(), "tâches comptées")
+    verif(hero.locator("[data-act=newvisite]").count() == 1 and hero.locator("[data-act=newvente]").count() == 1, "Nouvelle visite et Nouvelle vente")
+    api = page.locator(".ac-api")
+    verif("Ruche 5" in api.inner_text() and api.locator("api-compagnon").count() == 1, "priorité dite par API : " + page.locator("#acPhrase").inner_text())
+    verif("D’après 3 pesées de Ruche 5" in api.inner_text(), "d'où vient la priorité")
+    verif(api.locator(".btn.main").inner_text() == "Voir Ruche 5", "action de la priorité")
+    verif(page.locator(".n4-prochaine").count() == 0, "la proposition de tournée passe dans la carte d'API")
+    ch = page.locator(".ac-chiffre").all_inner_texts()
+    verif(len(ch) == 4 and "Miel en stock" in ch[0] and "11,8 kg" in ch[0] and "29 pots" in ch[0], "miel en stock : " + ch[0].replace("\n", " "))
+    verif("64 €" in ch[1] and "28 € à encaisser" in ch[1], "ventes et à encaisser : " + ch[1].replace("\n", " "))
+    verif("16 €" in ch[2] and "48 € de charges" in ch[2], "résultat après charges : " + ch[2].replace("\n", " "))
+    verif("Trésorerie" in ch[3] and "-12 €" in ch[3].replace("−", "-").replace(" ", ""), "trésorerie : " + ch[3].replace("\n", " "))
+    verif(page.locator(".al-carte .u-hex").count() == 6 and "État des ruches" in page.locator(".al-carte").inner_text(), "état des ruches : alvéoles par rucher")
+    page.wait_for_selector(".ac-jour", timeout=8000)
+    verif(page.locator(".ac-jour").count() == 5 and "Bois" in page.locator(".ac-creneau .u-entete").inner_text(), "créneau : 5 jours, rucher de la priorité")
+    verif("Meilleur créneau : " in page.locator(".ac-creneau").inner_text() and "de 10 h à 16 h" in page.locator(".ac-creneau").inner_text(), "meilleur créneau en plage horaire")
+    verif(page.locator(".ac-jour.on").count() == 1 and "6 h" in page.locator(".ac-jour.on").inner_text(), "le meilleur jour mis en avant")
+    verif("Pluie" in page.locator(".ac-jour").nth(0).inner_text() and "Vent" in page.locator(".ac-jour").nth(3).inner_text(), "pourquoi pas les autres jours")
+    t = page.locator(".ac-todo")
+    verif(t.count() >= 4 and t.nth(0).locator(".ac-tag.crit").inner_text() == "Ruche 5", "À faire : la critique en tête, étiquetée")
+    verif("pas de visite depuis" in t.nth(0).inner_text(), "À faire : depuis quand")
+    verif(page.locator(".ac-tag", has_text="Stock bas").count() == 1, "étiquette Stock bas")
+    pos = page.evaluate("[...document.querySelectorAll('.wrap.ac > *')].map(e => e.className.split(' ').find(c => /^(ac-|al-carte|u-liste|dm-)/.test(c)) || e.className)")
+    verif([p for p in pos if p in ("ac-hero", "ac-api", "ac-chiffres", "al-carte", "ac-creneau", "u-liste", "ac-dernieres")] == ["ac-hero", "ac-api", "ac-chiffres", "al-carte", "ac-creneau", "u-liste", "ac-dernieres"], "ordre des maquettes : " + ", ".join(pos))
+    verif(page.locator(".ac-fil").count() == 3, "trois dernières actions")
+    verif(page.locator(".ac-fil").nth(0).inner_text().startswith("Visite de Ruche"), "action sans auteur connu : phrase sans nom")
+    verif(page.locator(".u-trois").count() == 0, "l'ancien bloc Saison laisse la place aux quatre chiffres")
+
+    if cap:
+        os.makedirs(cap, exist_ok=True); page.wait_for_timeout(700)
+        page.screenshot(path=f"{cap}/accueil-1.png")
+        page.locator(".al-carte").scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, -70)"); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/accueil-2.png")
+        page.locator(".ac-creneau").scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, 200)"); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/accueil-3.png")
+        page.locator(".ac-dernieres").scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/accueil-4.png")
+
+    page.click(".ac-jour.on"); page.wait_for_selector(".mt-hero", timeout=5000)
+    verif(page.evaluate("S.route") == "meteo" and page.locator(".mt-jour.on").get_attribute("data-v") == jours[1], "toucher un jour ouvre la météo de ce jour")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-chiffre")
+    page.click(".ac-chiffre >> nth=0"); page.wait_for_timeout(300)
+    verif(page.evaluate("S.route") == "miel", "chiffre Miel → écran Miel")
+
+    # Prénom donné : il s'affiche.
+    page.evaluate("localStorage.setItem('apiviz-prenom-' + S.session.user.email, 'Pierre-Louis'); ACT.go('dash')"); page.wait_for_selector(".ac-hero")
+    verif(page.locator(".ac-hero h1").inner_text().endswith("Pierre-Louis"), "prénom dans le bonjour")
+
+    # Ordinateur : vue d'ensemble inchangée.
+    page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_selector(".ab-chiffre", timeout=5000)
+    verif(page.locator(".ac-hero").count() == 0 and page.locator(".ab-chiffre").count() == 4, "ordinateur : vue d'ensemble inchangée")

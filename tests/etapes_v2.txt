@@ -27,9 +27,10 @@
     page.wait_for_selector(".al-wx .al-temps", timeout=5000)
     verif("17°" in page.locator(".al-wx >> nth=0").inner_text() or "17°" in page.locator(".al-wx >> nth=1").inner_text(), "météo du rucher sur l'accueil")
     verif("latitude=47.32" in meteo_appels[0], "météo demandée à la position du rucher")
-    verif(page.locator(".u-todo").count() == 3 and page.locator("[data-act=utout]").count() == 1, "accueil : 3 points à faire, « Tout voir »")
-    page.click("[data-act=utout]"); verif(page.locator(".u-todo").count() > 3, "« Tout voir » déplie la liste")
-    verif(page.locator(".u-todo").first.locator(".bg-crit").count() == 1, "le plus urgent en premier")
+    # v5.24 (maquettes) : six points sur téléphone, étiquetés, puis « Voir les autres ».
+    verif(page.locator(".u-todo").count() == 6 and page.locator("[data-act=utout]").count() == 1, "accueil : 6 points à faire, « Voir les autres »")
+    page.click("[data-act=utout]"); page.wait_for_selector(".u-todo >> nth=6"); verif(page.locator(".u-todo").count() > 6, "« Voir les autres » déplie la liste")
+    verif(page.locator(".u-todo").first.locator(".ac-tag.crit").count() == 1, "le plus urgent en premier")
     verif(page.locator(".u-rucher").count() == 2 and page.locator(".u-hex").count() == 6, "ruchers et alvéoles")
     page.wait_for_timeout(400); page.screenshot(path="v2/accueil.png", full_page=True)
     # Fiche ruche
@@ -67,7 +68,7 @@
     page.click("[data-act=uonglet][data-v=clients]"); page.wait_for_selector(".u-client")
     verif(page.locator(".u-client").count() == 2 and page.locator(".u-client a[href^='tel:']").count() == 1, "onglet clients")
     # Carte
-    page.evaluate("ACT.go('plus')")
+    page.evaluate("ACT.go('plus')"); page.wait_for_selector(".n4-g[data-v=pilotage]", timeout=5000)
     verif(page.locator(".n4-g[data-v=pilotage]").count() == 1, "Bilan dans Gestion")
     page.evaluate("ACT.go('ruches')"); verif(page.locator(".subtabs [data-v=carte]").count() == 1, "Carte dans les onglets de Ruchers")
     page.click(".subtabs [data-v=carte]"); page.wait_for_selector(".leaflet-container", timeout=10000)

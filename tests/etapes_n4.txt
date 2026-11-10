@@ -14,11 +14,13 @@
     verif(libs == ["Accueil", "Ruchers", "API", "Miel", "Gestion"], "barre du bas : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
     # Prochaine action
-    verif(page.locator(".n4-prochaine").count() == 1 and "Bois" in page.locator(".n4-prochaine").inner_text(), "prochaine action : " + page.locator(".n4-prochaine b").inner_text())
+    # v5.24 : sur téléphone, la prochaine action (tournée) est proposée dans la carte d'API.
+    tn = page.locator(".ac-api [data-act=v3tournee]")
+    verif(tn.count() == 1 and tn.get_attribute("data-v") == "Bois" and tn.inner_text() == "Commencer la tournée", "prochaine action : tournée « Bois »")
     verif(page.locator(".hero-head .actions .btn").count() == 0, "plus de boutons en double dans l'en-tête")
     shot("accueil")
-    page.click("[data-act=n4plustard]")
-    verif(page.locator(".n4-prochaine").count() == 0, "« Plus tard » masque la proposition pour aujourd'hui")
+    page.click("[data-act=n4plustard]"); page.wait_for_selector(".ac-api")
+    verif(page.locator(".ac-api [data-act=v3tournee]").count() == 0, "« Plus tard » masque la proposition pour aujourd'hui")
     # Bouton +
     page.click(".bottom button[data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
     verif(page.locator("#sheet .n4-tuile").all_inner_texts() == ["Visite", "Tournée", "Récolte", "Vente", "Dépense", "Tâche"], "6 tuiles de saisie")
@@ -76,7 +78,7 @@
     shot("gestion")
     page.click(".n4-g[data-v=pilotage]"); page.wait_for_selector(".u-retour >> text=Gestion")
     verif(page.locator(".head h1").inner_text() == "Bilan", "« Pilotage » devient « Bilan »")
-    page.click(".u-retour"); page.click(".n4-g[data-v=materiel]")
+    page.click(".u-retour"); page.click(".n4-g[data-v=materiel]"); page.wait_for_function("S.route === 'materiel' && document.querySelector('.head h1')?.textContent === 'Matériel'", timeout=5000)
     verif(page.locator(".head h1").inner_text() == "Matériel", "écran Matériel")
     # Compte
     page.click(".topbar .avatar"); page.wait_for_selector("#sheet[open] .n4-moi")

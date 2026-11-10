@@ -39,17 +39,15 @@
     if os.environ.get("APIDOO_CAPTURE"):
         page.screenshot(path=os.environ["APIDOO_CAPTURE"], full_page=True)
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
-    # Météo du rucher (v5.22 : écran « Météo lisible », vérifié en détail par etapes_mt.txt)
-    page.click(".ab-rucher:has-text('Verger') .al-heures"); page.wait_for_selector(".mt-hero")
+    # Météo heure par heure
+    page.click(".ab-rucher:has-text('Verger') .al-heures"); page.wait_for_selector(".mt-frise")
     verif(page.locator(".mt-jour").count() == 5, "cinq jours")
-    verif(page.locator(".mt-h").count() == 13, "treize heures, de 8 h à 20 h")
-    verif(page.locator("details.mt-tout").count() == 1, "tableau complet disponible, replié")
+    verif(page.locator(".mt-h").count() == 13 and page.locator(".eh-table thead th").count() == 14, "treize heures, de 8 h à 20 h (frise et tableau replié)")
     verif("Tu peux ouvrir" in page.locator(".wrap .head h1").inner_text(), "phrase : " + page.locator(".wrap .head h1").inner_text())
     if os.environ.get("APIDOO_CAPTURE"):
         page.screenshot(path=os.environ["APIDOO_CAPTURE"] + ".meteo.png", full_page=True)
-    page.locator(".mt-jour").nth(2).click(); page.wait_for_selector(".mt-jour[aria-pressed=true] >> nth=0")
+    page.locator(".mt-jour").nth(2).click(); page.wait_for_selector(".mt-jour.on >> nth=0")
     verif(page.locator(".mt-jour").nth(2).get_attribute("aria-pressed") == "true", "changer de jour")
-    page.locator(".mt-jour").nth(0).click(); page.wait_for_selector(".wrap .btn.main[data-act=ervisite]")
     page.click(".wrap .btn.main[data-act=ervisite]"); page.wait_for_selector("#sheet[open]")
     verif("Visite du rucher Verger" in page.input_value("#sheet [name=titre]") and page.input_value("#sheet [name=echeance]") != "", "tâche préparée")
     page.click("#sheet [data-act=closesheet]")
