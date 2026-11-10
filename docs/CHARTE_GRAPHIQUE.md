@@ -61,6 +61,22 @@ Le miel couvre moins d'un dixième d'un écran. Jamais de texte miel sur fond cl
 L'alvéole miel avec ses antennes. Ses yeux sont deux petites alvéoles sapin avec un reflet cire, comme le symbole.
 Dans le code, le compagnon s'appelle par `Apiviz.compagnon(état, taille)`.
 
+## Mouvement (`mouvement.js`, `styles/38-mouvement.css`)
+
+Le logo, le symbole et API sont la même alvéole : les animations le montrent. Planche : https://claude.ai/artifact/CQkJaztnC3GpCySnVT71g2
+
+| Moment | Mouvement |
+|---|---|
+| Chargement | La pupille du symbole se dédouble en deux yeux, les antennes poussent : le symbole devient API. Une alvéole par ruche se remplit. |
+| Connexion | Les deux points du logo s'envolent et deviennent API, une fois, puis reviennent. |
+| Écran vide | Le symbole suit le doigt et cligne. |
+| Saisie réussie | Coche tracée, éclats d'alvéoles, API saute. |
+| Bouton API | Il quitte la barre pour la feuille, puis revient. |
+
+- Courtes : moins d'une seconde pour une réponse à un geste. Les boucles sont réservées au chargement et aux écrans vides.
+- Les alvéoles gardent leurs pointes à gauche et à droite, même en vol. Couleurs de la charte uniquement.
+- Sans mouvement (réglage « moins d'animations »), l'écran dit la même chose.
+
 ## Voix
 
 Apiviz tutoie, phrases courtes, un chiffre plutôt qu'un adjectif. Détail : `CHARTE_DE_TON.md`.

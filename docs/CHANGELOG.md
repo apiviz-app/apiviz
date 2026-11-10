@@ -5,6 +5,37 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.23 · à publier en recette · du logo à API, en mouvement
+Aucune migration. Six petites animations relient le logo, le symbole et API. Planche de démonstration :
+https://claude.ai/artifact/CQkJaztnC3GpCySnVT71g2
+
+Pour l'apiculteur :
+- **Chargement** : l'œil-alvéole se réveille. Sa pupille se dédouble en deux yeux, les antennes poussent, API salue,
+  puis redevient le symbole. En dessous, le logo et **une alvéole par ruche** qui se remplit de miel (« Mise à jour
+  de tes 6 ruches » ; le nombre est celui de la dernière ouverture).
+- **Connexion** : à la première apparition, les deux points du logo s'envolent, deviennent API à côté du mot, qui
+  salue, puis ils reprennent leur place. Toucher le logo rejoue le mouvement.
+- **Écrans vides** (« Aucune vente », « Ajoute ta première ruche »…) : le symbole suit le doigt ou la souris et cligne.
+- **Saisie réussie** : la confirmation trace une coche et quelques alvéoles jaillissent (API saute toujours dans la barre).
+- **Bouton API** : il s'enfonce sous le doigt, quitte la barre, arrive par le bas dans « Que veux-tu faire ? », et
+  revient à sa place quand la feuille se ferme.
+- Tout se fige avec le réglage « moins d'animations » du téléphone : chaque écran reste lisible sans mouvement.
+
+Technique : `mouvement.js` (éléments `<mv-eveil>`, `<mv-logo>`, `<mv-oeil>`, chargé avant `app.js` pour servir dès le
+premier écran ; coche et bouton API branchés une fois tous les scripts chargés) ; styles `styles/38-mouvement.css` ;
+trois lignes d'`app.js` (chargement, connexion, écran vide) ; clé locale `apidoo-nb-ruches` ; scénario
+`tests/etapes_mv.txt`. Le logo animé est lu depuis `logo-apiviz.svg`, pas recomposé.
+
+**À vérifier**
+1. Ouvrir l'application déjà connecté : pendant le chargement, le symbole devient API, six alvéoles se remplissent.
+2. Se déconnecter : sur la page de connexion, les deux points du logo s'envolent une fois et API apparaît à droite du
+   mot ; toucher le logo rejoue. Se tromper de mot de passe ne relance pas l'animation.
+3. Un écran vide (une exploitation sans vente, par exemple) : la pupille suit le doigt, puis reprend sa ronde.
+4. Enregistrer une visite ou une vente : coche tracée et éclats sur la confirmation ; un message d'erreur n'en a pas.
+5. Toucher API dans la barre du bas : il disparaît de la barre, arrive dans la feuille, revient à la fermeture
+   (croix, touche Retour, ou choix d'une tuile).
+6. Réglages du téléphone › réduire les animations : rien ne bouge, tout reste lisible.
+
 ## v5.22 · à publier en recette · météo lisible (chantier des écrans, étape 1)
 Aucune migration. Même service météo (Open-Meteo), mêmes seuils réglables. Premier lot du chantier des écrans tirés
 des maquettes UX/UI du 10 nov. 2026 (`docs/ROADMAP/CHANTIER_ECRANS.md`).
