@@ -1,0 +1,73 @@
+/* ---------- Mouvement : du logo à API (v5.23, mouvement.js) ---------- */
+/* Au repos, chaque élément est lisible sans animation : « moins d'animations » (règle générale) fige tout. */
+
+/* Écran de chargement : l'œil-alvéole se réveille en API, une alvéole par ruche se remplit. */
+mv-eveil{display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px}
+.mv-ev{display:block;width:112px;height:112px;overflow:visible}
+.loader img.mv-ev-logo{width:auto;height:32px;animation:none}
+.mv-ev-corps{fill:var(--honey);stroke:var(--honey);stroke-width:10;stroke-linejoin:round}
+.mv-ev-tige{fill:none;stroke:var(--cire);stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1.5;animation:mv-ev-tige 5.6s ease-in-out infinite}
+.mv-ev-bout{fill:var(--cire);transform-box:fill-box;transform-origin:center;transform:scale(0);animation:mv-ev-bout 5.6s ease-in-out infinite}
+.mv-ev-pup{fill:var(--pine)}
+.mv-ev-ref{fill:var(--cire)}
+.mv-ev-g{transform:translate(60px,68px) scale(2.7);animation:mv-ev-g 5.6s ease-in-out infinite}
+.mv-ev-d{transform:translate(60px,68px) scale(2.7);animation:mv-ev-d 5.6s ease-in-out infinite}
+.mv-ev-pau{animation:mv-ev-cligne 5.6s linear infinite}
+.mv-ev-tout{transform-origin:60px 110px;animation:mv-ev-salut 5.6s ease-in-out infinite}
+@keyframes mv-ev-g{0%,6%{transform:translate(60px,68px) scale(2.7)}18%,80%{transform:translate(48px,64px) scale(1)}94%,100%{transform:translate(60px,68px) scale(2.7)}}
+@keyframes mv-ev-d{0%,6%{transform:translate(60px,68px) scale(2.7)}18%,80%{transform:translate(72px,64px) scale(1)}94%,100%{transform:translate(60px,68px) scale(2.7)}}
+@keyframes mv-ev-tige{0%,12%{stroke-dashoffset:1.5}26%,78%{stroke-dashoffset:0}90%,100%{stroke-dashoffset:1.5}}
+@keyframes mv-ev-bout{0%,22%{transform:scale(0)}27%{transform:scale(1.4)}31%,78%{transform:scale(1)}84%,100%{transform:scale(0)}}
+@keyframes mv-ev-cligne{0%,42%{transform:scale(1,1)}44%{transform:scale(1,.08)}46%,100%{transform:scale(1,1)}}
+@keyframes mv-ev-salut{0%,50%{transform:rotate(0deg)}53%{transform:rotate(-7deg)}57%{transform:rotate(7deg)}61%{transform:rotate(-4deg)}65%,100%{transform:rotate(0deg)}}
+.mv-ev-cells{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:210px}
+.mv-ev-cells i{width:18px;height:16px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);animation:mv-ev-cell 3.2s ease-in-out infinite backwards;animation-delay:calc(var(--i)*.3s)}
+@keyframes mv-ev-cell{0%{background:#3D5146;scale:1}8%{background:var(--honey);scale:1.4}16%,78%{background:var(--honey);scale:1}90%,100%{background:#3D5146;scale:1}}
+.mv-ev-texte{font-size:14px;color:#C5D0C8;margin-top:-6px}
+
+/* Connexion : les deux points du logo s'envolent, forment API, reviennent. */
+mv-logo{display:inline-block;position:relative;line-height:0;vertical-align:top}
+mv-logo svg{display:block;overflow:visible}
+.mv-pt{transform-box:fill-box;transform-origin:center}
+.mv-pt-g{--mv-dx:2239px}
+.mv-pt-d{--mv-dx:1499px}
+mv-logo.joue .mv-pt{animation:mv-pt 3.4s ease-in-out both}
+@keyframes mv-pt{
+  0%{transform:translate(0,0) rotate(0deg) scale(1,1);opacity:1}
+  8%{transform:translate(0,-160px) rotate(0deg) scale(.9,1.15);opacity:1}
+  26%{transform:translate(var(--mv-dx),329px) rotate(360deg) scale(2.2,2.2);opacity:1}
+  28%,78%{transform:translate(var(--mv-dx),329px) rotate(360deg) scale(2.2,2.2);opacity:0}
+  80%{transform:translate(var(--mv-dx),329px) rotate(360deg) scale(2.2,2.2);opacity:1}
+  100%{transform:translate(0,0) rotate(0deg) scale(1,1);opacity:1}}
+/* API se pose à droite du mot, dans la carte blanche : ses antennes sapin ne se liraient pas sur le fond sapin. */
+.mv-envol{position:absolute;left:100%;top:50%;width:46px;height:46px;margin:-25px 0 0 12px;transform:scale(0);pointer-events:none}
+mv-logo.joue .mv-envol{animation:mv-envol 3.4s ease-in-out both}
+@keyframes mv-envol{0%,26%{transform:scale(0)}32%{transform:scale(1.15)}36%,74%{transform:scale(1)}80%,100%{transform:scale(0)}}
+
+/* Écrans vides : le symbole suit le doigt ou la souris, et cligne. */
+mv-oeil{display:block}
+mv-oeil.hexdeco:defined{background:none;clip-path:none}
+mv-oeil svg{display:block;width:100%;height:100%;overflow:visible}
+.mv-o-suit{transition:transform .18s var(--sortie)}
+.mv-o-erre{animation:mv-o-erre 9s ease-in-out infinite}
+mv-oeil[data-suit] .mv-o-erre{animation-play-state:paused}
+.mv-o-pau{transform-origin:100px 90px;animation:mv-o-cligne 4.6s linear infinite}
+@keyframes mv-o-erre{0%,12%{transform:translate(0,0)}20%,38%{transform:translate(20px,-7px)}46%,62%{transform:translate(-22px,5px)}70%,84%{transform:translate(7px,12px)}92%,100%{transform:translate(0,0)}}
+@keyframes mv-o-cligne{0%,90%{transform:scale(1,1)}94%{transform:scale(1,.06)}98%,100%{transform:scale(1,1)}}
+
+/* Saisie réussie : la coche se trace, quelques alvéoles jaillissent. */
+.toast.mv-ok{display:flex;align-items:center;gap:8px}
+.mv-coche{flex:none;width:18px;height:18px;fill:none;stroke:var(--honey-light);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 2;animation:mv-coche .35s .15s var(--sortie) both}
+@keyframes mv-coche{from{stroke-dashoffset:1.5}to{stroke-dashoffset:0}}
+.mv-eclats{position:absolute;left:25px;top:50%;width:0;height:0;pointer-events:none}
+.mv-eclats i{position:absolute;width:10px;height:9px;margin:-4px 0 0 -5px;background:var(--c);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);opacity:0;animation:mv-eclat .7s .2s var(--sortie) both}
+@keyframes mv-eclat{0%{opacity:0;transform:rotate(var(--a)) translateY(0) scale(.3)}20%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-44px) scale(1)}}
+
+/* Barre du bas : le bouton API s'enfonce, passe dans la feuille « Que veux-tu faire ? », revient à sa place. */
+.bottom button[data-v=saisir] api-compagnon{transition:scale var(--duree) var(--ressort)}
+.bottom button[data-v=saisir]:active api-compagnon{scale:.86}
+.mv-api-sorti .bottom button[data-v=saisir] api-compagnon{scale:0;transition:scale .18s ease-in}
+.mv-api-retour .bottom button[data-v=saisir] api-compagnon{animation:mv-retour .5s var(--ressort) both}
+@keyframes mv-retour{from{scale:0}to{scale:1}}
+api-compagnon.mv-monte .api[data-etat="bonjour"] .api-tout{animation:mv-monte .62s ease-out both}
+@keyframes mv-monte{0%{opacity:0;transform:translateY(46px) scale(.5)}55%{opacity:1;transform:translateY(-5px) scale(1.06,.96)}100%{transform:none}}

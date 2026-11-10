@@ -2,11 +2,12 @@
 
 - **Application** : PWA en JavaScript sans framework. Sources découpées, regroupées à l'assemblage (sans dépendance).
   `index.html` (coquille), `styles/` (feuilles de style), `src/` (noyau et règles, modules ES), `config.js`, puis `app.js`
-  (cœur) et 19 scripts classiques. Ordre de chargement (celui de `index.html`, tous en `defer`, exécutés dans l'ordre) :
+  (cœur) et 20 scripts classiques. Ordre de chargement (celui de `index.html`, tous en `defer`, exécutés dans l'ordre) :
   `src/passerelle.js` (module : `window.Regles`, `window.Noyau.journal` et `.crochets`), `config.js`, puis :
 
   | # | Fichier | Objet global | Rôle |
   |---|---|---|---|
+  | 0 | `mouvement.js` | `Mouvement`, `<mv-eveil>`, `<mv-logo>`, `<mv-oeil>` | Animations du logo, du symbole et d'API (sans dépendance, avant `app.js` pour l'écran de chargement) |
   | 1 | `app.js` | — (`S`, `sb`, `ACT`…) | Cœur : données, `render()` et `shell()`, formulaires, actions |
   | 2 | `photos.js` | `PH` | Photos de visite, réduction, envoi différé |
   | 3 | `registre.js` | `RG` | Registre d'élevage, impression, export |

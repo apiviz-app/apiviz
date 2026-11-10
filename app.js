@@ -363,7 +363,7 @@ async function saveCfg(modifs, message) {
 function authView() {
   const mode = S.authMode;
   $app.innerHTML = `<div class="auth"><form data-form="auth">
-    <div class="brand"><img src="logo-apiviz.svg" alt="Apiviz" height="38"></div>
+    <div class="brand"><mv-logo><img src="logo-apiviz.svg" alt="Apiviz" height="38"></mv-logo></div>
     <p class="sub">Le carnet de bord de ton rucher</p>
     ${
       S.recovery
@@ -518,7 +518,7 @@ const table = (colonnes, lignes, siVide) =>
       ? `<table><thead><tr>${colonnes.map((colonne) => (colonne[0] === "#" ? `<th class="num">${esc(colonne.slice(1))}</th>` : `<th>${esc(colonne)}</th>`)).join("")}</tr></thead><tbody>${lignes.join("")}</tbody></table>`
       : `<p class="empty">${esc(siVide)}</p>`,
   emptyState = (titre, texte, bouton, action, extra = "") =>
-    `<section class="card hero"><div class="hexdeco" aria-hidden="true"></div><h2>${esc(titre)}</h2><p class="sub">${esc(texte)}</p>${bouton ? `<button class="btn main" data-act="${action}">${esc(bouton)}</button>` : ""}${extra}</section>`,
+    `<section class="card hero"><mv-oeil class="hexdeco" aria-hidden="true"></mv-oeil><h2>${esc(titre)}</h2><p class="sub">${esc(texte)}</p>${bouton ? `<button class="btn main" data-act="${action}">${esc(bouton)}</button>` : ""}${extra}</section>`,
   kpi = (libelle, valeur, detail, classe = "") =>
     `<div class="card kpi"><div class="l">${esc(libelle)}</div><div class="big ${classe}">${esc(valeur)}</div>${detail ? `<div class="s">${esc(detail)}</div>` : ""}</div>`,
   subtabs = (onglets, actif, action) =>
@@ -1345,7 +1345,7 @@ function rendreEcran() {
   }
   if (!S.d) {
     $app.innerHTML =
-      '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apiviz.svg" alt=""></div>';
+      '<div class="loader" role="status" aria-label="Chargement"><mv-eveil><img src="symbole-apiviz.svg" alt=""></mv-eveil></div>';
     return;
   }
   // Table des écrans du noyau (IT-03, src/domaines/*/ecrans.js) : une seule implémentation par écran.
