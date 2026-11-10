@@ -1,0 +1,77 @@
+/* Page de connexion (v5.24) : dans l'air de l'application.
+   Téléphone : bandeau miel doux avec un rayon d'alvéoles, feuille blanche qui monte du bas, API par-dessus la feuille.
+   Ordinateur (801 px et plus) : à gauche la signature et ce que fait Apiviz, à droite le formulaire dans une carte.
+   Le balisage est dans authView() d'app.js. .cx-tel : téléphone seulement ; .cx-ordi : ordinateur seulement. */
+.auth.cx{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;min-height:100vh;min-height:100dvh;padding:0;background:var(--honeysoft);color:var(--ink)}
+.cx .cx-ordi,.cx .cx-vitrine{display:none}
+
+/* Bandeau */
+.cx-tete{position:relative;overflow:hidden;flex:1 0 auto;min-height:280px;box-sizing:border-box;display:flex;flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 20px 26px}
+.cx-rayon{position:absolute;top:0;right:0;width:0;height:0;transform-origin:100% 0}
+.cx-rayon i{position:absolute;width:62px;height:54px;background:#fff;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.cx-rayon i.cx-demi{background:#EBD9A6}
+.cx-rayon img{position:absolute;right:51px;top:29px;width:64px;height:58px;max-width:none}
+.cx .brand{position:relative;align-self:flex-start;padding:0;line-height:0}
+.cx .brand img,.cx mv-logo svg{height:38px;width:auto}
+.cx-phrase{position:relative;display:flex;flex-direction:column;gap:8px}
+.cx-tete .cx-phrase{margin-top:auto;padding-top:24px;max-width:calc(100% - 134px)}
+.cx-say{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:27px;line-height:1.14;font-weight:700;letter-spacing:-.018em}
+.cx .sub{margin:0;font-size:14px;color:#3F4A44}
+
+/* API regarde le formulaire par-dessus la feuille. À la première ouverture il monte après l'envol du logo. */
+.cx-corps{flex:none}
+.cx-carte{position:relative}
+.cx-api{position:absolute;right:40px;top:-58px;width:84px;height:84px;line-height:0}
+.cx .cx-api .api .api-regard{transform:translate(-3px,3px)}
+.cx-premiere .cx-api{animation:cx-monte .6s cubic-bezier(.34,1.56,.64,1) 3.7s both}
+@keyframes cx-monte{from{transform:translateY(62px)}to{transform:none}}
+
+/* Feuille */
+.auth.cx form{position:relative;z-index:1;box-sizing:border-box;width:auto;display:flex;flex-direction:column;gap:0;padding:28px 20px calc(16px + env(safe-area-inset-bottom));background:var(--card);border-radius:26px 26px 0 0;box-shadow:none}
+.cx form label{gap:6px;margin-top:14px;font-size:13px;font-weight:600}
+.cx form label:first-of-type{margin-top:0}
+.cx form input{min-height:50px;padding:0 14px;border-radius:13px;font-weight:400}
+.cx form input::placeholder{color:var(--muted);opacity:1}
+.cx-mdp{position:relative;display:block}
+.cx-mdp input{padding-right:100px}
+.cx-voir{position:absolute;right:4px;top:3px;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--good);font-size:14px;font-weight:600}
+.cx .cx-aide{margin:8px 0 0}
+.cx .cx-oubli{align-self:flex-end;min-height:44px;padding:0;font-size:14px;color:var(--good)}
+.cx form .btn.main{min-height:52px;margin-top:18px;border-radius:13px;font-size:16px}
+.cx form .cx-oubli + .btn.main{margin-top:0}
+.cx form .btn.block:not(.main){min-height:48px;border-radius:13px}
+.cx-ou{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:13px;color:var(--muted)}
+.cx-ou::before,.cx-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+.cx .cx-lien{align-self:center;min-height:44px;margin-top:4px;padding:0;color:var(--good);text-align:center}
+.cx .notice{margin:0 0 14px;border-radius:14px;font-size:14px}
+.cx .cx-info{display:flex;align-items:center;gap:12px}
+.cx .cx-info::before{content:"";flex:none;width:23px;height:20px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.cx form .btn.main + .cx-info{margin:16px 0 0}
+.cx .cx-erreur{background:var(--critbg);color:#8A1414;font-weight:600}
+.cx-confid{display:flex;align-items:center;justify-content:center;min-height:40px;font-size:13px;font-weight:500;color:#3F4A44}
+.cx form .cx-confid{margin-top:12px}
+
+@media (min-width:801px){
+  .auth.cx{flex-direction:row;background:var(--ground)}
+  .cx .cx-tel{display:none}
+  .cx .cx-ordi,.cx .cx-vitrine{display:flex}
+  .cx-tete{flex:1 1 50%;min-width:0;min-height:100vh;min-height:100dvh;padding:40px clamp(32px,5vw,64px);background:var(--honeysoft)}
+  .cx .brand img,.cx mv-logo svg{height:44px}
+  .cx-vitrine{position:relative;flex-direction:column;gap:22px;margin-top:auto;padding-top:150px;max-width:520px}
+  .cx-signature{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:clamp(34px,4vw,48px);line-height:1.08;font-weight:700;letter-spacing:-.02em}
+  .cx-intro{margin:0;max-width:440px;font-size:17px;line-height:1.45;color:#3F4A44}
+  .cx-promesses{margin:6px 0 0;padding:0;list-style:none}
+  .cx-promesses li{display:grid;grid-template-columns:23px minmax(0,1fr);column-gap:14px;row-gap:2px;padding:14px 0;border-top:1px solid #EBD9A6}
+  .cx-promesses li:last-child{border-bottom:1px solid #EBD9A6}
+  .cx-promesses li::before{content:"";grid-row:1 / span 2;width:23px;height:20px;margin-top:2px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+  .cx-promesses b{font-size:16px;font-weight:600}
+  .cx-promesses span{font-size:14px;color:#3F4A44}
+  .cx-tete .cx-confid{position:relative;align-self:flex-start;justify-content:flex-start;min-height:44px;margin-top:auto;padding-top:16px}
+  .cx-corps{flex:1 1 50%;min-width:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:40px clamp(24px,4vw,48px)}
+  .cx-carte{width:100%;max-width:440px;margin-top:58px}
+  .auth.cx form{padding:36px;border:1px solid var(--line);border-radius:18px}
+  .cx form .cx-phrase{margin-bottom:24px}
+  .cx form .sub{color:var(--muted)}
+}
+/* Grand écran : le rayon grossit avec le panneau. */
+@media (min-width:1200px){.cx-rayon{right:52px;transform:scale(1.5)}}

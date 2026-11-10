@@ -360,26 +360,75 @@ async function saveCfg(modifs, message) {
   if (erreur) throw erreur;
   (await refresh(), message && toast(message));
 }
+// Page de connexion (v5.24) : bandeau miel doux, rayon d'alvéoles, feuille blanche, API par-dessus la feuille.
+// Styles : styles/39-connexion.css. Sur téléphone la phrase est dans le bandeau, sur ordinateur dans la carte.
+const CX_PHRASES = {
+  in: ["Tes ruches t’attendent.", "Connecte-toi pour retrouver ton rucher."],
+  up: ["Ton rucher en trois questions.", "Commence par créer ton compte."],
+  reset: ["Un lien pour repartir.", "Indique ton e-mail, tu recevras un lien pour choisir un nouveau mot de passe."],
+  recovery: ["Choisis ton nouveau mot de passe.", "Tu te connecteras avec lui dès maintenant."],
+};
+// Alvéoles du rayon : [distance au bord droit, distance au bord haut, demi-teinte].
+const CX_RAYON = [[152, -27, 0], [102, 2, 1], [102, 60, 0], [52, -27, 1], [52, 89, 0], [2, 2, 0], [2, 60, 1], [2, 118, 0], [-48, -27, 1], [-48, 31, 0], [-48, 89, 1], [-48, 147, 0]]
+  .map(([droite, haut, demi]) => `<i${demi ? ' class="cx-demi"' : ""} style="right:${droite}px;top:${haut}px"></i>`)
+  .join("") + '<img src="symbole-apiviz.svg" alt="" width="64" height="58">';
+const CX_VITRINE = `<div class="cx-vitrine">
+      <p class="cx-signature">Voir clair dans ses ruches.</p>
+      <p class="cx-intro">Apiviz, c’est le carnet de bord de ton rucher. Tu racontes ta visite, il retient tout pour toi.</p>
+      <ul class="cx-promesses">
+        <li><b>Tu parles, API note</b><span>Dicte ta visite devant la ruche, les gants aux mains. Ça marche aussi sans réseau.</span></li>
+        <li><b>Le bon jour pour ouvrir tes ruches</b><span>Apiviz regarde la météo de ton rucher et te propose le meilleur moment.</span></li>
+        <li><b>Ton miel, de la récolte au pot vendu</b><span>Ce que tu as récolté, ce qu’il te reste en stock, et qui doit encore te payer.</span></li>
+      </ul>
+    </div>`;
+let cxDejaVue = false;
 function authView() {
-  const mode = S.authMode;
-  $app.innerHTML = `<div class="auth"><form data-form="auth">
-    <div class="brand"><img src="logo-apiviz.svg" alt="Apiviz" height="38"></div>
-    <p class="sub">Le carnet de bord de ton rucher</p>
+  const mode = S.recovery ? "recovery" : CX_PHRASES[S.authMode] ? S.authMode : "in";
+  const [titre, sous] = CX_PHRASES[mode];
+  const phrase = (cote) => `<div class="cx-phrase cx-${cote}"><h1 class="cx-say">${titre}</h1><p class="sub">${sous}</p></div>`;
+  // L'e-mail déjà saisi est gardé quand on passe de « Se connecter » à « Créer mon compte » ou « Mot de passe oublié ».
+  const mail = $app.querySelector("form[data-form=auth] [name=email]")?.value || "";
+  const motDePasse = (libelle, memoire) => `<label>${libelle}<span class="cx-mdp"><input name="password" type="password" minlength="8" required autocomplete="${memoire}"><button type="button" class="cx-voir" data-act="cxvoir" aria-pressed="false">Afficher</button></span></label>`;
+  const confid = (cote) => `<a class="cx-confid cx-${cote}" href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a>`;
+  const premiere = !cxDejaVue;
+  cxDejaVue = true;
+  $app.innerHTML = `<div class="auth cx${premiere ? " cx-premiere" : ""}" data-mode="${mode}">
+  <header class="cx-tete">
+    <div class="cx-rayon" aria-hidden="true">${CX_RAYON}</div>
+    <div class="brand"><mv-logo><img src="logo-apiviz.svg" alt="Apiviz" height="38"></mv-logo></div>
+    ${CX_VITRINE}
+    ${phrase("tel")}
+    ${confid("ordi")}
+  </header>
+  <div class="cx-corps"><div class="cx-carte">
+    <span class="cx-api" aria-hidden="true"><api-compagnon etat="repos" taille="84" muet></api-compagnon></span>
+    <form data-form="auth">
+    ${phrase("ordi")}
+    ${S.authMsg ? (S.authErr ? `<p class="notice cx-erreur" role="alert">${esc(S.authMsg)}</p>` : `<p class="notice cx-info" role="status">${esc(S.authMsg)}</p>`) : ""}
     ${
       S.recovery
-        ? `<label>Nouveau mot de passe<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+        ? `${motDePasse("Nouveau mot de passe", "new-password")}
+      <p class="small cx-aide">8 caractères au moins</p>
       <button class="btn main block">Enregistrer</button>`
         : `
-    <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
-    ${mode === "reset" ? "" : `<label>Mot de passe<input name="password" type="password" minlength="8" required autocomplete="${mode === "up" ? "new-password" : "current-password"}"></label>`}
-    <button class="btn main block">${mode === "up" ? "Cr\xE9er mon compte" : mode === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
-    <div class="actions" style="justify-content:space-between">
-      <button type="button" class="link" data-act="authmode" data-v="${mode === "in" ? "up" : "in"}">${mode === "in" ? "Cr\xE9er mon compte" : "J\u2019ai d\xE9j\xE0 un compte"}</button>
-      ${mode === "in" ? '<button type="button" class="link" data-act="authmode" data-v="reset">Mot de passe oubli\xE9</button>' : ""}
-    </div>`
+    <label>E-mail<input name="email" type="email" required autocomplete="email" placeholder="toi@exemple.fr" value="${esc(mail)}"></label>
+    ${mode === "reset" ? "" : motDePasse("Mot de passe", mode === "up" ? "new-password" : "current-password")}
+    ${mode === "up" ? '<p class="small cx-aide">8 caractères au moins</p>' : ""}
+    ${mode === "in" ? '<button type="button" class="link cx-oubli" data-act="authmode" data-v="reset">Mot de passe oublié</button>' : ""}
+    <button class="btn main block">${mode === "up" ? "Créer mon compte" : mode === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
+    ${
+      mode === "in"
+        ? `<p class="cx-ou" aria-hidden="true"><span>Pas encore de compte</span></p>
+    <button type="button" class="btn block" data-act="authmode" data-v="up">Créer mon compte</button>
+    ${ACT.dmexemple ? '<button type="button" class="link cx-lien" data-act="dmexemple">Voir un rucher d’exemple</button>' : ""}`
+        : `${mode === "up" ? '<p class="notice cx-info">Tu recevras un lien par e-mail. Ouvre-le sur cet appareil pour continuer.</p>' : ""}
+    <button type="button" class="link cx-lien" data-act="authmode" data-v="in">J’ai déjà un compte</button>`
+    }`
     }
-    ${S.authMsg ? `<p class="notice" role="status">${esc(S.authMsg)}</p>` : ""}
-  </form></div>`;
+    ${confid("tel")}
+    </form>
+  </div></div>
+</div>`;
 }
 const AUTH_FR = {
   "Invalid login credentials": "E-mail ou mot de passe incorrect.",
@@ -389,6 +438,7 @@ const AUTH_FR = {
 async function submitAuth(formulaire) {
   const retour = location.origin + location.pathname;
   S.authMsg = "";
+  S.authErr = false;
   try {
     if (S.recovery) {
       const { error: erreur } = await sb.auth.updateUser({ password: formulaire.password.value });
@@ -421,7 +471,7 @@ async function submitAuth(formulaire) {
       return;
     }
   } catch (erreur) {
-    ((S.authMsg = messageErreur(erreur)), traduireErreur(erreur).connu || journaliser("connexion", erreur));
+    ((S.authMsg = messageErreur(erreur)), (S.authErr = true), traduireErreur(erreur).connu || journaliser("connexion", erreur));
   }
   authView();
 }
@@ -518,7 +568,7 @@ const table = (colonnes, lignes, siVide) =>
       ? `<table><thead><tr>${colonnes.map((colonne) => (colonne[0] === "#" ? `<th class="num">${esc(colonne.slice(1))}</th>` : `<th>${esc(colonne)}</th>`)).join("")}</tr></thead><tbody>${lignes.join("")}</tbody></table>`
       : `<p class="empty">${esc(siVide)}</p>`,
   emptyState = (titre, texte, bouton, action, extra = "") =>
-    `<section class="card hero"><div class="hexdeco" aria-hidden="true"></div><h2>${esc(titre)}</h2><p class="sub">${esc(texte)}</p>${bouton ? `<button class="btn main" data-act="${action}">${esc(bouton)}</button>` : ""}${extra}</section>`,
+    `<section class="card hero"><mv-oeil class="hexdeco" aria-hidden="true"></mv-oeil><h2>${esc(titre)}</h2><p class="sub">${esc(texte)}</p>${bouton ? `<button class="btn main" data-act="${action}">${esc(bouton)}</button>` : ""}${extra}</section>`,
   kpi = (libelle, valeur, detail, classe = "") =>
     `<div class="card kpi"><div class="l">${esc(libelle)}</div><div class="big ${classe}">${esc(valeur)}</div>${detail ? `<div class="s">${esc(detail)}</div>` : ""}</div>`,
   subtabs = (onglets, actif, action) =>
@@ -1345,7 +1395,7 @@ function rendreEcran() {
   }
   if (!S.d) {
     $app.innerHTML =
-      '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apiviz.svg" alt=""></div>';
+      '<div class="loader" role="status" aria-label="Chargement"><mv-eveil><img src="symbole-apiviz.svg" alt=""></mv-eveil></div>';
     return;
   }
   // Table des écrans du noyau (IT-03, src/domaines/*/ecrans.js) : une seule implémentation par écran.
@@ -2077,6 +2127,15 @@ const ACT = {
   gomateriel: () => go("materiel"),
   authmode: (valeur) => {
     ((S.authMode = valeur), (S.authMsg = ""), authView());
+  },
+  // Connexion : montrer ou masquer le mot de passe saisi.
+  cxvoir: (valeur, cle, bouton) => {
+    const champ = bouton.closest(".cx-mdp").querySelector("input");
+    const montrer = champ.type === "password";
+    champ.type = montrer ? "text" : "password";
+    bouton.textContent = montrer ? "Masquer" : "Afficher";
+    bouton.setAttribute("aria-pressed", String(montrer));
+    champ.focus();
   },
   logout: async () => {
     if (typeof HL != "undefined" && HL.nb() > 0) return ficheDeconnexion();
