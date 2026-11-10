@@ -11,43 +11,130 @@ const ES = (() => {
   const phrase = (texte) => { const h = document.querySelector(".wrap .head h1"); if (h) { h.textContent = texte; h.closest(".head").classList.add("g-tete"); } };
 
   // ---------- 1. Météo heure par heure ----------
-  ACT.ermeteo = (k) => { S.meteoRucher = k; S.meteoJour = null; go("meteo"); };
-  ACT.ermjour = (t) => { S.meteoJour = t; render(); };
+  ACT.ermeteo = (k) => { S.meteoRucher = k; S.meteoJour = null; S.meteoHeure = null; go("meteo"); };
+  ACT.ermjour = (t) => { S.meteoJour = t; S.meteoHeure = null; render(); };
   const ETAT = { 2: ["ok", "", "Oui"], 1: ["court", "w", "Rapide"], 0: ["", "non", "Non"] };
   const etatHtml = (n) => (n == null ? "–" : `<span class="eh-etat"><i class="ab-mini ${ETAT[n][1]}"></i>${ETAT[n][2]}</span>`);
+  // Phrase du jour : la première plage d'heures bonnes à venir, sinon la première plage rapide.
   function phraseJour(j) {
-    const nom = jourLong(j.t), plage = (n) => { const l = j.heures.filter((x) => x.n === n && !x.passee); return l.length ? [l[0].h, l[l.length - 1].h + 1] : null; };
-    const bon = plage(2), vite = plage(1);
-    if (bon) return `Tu peux ouvrir ${nom} entre ${bon[0]} h et ${bon[1]} h.`;
-    if (vite) return `Visite rapide possible ${nom} entre ${vite[0]} h et ${vite[1]} h.`;
+    const nom = jourLong(j.t), bon = j.plages.find((p) => p.n === 2), vite = j.plages.find((p) => p.n === 1);
+    if (bon) return `Tu peux ouvrir ${nom} entre ${bon.debut} h et ${bon.fin} h.`;
+    if (vite) return `Visite rapide possible ${nom} entre ${vite.debut} h et ${vite.fin} h.`;
     return `Pas de créneau pour ouvrir ${nom}.`;
   }
+  const TON = { 2: "bon", 1: "rapide", 0: "non" };
+  const libelleNiveau = (n) => (n === 2 ? "On peut ouvrir" : n === 1 ? "Visite rapide" : "Mieux vaut attendre");
+
+  // Détail d'une heure : ce que l'apiculteur lit en touchant une case de la frise.
+  function detailHeure(x) {
+    if (!x) return "";
+    const n = x.n, ton = n == null ? "hors" : TON[n];
+    const titre = n == null ? "Hors des heures de visite" : libelleNiveau(n);
+    const pourquoi = n == null ? `On cherche un créneau entre ${MT.SEUILS.debut} h et ${MT.SEUILS.fin} h.` : x.raison || "Chaud, sec et calme : les butineuses sont dehors.";
+    const val = (t, v) => `<span><small>${t}</small><b>${v}</b></span>`;
+    return `<div class="mt-detail ${ton}" aria-live="polite">
+      <div class="mt-detail-h">${MT.icone(x.code)}<b>${x.h} h</b><strong>${esc(titre)}</strong></div>
+      <p>${esc(pourquoi)}</p>
+      <div class="mt-detail-v">${val("Température", `${x.temp}°`)}${val("Pluie", `${x.risque} %${x.pluie > 0 ? ` · ${String(x.pluie).replace(".", ",")} mm` : ""}`)}${val("Vent", `${x.vent} km/h`)}${x.rafales != null ? val("Rafales", `${x.rafales} km/h`) : ""}${x.hum != null ? val("Humidité", `${x.hum} %`) : ""}</div>
+      ${n > 0 && !(x.passee && !x.maintenant) ? `<button type="button" class="btn mt-prevoir" data-act="ervisite" data-v="${S.meteoJour}|${x.h}">Prévoir une visite à ${x.h} h</button>` : ""}
+    </div>`;
+  }
+
+  // Frise de la journée, 8 h à 20 h : bande de couleur par heure, courbe de température, barres de pluie, vent.
+  function frise(j) {
+    const hs = j.heures, n = hs.length;
+    if (!n) return "";
+    const temps = hs.map((x) => x.temp), tmin = Math.min(...temps) - 2, tmax = Math.max(...temps) + 2;
+    const y = (t) => 52 - ((t - tmin) / Math.max(1, tmax - tmin)) * 32; // 20 à 52 px : l'étiquette tient au-dessus
+    const pts = hs.map((x, i) => `${(i + 0.5) * 10},${y(x.temp).toFixed(1)}`).join(" ");
+    const sel = S.meteoHeure;
+    const cases = hs.map((x, i) => {
+      const ton = x.n == null ? "hors" : TON[x.n];
+      const lib = `${x.h} h, ${x.temp}°, pluie ${x.risque} %, vent ${x.vent} km/h : ${x.n == null ? "hors des heures de visite" : libelleNiveau(x.n).toLowerCase()}${x.raison ? `, ${x.raison.toLowerCase()}` : ""}`;
+      return `<button type="button" class="mt-h ${ton}${x.passee && !x.maintenant ? " passee" : ""}${x.maintenant ? " now" : ""}${x.h === sel ? " on" : ""}" style="--i:${i};--y:${y(x.temp).toFixed(1)}" data-act="ermheure" data-v="${x.h}" aria-pressed="${x.h === sel}" aria-label="${esc(lib)}">
+        <span class="mt-t">${x.temp}°</span><span class="mt-bande"></span>
+        <span class="mt-pluie" style="--p:${x.risque}"><i></i></span><span class="mt-vent${x.vent >= MT.SEUILS.vent ? " fort" : ""}">${x.vent}</span><span class="mt-heure">${x.h}<span class="mt-hu"> h</span></span></button>`;
+    }).join("");
+    return `<section class="mt-frise" aria-label="La journée heure par heure">
+      <div class="mt-legende" aria-hidden="true"><span class="bon">Ouvrir</span><span class="rapide">Rapide</span><span class="non">Attendre</span><span class="hors">Hors visite</span></div>
+      <div class="mt-grille" style="--n:${n}">
+        <svg class="mt-courbe" viewBox="0 0 ${n * 10} 56" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>
+        ${cases}
+      </div>
+      <div class="mt-axe" aria-hidden="true"><span><i class="mt-axe-pluie"></i>Risque de pluie</span><span>Vent en km/h</span><span>Heures</span></div>
+    </section>`;
+  }
+
   VUES.meteo = function () {
     const k = S.meteoRucher, rs = U.ruchers().find(([x]) => x === k)?.[1] || [], nom = U.nomRucher(k), m = MT.parHeure(k, rs);
     const fin = () => retour("alrucher", k, nom);
     if (!m || m.sansLieu) {
-      shell("Météo", nom, "", m ? '<p class="small">Place ce rucher sur la carte pour voir sa météo.</p><button type="button" class="btn" data-act="go" data-v="carte">Ouvrir la carte</button>' : '<p class="small">Météo en cours de chargement…</p>');
+      shell("Météo", nom, "", m ? '<p class="small">Place ce rucher sur la carte pour voir sa météo.</p><button type="button" class="btn" data-act="go" data-v="carte">Ouvrir la carte</button>'
+        : '<div class="mt-attente" aria-busy="true"><i></i><i></i><i></i><p class="small">Météo en cours de chargement…</p></div>');
       return fin();
     }
     if (!m.jours.some((j) => j.t === S.meteoJour)) S.meteoJour = m.creneau?.jour || m.auj;
     const j = m.jours.find((x) => x.t === S.meteoJour) || m.jours[0];
-    const meilleur = j.heures.find((x) => x.n === 2 && !x.passee) || j.heures.find((x) => x.n === 1 && !x.passee);
-    const action = meilleur ? `<button type="button" class="btn main" data-act="ervisite" data-v="${meilleur.h}">Prévoir une visite ${esc(jourLong(j.t))} à ${meilleur.h} h</button>` : "";
-    const onglets = `<div class="eh-jours" role="group" aria-label="Choisir un jour">${m.jours.map((x) => `<button type="button" class="${x.t === j.t ? "on" : ""} ${x.heures.some((h) => h.n === 2) ? "bon" : ""}" aria-pressed="${x.t === j.t}" data-act="ermjour" data-v="${x.t}">${MT.icone(x.code)}<b>${esc(jourCourt(x.t))}</b> ${x.max}°</button>`).join("")}</div>`;
+    const avenir = j.heures.filter((x) => !x.passee || x.maintenant);
+    const meilleur = avenir.find((x) => x.n === 2) || avenir.find((x) => x.n === 1);
+    if (!j.heures.some((x) => x.h === S.meteoHeure)) S.meteoHeure = (meilleur || avenir[0] || j.heures[0])?.h;
+    const action = meilleur ? `<button type="button" class="btn main" data-act="ervisite" data-v="${j.t}|${meilleur.h}">Prévoir une visite ${esc(jourLong(j.t))} à ${meilleur.h} h</button>` : "";
+
+    // 1. Maintenant : un verdict franc, et pourquoi.
+    const now = m.maintenant, nNow = now?.n;
+    const tonNow = nNow == null ? (m.verdict.startsWith("Bon") ? "bon" : m.verdict.startsWith("Visite") ? "rapide" : "non") : TON[nNow];
+    const pourquoi = now?.raison || (nNow === 2 ? "Chaud, sec et calme." : "");
+    // Prochaine plage, sur les 3 jours (comme le créneau de l'accueil) : d'abord une bonne, sinon une rapide.
+    const trois = m.jours.slice(0, 3), cherche = (n) => trois.map((x) => ({ x, p: x.plages.find((q) => q.n === n) })).find((o) => o.p);
+    const pro = cherche(2) || cherche(1);
+    const prochaine = pro ? `Prochain créneau ${pro.p.n === 2 ? "favorable" : "pour une visite rapide"} : <b>${pro.x.t === m.auj ? "aujourd’hui" : esc(jourLong(pro.x.t))} de ${pro.p.debut} h à ${pro.p.fin} h</b>` : "Aucun créneau pour ouvrir ces 3 jours.";
+    const hero = `<section class="mt-hero ${tonNow}">
+      <div class="mt-hero-ciel">${MT.icone(m.code)}<b>${m.temp}°</b></div>
+      <div class="mt-hero-txt"><small>Maintenant au rucher</small><strong>${esc(m.verdict)}</strong>
+        <span>${pourquoi ? `${esc(pourquoi)} · ` : ""}Vent ${m.vent} km/h${now ? ` · pluie ${now.risque} %` : ""}</span></div>
+      <p class="mt-hero-suite">${prochaine}</p></section>`;
+
+    // 2. Les jours : combien d'heures favorables, en un coup d'œil.
+    const jours = `<div class="mt-jours" role="group" aria-label="Choisir un jour">${m.jours.map((x, i) => {
+      const tot = x.heures.filter((h) => h.n != null).length || 1, b = x.bonnes, r = x.rapides;
+      const lib = b ? `${b} h pour ouvrir` : r ? `${r} h rapide${r > 1 ? "s" : ""}` : "Pas de créneau";
+      return `<button type="button" class="mt-jour${x.t === j.t ? " on" : ""}${b ? " bon" : r ? " rapide" : ""}" style="--i:${i}" aria-pressed="${x.t === j.t}" data-act="ermjour" data-v="${x.t}">
+        <span class="mt-jour-nom">${i === 0 && x.t === m.auj ? "Auj." : esc(jourCourt(x.t))}</span>${MT.icone(x.code)}<b>${x.max}°</b>
+        <span class="mt-jauge" aria-hidden="true"><i style="width:${(b / tot) * 100}%"></i><i class="r" style="width:${(r / tot) * 100}%"></i></span><small>${lib}</small></button>`;
+    }).join("")}</div>`;
+
+    // 3. Les plages du jour choisi, chacune avec son bouton.
+    const plages = j.plages.length ? `<section class="mt-plages"><h2>Créneaux ${j.t === m.auj ? "d’aujourd’hui" : esc(jourLong(j.t))}</h2>${j.plages.map((p) => {
+      const hs = j.heures.filter((x) => x.h >= p.debut && x.h < p.fin), tm = Math.max(...hs.map((x) => x.temp)), vm = Math.max(...hs.map((x) => x.vent));
+      return `<div class="mt-plage ${TON[p.n]}"><span class="mt-plage-h"><b>${p.debut} h – ${p.fin} h</b><small>${p.n === 2 ? "Bonnes conditions" : "Visite courte"} · jusqu’à ${tm}° · vent ${vm} km/h</small></span>
+        <button type="button" class="btn" data-act="ervisite" data-v="${j.t}|${p.debut}">Prévoir</button></div>`;
+    }).join("")}</section>` : `<p class="mt-rien">Pas de créneau ${j.t === m.auj ? "aujourd’hui" : esc(jourLong(j.t))}. ${m.jours.find((x) => x.bonnes && x.t !== j.t) ? `Regarde <button type="button" class="link" data-act="ermjour" data-v="${m.jours.find((x) => x.bonnes && x.t !== j.t).t}">${esc(jourLong(m.jours.find((x) => x.bonnes && x.t !== j.t).t))}</button>.` : ""}</p>`;
+
+    // 4. Le tableau complet reste disponible, replié.
     const ligne = (titre, f, cl = "") => `<tr><th scope="row">${titre}</th>${j.heures.map((h) => `<td class="${cl} ${h.n === 2 ? "ok" : h.n === 1 ? "court" : ""}">${f(h)}</td>`).join("")}</tr>`;
     const tete = `<tr><th scope="col">Heure</th>${j.heures.map((h) => `<th scope="col">${h.h} h</th>`).join("")}</tr>`;
     const ligneSi = (titre, cle, u) => (j.heures.some((h) => h[cle] != null) ? ligne(titre, (h) => (h[cle] == null ? "–" : `${h[cle]}${u}`)) : "");
-    const table = `<section class="eh-table"><table><thead>${tete}</thead><tbody>
-      ${ligne("Ciel", (h) => MT.icone(h.code))}${ligne("Température", (h) => `${h.temp}°`, "fort")}${ligne("Risque de pluie", (h) => `${h.risque} %`)}${ligne("Vent", (h) => h.vent)}${ligneSi("Rafales", "rafales", "")}${ligneSi("Humidité", "hum", " %")}${ligne("Ouvrir ?", (h) => etatHtml(h.n))}</tbody></table></section>`;
-    const liste = `<section class="eh-liste" aria-label="Prévisions heure par heure">${j.heures.map((h) => `<div class="eh-h ${h.n === 2 ? "ok" : h.n === 1 ? "court" : ""}"><b>${h.h} h</b>${MT.icone(h.code)}<b>${h.temp}°</b><span class="small">Pluie ${h.risque} %, vent ${h.vent}</span><span class="small">${h.n == null ? "–" : ETAT[h.n][2]}</span></div>`).join("")}</section>`;
+    const table = `<details class="mt-tout"><summary>Tout le détail heure par heure</summary><section class="eh-table"><table><thead>${tete}</thead><tbody>
+      ${ligne("Ciel", (h) => MT.icone(h.code))}${ligne("Température", (h) => `${h.temp}°`, "fort")}${ligne("Risque de pluie", (h) => `${h.risque} %`)}${ligne("Vent", (h) => h.vent)}${ligneSi("Rafales", "rafales", "")}${ligneSi("Humidité", "hum", " %")}${ligne("Ouvrir ?", (h) => etatHtml(h.n))}</tbody></table></section></details>`;
     const s = MT.SEUILS;
     shell("Météo", `${nom}, ${new Date(j.t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}`, action,
-      `${onglets}${table}${liste}<p class="small">Vent et rafales en km/h. Oui à partir de ${s.ouvrir} °C, rapide à partir de ${s.rapide} °C, sans pluie annoncée, avec moins de ${s.vent} km/h de vent et moins de ${s.pluie} % de risque de pluie, entre ${s.debut} h et ${s.fin} h. Ces seuils se règlent dans Réglages.</p>`);
+      `<div class="mt">${hero}${jours}${frise(j)}<div id="mtDetail">${detailHeure(j.heures.find((x) => x.h === S.meteoHeure))}</div>${plages}${table}
+      <p class="small mt-seuils">On peut ouvrir à partir de ${s.ouvrir} °C (visite rapide dès ${s.rapide} °C), sans pluie, avec moins de ${s.vent} km/h de vent et moins de ${s.pluie} % de risque de pluie, entre ${s.debut} h et ${s.fin} h. <button type="button" class="link" data-act="errgmeteo">Régler ces seuils</button></p></div>`);
     fin();
     phrase(phraseJour(j));
   };
-  ACT.ervisite = (h) => {
-    S.erPrefill = { titre: `Visite du rucher ${U.nomRucher(S.meteoRucher)} à ${h} h`, echeance: S.meteoJour };
+  // Toucher une heure met à jour le détail sans tout redessiner (la frise ne rejoue pas son entrée).
+  ACT.ermheure = (h) => {
+    S.meteoHeure = Number(h);
+    const m = MT.parHeure(S.meteoRucher, U.ruchers().find(([x]) => x === S.meteoRucher)?.[1] || []);
+    const j = m?.jours?.find((x) => x.t === S.meteoJour);
+    document.querySelectorAll(".mt-h").forEach((b) => { const on = Number(b.dataset.v) === S.meteoHeure; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    const d = document.getElementById("mtDetail");
+    if (d && j) d.innerHTML = detailHeure(j.heures.find((x) => x.h === S.meteoHeure));
+  };
+  ACT.ervisite = (v) => {
+    const [t, h] = String(v).includes("|") ? String(v).split("|") : [S.meteoJour, v];
+    S.erPrefill = { titre: `Visite du rucher ${U.nomRucher(S.meteoRucher)} à ${h} h`, echeance: t };
     tacheForm(null, "");
   };
   const pret = AL.meteoPrete;
