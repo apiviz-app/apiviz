@@ -10,7 +10,7 @@
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Compagnon et phrase du jour
     verif(page.locator('.bottom [data-v=saisir] api-compagnon.al-api[data-humeur=repos] svg.api[data-etat=repos]').count() == 1, "API dans la barre du bas")
-    h1 = page.locator(".hero-head h1").inner_text()
+    h1 = page.locator("#acPhrase").inner_text()  # v5.24 : sur téléphone, API dit la phrase du jour dans sa carte
     verif("Ruche 5 a perdu 3 kg" in h1 and "priorité" in h1, "phrase du jour : " + h1)
     verif(page.locator(".al-carte .u-hex").count() == 6 and page.locator(".al-carte .u-hex.bg-crit").count() == 1, "carte de 6 alvéoles, 1 critique")
     verif("4 en forme" in page.locator(".al-cle").inner_text() and "1 critique" in page.locator(".al-cle").inner_text(), "légende de la carte")

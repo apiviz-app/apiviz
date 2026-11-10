@@ -5,6 +5,41 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
+Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
+la vue d'ensemble ne change pas. La prise en main (exploitation sans ruche ou sans visite) ne change pas non plus.
+
+Sur téléphone, l'accueil suit maintenant les maquettes du 10 nov. 2026, dans cet ordre :
+1. **Bonjour**, sur fond sapin : l'exploitation et la date, le résumé du jour (ruches, à surveiller, tâches),
+   **Nouvelle visite** et **Nouvelle vente**.
+2. **La priorité du jour, dite par API**, sur fond miel : la phrase, d'où elle vient (« D'après 3 pesées de
+   Ruche 5 »), **Voir Ruche 5**, et la tournée proposée avec « Plus tard ».
+3. **Quatre chiffres** qui ouvrent leur écran : miel en stock (kg et pots), ventes de l'année et à encaisser,
+   résultat après charges, trésorerie (encaissé moins dépensé).
+4. **État des ruches** : les alvéoles par rucher, avec les lentilles et la météo de chaque rucher, comme avant.
+5. **Prochain créneau de visite** : le rucher de la priorité, ses 5 jours (heures pour ouvrir, ou pourquoi pas :
+   pluie, vent, frais), le meilleur jour en avant ; toucher un jour ouvre sa météo heure par heure.
+6. **À faire**, étiqueté (« Ruche 5 », « Stock bas », « À encaisser »…) : six points, la colonie critique en tête,
+   puis « Voir les autres ».
+7. **Dernières actions** : qui a fait quoi, avec l'initiale de la personne.
+
+Le bloc « Saison » disparaît du téléphone : les quatre chiffres le remplacent.
+
+Prénom : aucun n'est enregistré aujourd'hui, l'accueil dit donc « Bonjour » ou « Bonsoir » seul. Il affichera
+le prénom une fois qu'on pourra le saisir (prévu à l'étape Réglages).
+
+Technique : `accueil.js`, dernier complément de l'écran « dash » (`src/domaines/accueil/ecrans.js`), réarrange
+et habille les blocs déjà construits (ux.js, alveoles.js, demarrage.js) ; styles `styles/39-accueil.css` ;
+scénario `tests/etapes_ac.txt` (captures à 390 px). Tests `al`, `n4`, `v2` mis à jour pour la nouvelle mise en page.
+
+**À vérifier**
+1. Sur téléphone, l'accueil se lit dans l'ordre ci-dessus ; sur ordinateur, rien n'a bougé.
+2. La carte d'API nomme la bonne ruche ; « Voir … » ouvre sa fiche ; « Plus tard » retire la tournée pour la journée.
+3. Les quatre chiffres correspondent au Bilan (Gestion › Bilan) et ouvrent le bon écran.
+4. Le créneau correspond à la météo du rucher ; toucher un jour ouvre ce jour en heure par heure.
+5. À faire : la ruche critique en premier, puis « Voir les autres ».
+6. En lecture seule, le repère « Lecture seule » reste sous le bonjour.
+
 ## v5.23 · à publier en recette · transitions entre écrans (chantier des écrans, étapes 2 et 3)
 Aucune migration. S'appuie sur la v5.22 (météo lisible).
 
