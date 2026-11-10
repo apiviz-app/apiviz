@@ -76,7 +76,7 @@
     shot("gestion")
     page.click(".n4-g[data-v=pilotage]"); page.wait_for_selector(".u-retour >> text=Gestion")
     verif(page.locator(".head h1").inner_text() == "Bilan", "« Pilotage » devient « Bilan »")
-    page.click(".u-retour"); page.click(".n4-g[data-v=materiel]")
+    page.click(".u-retour"); page.click(".n4-g[data-v=materiel]"); page.wait_for_function("S.route === 'materiel' && document.querySelector('.head h1')?.textContent === 'Matériel'", timeout=5000)
     verif(page.locator(".head h1").inner_text() == "Matériel", "écran Matériel")
     # Compte
     page.click(".topbar .avatar"); page.wait_for_selector("#sheet[open] .n4-moi")

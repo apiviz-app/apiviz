@@ -9,9 +9,9 @@ Miel, Gestion, API au centre). Aucune étape ne déplace de rubrique.
 
 | # | Étape | Ce que montrent les maquettes | Dans l'app avant le chantier | État |
 |---|---|---|---|---|
-| 1 | **Météo lisible** | Verdict « maintenant » et pourquoi, jours, frise de la journée, détail d'une heure, créneaux | Tableau heure par heure, 5 jours, « Prévoir une visite » | **v5.22, en PR** |
-| 2 | Barre du bas | Quatre rubriques, API au centre, bandeau miel doux | API au centre déjà en place (alveoles.js) | À comparer |
-| 3 | Transitions | Aller, retour, onglets, feuilles qui montent, messages qui descendent ; « moins d'animations » respecté | Transitions de vue en partie (alveoles.js), feuilles | À compléter |
+| 1 | **Météo lisible** | Verdict « maintenant » et pourquoi, jours, frise de la journée, détail d'une heure, créneaux | Tableau heure par heure, 5 jours, « Prévoir une visite » | **v5.22, PR #27** |
+| 2 | Barre du bas | Quatre rubriques, API au centre, bandeau miel doux | API au centre déjà en place (alveoles.js) | **Conforme, rien à changer** (vérifié en v5.23) |
+| 3 | Transitions | Aller, retour, onglets, feuilles qui montent, messages qui descendent ; « moins d'animations » respecté | Transitions de vue en partie (alveoles.js), feuilles | **v5.23, en PR** |
 | 4 | Accueil | Phrase du jour, alvéoles une à une, créneau de visite | Phrase, alvéoles, créneau ; frise courte en v5.22 | À compléter |
 | 5 | Fiche ruche | Courbe de poids tracée, message d'API, journal | Onglets, journal | À faire |
 | 6 | Visite et vente | Bouton d'enregistrement fixe en bas, compteurs qui réagissent | Barre d'enregistrement de visite | À comparer |

@@ -5,6 +5,35 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.23 · à publier en recette · transitions entre écrans (chantier des écrans, étapes 2 et 3)
+Aucune migration. S'appuie sur la v5.22 (météo lisible).
+
+Étape 2, barre du bas : rien à changer. Elle correspond déjà aux maquettes : Accueil, Ruchers, API au centre, Miel,
+Gestion, sur le bandeau miel doux.
+
+Pour l'apiculteur (étape 3) :
+- **Aller** (ouvrir un écran depuis un autre) : le contenu arrive de la droite.
+- **Retour** (« ‹ Gestion », « ‹ Verger »…, ou revenir à l'écran d'avant) : il arrive de la gauche.
+- **Changer de rubrique** (barre du bas, menu de côté) ou de sous-onglet (Liste, Carte, Santé) : il monte en fondu.
+- Les barres du haut et du bas ne bougent pas. Les feuilles qui montent du bas et les messages qui descendent du
+  haut restent comme avant ; l'alvéole qui devient l'en-tête de la fiche ruche aussi.
+- **Sur ordinateur, Échap** revient à l'écran précédent, jamais pendant une saisie (champ actif, visite, vente, tournée).
+- Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `transitions.js` (chargé en dernier) enveloppe `render()` : l'écran change tout de suite, comme avant,
+et seul le contenu neuf (`.wrap`) joue son entrée selon `<html data-vt>` (`styles/38-transitions.css`). Choix fait
+après essai des transitions de vue du navigateur : elles retardent l'écran d'une image, ce que du code et des tests
+existants ne supportent pas. Cette version marche aussi sur Firefox. Scénario `tests/etapes_vt.txt` ; attentes
+ajoutées dans `etapes_n4.txt` et `etapes_v2.txt`.
+
+**À vérifier**
+1. Gestion › Fournisseurs puis « ‹ Gestion » : l'écran arrive de la droite, puis revient de la gauche.
+2. Barre du bas, de rubrique en rubrique : fondu court ; la barre elle-même reste immobile.
+3. Ruchers › Liste, Carte, Santé : fondu, pas de glissement.
+4. Ouvrir une ruche depuis Ruchers : l'alvéole grossit en en-tête comme avant, sans saccade.
+5. Sur ordinateur, Échap dans Fournisseurs : retour à Gestion ; Échap dans une visite en cours : rien ne change.
+6. Réglages du téléphone › réduire les animations : les écrans changent d'un coup.
+
 ## v5.22 · à publier en recette · météo lisible (chantier des écrans, étape 1)
 Aucune migration. Même service météo (Open-Meteo), mêmes seuils réglables. Premier lot du chantier des écrans tirés
 des maquettes UX/UI du 10 nov. 2026 (`docs/ROADMAP/CHANTIER_ECRANS.md`).

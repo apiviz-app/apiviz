@@ -1,0 +1,14 @@
+/* ---------- Transitions entre écrans (v5.23, transitions.js) ----------
+   L'écran change tout de suite ; le contenu neuf (.wrap) entre selon le sens posé sur <html data-vt> :
+   aller, de la droite ; retour, de la gauche ; rubrique, en fondu qui monte. Barres du haut, du bas et de côté fixes. */
+html[data-vt=aller] .wrap{animation:vt-droite var(--duree-lente) var(--sortie) both}
+html[data-vt=retour] .wrap{animation:vt-gauche var(--duree-lente) var(--sortie) both}
+html[data-vt=onglet] .wrap{animation:vt-monte var(--duree) var(--sortie) both}
+html[data-vt] body{overflow-x:clip}
+@keyframes vt-droite{from{opacity:0;transform:translateX(28px)}}
+@keyframes vt-gauche{from{opacity:0;transform:translateX(-28px)}}
+@keyframes vt-monte{from{opacity:0;transform:translateY(8px)}}
+/* Fiche ruche (alveoles.js) : la vue entière ne fait plus qu'un fondu, l'alvéole et le contenu font le mouvement. */
+::view-transition-new(root){animation-name:vt-rien}
+@keyframes vt-rien{from{opacity:.6}}
+@media (prefers-reduced-motion:reduce){html[data-vt] .wrap{animation:none}}
