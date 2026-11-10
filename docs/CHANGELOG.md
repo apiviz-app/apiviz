@@ -69,6 +69,72 @@ ajoutées dans `etapes_n4.txt` et `etapes_v2.txt`.
 5. Sur ordinateur, Échap dans Fournisseurs : retour à Gestion ; Échap dans une visite en cours : rien ne change.
 6. Réglages du téléphone › réduire les animations : les écrans changent d'un coup.
 
+## v5.24 · à publier en recette · une page de connexion dans l'air de l'application
+Aucune migration. Maquette : https://claude.ai/artifact/5PRMioYfLHfGFUT9DMWT1e
+
+Pour l'apiculteur :
+- **Fini le rectangle blanc sur fond sapin.** La page de connexion reprend les codes de l'application : bandeau miel
+  doux, rayon d'alvéoles avec l'œil-alvéole, feuille blanche qui monte du bas, et API qui regarde le formulaire
+  par-dessus la feuille.
+- **Une phrase par situation** : « Tes ruches t'attendent. » (connexion), « Ton rucher en trois questions. »
+  (création), « Un lien pour repartir. » (mot de passe oublié), « Choisis ton nouveau mot de passe. ».
+- **Sur ordinateur**, deux colonnes : à gauche la signature « Voir clair dans ses ruches. » et trois phrases sur ce que
+  fait Apiviz (« Tu parles, API note », « Le bon jour pour ouvrir tes ruches », « Ton miel, de la récolte au pot
+  vendu »), à droite le formulaire dans une carte.
+- **Afficher / Masquer** le mot de passe pendant la saisie.
+- L'e-mail déjà saisi est gardé en passant de « Se connecter » à « Créer mon compte » ou « Mot de passe oublié ».
+- Une erreur (« E-mail ou mot de passe incorrect. ») s'affiche en rouge en tête de feuille ; une information (lien
+  envoyé) reste en miel doux.
+- « Voir un rucher d'exemple » et « Où vont mes données » sont accessibles depuis la page de connexion.
+- À la première ouverture, API monte derrière la feuille une fois l'envol du logo terminé (rien ne bouge avec le
+  réglage « moins d'animations »).
+
+Technique : `authView()` d'`app.js` réécrite (classe `cx`, modes `in`, `up`, `reset`, `recovery` dans `data-mode`) ;
+`S.authErr` distingue une erreur d'une information ; action `cxvoir` ; styles `styles/39-connexion.css` ; la phrase
+existe deux fois dans la page (`.cx-tel` dans le bandeau, `.cx-ordi` dans la carte), une seule est affichée ;
+`demarrage.js` et `exploitations.js` adaptés pour l'invitation ; scénario `tests/etapes_cx.txt`. L'écran de
+présentation (première visite, fond sapin) n'est pas modifié.
+
+**À vérifier**
+1. Se déconnecter : la page de connexion est claire, le logo joue son envol, puis API apparaît derrière la feuille.
+2. Saisir un mauvais mot de passe : message rouge en haut de la feuille, l'e-mail reste saisi.
+3. Toucher « Afficher » : le mot de passe se lit, « Masquer » le cache.
+4. « Créer mon compte », « Mot de passe oublié », « J'ai déjà un compte » : la phrase du bandeau change, l'e-mail suit.
+5. Sur ordinateur : deux colonnes, rien ne se chevauche en réduisant la fenêtre.
+6. Ouvrir un lien d'invitation sans être connecté : « Tu es invité à rejoindre … » remplace la phrase.
+7. Se connecter pour de bon : l'application s'ouvre comme avant.
+
+## v5.23 · à publier en recette · du logo à API, en mouvement
+Aucune migration. Six petites animations relient le logo, le symbole et API. Planche de démonstration :
+https://claude.ai/artifact/CQkJaztnC3GpCySnVT71g2
+
+Pour l'apiculteur :
+- **Chargement** : l'œil-alvéole se réveille. Sa pupille se dédouble en deux yeux, les antennes poussent, API salue,
+  puis redevient le symbole. En dessous, le logo et **une alvéole par ruche** qui se remplit de miel (« Mise à jour
+  de tes 6 ruches » ; le nombre est celui de la dernière ouverture).
+- **Connexion** : à la première apparition, les deux points du logo s'envolent, deviennent API à côté du mot, qui
+  salue, puis ils reprennent leur place. Toucher le logo rejoue le mouvement.
+- **Écrans vides** (« Aucune vente », « Ajoute ta première ruche »…) : le symbole suit le doigt ou la souris et cligne.
+- **Saisie réussie** : la confirmation trace une coche et quelques alvéoles jaillissent (API saute toujours dans la barre).
+- **Bouton API** : il s'enfonce sous le doigt, quitte la barre, arrive par le bas dans « Que veux-tu faire ? », et
+  revient à sa place quand la feuille se ferme.
+- Tout se fige avec le réglage « moins d'animations » du téléphone : chaque écran reste lisible sans mouvement.
+
+Technique : `mouvement.js` (éléments `<mv-eveil>`, `<mv-logo>`, `<mv-oeil>`, chargé avant `app.js` pour servir dès le
+premier écran ; coche et bouton API branchés une fois tous les scripts chargés) ; styles `styles/38-mouvement.css` ;
+trois lignes d'`app.js` (chargement, connexion, écran vide) ; clé locale `apidoo-nb-ruches` ; scénario
+`tests/etapes_mv.txt`. Le logo animé est lu depuis `logo-apiviz.svg`, pas recomposé.
+
+**À vérifier**
+1. Ouvrir l'application déjà connecté : pendant le chargement, le symbole devient API, six alvéoles se remplissent.
+2. Se déconnecter : sur la page de connexion, les deux points du logo s'envolent une fois et API apparaît à droite du
+   mot ; toucher le logo rejoue. Se tromper de mot de passe ne relance pas l'animation.
+3. Un écran vide (une exploitation sans vente, par exemple) : la pupille suit le doigt, puis reprend sa ronde.
+4. Enregistrer une visite ou une vente : coche tracée et éclats sur la confirmation ; un message d'erreur n'en a pas.
+5. Toucher API dans la barre du bas : il disparaît de la barre, arrive dans la feuille, revient à la fermeture
+   (croix, touche Retour, ou choix d'une tuile).
+6. Réglages du téléphone › réduire les animations : rien ne bouge, tout reste lisible.
+
 ## v5.22 · à publier en recette · météo lisible (chantier des écrans, étape 1)
 Aucune migration. Même service météo (Open-Meteo), mêmes seuils réglables. Premier lot du chantier des écrans tirés
 des maquettes UX/UI du 10 nov. 2026 (`docs/ROADMAP/CHANTIER_ECRANS.md`).
