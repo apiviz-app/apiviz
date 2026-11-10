@@ -67,7 +67,7 @@
     page.click("[data-act=uonglet][data-v=clients]"); page.wait_for_selector(".u-client")
     verif(page.locator(".u-client").count() == 2 and page.locator(".u-client a[href^='tel:']").count() == 1, "onglet clients")
     # Carte
-    page.evaluate("ACT.go('plus')")
+    page.evaluate("ACT.go('plus')"); page.wait_for_selector(".n4-g[data-v=pilotage]", timeout=5000)
     verif(page.locator(".n4-g[data-v=pilotage]").count() == 1, "Bilan dans Gestion")
     page.evaluate("ACT.go('ruches')"); verif(page.locator(".subtabs [data-v=carte]").count() == 1, "Carte dans les onglets de Ruchers")
     page.click(".subtabs [data-v=carte]"); page.wait_for_selector(".leaflet-container", timeout=10000)
