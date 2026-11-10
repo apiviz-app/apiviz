@@ -1,4 +1,4 @@
-// Apidoo — accès hors ligne.
+// Apiviz — accès hors ligne.
 // Garde sur le téléphone les dernières données et les saisies faites sans réseau
 // (visites, ventes, récoltes, dépenses, tâches), puis les envoie au retour du réseau.
 // S'appuie sur app.js (S, sb, loadAll, refresh, render, toast…) et photos.js (PH).

@@ -1,4 +1,4 @@
-// Charge l'exploitation de démonstration (IT-04, AP-FEAT-018, AP-US-017) dans une base Apidoo de recette ou de test,
+// Charge l'exploitation de démonstration (IT-04, AP-FEAT-018, AP-US-017) dans une base Apiviz de recette ou de test,
 // depuis le fichier unique tests/demo/exploitation-demo.json : 3 ruchers, 20 colonies, saisons 2025 et 2026.
 // Passe par l'API, connecté avec un compte d'essai, et par les fonctions SQL (creer_exploitation_demo, creer_visite,
 // creer_vente, regler) : la RLS et les contrôles de la base s'appliquent comme pour l'application.

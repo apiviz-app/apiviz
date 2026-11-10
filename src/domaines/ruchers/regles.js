@@ -1,4 +1,4 @@
-// Apidoo — règles des ruchers (IT-05, AP-FEAT-025 à 027). Fonctions pures, testées par tests/unitaires/ruchers.test.mjs.
+// Apiviz — règles des ruchers (IT-05, AP-FEAT-025 à 027). Fonctions pures, testées par tests/unitaires/ruchers.test.mjs.
 // Le rucher est une ligne de la table ruchers (migration 015). Le texte ruches.rucher reste rempli et synchronisé par
 // la base : c'est encore la clé de regroupement des anciens modules (U.ruchers()). Ces règles lisent la table quand
 // elle est là, et retombent sur le texte sinon (base sans 015, données d'exemple, base simulée des tests).

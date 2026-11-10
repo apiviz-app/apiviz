@@ -1,4 +1,4 @@
-// Apidoo — envoi des erreurs au journal de production (IT-03, AP-FEAT-016).
+// Apiviz — envoi des erreurs au journal de production (IT-03, AP-FEAT-016).
 // app.js garde journaliser() (console et 50 entrées sur l'appareil, AP-FEAT-036) ; cette file en reçoit une copie,
 // regroupe les erreurs identiques et les envoie par la fonction SQL journaliser_erreur (migration 013).
 // Rien n'est envoyé sans session ni réseau ; jamais d'e-mail ni de donnée métier : seulement version, écran,

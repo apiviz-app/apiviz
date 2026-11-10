@@ -1,6 +1,6 @@
 # Web et mobile : architecture
 
-Révisé le 6 novembre 2026. La proposition du 4 novembre (« rester sur le web, stores facultatifs, Google Play en TWA ») est remplacée : **Apidoo devient une application publiée sur le web et sur les stores, à partir d'un seul code.** Le détail, les règles des stores, les paiements et les sources sont dans [`docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md`](ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
+Révisé le 6 novembre 2026. La proposition du 4 novembre (« rester sur le web, stores facultatifs, Google Play en TWA ») est remplacée : **Apiviz devient une application publiée sur le web et sur les stores, à partir d'un seul code.** Le détail, les règles des stores, les paiements et les sources sont dans [`docs/ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md`](ROADMAP/12_DISTRIBUTION_ET_MONETISATION.md).
 
 ## Aujourd'hui
 
@@ -24,7 +24,7 @@ GitHub reste l'outil du code, des pull requests et des Actions ; seule la public
 
 ## Pourquoi Capacitor, et pas Expo comme Gladoo
 
-Gladoo est écrit en Expo depuis le début. Apidoo est du JavaScript sans framework : passer à Expo voudrait dire réécrire tous les écrans. Capacitor embarque le site existant dans une vraie application iOS et Android et donne accès aux fonctions du téléphone (photo, QR, position, notifications, achats intégrés). Un seul code continue de servir le web et les deux stores. Si Capacitor ne tient pas sur vrais téléphones, une réécriture sera réexaminée au jalon J7 (après IT-30).
+Gladoo est écrit en Expo depuis le début. Apiviz est du JavaScript sans framework : passer à Expo voudrait dire réécrire tous les écrans. Capacitor embarque le site existant dans une vraie application iOS et Android et donne accès aux fonctions du téléphone (photo, QR, position, notifications, achats intégrés). Un seul code continue de servir le web et les deux stores. Si Capacitor ne tient pas sur vrais téléphones, une réécriture sera réexaminée au jalon J7 (après IT-30).
 
 La Trusted Web Activity (Chrome en plein écran sur Android) prévue dans la version précédente de ce document est abandonnée : elle ne couvrait qu'Android.
 

@@ -1,4 +1,4 @@
-// Apidoo — registre d'élevage (version bêta).
+// Apiviz — registre d'élevage (version bêta).
 // Les traitements sont notés dans la visite ; le registre les rassemble par année,
 // s'imprime en PDF et s'exporte pour Excel. S'appuie sur app.js (S, sb, shell, table…).
 const RG = (() => {

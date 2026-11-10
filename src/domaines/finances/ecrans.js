@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine finances (IT-03).
+// Apiviz — écrans du domaine finances (IT-03).
 export default [
   // Dépenses : app.js, complétées par ergonomie.js (chiffres et filtre par poste).
   { id: "compta", titre: "Dépenses", rubrique: "plus", rendu: () => { viewCompta(); ER.completerDepenses(); } },

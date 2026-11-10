@@ -97,7 +97,7 @@ def transformer(rel):
 entrees = re.findall(r'<script type="module" src="\./(src/[^"]+)"></script>', index)
 if entrees:
     for e in entrees: transformer(e)
-    tete = """// Apidoo — modules de src/ regroupés à l'assemblage (scripts/regrouper.py). Ne pas modifier : modifier src/.
+    tete = """// Apiviz — modules de src/ regroupés à l'assemblage (scripts/regrouper.py). Ne pas modifier : modifier src/.
 const __m = {}, __f = {};
 const __d = (nom, f) => { __f[nom] = f; };
 const __r = (nom) => {

@@ -1,4 +1,4 @@
-// Apidoo — fonctionnalités essentielles : météo par heure, rappels, réglages en blocs, registre complet,
+// Apiviz — fonctionnalités essentielles : météo par heure, rappels, réglages en blocs, registre complet,
 // fiche de lot, factures et conseils du mois. Chargé après ergonomie.js. Styles : fin de index.html.
 const ES = (() => {
   const U = UX;
@@ -85,7 +85,7 @@ const ES = (() => {
     const lignes = l.map((r) => `<button type="button" class="u-todo ${v.has(r.cle) ? "er-vu" : ""}" data-act="${r.act}" data-v="${esc(r.v)}"><span class="u-todo-t"><b>${esc(r.titre)}</b><span class="small">${esc(r.sous)}</span></span><span class="u-chip ${CL[r.cl]}">${esc(r.tag)}</span></button>`).join("");
     const bascule = (titre, sous, on, act, val) => `<div class="er-rang"><span class="u-todo-t"><b>${esc(titre)}</b>${sous ? `<span class="small">${esc(sous)}</span>` : ""}</span><button type="button" class="er-bascule ${on ? "on" : ""}" role="switch" aria-checked="${on}" aria-label="${esc(titre)}" data-act="${act}" data-v="${val}"></button></div>`;
     const dispo = "Notification" in window, perm = dispo ? Notification.permission : "denied";
-    const notif = dispo ? bascule("Notifications sur cet appareil", perm === "denied" ? "Bloquées dans les réglages du navigateur" : "Quand Apidoo est ouverte", perm === "granted" && memo("apidoo-notif") !== "0", "ernotif", "") : '<p class="small">Cet appareil ne propose pas les notifications. Sur iPhone, ajoute d’abord Apidoo à l’écran d’accueil.</p>';
+    const notif = dispo ? bascule("Notifications sur cet appareil", perm === "denied" ? "Bloquées dans les réglages du navigateur" : "Quand Apiviz est ouverte", perm === "granted" && memo("apidoo-notif") !== "0", "ernotif", "") : '<p class="small">Cet appareil ne propose pas les notifications. Sur iPhone, ajoute d’abord Apiviz à l’écran d’accueil.</p>';
     shell("Rappels", "Ce qui demande ton attention", "", `<div class="er-deux">
       <section class="card u-liste er-liste-r"><div class="u-entete"><h2>À voir</h2>${nb ? '<button type="button" class="link" data-act="ertoutvu">Tout marquer comme vu</button>' : ""}</div>${lignes || '<p class="small">Rien à signaler pour le moment.</p>'}</section>
       <div class="er-pile"><section class="card"><h2>Comment te prévenir</h2>${notif}<div class="er-rang"><span class="u-todo-t"><b>Agenda de ton téléphone</b><span class="small">Tâches et échéances</span></span>${RP.bouton() || '<span class="small">Aucune tâche datée</span>'}</div></section>
@@ -119,7 +119,7 @@ const ES = (() => {
   const BANDEAUX = {
     miel: ["Miel doux", {}],
     sauge: ["Sauge", { "--bandeau": "#DFEDE4" }],
-    vert: ["Vert Apidoo", { "--bandeau": "#2F6B4F", "--bandeau-texte": "#fff", "--bandeau-lien": "#fff", "--bandeau-actif": "#FBEFC9", "--bandeau-actif-texte": "#1B2420", "--bandeau-survol": "rgba(255,255,255,.16)" }],
+    vert: ["Vert Apiviz", { "--bandeau": "#2F6B4F", "--bandeau-texte": "#fff", "--bandeau-lien": "#fff", "--bandeau-actif": "#FBEFC9", "--bandeau-actif-texte": "#1B2420", "--bandeau-survol": "rgba(255,255,255,.16)" }],
     sapin: ["Sapin", { "--bandeau": "#1E2B24", "--bandeau-texte": "#fff", "--bandeau-lien": "#C5D0C8", "--bandeau-actif": "#2C3D33", "--bandeau-survol": "rgba(255,255,255,.12)" }],
   };
   const bandeau = () => (BANDEAUX[memo("apidoo-bandeau")] ? memo("apidoo-bandeau") : "miel");
@@ -128,7 +128,7 @@ const ES = (() => {
     ["--bandeau", "--bandeau-texte", "--bandeau-lien", "--bandeau-actif", "--bandeau-actif-texte", "--bandeau-survol"].forEach((k) => (v[k] ? r.style.setProperty(k, v[k]) : r.style.removeProperty(k)));
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", v["--bandeau"] || "#FBEFC9");
     const sombre = bandeau() === "vert" || bandeau() === "sapin";
-    document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apidoo-clair.svg" : "logo-apidoo.svg"; });
+    document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apiviz-clair.svg" : "logo-apiviz.svg"; });
   }
   appliquerBandeau();
   // Écran « reglages » : enregistré dans le noyau (src/domaines/compte/ecrans.js, ES.ecranReglages).
@@ -213,7 +213,7 @@ const ES = (() => {
         ${l.length ? `<section class="card tbl er-tb">${table(["Date", "Ruche", "Intervention"], lignes, "")}</section>` : `<p class="small">Aucune intervention notée en ${an}.</p>`}`);
     } else {
       wrap.insertAdjacentHTML("beforeend", `<section class="card er-fiche-c"><dl class="er-dl"><dt>Nom</dt><dd>${esc(c.nom)}</dd><dt>NAPI</dt><dd>${esc(c.napi) || "–"}</dd><dt>SIRET</dt><dd>${esc(c.siret) || "–"}</dd><dt>Adresse</dt><dd>${esc(c.adresse) || "–"}</dd><dt>Ruchers</dt><dd>${esc(U.ruchers().map(([k, rs]) => `${U.nomRucher(k)} (${rs.length})`).join(", ")) || "–"}</dd></dl><button type="button" class="btn" data-act="errgexpl">Modifier</button></section>
-        <p class="small">Le registre se garde au moins 5 ans. Apidoo ne supprime rien automatiquement : pense aux exports.</p>`);
+        <p class="small">Le registre se garde au moins 5 ans. Apiviz ne supprime rien automatiquement : pense aux exports.</p>`);
     }
   };
   ACT.errgtab = (k) => { S.rgTab = k; render(); };

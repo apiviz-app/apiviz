@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine ruchers (IT-03, complétés en IT-05).
+// Apiviz — écrans du domaine ruchers (IT-03, complétés en IT-05).
 import { completerFiche, actions } from "./fiche.js";
 import { ecran as ecranDeplacer, actions as actionsDeplacer } from "./deplacer.js";
 

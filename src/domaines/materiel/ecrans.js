@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine matériel (IT-03). Implémentations d'app.js ; l'écran Matériel est complété par la section
+// Apiviz — écrans du domaine matériel (IT-03). Implémentations d'app.js ; l'écran Matériel est complété par la section
 // « Ruches physiques » (IT-06, src/domaines/colonies/contenants.js), visible seulement si le suivi est activé.
 import { completerMateriel, actions } from "../colonies/contenants.js";
 

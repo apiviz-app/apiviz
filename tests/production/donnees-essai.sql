@@ -1,4 +1,4 @@
--- Apidoo — données d'essai pour vérifier en production : Déplacer des ruches, Noter une intervention, Créer la facture.
+-- Apiviz — données d'essai pour vérifier en production : Déplacer des ruches, Noter une intervention, Créer la facture.
 -- IT-02 (AP-US-005). À coller dans Supabase › apidoo › SQL Editor, puis « Run », UNIQUEMENT avec l'accord du responsable.
 -- Prérequis : migrations 010 et 011 appliquées (c'est le cas depuis le 5 nov. 2026).
 -- Relançable : identifiants fixes, « on conflict do nothing ». Tout se retire avec nettoyage-essai.sql.

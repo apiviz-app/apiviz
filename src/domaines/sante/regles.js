@@ -1,4 +1,4 @@
-// Apidoo — règles sanitaires (IT-03, AP-FEAT-013). Fonctions pures, reprises d'ux.js.
+// Apiviz — règles sanitaires (IT-03, AP-FEAT-013). Fonctions pures, reprises d'ux.js.
 // Aucun seuil nouveau : le seuil par défaut (3 %) est celui d'ux.js depuis la v2 ; il se règle dans Réglages.
 
 /**

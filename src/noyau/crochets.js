@@ -1,4 +1,4 @@
-// Apidoo — crochets du rendu et de la coquille (IT-03, AP-FEAT-002).
+// Apiviz — crochets du rendu et de la coquille (IT-03, AP-FEAT-002).
 // Remplacent les surcharges en chaîne de window.render et window.shell : chaque module déclare ce qu'il fait
 // avant ou après, sous un nom, et render() / shell() d'app.js les appellent dans un ordre fixe et lisible.
 //

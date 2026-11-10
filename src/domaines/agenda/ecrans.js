@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine agenda (IT-03), migrés sans changement.
+// Apiviz — écrans du domaine agenda (IT-03), migrés sans changement.
 export default [
   // Agenda et tâches : app.js.
   { id: "agenda", titre: "Agenda", rubrique: "plus", rendu: () => viewAgenda() },

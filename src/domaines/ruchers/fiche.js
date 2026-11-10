@@ -1,4 +1,4 @@
-// Apidoo — fiche rucher et actions du domaine ruchers (IT-05, AP-FEAT-025 et AP-FEAT-026).
+// Apiviz — fiche rucher et actions du domaine ruchers (IT-05, AP-FEAT-025 et AP-FEAT-026).
 // Complète l'écran « rucher » rendu par AL.vueRucher (alveoles.js) : boutons Renommer / Infos / Archiver, et section
 // « Infos » repliée (accès, propriétaire avec bouton d'appel, capacité, environnement, ressources, point d'eau, notes).
 // Les actions sont déclarées une seule fois par l'écran « rucher » (src/domaines/ruchers/ecrans.js) et enregistrées

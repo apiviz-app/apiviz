@@ -1,4 +1,4 @@
-// Apidoo — passerelle provisoire entre les modules ES (src/) et les scripts classiques (*.js de la racine).
+// Apiviz — passerelle provisoire entre les modules ES (src/) et les scripts classiques (*.js de la racine).
 // Chargée en premier : index.html marque tous les scripts « defer », qui s'exécutent dans l'ordre du document,
 // modules compris. Les anciens scripts trouvent ici les règles pures sous window.Regles.
 // À retirer quand plus aucun script classique ne les appelle (fin de la transition, doc 03 §3).

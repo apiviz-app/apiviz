@@ -1,4 +1,4 @@
-// Apidoo — règles des visites (IT-03, AP-FEAT-014). Fonctions pures.
+// Apiviz — règles des visites (IT-03, AP-FEAT-014). Fonctions pures.
 // appliquerVisite reproduit dans les données du téléphone ce que fait creer_visite (migrations 006 à 009) :
 // la visite, ses intrants, la baisse du stock des articles et l'état de la ruche. Elle sert
 //   - à afficher une visite gardée sur le téléphone (hors ligne, offline.js) ;

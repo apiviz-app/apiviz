@@ -1,4 +1,4 @@
-// Apidoo — interface « Alvéoles » : compagnon API, accueil en une phrase, carte des ruches, écrans allégés.
+// Apiviz — interface « Alvéoles » : compagnon API, accueil en une phrase, carte des ruches, écrans allégés.
 // Les styles sont à la fin de index.html (rubrique « Interface Alvéoles »). Le bouton central garde la clé « saisir ».
 // API n'est pas encore relié à une intelligence artificielle : il ouvre la saisie et la recherche.
 // Quatre rubriques : Accueil, Ruchers, Miel, Gestion. Sur ordinateur, le menu devient une barre en haut.
@@ -9,7 +9,7 @@ const AL = (() => {
   // ---------- Le compagnon ----------
   // Dessin et animations : api-compagnon.js, repris tel quel de la charte.
   const compagnon = (humeur = "repos", taille = 62) =>
-    Apidoo.compagnon(humeur, taille).replace("<api-compagnon ", `<api-compagnon class="al-api" data-humeur="${humeur}" muet `);
+    Apiviz.compagnon(humeur, taille).replace("<api-compagnon ", `<api-compagnon class="al-api" data-humeur="${humeur}" muet `);
   const humeur = () => (typeof HL != "undefined" && HL.horsLigne() ? "horsligne" : "repos");
 
   // API réagit : il saute quand une saisie aboutit, s'endort quand le réseau part.
@@ -37,10 +37,10 @@ const AL = (() => {
   // Après chaque coquille (crochet du noyau, IT-03) : logo, compagnon API dans la barre, liens de retour.
   Noyau.crochets.sur("apresCoquille", "alveoles", () => {
     if (S.route !== "dash") S.alVu = false;
-    document.querySelectorAll('.topbar img[src="logo-apidoo-clair.svg"]').forEach((i) => { i.src = "logo-apidoo.svg"; });
+    document.querySelectorAll('.topbar img[src="logo-apiviz-clair.svg"]').forEach((i) => { i.src = "logo-apiviz.svg"; });
     document.querySelectorAll('.bottom [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur()); });
     document.querySelectorAll('.side [data-v="saisir"] > svg').forEach((s) => { s.outerHTML = compagnon(humeur(), 34); });
-    document.querySelectorAll('.side .brand img').forEach((i) => { i.src = "logo-apidoo.svg"; });
+    document.querySelectorAll('.side .brand img').forEach((i) => { i.src = "logo-apiviz.svg"; });
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
     if (S.route === "varroa") lienSante();

@@ -1,9 +1,9 @@
-// Apidoo — météo de chaque rucher (Open-Meteo, sans compte) et calcul du meilleur créneau pour ouvrir les ruches.
+// Apiviz — météo de chaque rucher (Open-Meteo, sans compte) et calcul du meilleur créneau pour ouvrir les ruches.
 // Chaque rucher utilise sa position (table ruchers, IT-05) ; à défaut, la moyenne de ses ruches placées sur la carte.
 // Chargé avant alveoles.js.
 //
 // Seuils : température d'après les repères publiés par les apiculteurs (détail et sources dans docs/TECHNIQUE.md).
-// Le vent et la pluie n'ont pas de chiffre établi : ce sont des choix d'Apidoo, à ajuster à l'usage.
+// Le vent et la pluie n'ont pas de chiffre établi : ce sont des choix d'Apiviz, à ajuster à l'usage.
 const MT = (() => {
   const SEUILS = {
     ouvrir: 15,   // °C : visite normale

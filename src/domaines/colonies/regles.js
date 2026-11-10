@@ -1,4 +1,4 @@
-// Apidoo — règles des colonies : statut, emplacements, déplacements, contenants (IT-06, AP-FEAT-028 à 031).
+// Apiviz — règles des colonies : statut, emplacements, déplacements, contenants (IT-06, AP-FEAT-028 à 031).
 // Fonctions pures, testées par tests/unitaires/colonies.test.mjs. Elles reproduisent côté téléphone ce que fait la base
 // (migration 016) : affichage immédiat d'une saisie gardée hors ligne, et lecture sur une base sans 016 (repli).
 

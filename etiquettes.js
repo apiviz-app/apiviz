@@ -1,4 +1,4 @@
-// Apidoo — étiquettes de pots (version bêta).
+// Apiviz — étiquettes de pots (version bêta).
 // Une planche A4 de 21 étiquettes 63,5 × 38,1 mm (format courant, type Avery L7160), à imprimer à 100 %.
 // S'appuie sur app.js (S, cfg, sheet, toast…).
 const ET = (() => {

@@ -1,4 +1,4 @@
-// Apidoo — visite à la voix : on parle, les alvéoles se remplissent, on relit, on enregistre.
+// Apiviz — visite à la voix : on parle, les alvéoles se remplissent, on relit, on enregistre.
 // Elle s'ouvre par-dessus le formulaire de visite et enregistre par lui : tournée, hors ligne et registre ne changent pas.
 const VX = (() => {
   const Reco = () => window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -112,7 +112,7 @@ const VX = (() => {
     let d = document.getElementById("alVoix");
     if (!d) { d = document.createElement("dialog"); d.id = "alVoix"; d.className = "vx"; document.body.append(d); d.addEventListener("cancel", (ev) => { ev.preventDefault(); ACT.vxquitter(); }); }
     d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div><b>${esc(r.nom)}</b><span class="small">Visite à la voix</span></div></header>
-      <div class="vx-scene">${Apidoo.compagnon("ecoute", 132)}</div>
+      <div class="vx-scene">${Apiviz.compagnon("ecoute", 132)}</div>
       <p class="vx-dit vide" aria-live="polite"></p>
       <div class="vx-champs"></div>
       <div class="vx-pied"><button type="button" class="vx-pause" data-act="vxpause">Mettre en pause</button><button type="button" class="btn block" data-act="vxfin">J’ai terminé</button><p class="vx-aide" aria-live="polite"></p></div>`;
@@ -139,7 +139,7 @@ const VX = (() => {
     const ligne = (nom, v, alerte = "") => `<div class="vx-l ${alerte ? "alerte" : ""}"><span>${esc(nom)}${alerte ? `<em>${esc(alerte)}</em>` : ""}</span><span>${esc(v || "Pas dit")}</span></div>`;
     const lignes = CHAMPS.map(([k, nom]) => ligne(nom, E.v[k])).join("") +
       ligne("Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : "", ecart !== null && Math.abs(ecart) >= 2 ? `À vérifier, ${ecart > 0 ? "+" : "−"}${n(Math.abs(ecart))} kg par rapport à la dernière pesée` : "");
-    d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div class="vx-api">${Apidoo.compagnon("repond", 30).replace("<api-compagnon ", "<api-compagnon muet ")}API</div></header>
+    d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div class="vx-api">${Apiviz.compagnon("repond", 30).replace("<api-compagnon ", "<api-compagnon muet ")}API</div></header>
       <div class="vx-relire"><h2>Voilà ce que j’ai noté pour ${esc(E.nom)}. Vérifie avant d’enregistrer.</h2><div class="vx-t">${lignes}</div>
       ${E.final ? `<label class="vx-note">Note<textarea id="vx_note" rows="3">${esc(E.final)}</textarea></label>` : ""}</div>
       <div class="vx-pied"><div class="vx-deux"><button type="button" class="btn main" data-act="vxenreg">${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button><button type="button" class="btn" data-act="vxcorriger">Au doigt</button></div></div>`;
@@ -169,7 +169,7 @@ const VX = (() => {
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<h2>Avant de dicter</h2>
       <p>La dictée utilise la reconnaissance vocale de ton navigateur. Selon ton téléphone, ce que tu dis peut être envoyé au fournisseur du navigateur (Google pour Chrome et Android, Apple pour Safari et l’iPhone) pour être transformé en texte.</p>
-      <p class="small">Apidoo ne garde pas l’audio : seul le texte que tu relis et enregistres est conservé. <a href="confidentialite.html" target="_blank" rel="noopener">Où partent tes données</a></p>
+      <p class="small">Apiviz ne garde pas l’audio : seul le texte que tu relis et enregistres est conservé. <a href="confidentialite.html" target="_blank" rel="noopener">Où partent tes données</a></p>
       <div class="actions"><button type="button" class="btn main" data-act="vxaccord">Continuer avec la dictée</button><button type="button" class="btn" data-act="vxdoigt">Saisir au doigt</button></div>`;
     $sheet.showModal();
   }

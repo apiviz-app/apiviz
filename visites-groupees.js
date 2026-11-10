@@ -1,4 +1,4 @@
-// Apidoo — visite de plusieurs ruches (version bêta).
+// Apiviz — visite de plusieurs ruches (version bêta).
 // Une même saisie (observations, intrants par ruche, traitement) enregistrée pour chaque ruche choisie.
 // S'appuie sur app.js (S, sb, ACT, viewVisite…), offline.js (HL), photos.js (PH) et registre.js (RG).
 const VR = (() => {

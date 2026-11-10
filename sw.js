@@ -1,4 +1,4 @@
-// Apidoo — service worker : garde l'application sur le téléphone pour l'ouvrir sans réseau.
+// Apiviz — service worker : garde l'application sur le téléphone pour l'ouvrir sans réseau.
 // Les données (Supabase) ne passent pas par ici : offline.js s'en occupe.
 const VERSION = "apidoo-dev"; // remplie à l'assemblage : date + commit (scripts/generer-coquille.py)
 // Liste remplie à l'assemblage depuis index.html (scripts/generer-coquille.py, IT-03) : ne plus l'écrire à la main.
@@ -52,7 +52,7 @@ self.addEventListener("fetch", (e) => {
   }
 });
 
-// Un clic sur une notification rouvre Apidoo sur les rappels.
+// Un clic sur une notification rouvre Apiviz sur les rappels.
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((l) => (l[0] ? l[0].focus() : self.clients.openWindow("./"))));

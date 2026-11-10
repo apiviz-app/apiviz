@@ -1,4 +1,4 @@
-# Apidoo
+# Apiviz (anciennement Apidoo)
 
 - Rien n'est fusionné sur `main`, mis en production ni appliqué sur la base `apidoo` sans l'accord de Pierre-Louis.
 - Travailler sur une branche `claude/…` et ouvrir une pull request. Suivre `docs/PROCESSUS.md`.

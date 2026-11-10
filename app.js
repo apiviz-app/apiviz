@@ -1,4 +1,4 @@
-// Apidoo — cœur de l'application (app.js).
+// Apiviz — cœur de l'application (app.js).
 //
 // Provenance : la source d'origine de ce fichier n'existe plus (décision D-01, 6 nov. 2026).
 // Cette version lisible a été reconstituée en novembre 2026 (IT-00) à partir du fichier minifié publié
@@ -363,7 +363,7 @@ async function saveCfg(modifs, message) {
 function authView() {
   const mode = S.authMode;
   $app.innerHTML = `<div class="auth"><form data-form="auth">
-    <div class="brand"><img src="logo-apidoo.svg" alt="Apidoo" height="38"></div>
+    <div class="brand"><img src="logo-apiviz.svg" alt="Apiviz" height="38"></div>
     <p class="sub">Le carnet de bord de ton rucher</p>
     ${
       S.recovery
@@ -500,11 +500,11 @@ function coquilleDeBase(titre, sousTitre, boutons, contenu, surTitre) {
     ).join("");
   $app.innerHTML = `<div class="shell">
     <nav class="side" aria-label="Navigation">
-      <div class="brand"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="30"></div>
+      <div class="brand"><img src="logo-apiviz-clair.svg" alt="Apiviz" height="30"></div>
       ${menuLateral}
       <div class="me"><span class="avatar">${esc(initiale)}</span><span><span class="mail">${esc(S.session.user.email)}</span><button class="link" data-act="logout">Se d\xE9connecter</button></span></div>
     </nav>
-    <header class="topbar"><img src="logo-apidoo-clair.svg" alt="Apidoo" height="24"><button class="avatar" data-act="go" data-v="reglages" aria-label="R\xE9glages">${esc(initiale)}</button></header>
+    <header class="topbar"><img src="logo-apiviz-clair.svg" alt="Apiviz" height="24"><button class="avatar" data-act="go" data-v="reglages" aria-label="R\xE9glages">${esc(initiale)}</button></header>
     <main>${typeof HL != "undefined" ? HL.bandeau() : ""}<div class="wrap">
       <div class="head ${surTitre ? "hero-head" : ""}"><div>${surTitre ? `<p class="eyebrow">${esc(surTitre)}</p>` : ""}<h1>${esc(titre)}</h1>${sousTitre ? `<p class="sub">${esc(sousTitre)}</p>` : ""}</div><div class="actions">${boutons || ""}</div></div>
       ${contenu}
@@ -1290,7 +1290,7 @@ function viewReglages() {
   const reglages = cfg();
   shell(
     "R\xE9glages",
-    "Adapte Apidoo \xE0 ton exploitation",
+    "Adapte Apiviz \xE0 ton exploitation",
     "",
     `
     <form data-form="reglages" class="form">
@@ -1340,12 +1340,12 @@ function rendreEcran() {
   if (S.recovery || !S.session) return authView();
   if (S.member === !1) {
     if (typeof EX != "undefined") return EX.accueil();
-    $app.innerHTML = `<div class="auth"><form><div class="brand"><img src="logo-apidoo.svg" alt="Apidoo" height="38"></div><p>Cette adresse (${esc(S.session.user.email)}) n\u2019a pas encore acc\xE8s aux donn\xE9es.</p><button type="button" class="btn" data-act="logout">Se d\xE9connecter</button></form></div>`;
+    $app.innerHTML = `<div class="auth"><form><div class="brand"><img src="logo-apiviz.svg" alt="Apiviz" height="38"></div><p>Cette adresse (${esc(S.session.user.email)}) n\u2019a pas encore acc\xE8s aux donn\xE9es.</p><button type="button" class="btn" data-act="logout">Se d\xE9connecter</button></form></div>`;
     return;
   }
   if (!S.d) {
     $app.innerHTML =
-      '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apidoo.svg" alt=""></div>';
+      '<div class="loader" role="status" aria-label="Chargement"><img src="symbole-apiviz.svg" alt=""></div>';
     return;
   }
   // Table des écrans du noyau (IT-03, src/domaines/*/ecrans.js) : une seule implémentation par écran.

@@ -1,4 +1,4 @@
-// Apidoo — version 4 de la navigation : Accueil · Ruchers · + · Miel · Gestion.
+// Apiviz — version 4 de la navigation : Accueil · Ruchers · + · Miel · Gestion.
 // Prochaine action sur l'accueil, bouton + unique, Ruchers (liste, carte, santé), fiche ruche avec flèches,
 // menu Gestion rangé par thème, menu du compte, suppression avec « Annuler », chargement en cartes grisées.
 // Chargé en dernier. S'appuie sur app.js, UX, V3, VR, HL, PH et, s'il est là, EX.
@@ -97,7 +97,7 @@ const N4 = (() => {
 
   // ---------- Chargement : cartes grisées ----------
   function squelette() {
-    $app.innerHTML = `<div class="shell n4-squelette" aria-busy="true" aria-label="Chargement"><header class="topbar"><img src="logo-apidoo.svg" alt="Apidoo" height="24"></header>
+    $app.innerHTML = `<div class="shell n4-squelette" aria-busy="true" aria-label="Chargement"><header class="topbar"><img src="logo-apiviz.svg" alt="Apiviz" height="24"></header>
       <main><div class="wrap"><div class="n4-gris" style="height:150px"></div><div class="n4-gris" style="height:220px"></div><div class="n4-gris" style="height:120px"></div></div></main></div>`;
   }
 
@@ -214,9 +214,9 @@ const N4 = (() => {
     return /android/i.test(ua) ? "android" : "ordinateur";
   };
   const ETAPES_INSTALLATION = {
-    ios: ["Ouvre Apidoo dans Safari. Si tu viens d’un lien reçu par e-mail ou message, choisis d’abord « Ouvrir dans Safari ».", "Touche le bouton Partager, le carré avec une flèche vers le haut.", "Choisis « Sur l’écran d’accueil », puis « Ajouter »."],
-    android: ["Ouvre Apidoo dans Chrome.", "Touche le menu ⋮, en haut à droite.", "Choisis « Installer l’application » ou « Ajouter à l’écran d’accueil »."],
-    ordinateur: ["Ouvre Apidoo dans Chrome ou Edge.", "Clique sur l’icône d’installation, à droite de la barre d’adresse.", "Confirme avec « Installer »."],
+    ios: ["Ouvre Apiviz dans Safari. Si tu viens d’un lien reçu par e-mail ou message, choisis d’abord « Ouvrir dans Safari ».", "Touche le bouton Partager, le carré avec une flèche vers le haut.", "Choisis « Sur l’écran d’accueil », puis « Ajouter »."],
+    android: ["Ouvre Apiviz dans Chrome.", "Touche le menu ⋮, en haut à droite.", "Choisis « Installer l’application » ou « Ajouter à l’écran d’accueil »."],
+    ordinateur: ["Ouvre Apiviz dans Chrome ou Edge.", "Clique sur l’icône d’installation, à droite de la barre d’adresse.", "Confirme avec « Installer »."],
   };
   ACT.n4compte = () => {
     const mail = S.session?.user?.email || "";
@@ -240,9 +240,9 @@ const N4 = (() => {
   ACT.n4installer = async () => {
     if (installer) { installer.prompt(); installer = null; return; }
     $sheetForm.onsubmit = (e) => e.preventDefault();
-    $sheetForm.innerHTML = `<section class="n4-bloc n4-installer"><h3>Installer Apidoo</h3>
+    $sheetForm.innerHTML = `<section class="n4-bloc n4-installer"><h3>Installer Apiviz</h3>
       <ol>${ETAPES_INSTALLATION[appareil()].map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
-      <p class="small">Apidoo s’ouvre ensuite depuis son icône, en plein écran, et reste utilisable sans réseau. Tu n’as rien à télécharger depuis un store.</p></section>
+      <p class="small">Apiviz s’ouvre ensuite depuis son icône, en plein écran, et reste utilisable sans réseau. Tu n’as rien à télécharger depuis un store.</p></section>
       <button type="button" class="btn" data-act="n4compte">Retour</button>`;
     if (!$sheet.open) $sheet.showModal();
   };

@@ -1,4 +1,4 @@
-// Apidoo — table des écrans migrés dans le noyau (IT-03). Un fichier par domaine (src/domaines/<domaine>/ecrans.js).
+// Apiviz — table des écrans migrés dans le noyau (IT-03). Un fichier par domaine (src/domaines/<domaine>/ecrans.js).
 // Chaque écran y est défini une seule fois. Les implémentations encore dans les anciens modules (UX, AL, ES, V3…)
 // sont appelées au moment du rendu, jamais au chargement ; l'ordre des compléments y est écrit en clair.
 import accueil from "./accueil/ecrans.js";

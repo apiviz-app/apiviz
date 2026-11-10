@@ -1,4 +1,4 @@
-// Apidoo — version 3 : colonie (reine, hausses, équipement, vie de la colonie), suivi varroa,
+// Apiviz — version 3 : colonie (reine, hausses, équipement, vie de la colonie), suivi varroa,
 // récolte et traçabilité, commandes à livrer, tournée au rucher avec dictée, déclaration annuelle,
 // recherche, activité récente et mode plein soleil.
 // Chargé après ux.js et offline.js. S'appuie sur app.js (S, sb, ACT…), UX, VR, HL, PH.

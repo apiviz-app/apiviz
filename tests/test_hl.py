@@ -1,4 +1,4 @@
-"""Test de bout en bout du mode hors ligne d'Apidoo, avec une base Supabase simulée."""
+"""Test de bout en bout du mode hors ligne d'Apiviz, avec une base Supabase simulée."""
 import json, re, sys, time, uuid, threading, http.server, functools
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright

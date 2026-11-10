@@ -1,4 +1,4 @@
--- Apidoo — retire les données d'essai d'IT-02 (donnees-essai.sql) et tout ce que les essais ont créé dessus.
+-- Apiviz — retire les données d'essai d'IT-02 (donnees-essai.sql) et tout ce que les essais ont créé dessus.
 -- À coller dans Supabase › apidoo › SQL Editor, puis « Run ». Relançable : ne fait rien s'il n'y a plus rien.
 -- Ne supprime que les lignes aux identifiants « e55a1002-… » et ce qui en dépend
 -- (évènements, visites, tâches, récoltes des ruches d'essai ; lignes de la vente d'essai).

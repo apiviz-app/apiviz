@@ -1,4 +1,4 @@
-// Apidoo — écrans du domaine registre (IT-03), migrés sans changement.
+// Apiviz — écrans du domaine registre (IT-03), migrés sans changement.
 export default [
   // Registre d'élevage : essentiels.js (ES.VUES.registre, autour de RG.vue).
   { id: "registre", titre: "Registre d’élevage", rubrique: "plus", rendu: () => ES.VUES.registre() },

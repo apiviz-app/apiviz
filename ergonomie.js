@@ -1,4 +1,4 @@
-// Apidoo — ergonomie : Gestion en blocs, barre de recherche, fenêtres qui se ferment au clic à côté,
+// Apiviz — ergonomie : Gestion en blocs, barre de recherche, fenêtres qui se ferment au clic à côté,
 // brouillons, annulation, retour au même endroit, filtres mémorisés, raccourcis clavier.
 // Chargé en dernier. S'appuie sur app.js, UX, V3, N4 et, s'il est là, EX. Styles : fin de index.html.
 const ER = (() => {
