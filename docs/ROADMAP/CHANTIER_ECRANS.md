@@ -15,7 +15,7 @@ Miel, Gestion, API au centre). Aucune étape ne déplace de rubrique.
 | 4 | Accueil | Phrase du jour, alvéoles une à une, créneau de visite | Phrase, alvéoles, créneau ; frise courte en v5.22 | **v5.24, PR #31** (téléphone) |
 | 5 | Fiche ruche | Courbe de poids tracée, message d'API, journal | Courbe tracée mais à partir de 0 kg, onglets, journal | **v5.25, en PR** |
 | 6 | Visite et vente | Bouton d'enregistrement fixe en bas, compteurs qui réagissent | Barre fixe pour la visite seulement, compteurs muets | **v5.26, en PR** |
-| 7 | Gestion | Page centrale, carte « entre associés » | Gestion en blocs | À faire |
+| 7 | Gestion | Page centrale, carte « entre associés » | Blocs de Gestion ; plus de saisie de qui paie | **v5.29, en PR**, migration 017 |
 | 8 | Feuille API | Ajouts rapides, suggestion du jour | Compagnon API, saisie rapide, sans suggestion | **v5.27, en PR** |
 | 9 | Réglages | Choix de la couleur du bandeau, en aperçu | Choix du bandeau (4 couleurs) en liste, pas de prénom | **v5.28, en PR** |
 
@@ -61,3 +61,9 @@ priorité que l'accueil, avec « Visiter … » et « Ajouter à l'agenda ») et
 Écart relevé : couleur du bandeau choisie dans une liste, sans aperçu ; pas d'endroit pour le prénom attendu par
 l'accueil. Ajouté : bloc « Toi » (prénom, sur l'appareil), alvéoles de couleur avec aperçu appliqué aussitôt et
 annulable. Le choix de couleur reste par appareil, comme avant.
+
+## Étape 7 — Gestion, entre associés (v5.29)
+
+Demande de Pierre-Louis (11 nov.) : savoir, pour chaque achat, qui l'a fait et s'il a payé de ses fonds propres ou
+avec la trésorerie de la société ; pour chaque vente, qui l'a faite et qui a récolté l'argent. Migration 017 (deux
+colonnes, `creer_vente` qui enregistre le vendeur), formulaires, carte de Gestion et détail, liste des associés.
