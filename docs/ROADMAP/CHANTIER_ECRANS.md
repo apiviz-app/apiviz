@@ -16,7 +16,7 @@ Miel, Gestion, API au centre). Aucune étape ne déplace de rubrique.
 | 5 | Fiche ruche | Courbe de poids tracée, message d'API, journal | Courbe tracée mais à partir de 0 kg, onglets, journal | **v5.25, en PR** |
 | 6 | Visite et vente | Bouton d'enregistrement fixe en bas, compteurs qui réagissent | Barre fixe pour la visite seulement, compteurs muets | **v5.26, en PR** |
 | 7 | Gestion | Page centrale, carte « entre associés » | Gestion en blocs | À faire |
-| 8 | Feuille API | Ajouts rapides, suggestion du jour | Compagnon API, saisie rapide | À compléter |
+| 8 | Feuille API | Ajouts rapides, suggestion du jour | Compagnon API, saisie rapide, sans suggestion | **v5.27, en PR** |
 | 9 | Réglages | Choix de la couleur du bandeau, en aperçu | Choix du bandeau (4 couleurs) | Aperçu à faire |
 
 Pour chaque étape : comparer d'abord à l'existant, ne coder que l'écart, un scénario `tests/etapes_*.txt` avec captures
@@ -50,3 +50,8 @@ alvéole, les quatre chiffres, les onglets Journal, Colonie, Photos, la barre «
 Écart relevé : la visite avait déjà sa barre fixe ; la vente gardait son bouton au bout du formulaire, sous la barre
 du bas. Ajouté : la barre fixe de la vente avec le total et le nombre de pots, le stock restant sous chaque compteur,
 le rebond du chiffre changé et du total. Gardé tel quel : l'ordre des champs, les clients récents, la remise.
+
+## Étape 8 — Feuille API (v5.27)
+
+Écart relevé : compagnon, recherche et six saisies rapides étaient déjà là. Ajouté : la suggestion du jour (même
+priorité que l'accueil, avec « Visiter … » et « Ajouter à l'agenda ») et l'entrée des tuiles une à une.

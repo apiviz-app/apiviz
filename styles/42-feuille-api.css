@@ -1,0 +1,10 @@
+/* ---------- Feuille d'API d'après les maquettes (v5.27, src/domaines/accueil/feuille-api.js) ----------
+   Les saisies rapides entrent l'une après l'autre ; la suggestion du jour, sur fond miel, suit. */
+.fa-tuiles .n4-tuile{animation:vt-monte var(--duree-lente) var(--sortie) both;animation-delay:calc(.06s + var(--i, 0) * .04s);transition:transform var(--duree-rapide)}
+.fa-tuiles .n4-tuile:active{transform:scale(.96)}
+.fa-sugg{display:flex;flex-direction:column;gap:6px;margin:2px 0 12px;padding:14px 16px;border-radius:14px;background:var(--honeysoft);animation:vt-monte var(--duree-lente) var(--sortie) .26s both}
+.fa-sugg p{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
+.fa-sugg .small{color:var(--muted)}
+.fa-gestes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.fa-gestes .btn{min-height:44px}
+@media (prefers-reduced-motion:reduce){.fa-tuiles .n4-tuile,.fa-sugg{animation:none}}

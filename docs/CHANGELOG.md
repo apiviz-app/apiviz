@@ -5,6 +5,28 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.27 · à publier en recette · feuille d'API (chantier des écrans, étape 8)
+Aucune migration. S'appuie sur la v5.26.
+
+Écart relevé avec les maquettes : le bouton API ouvrait déjà « Que veux-tu faire ? » (compagnon, recherche, six
+saisies rapides). Il manquait la **suggestion du jour**.
+
+Pour l'apiculteur :
+1. Sous les saisies rapides, sur fond miel, API redit la priorité de l'accueil (« Ruche 5 a perdu 1 kg… »), d'où
+   elle vient, et propose deux gestes : **Visiter Ruche 5** (la visite s'ouvre sur cette ruche) et **Ajouter à
+   l'agenda** (tâche déjà rattachée à la ruche). Quand tout va bien, pas de suggestion.
+2. Les six saisies entrent l'une après l'autre à l'ouverture de la feuille.
+
+Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `src/domaines/accueil/feuille-api.js` enveloppe `quickSheet` (après nav4.js et alveoles.js) ; ses deux
+actions sont déclarées avec l'écran d'accueil ; styles `styles/42-feuille-api.css` ; scénario `tests/etapes_ap.txt`.
+
+**À vérifier**
+1. Bouton API, depuis n'importe quel écran : la suggestion nomme la même ruche que l'accueil.
+2. « Visiter … » ouvre la visite de cette ruche ; « Ajouter à l'agenda » ouvre la tâche avec la ruche choisie.
+3. Toutes les ruches en forme : la feuille n'a que les saisies.
+
 ## v5.26 · à publier en recette · saisies de visite et de vente (chantier des écrans, étape 6)
 Aucune migration. S'appuie sur la v5.25 (fiche ruche).
 
