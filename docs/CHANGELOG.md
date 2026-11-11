@@ -111,7 +111,15 @@ tard, quand le sens de la transition était retiré. D'où l'impression d'un éc
 retire maintenant l'ancienne entrée quand la nouvelle joue ; `tests/etapes_vt.txt` compte une seule entrée par écran.
 Aucun chargement de données en double : c'était seulement l'animation.
 
-**À vérifier** : changer de rubrique, ouvrir une fiche ruche, revenir : le contenu arrive une fois, sans second fondu.
+**Même correctif · plus d'écran de présentation avant la connexion.** L'ancien écran « Tes ruches, ton miel et tes
+comptes dans ta poche. » (`demarrage.js`) revenait à chaque déconnexion, car la déconnexion efface la note « déjà vu »
+de l'appareil. Il est retiré : sans compte ouvert, on arrive directement sur la page de connexion (v5.24), qui porte déjà
+« Créer mon compte », « Voir un rucher d'exemple » et « Où vont mes données ». Scénarios `etapes_cf`, `etapes_cx` et
+`etapes_dc` mis à jour.
+
+**À vérifier**
+1. Changer de rubrique, ouvrir une fiche ruche, revenir : le contenu arrive une fois, sans second fondu.
+2. Se déconnecter, ou ouvrir l'application sans compte : la page de connexion s'affiche tout de suite.
 
 ## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
 Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
