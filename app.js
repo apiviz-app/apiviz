@@ -44,9 +44,12 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     occupations: ["colonie_contenants", "du", !1],
     // v5.30 (migration 018) : journal des mouvements de stock.
     mouvements: ["mouvements_stock", "date_mouvement", !1],
+    // IT-07 (migration 019) : historique des reines, liens de filiation entre colonies.
+    reines: ["reines", "en_place_du", !1],
+    liens: ["colonie_liens", "date_lien", !1],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -1524,12 +1527,6 @@ function rucheForm(ruche) {
         list: ["Dadant 10 cadres", "Dadant 12 cadres", "Langstroth", "Warr\xE9"],
       },
       {
-        name: "annee_reine",
-        label: "Ann\xE9e de la reine",
-        type: "number",
-        value: ruche.annee_reine,
-      },
-      {
         name: "date_installation",
         label: "Date d\u2019installation",
         type: "date",
@@ -1543,8 +1540,8 @@ function rucheForm(ruche) {
         sb
           .from("ruches")
           .update({
+            // IT-07 : la reine ne se change plus ici (onglet « Reine & lignée », changer_reine() de la migration 019).
             ...saisie,
-            annee_reine: num(saisie.annee_reine),
             date_installation: orNull(saisie.date_installation),
           })
           .eq("id", ruche.id),
