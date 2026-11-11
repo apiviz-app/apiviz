@@ -22,7 +22,10 @@ test("un lecteur navigue et consulte, mais ne saisit rien", () => {
 });
 
 test("chaque action permise au lecteur existe dans le code (pas de nom mort)", () => {
-  const code = fs.readdirSync(".").filter((f) => f.endsWith(".js")).map((f) => fs.readFileSync(f, "utf8")).join("\n");
+  // Scripts de la racine et modules de src/domaines (les écrans migrés y déclarent leurs actions).
+  const fichiers = [...fs.readdirSync(".").filter((f) => f.endsWith(".js")),
+    ...fs.readdirSync("src/domaines", { recursive: true }).filter((f) => f.endsWith(".js")).map((f) => "src/domaines/" + f)];
+  const code = fichiers.map((f) => fs.readFileSync(f, "utf8")).join("\n");
   const mortes = ACTIONS_LECTEUR.filter((a) => !new RegExp(`\\b${a}\\b`).test(code));
   assert.deepEqual(mortes, []);
 });

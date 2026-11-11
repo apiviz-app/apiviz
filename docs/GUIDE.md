@@ -44,13 +44,23 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 - Un pot par format, rempli selon le stock ; le toucher ouvre une vente.
 - Ventes (à encaisser, à livrer), clients, lots et récoltes. **Fiche d'un lot** : récolte, ruches, ventes, clients,
-  contrôle de l'étiquette.
+  contrôle de l'étiquette, et « D'où vient ce pot » : récolte, achat des pots (avec la facture), mise en pots, ventes
+  *(v5.30)*.
+- **Mise en pots** *(v5.30)* : « Nouveau lot » ou « Mettre en pots ». Choisis le format, le nombre de pots ; le pot
+  vide, le couvercle et l'étiquette du format sont proposés, avec ce qu'il en restera. Valider crée le lot et retire
+  ces articles du stock. Pour des pots déjà prêts, le lien en bas garde l'ancienne fiche, sans rien retirer.
 - **Facture** : ouvrir une vente, « Créer la facture ». Le numéro (`F-année-0001`) est donné une fois et ne change
   plus ; Imprimer ou PDF. Adresse, code postal, ville et SIRET du client figurent sur la facture *(v5.16)*.
 
 ## Gestion
 
 - Blocs : Bilan de l'année, Dépenses, Budget, Stock matériel, Fournisseurs, **Registre et déclaration** *(v5.17)*, Équipe.
+- **Matériel** *(v5.30)* : tes articles par famille (emballage, alimentation, traitements, cire, équipement), chacun
+  Opex (consommable) ou Capex (équipement amorti), avec son stock et « À commander » sous le seuil. « Ajouter vite »
+  propose les articles courants. La fiche d'un article montre ce qui a bougé (achats, visites, mises en pots,
+  corrections) ; un stock recompté y devient une correction notée.
+- **Ajouter un achat** *(v5.30)* : une facture, une ligne par article touché (ou un nouvel article, ou des frais). Le
+  stock monte dès l'enregistrement ; Opex ou Capex vient de l'article.
 - **Registre d'élevage** : onglets Traitements, Mouvements, Interventions, Exploitation. « Déplacer des ruches » et
   « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel. Le lien « ‹ Gestion » ramène ici,
   d'où que tu l'aies ouvert *(v5.17)*. La **déclaration annuelle** est rangée au même endroit.

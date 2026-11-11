@@ -77,6 +77,44 @@ def supabase(route):
                 DATA["visites"].append({"id": p["id"], "ruche_id": p["ruche_id"], "date_visite": p["date_visite"], "activite": p["activite"],
                     "provisions": p["provisions"], "reine": p["reine"], "couvain": p.get("couvain", ""), "poids_kg": None, "varroa": None, "note": p.get("note", "")})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        # v5.30 (migration 018) : achat en plusieurs lignes et mise en pots, idempotents comme la base.
+        if nom == "enregistrer_achat":
+            p = body["p"]; deps = DATA.setdefault("depenses", []); mvs = DATA.setdefault("mouvements_stock", [])
+            if not any(x.get("achat_id") == p["id"] for x in deps):
+                for l in p["lignes"]:
+                    a = next((x for x in DATA["articles"] if x["id"] == l.get("article_id")), None)
+                    if l.get("article"):
+                        na = l["article"]
+                        a = next((x for x in DATA["articles"] if x["nom"].lower() == na["nom"].lower()), None)
+                        if not a:
+                            a = {"id": na["id"], "nom": na["nom"], "unite": na.get("unite") or "unité", "type": na.get("type") or "Consommable", "famille": na.get("famille", ""),
+                                 "contenance_g": na.get("contenance_g"), "duree_amort": na.get("duree_amort"), "poste": na.get("poste", ""), "seuil": 0, "stock": 0}
+                            DATA["articles"].append(a)
+                    nat = ("Immobilisation" if a["type"] == "Équipement" else "Consommable") if a else "Service"
+                    deps.append({"id": l["id"], "achat_id": p["id"], "piece": p.get("piece", ""), "libelle": l.get("libelle") or (a["nom"] if a else ""),
+                                 "categorie": l.get("categorie") or "Autre", "montant": l["montant"], "date_depense": p["date"], "fournisseur_id": p.get("fournisseur_id"),
+                                 "achete_par": p.get("achete_par", ""), "paye_par": p.get("paye_par", ""),
+                                 "nature": nat, "article_id": a["id"] if a else None, "quantite": l.get("quantite") if a else None})
+                    if a:
+                        a["stock"] = float(a.get("stock") or 0) + float(l["quantite"])
+                        if l["montant"]: a["valeur"] = round(float(l["montant"]) / float(l["quantite"]), 2)
+                        mvs.append({"id": str(uuid.uuid4()), "article_id": a["id"], "type": "entree", "origine": "achat", "quantite": l["quantite"],
+                                    "depense_id": l["id"], "date_mouvement": p["date"], "note": "", "created_at": "2026-11-11T10:00:00Z"})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        if nom == "mettre_en_pots":
+            p = body["p"]; mvs = DATA.setdefault("mouvements_stock", []); lots = DATA["lots_stock"]
+            if not any(x["id"] == p["id"] for x in lots):
+                for i in p.get("intrants", []):
+                    a = next(x for x in DATA["articles"] if x["id"] == i["article_id"])
+                    if float(a["stock"]) < float(i["quantite"]):
+                        return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": f"Il te manque {float(i['quantite']) - float(a['stock']):g} {a['nom']} (il en reste {float(a['stock']):g})."}))
+                lots.append({"id": p["id"], "code": p["code"], "miel": p["miel"], "format_g": p["format_g"], "prix": p["prix"], "pots_initiaux": p["pots"],
+                             "pots_restants": p["pots"], "pots_vendus": 0, "date_mise_en_pot": p["date"], "ddm": p.get("ddm"), "extraction": p.get("extraction", "")})
+                for i in p.get("intrants", []):
+                    a = next(x for x in DATA["articles"] if x["id"] == i["article_id"]); a["stock"] = float(a["stock"]) - float(i["quantite"])
+                    mvs.append({"id": str(uuid.uuid4()), "article_id": a["id"], "type": "consommation", "origine": "mise_en_pots", "quantite": -float(i["quantite"]),
+                                "lot_id": p["id"], "date_mouvement": p["date"], "note": "", "created_at": "2026-11-11T10:00:00Z"})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
         return route.fulfill(status=200, headers=hdr, body="null")
     m = re.match(r"/rest/v1/(\w+)", path)
     if m:
@@ -98,6 +136,9 @@ def supabase(route):
             for i in EXPL["invit"]:
                 if i["code"] == code: i.update(req.post_data_json)
             return route.fulfill(status=204, headers=hdr, body="")
+        if req.method == "GET" and t == "mouvements_stock" and t not in DATA:
+            # Base sans la migration 018 : table inconnue, comme Supabase (l'app garde alors les anciens écrans).
+            return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.mouvements_stock'"}))
         if req.method == "GET":
             # Comme Supabase : au plus PLAFOND lignes par requête (« Max rows »), tranche offset/limit respectée.
             from urllib.parse import parse_qs
@@ -115,6 +156,9 @@ def supabase(route):
             recu["upsert"].append((t, req.url, rows))
             for r in rows:
                 if not any(x.get("id") == r.get("id") for x in DATA.setdefault(t, [])): DATA[t].append(r)
+                if t == "mouvements_stock":  # comme le déclencheur de 018 : le stock suit le mouvement
+                    for a in DATA["articles"]:
+                        if a["id"] == r["article_id"]: a["stock"] = float(a["stock"]) + float(r["quantite"])
             return route.fulfill(status=201, headers=hdr, body="")
     return route.fulfill(status=200, headers=hdr, body="{}")
 

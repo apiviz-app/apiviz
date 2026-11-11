@@ -5,6 +5,48 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.30 · à publier en recette · stock : catalogue, achats, mise en pots, traçabilité
+**Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. À appliquer sur
+`apidoo-test` avant la recette. S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».
+
+Écart relevé par Pierre-Louis le 11 nov. 2026 : une dépense de pots vides ne créait pas de stock (la fiche dépense
+n'avait pas d'article), il n'y avait pas de liste d'articles à acheter ni d'Opex/Capex par article, et créer un lot ne
+retirait ni les pots vides ni le miel. Rien n'était relié. Maquettes validées le même jour.
+
+Pour l'apiculteur :
+1. **Matériel devient un catalogue** : articles par famille (emballage, alimentation, traitements, cire, équipement),
+   chacun **Opex** (consommable) ou **Capex** (équipement amorti, durée par article), filtre Tous / Opex / Capex,
+   « À commander » sous le seuil, miel en vrac et pots de miel par format. « Ajouter vite » propose 21 articles
+   courants (pots 250 g, 500 g, 1 kg, couvercles, étiquettes, candy, hausses, extracteur…).
+2. **Ajouter un achat** (remplace « Ajouter une dépense ») : fournisseur, date, numéro de facture, puis une ligne par
+   article touché, un nouvel article (Opex ou Capex) ou des frais. Chaque ligne dit « Stock +150 ». À
+   l'enregistrement, le stock monte et la facture reste liée.
+3. **Mise en pots** (« Nouveau lot ») : format, nombre de pots ; pot vide du format, couvercle et étiquette proposés,
+   avec l'avant → après de chaque article et du miel en vrac. « Tu peux remplir jusqu'à 75 pots » dit ce qui limite.
+   Valider crée le lot et retire les articles du stock, d'un coup, ou rien si quelque chose manque. Coût
+   d'emballage par pot affiché. Lien pour saisir des pots déjà prêts sans rien retirer.
+4. **Fiche de lot : « D'où vient ce pot »** : récolte (ruches), achat des pots (fournisseur, facture), mise en pots,
+   ventes, dans l'ordre des dates.
+5. **Fiche d'un article : « Ce qui a bougé »** : chaque achat, visite, mise en pots, correction. Un stock recompté
+   devient une correction notée, plus une écriture sans trace.
+
+Technique : `mouvements_stock` est la source du stock (`articles.stock` = somme, tenue par déclencheurs ; une écriture
+directe, par l'ancienne version, devient un ajustement) ; `enregistrer_achat()` et `mettre_en_pots()` passent par la
+file d'envoi hors ligne. Écrans : `src/domaines/materiel/catalogue.js` (écran materiel, actions `newarticle`,
+`editarticle`, `preset` déclarées dans `remplace`), `src/domaines/finances/achat.js` (`newdepense`),
+`src/domaines/production/mise-en-pots.js` (écran `miseenpots`, `newlot`), `src/domaines/production/lot.js` ; règles
+pures `src/domaines/materiel/regles.js` (`Regles.stock`). Sans la migration 018, les anciens écrans restent
+(`S.absentes`, tables facultatives). Styles `styles/45-stock.css`. Tests : `tests/sql/test_018.mjs` (55 vérifications),
+`tests/unitaires/stock.test.mjs`, scénario `tests/etapes_st.txt` ; la base simulée des tests n'a 018 que si le
+scénario le dit.
+
+**À vérifier**
+1. Matériel : tes articles rangés par famille, Opex ou Capex ; « Ajouter vite » ajoute un article prérempli.
+2. Ajouter un achat de 150 pots 250 g : Matériel affiche 150 de plus ; la fiche de l'article montre l'achat.
+3. Mise en pots de 40 pots de 250 g : pots vides, couvercles, étiquettes baissent de 40 ; le lot apparaît dans Miel.
+4. Fiche du lot : « D'où vient ce pot » montre la récolte, l'achat (avec la facture), la mise en pots.
+5. Sans réseau : un achat et une mise en pots sont gardés et montrés tout de suite, puis envoyés au retour.
+
 ## v5.29 · à publier en recette · entre associés (chantier des écrans, étape 7)
 **Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, pas sur `apidoo`.
 Additive : l'ancienne version continue de fonctionner (elle n'envoie pas « vendu par », la colonne reste vide).

@@ -6,3 +6,4 @@
 015-ruchers.sql
 016-emplacements-contenants.sql
 017-associes.sql
+018-stock-mouvements.sql

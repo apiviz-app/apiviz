@@ -132,6 +132,18 @@
   compléments de la fiche colonie et de Matériel dans `src/domaines/colonies/` ; les trois fonctions passent par la
   file d'envoi hors ligne (`offline.js` les rejoue sur les données gardées). Ruches physiques derrière le réglage
   `contenants` (désactivé par défaut). Ancienne fenêtre de déplacement : drapeau `apidoo-deplacement-v510`.
+- **Stock par mouvements** (v5.30, migration 018, AP-FEAT-075) : `mouvements_stock` note chaque changement de stock
+  (type ouverture, entrée, consommation, ajustement, inventaire, rebut ; origine reprise, achat, visite, mise en pots,
+  saisie ; rattaché à sa dépense, son lot ou sa visite). `articles.stock` en est la somme : `mouvements_appliquer` met
+  le stock à jour à chaque mouvement ajouté, modifié ou supprimé ; `articles_stock_journal` note en ajustement toute
+  écriture directe du stock (ancienne version). Deux drapeaux de transaction (`apidoo.stock_par_mouvement`,
+  `apidoo.stock_note_seul`) évitent la boucle entre les deux. Achats (`maj_stock_achat`) et visites
+  (`maj_stock_intrant`) passent par des mouvements. `enregistrer_achat(p)` (lignes d'une facture reliées par
+  `depenses.achat_id`) et `mettre_en_pots(p)` (lot + consommations, tout ou rien) sont idempotentes et passent par la
+  file d'envoi hors ligne (`Regles.stock.appliquerAchat` / `appliquerMiseEnPots` sur le téléphone). Opex/Capex =
+  `articles.type` (Consommable / Équipement) ; la nature de la dépense en découle (Consommable, Immobilisation avec
+  `duree_amort`, Service pour une ligne sans article). Côté application : tables facultatives absentes notées dans
+  `S.absentes` ; sans `mouvements`, Matériel, « Nouveau lot » et « Ajouter une dépense » gardent les anciens écrans.
 - **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
   <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
   sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit
