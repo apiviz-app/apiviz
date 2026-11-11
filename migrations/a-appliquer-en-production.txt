@@ -1,10 +1,8 @@
-# Migrations appliquées en recette mais pas encore en production (une par ligne).
-# Depuis IT-04, la mise en ligne en production compare elle-même la structure de la base apidoo aux fichiers
-# (scripts/controler-structure.mjs) et refuse de partir en cas d'écart : cette liste sert de mémo.
-# Retirer la ligne une fois la migration appliquée sur la base apidoo.
-014-roles-audit.sql
-015-ruchers.sql
-016-emplacements-contenants.sql
+# Migrations appliquées en recette mais pas encore en production (une par ligne). Simple mémo.
+# La mise en ligne en production compare la structure de la base apidoo aux fichiers (scripts/controler-structure.mjs),
+# dit où en est la base, et applique elle-même les migrations manquantes quand le secret BASE_PRODUCTION existe
+# (scripts/appliquer-migrations.mjs, docs/PROCESSUS.md).
+# État relevé le 11 nov. 2026 : apidoo en est à 016 (014, 015 et 016 y sont).
 017-associes.sql
 018-stock-mouvements.sql
 019-reines-liens.sql

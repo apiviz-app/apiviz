@@ -1,9 +1,14 @@
 # Mise en ligne, à la main seulement : une fusion sur main ne publie rien.
 # Actions › Mise en ligne › Run workflow, cible « recette », puis « production » une fois validée.
 # Repères git : « recette » (version en recette) et « deploiement » (version en production).
-# Garde-fous : Vérifier doit être vert ; la production n'accepte que la version exacte en recette,
-# et refuse de partir si la structure de la base apidoo ne correspond pas exactement aux fichiers de migrations
-# (contrôle automatique, IT-04 / AP-TECH-042 : remplace la case « migrations faites »).
+# La production publie la version en recette, telle quelle : main peut avancer entre-temps (documentation, réglages de
+# GitHub, autre fusion) sans bloquer la production ; ces changements partiront à la prochaine recette.
+# Garde-fous : Vérifier ne doit pas être rouge (attendu s'il tourne, relancé si GitHub l'a annulé) ; la version en recette doit être fusionnée sur main ; la structure de la
+# base de la cible doit correspondre exactement aux fichiers de migrations (IT-04 / AP-TECH-042).
+# Migrations : si le secret de connexion de la cible existe (BASE_RECETTE, BASE_PRODUCTION), la mise en ligne applique
+# elle-même les migrations en attente avant de publier (scripts/appliquer-migrations.mjs) : lancer « production »
+# vaut accord pour mettre à jour la base apidoo. Sans le secret, rien n'est appliqué et le contrôle dit quoi faire.
+# Chaque mise en ligne en recette annonce déjà ce que la production demandera (résumé de l'action).
 name: Mise en ligne
 
 on:
@@ -25,14 +30,16 @@ concurrency:
 
 permissions:
   contents: write
-  actions: read
+  actions: write   # relancer « Vérifier » quand GitHub l'a annulé faute de machine (scripts/attendre-verifier.sh)
   pages: write
   id-token: write
 
 jobs:
+  # ubuntu-latest partout : le 11 nov. 2026 au soir, les tâches sur « ubuntu-24.04 » n'ont trouvé aucune machine.
   construire:
     name: Contrôler et assembler
     runs-on: ubuntu-latest
+    timeout-minutes: 45   # dont jusqu'à 30 min d'attente de « Vérifier »
     outputs:
       sha: ${{ steps.c.outputs.sha }}
     steps:
@@ -47,48 +54,99 @@ jobs:
           CIBLE: ${{ inputs.cible }}
           VERSION: ${{ inputs.version }}
         run: |
-          if [ "$CIBLE" = production ]; then VERSION=main; fi
-          sha=$(git rev-parse --verify -q "origin/$VERSION" || git rev-parse --verify -q "$VERSION") || {
-            echo "::error::Version introuvable : $VERSION"; exit 1; }
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          etat=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/verifier.yml/runs?head_sha=$sha&status=completed&per_page=20" \
-            --jq '[.workflow_runs[] | select(.conclusion == "success" or .conclusion == "failure")][0].conclusion // ""')
-          if [ "$etat" = failure ]; then echo "::error::Vérifier est rouge sur cette version : rien n'est parti."; exit 1; fi
-          if [ "$etat" != success ]; then echo "::notice::Pas de vérification sur cette version (documentation seule, ou en cours)."; fi
+          refus() { echo "::error::$1"; printf '### Mise en ligne refusée\n\n%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
           # Premier lancement : le repère part de la version en production avant l'adoption de cette méthode.
           if ! git rev-parse -q --verify refs/tags/deploiement > /dev/null; then
             git tag deploiement fda908f1194427f9e68ef8d37cba2ad344eebe52
             git push origin refs/tags/deploiement
           fi
           if [ "$CIBLE" = production ]; then
-            git rev-parse -q --verify refs/tags/recette > /dev/null || { echo "::error::Rien en recette."; exit 1; }
-            if [ "$(git rev-parse "$sha^{tree}")" != "$(git rev-parse 'refs/tags/recette^{tree}')" ]; then
-              echo "::error::Cette version n'est pas celle en recette : passez-la d'abord en recette."; exit 1
+            # La production publie exactement la version en recette (celle qui a été essayée sur téléphone).
+            git rev-parse -q --verify refs/tags/recette > /dev/null || refus "Rien en recette : lance d'abord la mise en ligne avec la cible recette."
+            sha=$(git rev-parse 'refs/tags/recette^{commit}')
+            # Elle doit être sur main : fusion classique (ancêtre de main) ou fusion « squash » (même contenu qu'un commit de main).
+            if ! git merge-base --is-ancestor "$sha" origin/main; then
+              arbre=$(git rev-parse "$sha^{tree}")
+              git log --format=%T -300 origin/main | grep -qx "$arbre" || refus "La version en recette ($(git rev-parse --short "$sha")) est une branche essayée avant fusion : fusionne sa pull request, relance la recette depuis main, puis la production."
             fi
-            prod=$sha
+            apres=0; git merge-base --is-ancestor "$sha" origin/main && apres=$(git rev-list --count "$sha..origin/main")
+            if [ "$apres" -gt 0 ]; then
+              echo "::notice::main a $apres commit(s) de plus que la recette : la production publie la version en recette ($(git rev-parse --short "$sha")) ; ces changements partiront à la prochaine recette."
+            fi
           else
-            prod=refs/tags/deploiement
+            sha=$(git rev-parse --verify -q "origin/$VERSION" || git rev-parse --verify -q "$VERSION") || refus "Version introuvable : $VERSION"
           fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          # Vérifier : attendu s'il tourne encore, relancé s'il a été annulé par GitHub ; seul un test en échec refuse.
+          etat=$(sh scripts/attendre-verifier.sh "$sha") || refus "$etat"
+          [ "$etat" = aucune ] && echo "::notice::Pas de vérification sur cette version (documentation seule)."
+          if [ "$CIBLE" = production ]; then prod=$sha; else prod=refs/tags/deploiement; fi
           git worktree add -q --detach /tmp/src-prod "$prod"
           git worktree add -q --detach /tmp/src-recette "$sha"
           sh /tmp/src-recette/scripts/assembler-site.sh /tmp/src-prod /tmp/src-recette _site
+          # shellcheck disable=SC2016 # accents graves littéraux : code Markdown du résumé
+          printf '### Mise en ligne : %s\n\nVersion publiée : `%s` (%s)\n\n' "$CIBLE" "$(git rev-parse --short "$sha")" "$(git log -1 --format=%s "$sha")" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Migrations de la base
+        env:
+          CIBLE: ${{ inputs.cible }}
+          # Chaîne de connexion Postgres de la base de la cible (secret du dépôt, jamais dans un fichier).
+          BASE: ${{ inputs.cible == 'production' && secrets.BASE_PRODUCTION || secrets.BASE_RECETTE }}
+        run: |
+          # Applique les migrations de la version publiée qui manquent à la base, chacune dans sa transaction.
+          # Une erreur annule la migration en cours et arrête la mise en ligne : rien n'est publié.
+          nom=apidoo-test; secret=BASE_RECETTE
+          if [ "$CIBLE" = production ]; then nom=apidoo; secret=BASE_PRODUCTION; fi
+          if [ -z "$BASE" ]; then
+            echo "::notice::Secret $secret absent : les migrations ne sont pas appliquées automatiquement sur $nom (voir docs/PROCESSUS.md)."
+            exit 0
+          fi
+          set -o pipefail
+          cd /tmp/src-recette
+          if [ ! -f scripts/appliquer-migrations.mjs ]; then echo "::notice::Version antérieure à la mise à jour automatique des bases."; exit 0; fi
+          (mkdir -p /tmp/pg && cd /tmp/pg && npm i --silent --no-save @electric-sql/pglite@0.2 pg@8 > /dev/null 2>&1)
+          ln -sfn /tmp/pg/node_modules node_modules
+          node scripts/appliquer-migrations.mjs | tee /tmp/migrations.log || {
+            rm -f node_modules
+            echo "::error::La base $nom n'a pas pu être mise à jour : rien n'est publié. Le détail est juste au-dessus."; exit 1; }
+          rm -f node_modules
+          grep -q '^Appliquée : ' /tmp/migrations.log && echo "::notice::Base $nom mise à jour : $(grep -c '^Appliquée : ' /tmp/migrations.log) migration(s) appliquée(s)." || true
       - name: Structure de la base
         env:
           CIBLE: ${{ inputs.cible }}
+          AUTO_PRODUCTION: ${{ secrets.BASE_PRODUCTION != '' }}
         run: |
           # Rejoue les migrations de la version publiée et compare à la vraie base (clé publique, lecture seule).
+          set -o pipefail
           cd /tmp/src-recette
           (mkdir -p /tmp/pg && cd /tmp/pg && npm i --silent --no-save @electric-sql/pglite@0.2 > /dev/null 2>&1)
           ln -sfn /tmp/pg/node_modules node_modules
           if [ "$CIBLE" = production ]; then
-            node scripts/controler-structure.mjs config.js || {
-              echo "::error::La base apidoo ne correspond pas aux migrations de cette version : appliquer d'abord les migrations en attente (migrations/a-appliquer-en-production.txt)."; exit 1; }
+            node scripts/controler-structure.mjs config.js | tee /tmp/structure.log || {
+              rm -f node_modules
+              m="La base apidoo n'a pas les migrations de cette version ($(grep -o 'Migrations à appliquer.*' /tmp/structure.log || echo 'détail juste au-dessus')). Pour que la mise en ligne les applique elle-même, ajouter une fois le secret BASE_PRODUCTION (docs/PROCESSUS.md) ; sinon les faire appliquer, puis relancer."
+              echo "::error::$m"; printf '### Mise en ligne refusée\n\n%s\n' "$m" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+            echo "Base apidoo : à jour." >> "$GITHUB_STEP_SUMMARY"
           else
             node scripts/controler-structure.mjs environnements/recette/config.js || \
               echo "::warning::La base apidoo-test ne correspond pas aux migrations de cette version (recette publiée quand même)."
+            # Ce que la production demandera, dit dès maintenant (lecture seule de apidoo, clé publique).
+            if node scripts/controler-structure.mjs config.js > /tmp/prod.log 2>&1; then
+              echo "Production : la base apidoo a déjà les migrations de cette version, rien à appliquer." >> "$GITHUB_STEP_SUMMARY"
+            else
+              manque=$(grep -o 'Migrations à appliquer.*' /tmp/prod.log || echo "la base apidoo ne correspond pas aux fichiers (voir le journal de cette étape)")
+              if [ "$AUTO_PRODUCTION" = true ]; then
+                m="Production : $manque Elles seront appliquées automatiquement au lancement de la production (secret BASE_PRODUCTION présent)."
+                echo "::notice::$m"
+              else
+                m="Production : $manque Le secret BASE_PRODUCTION est absent : la production sera refusée tant qu'elles ne sont pas appliquées sur apidoo (docs/PROCESSUS.md, « Mise à jour automatique des bases »)."
+                echo "::warning::$m"
+              fi
+              echo "$m" >> "$GITHUB_STEP_SUMMARY"
+              cat /tmp/prod.log
+            fi
           fi
           rm -f node_modules
       - uses: actions/upload-pages-artifact@v3
@@ -99,6 +157,7 @@ jobs:
     name: Publier
     needs: construire
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
     steps:
@@ -107,7 +166,8 @@ jobs:
   finir:
     name: Repère et contrôle de santé
     needs: [construire, publier]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       # Historique complet : une branche essayée en recette doit être connue pour y poser le repère (IT-04).
       - uses: actions/checkout@v4
@@ -130,7 +190,7 @@ jobs:
           # Adresse GitHub Pages déduite du dépôt : <proprio>.github.io/ si le dépôt porte ce nom, sinon /<dépôt>/.
           url="https://$PROPRIO.github.io/"; [ "$DEPOT" = "$PROPRIO.github.io" ] || url="$url$DEPOT/"
           [ "$CIBLE" = recette ] && url="${url}recette/"
-          for i in 1 2 3 4 5 6; do
+          for _ in 1 2 3 4 5 6; do
             curl -fsS -o /dev/null "$url" && { echo "$url répond."; exit 0; }
             sleep 10
           done
