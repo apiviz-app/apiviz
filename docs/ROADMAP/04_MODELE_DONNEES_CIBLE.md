@@ -69,11 +69,13 @@ Champs indicatifs ; types exacts à fixer dans la migration de l'itération conc
 ### 3.6 `reines` (nouvelle, IT-07)
 - **Champs :** `colonie_id`, `annee_naissance`, `marquage` (couleur déduite de l'année, modifiable), `origine` (élevée, achetée, naturelle, essaim), `lignee_id`, `mere_id` (reine), `serie_id`, `fournisseur_id`, `en_place_du`, `en_place_au`, `statut` (`en_place`, `remplacee`, `morte`, `disparue`, `vendue`), `clippee`, `notes`.
 - **Règles :** remplacement = clôture de la reine en place + nouvelle ligne, dans `changer_reine()` ; l'historique n'est jamais réécrit.
+- **Réalisé (IT-07, 019)** : `colonie_id`, `annee_naissance`, `marquage`, `origine` (texte de l'application), `en_place_du`, `en_place_au`, `statut`, `clippee`, `notes` ; `corriger_reine()` pour les erreurs de saisie. `lignee_id`, `mere_id`, `serie_id`, `fournisseur_id` : IT-16 et IT-17.
 - **Migration :** une reine par colonie ayant `annee_reine` renseignée, `en_place_du = reine_introduite` ou `date_installation`.
 
 ### 3.7 `colonie_liens` (nouvelle, IT-07 / IT-16)
 - **Champs :** `parent_id`, `enfant_id`, `type` (`division`, `essaim`, `reunion`), `date`, `evenement_id`.
 - **Règles :** réunion = deux parents vers une colonie conservée, l'autre passe au statut `reunie` ; pas de cycle.
+- **Réalisé (IT-07, 019)** : colonne `date_lien` ; réunion = parent (colonie réunie) → enfant (colonie qui accueille) ; l'anti-cycle ne porte que sur division et essaim, pour qu'une colonie puisse être réunie dans sa colonie mère.
 - **Migration :** depuis `ruche_evenements.autre_ruche_id` pour les types division/essaimage/réunion.
 
 ### 3.8 `ruche_evenements` (évolution)
@@ -156,10 +158,12 @@ Champs indicatifs ; types exacts à fixer dans la migration de l'itération conc
 | 014 | IT-04 | rôle lecteur, invitations limitées, `journal_audit`, contrôle d'exploitation dans `creer_*` | non |
 | 015 | IT-05 | `ruchers`, `ruches.rucher_id` + déclencheur de synchronisation du texte | non |
 | 016 | IT-06 | emplacements, déplacements, contenants, statut de colonie | non |
-| 017 | IT-07 | reines, liens de colonies, reprise des données | non |
-| 018 | IT-08 | champs de visite, modèles | non |
-| 019 | IT-09 | `modifie_le`, fonctions de modification hors ligne | non |
-| 020 à 034 | IT-11 à IT-27 | photos rattachées, opérations, élevage, extractions, mouvements, factures, abonnements… (numéro indiqué dans chaque fiche d'itération) | non, sauf mention dans la fiche |
+| 017 | chantier des écrans | entre associés (acheté par, payé avec, vendu par) | non |
+| 018 | chantier des écrans | stock : catalogue, mouvements, achat en plusieurs lignes, mise en pots | non |
+| 019 | IT-07 | reines, liens de colonies, reprise des données | non |
+| 020 | IT-08 | champs de visite, modèles | non |
+| 021 | IT-09 | `modifie_le`, fonctions de modification hors ligne | non |
+| 022 et suivantes | IT-11 à IT-27 | photos rattachées, opérations, élevage, extractions, mouvements, factures, abonnements… (numéro indiqué dans chaque fiche d'itération) | non, sauf mention dans la fiche |
 
 Les numéros sont indicatifs : la migration prend le premier numéro libre au moment de sa réalisation, et la fiche d'itération est corrigée en conséquence.
 

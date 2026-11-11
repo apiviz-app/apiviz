@@ -28,8 +28,10 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 - Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un
   raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Gestion).
-- **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; onglets Journal, Colonie (reine, hausses,
-  équipement, division, essaimage, réunion, sortie), Photos ; courbe de poids.
+- **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; sous le nom, le statut, la reine (âge, couleur) et la
+  dernière visite ; onglets Journal (visites et événements dans l'ordre des dates), Santé (comptages varroa,
+  traitements), Reine & lignée (nouvelle reine sans perdre l'ancienne, « Issue de … », colonies qui en sont issues),
+  Colonie (statut, emplacements, hausses, équipement, division, essaimage, réunion, sortie), Photos ; courbe de poids.
 - **Météo** : depuis un rucher, « Voir heure par heure » : ce qu'il en est maintenant et pourquoi, les heures pour ouvrir de chaque jour, la frise de la journée (touche une heure pour son détail), les créneaux avec « Prévoir ».
 
 ## Saisir (API)
