@@ -1,0 +1,24 @@
+/* ---------- Fiche ruche d'après les maquettes (v5.25, src/domaines/colonies/apercu.js) ----------
+   Ce qu'en dit API sous l'en-tête, courbe de poids resserrée tracée puis pointée, journal qui entre carte après carte. */
+.fr-api{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px;border-radius:16px;background:var(--honeysoft);animation:vt-monte var(--duree-lente) var(--sortie) .08s both}
+.fr-api-t{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fr-api-t p{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.fr-api-t .small{color:var(--muted)}
+
+.u-pli .fr-ecart{margin:-6px 0 0;font-variant-numeric:tabular-nums}
+.fr-courbe{margin-top:4px}
+.fr-ligne{fill:none;stroke:#C78A00;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.fr-point{fill:#C78A00;stroke:var(--card);stroke-width:2}
+.fr-trace .fr-ligne{stroke-dasharray:1;stroke-dashoffset:1;animation:al-trace 1s var(--sortie) .2s forwards}
+.fr-trace .fr-point{opacity:0;transform-box:fill-box;transform-origin:center;animation:fr-point .32s var(--sortie) both;animation-delay:calc(.35s + var(--i) * .12s)}
+@keyframes fr-point{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+
+.u-visite.fr-entre{animation:vt-monte var(--duree-lente) var(--sortie) both;animation-delay:calc(.12s + var(--i) * .07s)}
+.u-visite.fr-neuve{background:var(--honeysoft);border-color:transparent}
+.fr-neuve-t{margin-left:auto}
+
+@media (prefers-reduced-motion:reduce){
+  .fr-api,.u-visite.fr-entre{animation:none}
+  .fr-trace .fr-ligne{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
+  .fr-trace .fr-point{animation:none;opacity:1}
+}

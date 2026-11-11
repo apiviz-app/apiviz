@@ -5,6 +5,36 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.25 · à publier en recette · fiche ruche des maquettes (chantier des écrans, étape 5)
+Aucune migration. S'appuie sur les v5.22 à v5.24. Téléphone et ordinateur : la fiche est la même.
+
+Pour l'apiculteur :
+1. **Ce qu'en dit API**, sous l'en-tête de la ruche, sur fond miel : un ou deux constats tirés des visites, un conseil,
+   et d'où ça vient (« D'après 3 pesées et 3 visites de Ruche 5 »). Signaux, dans l'ordre : varroa au-dessus de ton
+   seuil (avec renvoi vers le vétérinaire ou le GDS, sans rien prescrire), perte d'au moins 1 kg entre les deux
+   dernières pesées, provisions faibles, reine non vue deux fois de suite, pas de visite depuis plus de 30 jours pour
+   une colonie qui n'est pas en forme. **Une colonie en forme sans signal n'a pas de message** : API ne parle pas pour rien.
+2. **Courbe de poids lisible** : l'échelle se resserre autour des pesées (40 à 50 kg plutôt que 0 à 50), la courbe se
+   trace puis chaque pesée apparaît, avec sa date ; la variation est écrite sous le titre (« −2 kg depuis le
+   11 septembre »). Huit pesées au plus. « Voir les chiffres » reste.
+3. **Journal** : en arrivant sur la ruche, les cartes entrent l'une après l'autre ; la visite qu'on vient d'enregistrer
+   est sur fond miel, avec « Enregistrée à l'instant ». Changer d'onglet ne rejoue rien.
+
+Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `src/domaines/colonies/suivi.js` (règles pures : message d'API, échelle et variation du poids, testées par
+`tests/unitaires/suivi.test.mjs`) et `apercu.js`, dernier complément de l'écran « ruche » (`colonies/ecrans.js`) ;
+styles `styles/40-fiche-ruche.css` ; scénario `tests/etapes_fr.txt` (captures à 390 et 1 280 px).
+
+**À vérifier**
+1. Ruche critique ou à surveiller : le message d'API nomme ce qu'on voit dans le journal (poids, provisions, reine,
+   varroa) et sa source compte bien les pesées et les visites.
+2. Ruche en forme, poids stable : aucun message.
+3. Courbe : l'échelle encadre les pesées, les dates sont sous les points, la variation correspond au premier et au
+   dernier point.
+4. Après une visite enregistrée, retour sur la fiche : la carte du jour est sur fond miel.
+5. Réglage « réduire les animations » du téléphone : la fiche s'affiche d'un coup, sans tracé.
+
 ## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
 Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
 la vue d'ensemble ne change pas. La prise en main (exploitation sans ruche ou sans visite) ne change pas non plus.
