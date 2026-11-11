@@ -37,6 +37,14 @@
     page.evaluate("ACT.go('ruches')"); attendre()
     verif(dernier() == "retour", "fiche ruche → Ruchers : retour")
 
+    # Une seule entrée par écran : l'ancienne entrée (« rise ») ne repart pas quand le sens est retiré.
+    page.evaluate("""() => { window.entrees = []; document.addEventListener('animationstart', (e) => { if (e.target.classList?.contains('wrap')) entrees.push(e.animationName); }, true); }""")
+    page.click(".bottom [data-v=plus]"); page.wait_for_timeout(1200)
+    verif(page.evaluate("entrees") == ["vt-monte"], "changer d'écran : le contenu n'entre qu'une fois")
+    page.evaluate("ACT.go('fournisseurs')"); page.wait_for_timeout(1200)
+    verif(page.evaluate("entrees") == ["vt-monte", "vt-droite"], "ouvrir un écran : une seule entrée, de la droite")
+    page.evaluate("ACT.go('ruches')"); attendre()
+
     n = page.evaluate("vtLog.length")
     page.emulate_media(reduced_motion="reduce")
     page.click(".bottom [data-v=dash]"); attendre()

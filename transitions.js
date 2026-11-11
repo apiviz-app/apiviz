@@ -48,7 +48,11 @@ const VT = (() => {
     html.dataset.vt = s;
     clearTimeout(minuterie);
     minuterie = setTimeout(() => delete html.dataset.vt, 600); // un rendu suivant du même écran ne rejoue pas l'entrée
-    return rendre.apply(this, a);
+    const r = rendre.apply(this, a);
+    // Une seule entrée par écran : sans cela, l'ancienne entrée (.wrap.enter, « rise ») repartait au retrait du sens,
+    // 0,6 s plus tard, et l'écran semblait se charger deux fois.
+    document.querySelector(".wrap")?.classList.remove("enter");
+    return r;
   };
 
   return { sens, pile: () => [...pile] };
