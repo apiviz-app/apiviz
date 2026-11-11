@@ -20,7 +20,7 @@ Pour l'apiculteur :
 
 Technique : `src/domaines/compte/apparence.js` complète l'écran « reglages » et remplace l'action `errgcouleur`
 (déclarée dans `remplace`) ; essentiels.js expose ses couleurs de bandeau ; styles `styles/43-reglages.css` ;
-scénario `tests/etapes_re.txt`.
+scénario `tests/etapes_re.txt` ; `etapes_eg` suit le bloc « Toi » et les alvéoles de couleur.
 
 **À vérifier**
 1. Réglages › Toi : le prénom donné apparaît dans le bonjour de l'accueil.
