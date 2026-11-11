@@ -28,7 +28,7 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "authmode", "logout", "decoforcer", "decoenvoyer", "n4compte", "n4expl", "n4q", "n4soleil", "n4installer", "n4plustard",
   "v3soleil", "exouvrir", "exquitter", "excopier",
   // Prise en main (mémorisée sur l'appareil seulement)
-  "dmexemple", "dmentrer", "dmconnexion", "dmastuce", "dmbravo", "dmmasquer", "dminstaller", "dmarrivee", "dmsortie",
+  "dmexemple", "dmconnexion", "dmastuce", "dmbravo", "dmmasquer", "dminstaller", "dmarrivee", "dmsortie",
   // File hors ligne : un lecteur peut abandonner une saisie bloquée
   "hlcorriger", "hlabandonner",
 ]);

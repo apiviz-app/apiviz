@@ -1,4 +1,4 @@
-// Apiviz — prise en main : présentation avant le compte, création du rucher en trois questions,
+// Apiviz — prise en main : création du rucher en trois questions,
 // guide de démarrage selon la saison, premier succès, écrans vides utiles. Chargé en dernier.
 const DM = (() => {
   const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
@@ -6,18 +6,16 @@ const DM = (() => {
   const api = (etat, t) => (typeof Apiviz != "undefined" ? Apiviz.compagnon(etat, t) : "");
   document.head.insertAdjacentHTML("beforeend", `<style>
   .dm-ecran{min-height:100dvh;display:flex;flex-direction:column;gap:14px;max-width:460px;margin:0 auto;padding:24px 20px;background:var(--ground);color:var(--ink)}
-  .dm-sombre{background:var(--pine);color:#fff;max-width:none}.dm-sombre>*{width:100%;max-width:420px;margin-inline:auto}
   .dm-say{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:27px;line-height:1.14;font-weight:700;margin:0}
-  .dm-prom{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 14px;border-radius:14px;background:var(--pine2)}.dm-prom span{color:#C5D0C8;font-size:13px}
   .dm-pas{font-size:13px;font-weight:600;color:var(--muted)}.dm-choix{flex:1;min-height:84px;display:flex;flex-direction:column;justify-content:center;text-align:left;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
   .dm-choix span{font-size:13px;color:var(--muted)}.dm-compte{display:grid;grid-template-columns:52px 1fr 52px;gap:6px;align-items:center}.dm-compte b{text-align:center;font-size:34px;font-family:'Bricolage Grotesque',system-ui,sans-serif}
-  .dm-grand{flex:1}.dm-lien{min-height:44px;background:none;border:0;font-weight:600;color:var(--good);text-decoration:underline}.dm-sombre .dm-lien{color:#F6C453}a.dm-confid{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
+  .dm-grand{flex:1}.dm-lien{min-height:44px;background:none;border:0;font-weight:600;color:var(--good);text-decoration:underline}
   .dm-guide .step{min-height:48px}.dm-bravo{display:flex;gap:10px;align-items:center;background:var(--honeysoft);border-radius:14px;padding:12px 14px;margin-bottom:12px}.dm-bravo>div{flex:1;min-width:0}
   .dm-sous{margin:12px 0 2px;font-weight:700}
   .dm-exemple{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--pine);color:#fff;font-size:13px;font-weight:600}.dm-exemple button{margin-left:auto;min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--honey);color:var(--ink);font-weight:700}
   .dm-astuce{display:flex;flex-direction:column;gap:8px;padding:14px;margin-bottom:12px;border-radius:14px;background:var(--honeysoft)}.dm-astuce .u-entete{align-items:center}
   .dm-qr{display:flex;gap:14px;align-items:center}.dm-qr svg{width:112px;height:112px;flex:none}.dm-liste{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
-  @media (min-width:801px){.dm-guide .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.dm-sombre>*{max-width:560px}}</style>`);
+  @media (min-width:801px){.dm-guide .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}}</style>`);
 
   // ---------- Avant le compte ----------
   const authAvant = window.authView;
@@ -46,18 +44,8 @@ const DM = (() => {
       inv = null; S.authMode = "up";
       sb.rpc("invitation_info", { p_code: invit }).then((r) => { inv = r.error ? null : (r.data?.[0] || null); if (!S.session) authView(); }, () => {});
     }
-    if (S.authMode === "in" && !S.recovery && !invit && !memo("apidoo-dm-entree")) {
-      $app.innerHTML = `<div class="dm-ecran dm-sombre">${api("bonjour", 60)}
-        <h1 class="dm-say">Tes ruches, ton miel et tes comptes dans ta poche.</h1>
-        <div class="dm-prom"><b>Dicte ta visite, gants aux mains</b><span>API range chaque note dans la bonne ruche, même sans réseau</span></div>
-        <div class="dm-prom"><b>Sache quand ouvrir</b><span>La météo de ton rucher te donne le meilleur créneau</span></div>
-        <div class="dm-prom"><b>Suis ton miel jusqu’au pot vendu</b><span>Récoltes, stock, clients et ce qu’il reste à encaisser</span></div>
-        <button type="button" class="btn honey block" data-act="dmentrer" data-v="up">Créer mon rucher</button>
-        <button type="button" class="dm-lien" data-act="dmentrer" data-v="in">J’ai déjà un compte</button>
-        <button type="button" class="dm-lien" data-act="dmexemple">Voir un rucher d’exemple</button>
-        <a class="dm-lien dm-confid" href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a></div>`;
-      return;
-    }
+    // Plus d'écran de présentation avant le compte (11 nov. 2026) : la page de connexion (v5.24) porte déjà
+    // « Créer mon compte », le rucher d'exemple et « Où vont mes données ».
     if (S.authMsg) S.authMsg = S.authMsg.replace(/Compte créé\..*/, "Compte créé. Ouvre le lien reçu par e-mail sur ce téléphone pour continuer.");
     authAvant();
     if (invit) {
@@ -73,7 +61,6 @@ const DM = (() => {
       });
     }
   };
-  ACT.dmentrer = (v) => { memo("apidoo-dm-entree", "1"); S.authMode = v; S.authMsg = ""; authView(); };
 
   // ---------- Trois questions ----------
   const q = { pas: 1, profil: "", nom: "", nb: 2, rucher: "", lat: null, lng: null };
@@ -240,7 +227,7 @@ const DM = (() => {
     document.body.insertAdjacentHTML("afterbegin", '<div class="dm-exemple"><span>Rucher d’exemple, rien n’est enregistré</span><button type="button" data-act="dmsortie">Créer le mien</button></div>');
     document.addEventListener("submit", (e) => { e.preventDefault(); e.stopImmediatePropagation(); toast(REFUS.message); document.getElementById("sheet")?.close?.(); }, true);
   };
-  ACT.dmsortie = () => { memo("apidoo-dm-entree", "1"); try { sessionStorage.setItem("dm-creer", "1"); } catch {} location.reload(); };
+  ACT.dmsortie = () => { try { sessionStorage.setItem("dm-creer", "1"); } catch {} location.reload(); };
 
   const U_pluriel = (n) => (n > 1 ? `Tes ${n} ruches sont` : "Ta ruche est");
 

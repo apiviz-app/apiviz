@@ -8,8 +8,7 @@
     page.emulate_media(reduced_motion="reduce")
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.evaluate("window.name = 'deco'; localStorage.clear()")
-    page.goto(url); page.wait_for_selector("[data-act=dmentrer][data-v=in]", timeout=15000)
-    page.click("[data-act=dmentrer][data-v=in]"); page.wait_for_selector(".auth.cx form[data-form=auth]")
+    page.goto(url); page.wait_for_selector(".auth.cx form[data-form=auth]", timeout=15000)
     # Téléphone : la phrase est dans le bandeau, le formulaire dans la feuille.
     verif(page.locator(".auth.cx").get_attribute("data-mode") == "in", "écran de connexion affiché")
     verif("Tes ruches t’attendent." in page.locator(".cx-tete .cx-say").inner_text() and visible(".cx-tete .cx-phrase"), "téléphone : phrase dans le bandeau")
