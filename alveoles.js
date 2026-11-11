@@ -107,7 +107,8 @@ const AL = (() => {
     }
     if (carte && afaire) afaire.before(carte);
     if (afaire && saison) { const deux = document.createElement("div"); deux.className = "al-deux"; afaire.before(deux); deux.append(afaire, saison); }
-    if (surOrdinateur.matches && S.d.ruches.length) accueilOrdinateur(tete);
+    // L'accueil des maquettes (accueil.js, v5.25) couvre aussi l'ordinateur : l'ancienne vue d'ensemble reste en secours.
+    if (surOrdinateur.matches && S.d.ruches.length && typeof AC == "undefined") accueilOrdinateur(tete);
     const demarrer = document.querySelector(".steps")?.closest("section");
     if (demarrer) document.querySelector(".wrap").append(demarrer);
   }
