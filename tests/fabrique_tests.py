@@ -78,6 +78,37 @@ base = base.replace(rpc_fin, """        if nom == "creer_rucher":
                 if p.get("contenant_id"):
                     occ.append({"id": p["id"], "colonie_id": p["colonie_id"], "contenant_id": p["contenant_id"], "du": p["date"], "au": None})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        # IT-07 (migration 019) : nouvelle reine (l'ancienne est clôturée, jamais effacée) et correction ; idempotents.
+        if nom == "changer_reine":
+            p = body["p"]; rs = DATA.setdefault("reines", []); c = next(x for x in DATA["ruches"] if x["id"] == p["colonie_id"])
+            couleur = lambda a: ["bleu", "blanc", "jaune", "rouge", "vert"][int(a) % 5]
+            if not any(x["id"] == p["id"] for x in rs):
+                o = next((x for x in rs if x["colonie_id"] == c["id"] and x["statut"] == "en_place"), None)
+                if not o and c.get("annee_reine"):  # comme la reprise de 019 : la reine des colonnes entre dans l'historique
+                    o = {"id": str(uuid.uuid4()), "colonie_id": c["id"], "annee_naissance": c["annee_reine"], "marquage": couleur(c["annee_reine"]), "origine": c.get("reine_origine") or "",
+                         "en_place_du": c.get("reine_introduite") or c.get("date_installation") or "2020-01-01", "en_place_au": None, "statut": "en_place", "clippee": False, "notes": ""}
+                    rs.append(o)
+                if o and o["en_place_du"] > p["date"]:
+                    return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "La reine en place l'est depuis le %s : choisis une date à partir de ce jour." % o["en_place_du"]}))
+                if o: o.update({"statut": p.get("ancienne") or "remplacee", "en_place_au": p["date"]})
+                rs.append({"id": p["id"], "colonie_id": c["id"], "annee_naissance": int(p["annee"]), "marquage": p.get("marquage") or couleur(p["annee"]), "origine": p.get("origine", ""),
+                           "en_place_du": p["date"], "en_place_au": None, "statut": "en_place", "clippee": bool(p.get("clippee")), "notes": p.get("notes", "")})
+                c.update({"annee_reine": int(p["annee"]), "reine_origine": p.get("origine", ""), "reine_introduite": p["date"]})
+                if c.get("statut") == "orpheline": c["statut"] = "active"
+                DATA.setdefault("ruche_evenements", []).append({"id": str(uuid.uuid4()), "ruche_id": c["id"], "type": "reine", "date_evenement": p["date"],
+                    "detail": " · ".join(x for x in ["Reine %s" % p["annee"], (p.get("origine") or "").lower()] if x), "autre_ruche_id": None})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        if nom == "corriger_reine":
+            p = body["p"]; q = next((x for x in DATA.get("reines", []) if x["id"] == p["id"]), None)
+            if not q: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Reine introuvable"}))
+            q.update({"annee_naissance": int(p.get("annee") or q["annee_naissance"]), "en_place_du": p.get("date") or q["en_place_du"], "marquage": p.get("marquage") or q["marquage"]})
+            for k in ("origine", "notes"):
+                if k in p: q[k] = p[k]
+            if "clippee" in p: q["clippee"] = bool(p["clippee"])
+            if q["statut"] == "en_place":
+                c = next(x for x in DATA["ruches"] if x["id"] == q["colonie_id"])
+                c.update({"annee_reine": q["annee_naissance"], "reine_origine": q["origine"], "reine_introduite": q["en_place_du"]})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
 """ + rpc_fin)
 v = '"varroa": None, "note": p.get("note", "")})'
 assert base.count(v) == 1

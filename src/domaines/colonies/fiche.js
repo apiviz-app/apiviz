@@ -26,10 +26,11 @@ export function completerFiche() {
     const ou = C.rucherADate(S.d.emplacements, r.id, v.date_visite);
     if (ou !== undefined && ou !== r.rucher_id) carte.querySelector(".u-visite-h")?.insertAdjacentHTML("beforeend", `<span class="tag cl-ou">au ${e(nomRucher(ou))}</span>`);
   });
-  // Onglet « Colonie » : statut, emplacements, ruche physique, avant le reste (reine, hausses…).
-  const reine = wrap.querySelector(".v3-reine");
-  if (!reine) return;
-  reine.insertAdjacentHTML("beforebegin", sectionStatut(r, st) + sectionEmplacements(r) + (contenantsSuivis() ? sectionContenant(r) : ""));
+  // Onglet « Colonie » : statut, emplacements, ruche physique, avant le reste (hausses, équipement, vie de la colonie).
+  // La reine a son onglet depuis IT-07 (lignee.js) : l'ancre est la première carte de l'onglet Colonie (v3.js).
+  const debut = wrap.querySelector(".v3-hausses");
+  if (!debut) return;
+  debut.insertAdjacentHTML("beforebegin", sectionStatut(r, st) + sectionEmplacements(r) + (contenantsSuivis() ? sectionContenant(r) : ""));
 }
 
 function sectionStatut(r, st) {

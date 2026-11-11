@@ -136,6 +136,9 @@ def supabase(route):
             for i in EXPL["invit"]:
                 if i["code"] == code: i.update(req.post_data_json)
             return route.fulfill(status=204, headers=hdr, body="")
+        if req.method == "GET" and t in ("reines", "colonie_liens") and DATA.get("sans_019"):
+            # Base sans la migration 019 : tables inconnues (l'app lit alors la reine dans les colonnes de la ruche).
+            return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": f"Could not find the table 'public.{t}'"}))
         if req.method == "GET" and t == "mouvements_stock" and t not in DATA:
             # Base sans la migration 018 : table inconnue, comme Supabase (l'app garde alors les anciens écrans).
             return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.mouvements_stock'"}))
@@ -156,6 +159,11 @@ def supabase(route):
             recu["upsert"].append((t, req.url, rows))
             for r in rows:
                 if not any(x.get("id") == r.get("id") for x in DATA.setdefault(t, [])): DATA[t].append(r)
+                # Comme le déclencheur de 019 : une division, un essaim récupéré ou une réunion notés au journal créent leur lien.
+                if t == "ruche_evenements" and r.get("type") in ("division", "essaimage", "reunion") and r.get("autre_ruche_id"):
+                    pe = (r["autre_ruche_id"], r["ruche_id"]) if r["type"] == "reunion" else (r["ruche_id"], r["autre_ruche_id"])
+                    DATA.setdefault("colonie_liens", []).append({"id": str(uuid.uuid4()), "parent_id": pe[0], "enfant_id": pe[1],
+                        "type": "essaim" if r["type"] == "essaimage" else r["type"], "date_lien": r.get("date_evenement"), "evenement_id": r.get("id")})
                 if t == "mouvements_stock":  # comme le déclencheur de 018 : le stock suit le mouvement
                     for a in DATA["articles"]:
                         if a["id"] == r["article_id"]: a["stock"] = float(a["stock"]) + float(r["quantite"])

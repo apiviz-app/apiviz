@@ -1339,14 +1339,14 @@ Historique des reines de chaque colonie.
 | Type | Fonctionnalité |
 | Domaine | D04 Colonies, ruches physiques et reines |
 | Epic parent | AP-EPIC-008 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 11 nov. 2026 sur `claude/it-07-reines-liens` (v5.31, migration 019 pas encore appliquée) : table reines, une seule en place, changer_reine() et corriger_reine() par la file d'envoi, reprise des colonnes, couleur de marquage dérivée de l'année et modifiable ; plus aucune écriture directe de annee_reine ; lignée, mère, série et fournisseur de la reine reportés à IT-16 et IT-17 ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | M |
 | Risque | Moyen |
 | Itération cible | [IT-07](ITERATIONS/ITERATION_07.md) |
 | Dépendances | AP-FEAT-030 |
-| Modules impactés | `migrations/017`, `v3.js reine` |
+| Modules impactés | `migrations/019`, `src/domaines/colonies/reines.js`, `lignee.js` |
 
 **Description.** Table reines (naissance, marquage, origine, en place du/au, statut) et changer_reine() ; reprise des colonnes actuelles.
 
@@ -1381,14 +1381,14 @@ Une fiche qui raconte toute la vie de la colonie.
 | Type | Fonctionnalité |
 | Domaine | D04 Colonies, ruches physiques et reines |
 | Epic parent | AP-EPIC-009 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 11 nov. 2026 sur `claude/it-07-reines-liens` (v5.31, migration 019) : table colonie_liens, anti-cycle sur la descendance (réunion permise), liens créés par déclencheur depuis le journal, reprise depuis autre_ruche_id, « Issue de … » avec lien sur la fiche ; arbre généalogique visuel en IT-16 ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
 | Risque | Moyen |
 | Itération cible | [IT-07](ITERATIONS/ITERATION_07.md) |
 | Dépendances | AP-FEAT-030 |
-| Modules impactés | `migrations/017` |
+| Modules impactés | `migrations/019` |
 
 **Description.** colonie_liens (parent, enfant, type) reprise depuis les événements existants.
 
@@ -1416,7 +1416,7 @@ Une fiche qui raconte toute la vie de la colonie.
 | Type | Fonctionnalité |
 | Domaine | D04 Colonies, ruches physiques et reines |
 | Epic parent | AP-EPIC-009 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | EN COURS — réalisé le 11 nov. 2026 sur `claude/it-07-reines-liens` (v5.31) : en-tête (statut, reine, dernière visite ; force affichée « – » jusqu'à IT-08), onglets Journal, Santé, Reine & lignée, Colonie, Photos, journal unifié visites + événements ; opérations dans le journal en IT-12, onglet Production non réalisé ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | M |

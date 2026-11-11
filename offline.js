@@ -106,6 +106,11 @@ const HL = (() => {
         Regles.colonies.appliquerStatut(d, it.args.p);
       } else if (it.type === "rpc" && it.nom === "affecter_contenant") {
         Regles.colonies.appliquerContenant(d, it.args.p);
+      } else if (it.type === "rpc" && it.nom === "changer_reine") {
+        // Nouvelle reine sans réseau (IT-07) : l'ancienne est clôturée, comme le fera la base (migration 019).
+        Regles.reines.appliquerReine(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "corriger_reine") {
+        Regles.reines.appliquerCorrection(d, it.args.p);
       } else if (it.type === "rpc" && it.nom === "enregistrer_achat") {
         // Achat sans réseau (v5.30) : dépenses, nouveaux articles et stock, comme le fera la base (migration 018).
         Regles.stock.appliquerAchat(d, it.args.p, { _attente: true });
@@ -295,6 +300,11 @@ const HL = (() => {
     if (it.type === "rpc" && it.nom === "affecter_contenant") {
       const p = it.args.p, r = byId(d.ruches || [], p.colonie_id), c = (d.contenants || []).find((x) => x.id === p.contenant_id);
       return ["Ruche physique · " + (r?.nom || "colonie"), (c ? "n° " + c.code : "sortie de sa caisse") + " · " + dfr(p.date)];
+    }
+    if (it.type === "rpc" && (it.nom === "changer_reine" || it.nom === "corriger_reine")) {
+      const p = it.args.p, toutes = [...(d.ruches || []), ...(d.ruchesSorties || [])];
+      const r = byId(toutes, p.colonie_id) || byId(toutes, (d.reines || []).find((x) => x.id === p.id)?.colonie_id);
+      return ["Reine · " + (r?.nom || "colonie"), (it.nom === "changer_reine" ? "nouvelle reine " : "correction · reine ") + p.annee + " · " + dfr(p.date)];
     }
     if (it.type === "rpc" && it.nom === "enregistrer_achat") {
       const p = it.args.p, total = (p.lignes || []).reduce((t, x) => t + Number(x.montant || 0), 0);

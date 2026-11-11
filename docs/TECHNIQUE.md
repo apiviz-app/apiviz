@@ -121,6 +121,17 @@
   déclarées par l'écran « rucher » (`src/domaines/ruchers/ecrans.js`, enregistrées par `src/main.js` via
   `noyau/actions.js`). `creer_rucher` et `placer_rucher` passent par la file d'envoi hors ligne. Renommer, modifier
   les infos et archiver demandent le réseau (message clair sinon).
+- **Reines et filiation** (IT-07, migration 019) : `reines` garde l'historique (une seule ligne `en_place` par colonie,
+  index unique partiel) ; `changer_reine()` clôt la reine en place à la date d'introduction de la nouvelle, crée la
+  nouvelle, écrit la ligne « reine » du journal et recopie la reine en place dans `ruches.annee_reine`,
+  `reine_origine`, `reine_introduite` (lecture par l'ancienne version, retour arrière). L'application n'écrit plus ces
+  colonnes. Le déclencheur `ruches_reine` suit une écriture de l'ancienne version ; il se tait quand `changer_reine()`
+  écrit elle-même (variable de transaction `apidoo.reine_sync`). `colonie_liens` est alimentée par un déclencheur sur
+  `ruche_evenements` (division, essaimage récupéré, réunion) ; l'anti-cycle ne porte que sur la descendance (une
+  réunion dans la colonie mère est permise). Côté téléphone : `Regles.reines` (`src/domaines/colonies/reines.js`),
+  avec repli sur les colonnes de la ruche et sur `autre_ruche_id` si la base n'a pas 019. Écran « ruche » : `ux.js`
+  pose les onglets et le journal unifié, `src/domaines/colonies/lignee.js` remplit l'en-tête et les onglets « Santé »
+  et « Reine & lignée » (actions `rn*`).
 - **Emplacements, déplacements, ruches physiques** (IT-06, migration 016) : `colonie_emplacements` dit où était chaque
   colonie, par période `[du, au)` (contrainte d'exclusion `btree_gist` : jamais deux emplacements à la fois). Tout
   changement de `ruches.rucher_id` (nouvelle version par `deplacer_colonies()`, ancienne version par le texte) passe par

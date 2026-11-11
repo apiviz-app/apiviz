@@ -2,8 +2,9 @@
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_timeout(300)
     # AP-TECH-028 : nombre de lectures à l'ouverture, surveillé (relevé de départ : 16 avec les données des tests ;
-    # 17 depuis IT-05 : table ruchers ; 21 depuis IT-06 : emplacements, déplacements, contenants, occupations).
-    verif(len(lectures) <= 21, "lectures de données à l'ouverture : %s (21 au plus : 17 + 4 tables d'IT-06)" % len(lectures))
+    # 17 depuis IT-05 : table ruchers ; 21 depuis IT-06 : emplacements, déplacements, contenants, occupations ;
+    # 23 depuis IT-07 : reines, liens de colonies. La table mouvements_stock de 018 est absente de cette base simulée).
+    verif(len(lectures) <= 23, "lectures de données à l'ouverture : %s (23 au plus : 17 + 4 tables d'IT-06 + 2 d'IT-07)" % len(lectures))
     page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.wait_for_selector("form[data-form=visite]")
     page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
     page.fill("#v_note", "Visite comptée")

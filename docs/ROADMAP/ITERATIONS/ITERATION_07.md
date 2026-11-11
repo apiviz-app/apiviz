@@ -8,7 +8,8 @@
 | Phase | Phase 1 — Socle métier : ruchers, colonies, reines |
 | Taille | M |
 | Hypothèse de taille | Reprise des colonnes reine des ruches et des événements de division/essaimage/réunion. |
-| Migration | `017` |
+| Migration | `019` (la fiche annonçait 017, pris par 017-associes puis 018-stock-mouvements) |
+| État | Réalisée le 11 nov. 2026 sur `claude/it-07-reines-liens` (v5.31), en attente de validation |
 
 ## 1. Objectif
 
@@ -46,12 +47,12 @@ La fiche colonie montre la reine en place et les précédentes ; une colonie iss
 
 ## 6. Fichiers et modules potentiellement concernés
 
-- `migrations/017-reines-liens.sql`
-- `v3.js (formulaires reine) → src/domaines/colonies`
+- `migrations/019-reines-liens.sql`
+- `v3.js (formulaires reine) → src/domaines/colonies` (`reines.js`, `lignee.js`), `ux.js` (onglets, journal), `offline.js`
 
 ## 7. Évolutions SQL nécessaires
 
-Migration 017 : reines, colonie_liens, fonction changer_reine(), reprise des données.
+Migration 019 : reines, colonie_liens, fonction changer_reine(), reprise des données.
 
 ## 8. Dépendances
 
@@ -90,7 +91,7 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 ## 13. Livrables
 
 - Code sur une branche `claude/…` et pull request vers `main`.
-- Migration `migrations/017-….sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
+- Migration `migrations/019-reines-liens.sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
 - Entrée du CHANGELOG avec rubrique « À vérifier ».
 - Statuts mis à jour dans le backlog master.
 - Version publiée en recette.

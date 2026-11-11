@@ -63,17 +63,23 @@
     page.evaluate("ACT.tnquitter()"); page.wait_for_selector(".wrap")
 
     # Fiche ruche : onglet Colonie
-    page.evaluate(f"ACT.ruche('{R[0]}')"); page.click("[data-act=uronglet][data-v=colonie]"); page.wait_for_selector(".v3-reine")
-    verif("Marquage bleu" in page.locator(".v3-reine").inner_text(), "reine 2025 : marquage bleu")
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.click("[data-act=uronglet][data-v=reine]"); page.wait_for_selector(".rn-en-place")
+    verif("marquage bleu" in page.locator(".rn-en-place").inner_text(), "reine 2025 : marquage bleu (onglet Reine & lignée, IT-07)")
+    page.click("[data-act=uronglet][data-v=colonie]"); page.wait_for_selector(".v3-hausses")
     page.click("[data-act=v3hausse][data-v='1']"); page.wait_for_timeout(500)
     verif(any(b == {"hausses": 3} and f"id=eq.{R[0]}" in u for u, b in patches("ruches")), "hausse ajoutée (2 → 3)")
     page.click("[data-act=v3equip][data-v='Grille à reine']"); page.wait_for_timeout(500)
     verif(any(b.get("equipement") == ["Grille à reine"] for u, b in patches("ruches")), "équipement coché")
-    page.click("[data-act=uronglet][data-v=colonie]") if page.locator(".v3-reine").count() == 0 else None
+    page.click("[data-act=uronglet][data-v=colonie]") if page.locator(".v3-hausses").count() == 0 else None
     shot("colonie")
-    page.click("[data-act=v3reine]"); page.fill("#sheetForm input[name=annee]", str(an)); page.select_option("#sheetForm select[name=origine]", "Achetée")
+    # IT-07 : la nouvelle reine passe par changer_reine() (migration 019) ; l'app n'écrit plus annee_reine elle-même.
+    page.click("[data-act=uronglet][data-v=reine]"); page.wait_for_selector(".rn-en-place")
+    page.click("[data-act=rnnouvelle]"); page.fill("#sheetForm input[name=annee]", str(an)); page.select_option("#sheetForm select[name=origine]", "Achetée")
     page.click("#sheetForm .btn.main"); page.wait_for_selector(".toast >> text=Reine enregistrée", timeout=8000)
-    verif(any(b.get("annee_reine") == an and b.get("reine_origine") == "Achetée" for u, b in patches("ruches")) and any(e[0]["type"] == "reine" if isinstance(e, list) else e["type"] == "reine" for e in posts("ruche_evenements")), "nouvelle reine + événement")
+    nvr = [b["p"] for nm, b in recu["rpc"] if nm == "changer_reine"]
+    verif(len(nvr) == 1 and nvr[0]["annee"] == an and nvr[0]["origine"] == "Achetée" and nvr[0]["colonie_id"] == R[0]
+          and not any("annee_reine" in b for u, b in patches("ruches")) and any(e["type"] == "reine" for e in DATA["ruche_evenements"]), "nouvelle reine par changer_reine + événement, aucune écriture directe de annee_reine")
+    page.click("[data-act=uronglet][data-v=colonie]"); page.wait_for_selector(".v3-hausses")
     page.click("[data-act=v3diviser]"); page.wait_for_selector("#sheetForm input[name=nom]")
     verif(page.locator("#sheetForm input[name=nom]").input_value() == "Ruche 8", "nom proposé pour la division : Ruche 8")
     page.click("#sheetForm .btn.main"); page.wait_for_selector(".toast >> text=Ruche 8 créée", timeout=8000)

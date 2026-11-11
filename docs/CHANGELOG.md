@@ -5,6 +5,48 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.31 · à publier en recette · reines et liens de colonies (IT-07)
+**Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. **Pas encore
+appliquée** : à appliquer sur `apidoo-test` après 018, avant la recette, puis sur `apidoo` avant la production.
+(La fiche IT-07 annonçait le numéro 017, pris depuis par 017-associes puis 018-stock-mouvements.)
+
+Pour l'apiculteur :
+1. **Reine** : enregistrer une nouvelle reine ne fait plus disparaître l'ancienne. L'ancienne est clôturée à la date
+   d'introduction de la nouvelle (remplacée, morte, disparue ou vendue) et reste dans l'onglet « Reine & lignée ».
+   « Corriger » sert aux erreurs de saisie. Marquage : couleur de l'année par défaut, modifiable (ou « non marquée ») ;
+   aile clippée et notes en plus.
+2. **Lignée** : une colonie issue d'une division ou d'un essaim récupéré affiche « Issue de Ruche 2 le 12 mai » avec
+   un lien ; la colonie mère montre ce qui en est issu ; les réunions sont notées des deux côtés.
+3. **Fiche d'une ruche** : sous le nom, le statut, la reine (âge, couleur), la force et la date de la dernière visite.
+   Onglets Journal, Santé (comptages varroa et traitements déjà saisis), Reine & lignée, Colonie, Photos.
+4. **Journal** : visites et événements de la colonie (installation, division, essaimage, réunion, nouvelle reine,
+   déplacement, sortie) dans l'ordre des dates. L'« Historique » de l'onglet Colonie y est passé.
+5. « Modifier la ruche » ne demande plus l'année de la reine.
+
+Technique : tables `reines` et `colonie_liens` (RLS, audit), `changer_reine()` et `corriger_reine()` (idempotentes par
+identifiant, file d'envoi hors ligne), déclencheurs pour l'ancienne version (année changée = nouvelle reine ; division,
+essaimage ou réunion au journal = lien), reprise depuis `annee_reine` et `autre_ruche_id`. L'application n'écrit plus
+jamais `annee_reine` : la base tient les trois colonnes reine de `ruches` à jour (ancienne version, retour arrière).
+Règles pures `src/domaines/colonies/reines.js` (`tests/unitaires/reines.test.mjs`), écrans `lignee.js`, journal dans
+`ux.js`, styles `styles/46-reines.css`, scénario `tests/etapes_rn.txt`, tests SQL `tests/sql/test_019.mjs`.
+`etapes_v4` adapté (la reine passe par `changer_reine`). `etapes_dl` : 23 lectures à l'ouverture (2 tables de plus).
+
+Limites connues :
+- La **force** n'est pas encore saisie dans les visites (IT-08) : l'en-tête affiche « Force – ».
+- Le conseil « Reine de 3 ans ou plus : pense à la remplacer » est retiré (seuil sans source) ; l'âge reste affiché.
+- Division, essaimage et réunion restent des écritures directes, sans transaction ni file d'envoi (hors IT-07).
+- Le journal ne contient pas encore les opérations (traitements, comptages hors visite) : elles arrivent en IT-12.
+- Sur une base sans 019, la reine se lit dans la ruche, sans saisie possible : appliquer 019 avant de publier.
+
+**À vérifier**
+1. Une ruche avec une reine notée : l'en-tête montre son année, son âge et sa pastille de couleur.
+2. Reine & lignée › « Nouvelle reine », introduite à une date passée : l'ancienne passe dans « Reines précédentes »,
+   clôturée à cette date ; le journal montre « Nouvelle reine ».
+3. « Corriger » sur la reine en place : rien n'est ajouté à l'historique.
+4. Diviser une ruche : la nouvelle affiche « Issue de … », le lien ramène à la ruche d'origine.
+5. Sans réseau : une nouvelle reine est gardée, montrée « en attente », puis envoyée au retour du réseau.
+6. Les cinq onglets défilent sur téléphone ; l'onglet Colonie garde statut, emplacements, hausses, équipement.
+
 ## v5.30 · à publier en recette · stock : catalogue, achats, mise en pots, traçabilité
 **Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. À appliquer sur
 `apidoo-test` avant la recette. S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».

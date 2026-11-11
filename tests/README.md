@@ -18,6 +18,10 @@ Scénarios IT-04 : `etapes_iv` (invitations : rôle, usage unique, révocation, 
 restauration), `etapes_cf` (page de confidentialité et ses liens) ; `etapes_vx` vérifie l'information avant la première
 dictée. Avec la variable `CAPTURES=<dossier>`, ces scénarios enregistrent des captures à 390 et 1 280 px.
 
+Scénario IT-07 : `etapes_rn` (en-tête de la fiche colonie, nouvelle reine qui clôture l'ancienne, correction, « Issue de
+Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie sans réseau, aucune écriture directe de
+`annee_reine`, base sans 019). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 

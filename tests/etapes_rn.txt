@@ -1,0 +1,135 @@
+
+    # IT-07 — Reines et liens de colonies : en-tête de la fiche (AP-US-039), nouvelle reine sans perdre l'ancienne
+    # (AP-US-037), « Issue de Ruche 2 le 12 mai » (AP-US-038), onglets Santé et Reine & lignée, journal unifié,
+    # saisie sans réseau, plus aucune écriture directe de annee_reine, base sans la migration 019.
+    import os, datetime
+    cap = os.environ.get("CAPTURES")
+    auj = datetime.date.today(); an = auj.year
+    A = an if auj >= datetime.date(an, 5, 13) else an - 1          # année du scénario : le 12 mai est passé
+    suf = "" if A == an else f" {A}"                                # l'année n'est écrite que si ce n'est pas l'année en cours
+    couleur = lambda a: ["bleu", "blanc", "jaune", "rouge", "vert"][a % 5]
+    R1 = DATA["ruches"][0]["id"]; R2, R5, Q1 = str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["ruches"][0].update({"statut": "active", "sortie": "", "annee_reine": A - 2, "reine_origine": "Achetée", "reine_introduite": f"{A - 2}-05-02",
+                              "date_installation": f"{A - 3}-04-01", "hausses": 0, "equipement": []})
+    col = lambda i, nom, inst: {"id": i, "nom": nom, "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "reine_origine": "", "reine_introduite": None,
+                                "notes": "", "statut": "active", "sortie": "", "date_installation": inst, "hausses": 0, "equipement": []}
+    DATA["ruches"] += [col(R2, "Ruche 2", f"{A - 1}-04-10"), col(R5, "Ruche 5", f"{A}-05-12")]
+    DATA["reines"] = [{"id": Q1, "colonie_id": R1, "annee_naissance": A - 2, "marquage": couleur(A - 2), "origine": "Achetée", "en_place_du": f"{A - 2}-05-02",
+                       "en_place_au": None, "statut": "en_place", "clippee": False, "notes": ""}]
+    EV = str(uuid.uuid4())
+    DATA["ruche_evenements"] = [
+        {"id": EV, "ruche_id": R2, "type": "division", "date_evenement": f"{A}-05-12", "detail": "Nouvelle ruche : Ruche 5", "autre_ruche_id": R5},
+        {"id": str(uuid.uuid4()), "ruche_id": R5, "type": "installation", "date_evenement": f"{A}-05-12", "detail": "Issue de la division de Ruche 2", "autre_ruche_id": R2},
+        {"id": str(uuid.uuid4()), "ruche_id": R1, "type": "essaimage", "date_evenement": f"{A}-04-20", "detail": "Essaim perdu", "autre_ruche_id": None}]
+    DATA["colonie_liens"] = [{"id": str(uuid.uuid4()), "parent_id": R2, "enfant_id": R5, "type": "division", "date_lien": f"{A}-05-12", "evenement_id": EV}]
+    vis = lambda rid, d, **k: {"id": str(uuid.uuid4()), "ruche_id": rid, "date_visite": d, "activite": "Normale", "provisions": "Bonnes", "reine": "Vue", "couvain": "Normal",
+                               "poids_kg": None, "varroa": None, "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, **k}
+    DATA["visites"] = [vis(R1, f"{A}-05-05", varroa=6, varroa_abeilles=300, varroa_methode="Sucre glace"),
+                       vis(R1, f"{A}-04-02", traitement="Produit d’essai", lot_produit="L42", traitement_dose="2 lanières")]
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Le service worker s'installe, puis garde l'application au rechargement (pour la saisie sans réseau, plus bas).
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    def captures(nom):
+        if not cap: return
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(350)
+            page.screenshot(path=f"{cap}/rn-{nom}-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    # AP-US-039 : l'en-tête montre statut, reine (âge, couleur), force, varroa de la dernière observation, dernière visite.
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_selector(".rn-entete", timeout=5000)
+    t = page.locator(".rn-entete").inner_text()
+    ans = an - (A - 2)
+    verif("Active" in t and f"Reine {A - 2}" in t and f"{ans} an" in t and "Force –" in t and f"Visitée le 5 mai{suf}" in t, f"en-tête : statut, reine (âge), force, dernière visite ({t!r})".replace("\n", " "))
+    verif(page.locator(".rn-entete .v3-pastille").count() == 1 and "2 %" in page.locator(".u-quatre").inner_text(), "en-tête : pastille de couleur de la reine, varroa du dernier comptage (2 %)")
+    verif(page.locator(".subtabs button").all_inner_texts() == ["Journal", "Santé", "Reine & lignée", "Colonie", "Photos"], "cinq onglets : Journal, Santé, Reine & lignée, Colonie, Photos")
+    verif(page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), "téléphone : pas de défilement horizontal de la page")
+    # Journal unifié : visites et événements dans l'ordre des dates.
+    ordre = page.evaluate("[...document.querySelectorAll('.u-visite, .cl-evt')].map(x => x.classList.contains('cl-evt') ? 'E:' + x.querySelector('b').textContent : 'V')")
+    verif(ordre == ["V", "E:Essaimage", "V", "E:Installation"], f"journal unifié : visite, essaimage, visite, installation ({ordre})")
+    captures("fiche-journal")
+
+    # Onglet Santé : comptages et traitements déjà saisis, en lecture.
+    page.click("[data-act=uronglet][data-v=sante]"); page.wait_for_selector(".rn-varroa", timeout=5000)
+    verif("2 %" in page.locator(".rn-varroa").inner_text() and "6 sur 300 abeilles" in page.locator(".rn-varroa").inner_text(), "Santé : comptage varroa du 5 mai")
+    verif("Produit d’essai" in page.locator(".rn-traitements").inner_text() and "lot L42" in page.locator(".rn-traitements").inner_text(), "Santé : traitement noté pendant la visite")
+    captures("sante")
+
+    # AP-US-037 : reine A-2 en place ; j'enregistre une reine A introduite le 10 mai.
+    page.click("[data-act=uronglet][data-v=reine]"); page.wait_for_selector(".rn-en-place", timeout=5000)
+    verif(f"Reine {A - 2}" in page.locator(".rn-en-place").inner_text() and f"marquage {couleur(A - 2)}" in page.locator(".rn-en-place").inner_text(), "couleur de marquage dérivée de l'année, comme avant")
+    verif(page.locator(".rn-precedentes").count() == 0, "pas encore de reine précédente")
+    page.click("[data-act=rnnouvelle]"); page.wait_for_selector("#sheet[open]")
+    page.fill("#sheet [name=annee]", str(A)); page.fill("#sheet [name=date]", f"{A - 2}-01-01"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=/année d’introduction/", timeout=5000)
+    verif(not [1 for n, b in recu["rpc"] if n == "changer_reine"], "date incohérente : refusée en français avant l'envoi")
+    page.fill("#sheet [name=date]", f"{A}-05-10"); page.select_option("#sheet [name=origine]", "Élevage maison"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Reine enregistrée", timeout=10000)
+    env = [b["p"] for n, b in recu["rpc"] if n == "changer_reine"]
+    verif(len(env) == 1 and env[0]["colonie_id"] == R1 and env[0]["annee"] == A and env[0]["date"] == f"{A}-05-10" and env[0]["id"] not in (R1, Q1), "changer_reine envoyé avec un identifiant de saisie")
+    q1 = next(x for x in DATA["reines"] if x["id"] == Q1); q2 = next(x for x in DATA["reines"] if x["id"] == env[0]["id"])
+    verif(q1["statut"] == "remplacee" and q1["en_place_au"] == f"{A}-05-10" and q2["statut"] == "en_place", "AP-US-037 : l'ancienne reine est clôturée au 10 mai, la nouvelle est en place")
+    page.wait_for_selector(".rn-precedentes", timeout=5000)
+    verif(f"Reine {A}" in page.locator(".rn-en-place").inner_text() and f"marquage {couleur(A)}" in page.locator(".rn-en-place").inner_text(), "onglet Reine : la nouvelle reine en place")
+    p = page.locator(".rn-precedentes").inner_text()
+    verif(f"Reine {A - 2}" in p and f"au 10/05/{A}" in p and "remplacée" in p, "AP-US-037 : l'ancienne reine figure dans l'onglet, clôturée au 10 mai")
+    verif(not any("annee_reine" in c for t_, c in patchs) and not any("annee_reine" in r for t_, u, rows in recu["upsert"] for r in rows), "aucune écriture directe de annee_reine par l'application")
+    captures("reine-lignee")
+    # Même saisie renvoyée (coupure pendant l'envoi) : appliquée une seule fois.
+    page.evaluate("sb.rpc('changer_reine', { p: %s })" % json.dumps(env[0])); page.wait_for_timeout(300)
+    verif(len(DATA["reines"]) == 2 and len([e for e in DATA["ruche_evenements"] if e["type"] == "reine"]) == 1, "même saisie renvoyée : une seule reine créée, une seule ligne au journal")
+
+    # Corriger une erreur de saisie : pas de nouvelle reine.
+    page.click(".rn-en-place [data-act=rncorriger]"); page.wait_for_selector("#sheet[open]")
+    page.select_option("#sheet [name=origine]", "Achetée"); page.fill("#sheet [name=notes]", "Douce"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Reine corrigée", timeout=10000)
+    verif(len(DATA["reines"]) == 2 and q2["origine"] == "Achetée" and q2["notes"] == "Douce" and DATA["ruches"][0]["reine_origine"] == "Achetée", "corriger_reine : origine et notes corrigées, aucune reine créée")
+    # « Modifier la ruche » ne propose plus l'année de la reine.
+    page.evaluate("ACT.editruche('%s')" % R1); page.wait_for_selector("#sheet[open]")
+    verif(page.locator("#sheet [name=annee_reine]").count() == 0 and page.locator("#sheet [name=nom]").count() == 1, "« Modifier la ruche » : plus de champ année de la reine")
+    page.click("#sheet [data-act=closesheet]")
+    # Le journal montre le changement de reine à sa date.
+    page.click("[data-act=uronglet][data-v=journal]"); page.wait_for_selector(".cl-evt", timeout=5000)
+    verif(page.locator(".cl-evt").first.inner_text().split("\n")[1:3] == ["Nouvelle reine", f"Reine {A} · élevage maison"], "journal : « Nouvelle reine » en tête, à la date d'introduction")
+
+    # AP-US-038 : une colonie issue d'une division affiche sa colonie mère, avec un lien.
+    page.evaluate("ACT.ruche('%s')" % R5); page.wait_for_function("S.ruche === '%s' && !!document.querySelector('.rn-entete')" % R5, timeout=5000); page.evaluate("ACT.uronglet('reine')"); page.wait_for_selector(".rn-lignee", timeout=5000)
+    verif(f"Issue de Ruche 2 le 12 mai{suf}" in page.locator(".rn-origine").inner_text(), f"AP-US-038 : « Issue de Ruche 2 le 12 mai{suf} »")
+    page.click(".rn-origine [data-act=ruche]"); page.wait_for_function("S.ruche === '%s'" % R2, timeout=5000)
+    page.evaluate("ACT.uronglet('reine')"); page.wait_for_selector(".rn-lignee", timeout=5000)
+    l = page.locator(".rn-lignee").inner_text()
+    verif(f"Division le 12 mai{suf}" in l and "Ruche 5" in l, "le lien mène à Ruche 2, qui montre la colonie qui en est issue")
+
+    # Une division faite aujourd'hui apparaît dans la lignée des deux colonies.
+    page.evaluate("ACT.uronglet('colonie')"); page.wait_for_selector("[data-act=v3diviser]", timeout=5000)
+    page.click("[data-act=v3diviser]"); page.wait_for_selector("#sheet[open]"); page.fill("#sheet [name=nom]", "Ruche 9"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Ruche 9 créée", timeout=10000)
+    page.evaluate("ACT.uronglet('reine')"); page.wait_for_selector(".rn-lignee", timeout=5000)
+    verif("Ruche 9" in page.locator(".rn-lignee").inner_text(), "division : la nouvelle colonie apparaît dans la lignée")
+
+    # Sans réseau : première reine de Ruche 2, gardée sur le téléphone, envoyée une fois au retour du réseau.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.click("[data-act=rnnouvelle]"); page.wait_for_selector("#sheet[open]")
+    verif(page.locator("#sheet [name=ancienne]").count() == 0, "colonie sans reine connue : pas de question sur l'ancienne reine")
+    page.fill("#sheet [name=annee]", str(A)); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
+    verif(f"Reine {A}" in page.locator(".rn-en-place").inner_text() and page.locator(".rn-en-place .tag.watch").count() == 1, "sans réseau : la reine apparaît tout de suite, « en attente »")
+    verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif(page.evaluate("S.d.ruches.find(r => r.nom === 'Ruche 2').annee_reine") == A, "après rechargement sans réseau : la saisie est toujours là")
+    verif(len([1 for n, b in recu["rpc"] if n == "changer_reine" and b["p"]["colonie_id"] == R2]) == 0, "rien envoyé sans réseau")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=/envoyée|envoyées/", timeout=20000)
+    verif(len([1 for n, b in recu["rpc"] if n == "changer_reine" and b["p"]["colonie_id"] == R2]) == 1
+          and len([x for x in DATA["reines"] if x["colonie_id"] == R2]) == 1, "retour du réseau : la reine est envoyée une seule fois")
+
+    # Base sans la migration 019 : la reine se lit dans les colonnes de la ruche, sans saisie possible.
+    DATA["sans_019"] = True
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_function("S.ruche === '%s' && !!document.querySelector('.rn-entete')" % R1, timeout=5000); page.evaluate("ACT.uronglet('reine')"); page.wait_for_selector(".rn-en-place", timeout=5000)
+    verif(f"Reine {A}" in page.locator(".rn-en-place").inner_text() and page.locator("[data-act=rnnouvelle]").count() == 0, "base sans 019 : reine lue dans la ruche, pas de bouton de saisie")
+    page.evaluate("ACT.ruche('%s')" % R5); page.wait_for_function("S.ruche === '%s' && !!document.querySelector('.rn-entete')" % R5, timeout=5000); page.evaluate("ACT.uronglet('reine')"); page.wait_for_selector(".rn-lignee", timeout=5000)
+    verif("Issue de Ruche 2" in page.locator(".rn-lignee").inner_text(), "base sans 019 : la filiation est déduite du journal")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
