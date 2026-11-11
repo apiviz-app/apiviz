@@ -67,3 +67,11 @@ test("variation de poids sur la courbe", () => {
   assert.equal(S.resumePoids([v("2026-06-01", { poids_kg: 40 }), v("2026-10-07", { poids_kg: 40.2 })]), "Stable depuis le 1er juin");
   assert.equal(S.resumePoids([v("2026-06-01", { poids_kg: 40 })]), "");
 });
+
+import { resteTexte } from "../../src/domaines/ventes/saisie.js";
+test("saisies : stock restant écrit au bon nombre (v5.26)", () => {
+  assert.equal(resteTexte(16), "16 restants");
+  assert.equal(resteTexte(1), "1 restant");
+  assert.equal(resteTexte(0.5, "kg"), "0,5 kg restant");
+  assert.equal(resteTexte(-2, "L"), "0 L restant", "jamais négatif");
+});

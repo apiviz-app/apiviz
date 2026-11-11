@@ -5,6 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.26 · à publier en recette · saisies de visite et de vente (chantier des écrans, étape 6)
+Aucune migration. S'appuie sur la v5.25 (fiche ruche).
+
+Écart relevé avec les maquettes : la visite avait déjà sa barre « Enregistrer la visite » fixe en bas. La vente
+non : son bouton était au bout du formulaire, sous la barre du bas, et le total n'était lisible que dans le bouton.
+Les compteurs ne disaient pas ce qu'il resterait en stock.
+
+Pour l'apiculteur :
+1. **Vente : barre d'enregistrement fixe**, comme la visite : le total à gauche, avec le nombre de pots, et
+   « Enregistrer la vente » à droite. La barre du bas de l'app s'efface pendant la vente, comme pendant la visite.
+2. **Stock restant** : sous chaque compteur (pots vendus, nourrissement et matériel), « 16 restants » une fois la
+   quantité choisie. « 40 unité en stock » devient « 40 en stock ».
+3. **Compteurs qui réagissent** : le chiffre qui vient de changer rebondit, et le total aussi. Rien ne rebondit quand
+   on touche autre chose (paiement, remise).
+
+Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `src/domaines/ventes/saisie.js`, dernier complément des écrans « vente » et « visite » ; styles
+`styles/41-saisies.css` ; scénario `tests/etapes_sv.txt` (captures à 390 px) ; `etapes_qr` vise le bouton dans la barre.
+
+**À vérifier**
+1. Nouvelle vente sur téléphone : la barre reste en bas pendant qu'on fait défiler, le total suit les pots choisis.
+2. « Enregistrer la vente » enregistre comme avant, hors ligne compris.
+3. Sous chaque compteur, le stock restant baisse avec la quantité ; au singulier pour 1 ou moins.
+4. Pendant une visite, le nourrissement montre aussi le stock restant.
+
 ## v5.25 · à publier en recette · fiche ruche des maquettes (chantier des écrans, étape 5)
 Aucune migration. S'appuie sur les v5.22 à v5.24. Téléphone et ordinateur : la fiche est la même.
 
