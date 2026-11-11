@@ -1,8 +1,8 @@
 // Apiviz — accueil sur téléphone d'après les maquettes du 10 nov. 2026 (chantier des écrans, étape 4, v5.24).
 // Ordre : bonjour et deux actions, la priorité dite par API, quatre chiffres, l'état des ruches (alvéoles par rucher,
 // avec leur météo), le prochain créneau de visite sur 5 jours, À faire étiqueté, les dernières actions.
-// Complément de l'écran « dash », appelé après AL et DM (src/domaines/accueil/ecrans.js). Ne touche qu'au téléphone
-// (≤ 800 px) et à une exploitation déjà lancée (ruches et visites) : l'ordinateur et la prise en main restent tels quels.
+// Complément de l'écran « dash », appelé après AL et DM (src/domaines/accueil/ecrans.js). Téléphone et ordinateur
+// (v5.25 : sur ordinateur, deux colonnes). Dès la première ruche, même sans visite ; sans ruche, la prise en main reste.
 const AC = (() => {
   const U = UX;
   const telephone = matchMedia("(max-width:800px)");
@@ -29,7 +29,15 @@ const AC = (() => {
 
   // 2. La priorité du jour, dite par API, avec son action (et la tournée proposée, s'il y en a une).
   function priorite() {
-    const r = prioritaire(), d = S.d;
+    const d = S.d;
+    if (!d.visites.length) {
+      const premiere = d.ruches.find((x) => x.statut !== "orpheline") || d.ruches[0];
+      return `<section class="ac-api">${AL.compagnon("bonjour", 44)}
+      <div class="ac-api-t"><b id="acPhrase">${esc(U.pluriel(d.ruches.length, "ruche"))} en place. Note ta première visite : je pourrai ensuite te dire où en est chaque colonie.</b>
+      <span class="small">Une visite se note en une minute, au rucher, même sans réseau.</span>
+      <div class="ac-api-a"><button type="button" class="btn main" data-act="newvisite" data-v="${premiere.id}">Noter une visite</button></div></div></section>`;
+    }
+    const r = prioritaire();
     const pesees = r ? d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg).length : 0;
     const source = r ? (pesees > 1 ? `D’après ${pesees} pesées de ${r.nom}` : `D’après la dernière visite de ${r.nom}`) : "D’après tes dernières visites";
     const prochaine = document.querySelector(".n4-prochaine");
@@ -121,7 +129,7 @@ const AC = (() => {
 
   function completerAccueil() {
     const d = S.d, wrap = document.querySelector(".wrap"), tete = wrap?.querySelector(".hero-head");
-    if (!telephone.matches || !d?.ruches.length || !d.visites.length || !tete) return;
+    if (!d?.ruches.length || !tete) return;
     wrap.classList.add("ac");
     const carte = wrap.querySelector(".al-carte"), liste = wrap.querySelector(".u-liste"), guide = wrap.querySelector(".dm-guide");
     const haut = priorite() + chiffres(); // avant bonjour() : la proposition de tournée est encore dans l'en-tête
@@ -135,7 +143,24 @@ const AC = (() => {
     if (liste) { afaire(liste); (wrap.querySelector(".ac-creneau") || carte || wrap.querySelector(".ac-chiffres")).after(liste); }
     wrap.querySelector(".al-deux")?.remove(); // l'ancien bloc « Saison » : remplacé par les quatre chiffres
     (liste || wrap.querySelector(".ac-chiffres")).insertAdjacentHTML("afterend", dernieres());
-    if (guide) wrap.append(guide);
+    if (guide) {
+      // Sans visite, le guide de prise en main reste en vue, juste sous la priorité ; ensuite il passe en bas.
+      if (!d.visites.length) wrap.querySelector(".ac-api").after(guide); else wrap.append(guide);
+    }
+    if (!telephone.matches) colonnes(wrap);
+  }
+  // Ordinateur : bonjour et priorité côte à côte, les quatre chiffres sur une ligne, puis deux colonnes :
+  // l'état des ruches et le créneau à gauche, À faire et les dernières actions à droite.
+  function colonnes(wrap) {
+    const pris = (sel) => [...wrap.querySelectorAll(`:scope > ${sel}`)];
+    const haut = document.createElement("div"), g = document.createElement("div"), dr = document.createElement("div"), cols = document.createElement("div");
+    haut.className = "ac-haut"; cols.className = "ac-cols"; g.className = "ac-col"; dr.className = "ac-col";
+    const tete = wrap.querySelector(":scope > .ac-hero"), api = wrap.querySelector(":scope > .ac-api");
+    if (!tete || !api) return;
+    tete.before(haut); haut.append(tete, api);
+    g.append(...pris(".al-carte, .ac-creneau")); dr.append(...pris(".u-liste, .ac-dernieres"));
+    cols.append(g, dr);
+    (wrap.querySelector(":scope > .ac-chiffres") || haut).after(cols);
   }
   telephone.addEventListener("change", () => { if (S.route === "dash") redessiner("dash"); });
 
@@ -147,7 +172,7 @@ const AC = (() => {
     if (S.route !== "dash" || !bloc) return;
     bloc.outerHTML = creneau();
     const p = document.getElementById("acPhrase");
-    if (p) p.textContent = AL.phrase();
+    if (p && S.d.visites.length) p.textContent = AL.phrase(); // sans visite, la phrase reste « Note ta première visite »
   };
 
   return { completerAccueil, prenom };
