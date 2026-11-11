@@ -20,7 +20,7 @@ export function suggestion() {
 
 /** Enveloppe la feuille du bouton API (chargé après nav4.js et alveoles.js, par src/main.js). */
 export function installer() {
-  if (typeof window.quickSheet != "function" || window.quickSheet.faApi) return;
+  if (typeof window == "undefined" || typeof window.quickSheet != "function" || window.quickSheet.faApi) return;
   const avant = window.quickSheet;
   const feuille = function () {
     avant();
