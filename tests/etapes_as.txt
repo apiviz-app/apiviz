@@ -1,0 +1,67 @@
+    # v5.29 — Entre associés : qui a acheté et avec quel argent, qui a vendu et qui a récolté l'argent ; carte de
+    # Gestion (qui doit combien à qui) et son détail ; liste des associés dans Réglages. Migration 017.
+    # Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    # Une dépense avancée par chacun, une vente encaissée par chacun (voir donnees_v2 : V1 payée 36 €, V2 à encaisser).
+    DATA["depenses"] = [{"id": str(uuid.uuid4()), "date_depense": J(60), "categorie": "Pots & étiquettes", "libelle": "Pots 500 g", "montant": 48, "fournisseur_id": None, "achete_par": "Pierre-Louis", "paye_par": "Pierre-Louis"},
+                        {"id": str(uuid.uuid4()), "date_depense": J(30), "categorie": "Alimentation", "libelle": "Candy", "montant": 12, "fournisseur_id": None, "achete_par": "Johan", "paye_par": "Johan"},
+                        {"id": str(uuid.uuid4()), "date_depense": J(20), "categorie": "Matériel", "libelle": "Cadres", "montant": 30, "fournisseur_id": None, "achete_par": "Johan", "paye_par": "Caisse commune"}]
+    DATA["ventes"][0].update({"vendu_par": "Johan", "encaisse_par": "Johan"})
+    DATA["reglages"] = [{"id": 1, "data": {"napi": "A1234567", "associes": ["Pierre-Louis", "Johan"]}}]
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.evaluate("localStorage.setItem('apiviz-prenom-' + S.session.user.email, 'Pierre-Louis')")
+
+    # Gestion : soldes Pierre-Louis +48 ; Johan 12 − 36 = −24 ; écart 72, moitié 36.
+    page.evaluate("ACT.go('plus')"); page.wait_for_selector(".ea-carte")
+    verif("Johan doit 36" in page.locator(".ea-carte").inner_text() and "à Pierre-Louis pour être à égalité" in page.locator(".ea-carte").inner_text(), "carte : " + page.locator(".ea-phrase").inner_text())
+    pos = page.evaluate("[...document.querySelectorAll('.wrap > *')].map(e => e.className)")
+    verif(pos.index("ea-carte") == pos.index("head g-tete") + 1, "la carte suit le titre de Gestion : " + ", ".join(pos))
+    if cap: page.wait_for_timeout(500); page.screenshot(path=f"{cap}/gestion.png")
+    page.click("[data-act=eadetail]"); page.wait_for_selector("#sheet[open] .ea-ligne")
+    t = page.locator("#sheet").inner_text()
+    verif("1 achat · a avancé 48" in t and "La société lui doit 48" in t, "détail Pierre-Louis : " + page.locator(".ea-ligne").nth(0).inner_text().replace("\n", " "))
+    verif("2 achats · a avancé 12" in t and "1 vente · a récolté 36" in t and "Doit 24" in t, "détail Johan : achat payé par la caisse commune hors solde")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/gestion-detail.png")
+    page.evaluate("$sheet.close()")
+
+    # Achat : acheté par, payé avec.
+    page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] select[name=achete_par]")
+    verif(page.locator("#sheet select[name=achete_par]").input_value() == "Pierre-Louis", "acheté par : moi par défaut")
+    opts = page.locator("#sheet select[name=paye_par] option").all_inner_texts()
+    verif(opts == ["Fonds propres de Pierre-Louis", "Fonds propres de Johan", "Trésorerie de la société"], "payé avec : " + ", ".join(opts))
+    page.fill("#sheet [name=libelle]", "Sirop"); page.fill("#sheet [name=montant]", "20")
+    page.select_option("#sheet select[name=achete_par]", "Johan"); page.select_option("#sheet select[name=paye_par]", "Société")
+    page.click("#sheet .btn.main"); page.wait_for_timeout(800)
+    d = next((x for x in DATA["depenses"] if x["libelle"] == "Sirop"), {})
+    verif(d.get("achete_par") == "Johan" and d.get("paye_par") == "Société", "achat enregistré : Johan, trésorerie de la société (%s)" % {k: d.get(k) for k in ("achete_par", "paye_par")})
+
+    # Vente : vendu par, argent récolté par.
+    page.evaluate("ACT.newvente()"); page.wait_for_selector("#s_vendu")
+    verif(page.locator("#s_vendu").input_value() == "Pierre-Louis" and page.locator("#s_encaisse").input_value() == "Pierre-Louis", "vente : moi par défaut")
+    page.select_option("#s_client", C1); page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']")
+    page.select_option("#s_vendu", "Johan"); page.select_option("#s_encaisse", "Société")
+    verif(page.locator("#s_vendu").input_value() == "Johan", "le choix reste après un compteur")
+    page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']")
+    verif(page.locator("#s_vendu").input_value() == "Johan" and page.locator("#s_encaisse").input_value() == "Société", "les choix restent après un redessin")
+    if cap: page.locator("#s_vendu").scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vente.png")
+    page.click("[data-act=spaye][data-v='0']")
+    verif(page.locator("#s_encaisse").count() == 0 and page.locator("#s_vendu").count() == 1, "à encaisser : pas d'« argent récolté par »")
+    page.click("[data-act=spaye][data-v='1']")
+    page.click("form[data-form=vente] .btn.main.block"); page.wait_for_timeout(1200)
+    p = next((b["p"] for n, b in recu["rpc"] if n == "creer_vente"), {})
+    verif(p.get("vendu_par") == "Johan" and p.get("encaisse_par") == "Société", "vente envoyée : vendu par Johan, argent à la société (%s)" % {k: p.get(k) for k in ("vendu_par", "encaisse_par")})
+
+    # Réglages : la liste des associés.
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#eaAssocies")
+    verif("Pierre-Louis, Johan" in page.locator("#eaAssocies").inner_text(), "bloc Associés")
+    page.click("#eaAssocies"); page.wait_for_selector("#sheet[open] textarea[name=associes]")
+    page.fill("#sheet textarea[name=associes]", "Pierre-Louis\nJohan\nCaisse commune\nMarie"); page.click("#sheet .btn.main"); page.wait_for_timeout(800)
+    verif(page.evaluate("JSON.stringify(cfg().associes)") == '["Pierre-Louis","Johan","Marie"]', "associés enregistrés, la caisse n'est pas un associé : " + page.evaluate("JSON.stringify(cfg().associes)"))

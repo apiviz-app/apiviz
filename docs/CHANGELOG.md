@@ -5,6 +5,34 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.29 · à publier en recette · entre associés (chantier des écrans, étape 7)
+**Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, pas sur `apidoo`.
+Additive : l'ancienne version continue de fonctionner (elle n'envoie pas « vendu par », la colonne reste vide).
+À appliquer sur `apidoo` avant de mettre la v5.29 en production.
+
+Pour l'apiculteur :
+1. **Achat** : « Acheté par » (l'associé qui l'a fait) et « Payé avec » : les fonds propres d'un associé, ou la
+   trésorerie de la société. Par défaut, toi et tes fonds propres.
+2. **Vente** : « Vendu par » et, pour une vente payée, « Argent récolté par » : un associé, ou le compte de la société.
+3. **Gestion** : en tête, la carte « Entre associés » dit qui doit combien à qui pour être à égalité ; « Voir le
+   détail » montre, pour chacun, ses achats, l'argent avancé de ses fonds propres, ses ventes et l'argent récolté.
+   Calcul à parts égales : ce qu'un associé avance, la société le lui doit ; l'argent de vente qu'il garde, il le doit
+   à la société. Les achats payés par la société, l'argent laissé sur son compte et les ventes à encaisser ne comptent
+   pour personne. « Caisse commune » (ancienne version) vaut la société.
+4. **Réglages › Associés** : les prénoms proposés dans les listes, pour toute l'exploitation. Sans liste, l'app reprend
+   les prénoms déjà notés.
+
+Technique : règles pures `src/domaines/finances/associes.js` (tests `tests/unitaires/associes.test.mjs`) ; écrans
+`entre-associes.js` (enveloppe `depenseForm`, `readSaleForm` et l'envoi de `creer_vente`) ; styles
+`styles/44-associes.css` ; scénario `tests/etapes_as.txt` ; tests SQL `tests/sql/test_017.mjs` ; relevé
+`migrations/releves/structure-2026-11-11-recette-apres-017.json`.
+
+**À vérifier**
+1. Réglages › Associés : noter « Pierre-Louis » et « Johan ».
+2. Un achat payé de tes fonds propres, un achat payé par la société, une vente dont Johan garde l'argent : la carte de
+   Gestion et son détail donnent les bons montants.
+3. Hors ligne : une vente enregistrée garde « vendu par » et « argent récolté par » une fois envoyée.
+
 ## v5.28 · à publier en recette · réglages (chantier des écrans, étape 9)
 Aucune migration. S'appuie sur la v5.27.
 

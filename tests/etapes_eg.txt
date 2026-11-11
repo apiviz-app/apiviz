@@ -106,7 +106,7 @@
     page.click("[data-act=ertoutvu]"); page.wait_for_timeout(100)
     verif(page.locator(".er-cloche em").count() == 0, "tout vu : cloche sans pastille")
     page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".g-bloc")
-    verif(page.locator(".g-bloc").count() == 8, "réglages en blocs (dont Ruches physiques, IT-06, et Toi, v5.28)")
+    verif(page.locator(".g-bloc").count() == 9, "réglages en blocs (dont Ruches physiques, IT-06, Toi, v5.28, et Associés, v5.29)")
     page.click(".g-bloc[data-act=errgexpl]"); page.wait_for_selector("#sheet[open]")
     page.fill("#sheet [name=siret]", "12345678900011"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     page.click(".g-bloc[data-act=errgmeteo]"); page.wait_for_selector("#sheet[open]")

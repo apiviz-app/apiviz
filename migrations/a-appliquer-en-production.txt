@@ -5,3 +5,4 @@
 014-roles-audit.sql
 015-ruchers.sql
 016-emplacements-contenants.sql
+017-associes.sql
