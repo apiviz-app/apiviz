@@ -130,7 +130,7 @@ for (const [t, ligne] of croises) {
 verif(!!(await essai(`update public.recoltes set ruche_id = '${id(2, 3)}'`)).erreur, "recoltes : impossible de déplacer une récolte vers une ruche de B");
 await db.exec("reset role");
 const inc = (await db.query("select * from public.incoherences_exploitation()")).rows;
-verif(inc.length === 27 && inc.every((x) => Number(x.nombre) === 0), "incoherences_exploitation : 27 rattachements contrôlés (dont 9 de 016 et 3 de 018), aucun croisé");
+verif(inc.length === 31 && inc.every((x) => Number(x.nombre) === 0), "incoherences_exploitation : 27 rattachements contrôlés (dont 9 de 016, 3 de 018 et 4 de 019), aucun croisé");
 
 // 7. Visiteur non connecté : aucune ligne.
 for (const t of [...tables, "exploitations", "membres", "invitations", "journal_audit"]) {
