@@ -5,6 +5,76 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.28 · à publier en recette · réglages (chantier des écrans, étape 9)
+Aucune migration. S'appuie sur la v5.27.
+
+Écart relevé avec les maquettes : la couleur du bandeau se choisissait dans une liste, sans la voir avant
+d'enregistrer ; et aucun écran ne permettait de donner son prénom, que l'accueil attend depuis la v5.24.
+
+Pour l'apiculteur :
+1. **Bloc « Toi »** en tête des réglages : ton prénom. Il s'affiche dans le bonjour de l'accueil (« Bonsoir
+   Pierre-Louis »). Il reste sur cet appareil, comme la couleur du bandeau.
+2. **Couleur du bandeau** : quatre alvéoles (Miel doux, Sauge, Vert Apiviz, Sapin) et un aperçu du bandeau dans la
+   feuille ; toucher une couleur l'applique aussitôt à l'app. « Annuler » remet la couleur d'avant ; « Enregistrer »
+   la garde.
+
+Technique : `src/domaines/compte/apparence.js` complète l'écran « reglages » et remplace l'action `errgcouleur`
+(déclarée dans `remplace`) ; essentiels.js expose ses couleurs de bandeau ; styles `styles/43-reglages.css` ;
+scénario `tests/etapes_re.txt` ; `etapes_eg` suit le bloc « Toi » et les alvéoles de couleur.
+
+**À vérifier**
+1. Réglages › Toi : le prénom donné apparaît dans le bonjour de l'accueil.
+2. Réglages › Apparence : chaque alvéole change le bandeau tout de suite ; Annuler revient en arrière.
+3. Bandeaux Vert Apiviz et Sapin : logo clair, textes lisibles.
+
+## v5.27 · à publier en recette · feuille d'API (chantier des écrans, étape 8)
+Aucune migration. S'appuie sur la v5.26.
+
+Écart relevé avec les maquettes : le bouton API ouvrait déjà « Que veux-tu faire ? » (compagnon, recherche, six
+saisies rapides). Il manquait la **suggestion du jour**.
+
+Pour l'apiculteur :
+1. Sous les saisies rapides, sur fond miel, API redit la priorité de l'accueil (« Ruche 5 a perdu 1 kg… »), d'où
+   elle vient, et propose deux gestes : **Visiter Ruche 5** (la visite s'ouvre sur cette ruche) et **Ajouter à
+   l'agenda** (tâche déjà rattachée à la ruche). Quand tout va bien, pas de suggestion.
+2. Les six saisies entrent l'une après l'autre à l'ouverture de la feuille.
+
+Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `src/domaines/accueil/feuille-api.js` enveloppe `quickSheet` (après nav4.js et alveoles.js) ; ses deux
+actions sont déclarées avec l'écran d'accueil ; styles `styles/42-feuille-api.css` ; scénario `tests/etapes_ap.txt`.
+
+**À vérifier**
+1. Bouton API, depuis n'importe quel écran : la suggestion nomme la même ruche que l'accueil.
+2. « Visiter … » ouvre la visite de cette ruche ; « Ajouter à l'agenda » ouvre la tâche avec la ruche choisie.
+3. Toutes les ruches en forme : la feuille n'a que les saisies.
+
+## v5.26 · à publier en recette · saisies de visite et de vente (chantier des écrans, étape 6)
+Aucune migration. S'appuie sur la v5.25 (fiche ruche).
+
+Écart relevé avec les maquettes : la visite avait déjà sa barre « Enregistrer la visite » fixe en bas. La vente
+non : son bouton était au bout du formulaire, sous la barre du bas, et le total n'était lisible que dans le bouton.
+Les compteurs ne disaient pas ce qu'il resterait en stock.
+
+Pour l'apiculteur :
+1. **Vente : barre d'enregistrement fixe**, comme la visite : le total à gauche, avec le nombre de pots, et
+   « Enregistrer la vente » à droite. La barre du bas de l'app s'efface pendant la vente, comme pendant la visite.
+2. **Stock restant** : sous chaque compteur (pots vendus, nourrissement et matériel), « 16 restants » une fois la
+   quantité choisie. « 40 unité en stock » devient « 40 en stock ».
+3. **Compteurs qui réagissent** : le chiffre qui vient de changer rebondit, et le total aussi. Rien ne rebondit quand
+   on touche autre chose (paiement, remise).
+
+Rien ne bouge si le téléphone demande de réduire les animations.
+
+Technique : `src/domaines/ventes/saisie.js`, dernier complément des écrans « vente » et « visite » ; styles
+`styles/41-saisies.css` ; scénario `tests/etapes_sv.txt` (captures à 390 px) ; `etapes_qr` vise le bouton dans la barre.
+
+**À vérifier**
+1. Nouvelle vente sur téléphone : la barre reste en bas pendant qu'on fait défiler, le total suit les pots choisis.
+2. « Enregistrer la vente » enregistre comme avant, hors ligne compris.
+3. Sous chaque compteur, le stock restant baisse avec la quantité ; au singulier pour 1 ou moins.
+4. Pendant une visite, le nourrissement montre aussi le stock restant.
+
 ## v5.25 · à publier en recette · fiche ruche des maquettes (chantier des écrans, étape 5)
 Aucune migration. S'appuie sur les v5.22 à v5.24. Téléphone et ordinateur : la fiche est la même.
 
