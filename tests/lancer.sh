@@ -20,7 +20,8 @@ for t in test_*.py; do
   if python3 "$t" "$site" "$travail/sb/package/dist/umd/supabase.js" > "$t.log" 2>&1; then
     echo "OK     $t"
   else
-    echo "ECHEC  $t"; tail -20 "$t.log"; echec=1
+    # Les vérifications en échec d'abord : la fin du journal seule ne les montrait pas toujours (test_eg, 11 nov. 2026).
+    echo "ECHEC  $t"; grep -n '^ECHEC' "$t.log" | head -10; tail -20 "$t.log"; echec=1
   fi
 done
 # Tests SQL des migrations (Postgres en mémoire, aucune vraie base). En CI, ils ont leur propre job (SANS_SQL=1 ici).
