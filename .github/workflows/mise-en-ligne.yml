@@ -32,7 +32,7 @@ permissions:
 jobs:
   construire:
     name: Contrôler et assembler
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.c.outputs.sha }}
     steps:
@@ -98,7 +98,7 @@ jobs:
   publier:
     name: Publier
     needs: construire
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
     steps:
