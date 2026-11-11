@@ -209,12 +209,26 @@ const UX = (() => {
       `${tete}${chiffres}${r.notes ? `<section class="card">${esc(r.notes)}</section>` : ""}
        ${taches.length ? `<section class="card"><h2>Tâches prévues</h2>${taches.map(taskRow).join("")}</section>` : ""}
        ${poids}
-       ${subtabs([["journal", "Journal"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
+       ${subtabs([["journal", "Journal"], ["sante", "Santé"], ["reine", "Reine & lignée"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
        ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
-         : `<h2 class="u-titre">Journal</h2>${vis.map(carteVisite).join("") || '<p class="small">Aucune visite enregistrée.</p>'}`}
+         : ongletRuche.v === "sante" || ongletRuche.v === "reine" ? `<div class="cl-onglet" data-o="${ongletRuche.v}"></div>` // rempli par src/domaines/colonies/lignee.js (IT-07)
+         : `<h2 class="u-titre">Journal</h2>${vis.length ? "" : '<p class="small">Aucune visite enregistrée.</p>'}${journalRuche(r)}`}
        ${!r.sortie && typeof N4 != "undefined" ? `<div class="n4-rbarre"><button class="btn honey" data-act="newvisite" data-v="${r.id}">Visiter cette ruche</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button></div>` : ""}`);
     document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", typeof N4 != "undefined" ? N4.navRuche(r)
       : `<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruches${r.rucher ? " · " + esc(r.rucher) : ""}</button>`);
+  }
+
+  // Journal unifié (IT-07, AP-TECH-122) : visites et événements de la colonie (installation, division, essaimage,
+  // réunion, nouvelle reine, déplacement, sortie…) dans l'ordre des dates. Règle : src/domaines/colonies/reines.js.
+  function journalRuche(r) {
+    const types = typeof V3 != "undefined" ? V3.TYPES : {};
+    const autre = (id) => byId(S.d.ruches, id) || byId(S.d.ruchesSorties || [], id);
+    return Regles.reines.journal(S.d, r).map((x) => {
+      if (x.genre === "visite") return carteVisite(x.visite);
+      const ev = x.evenement, a = ev.autre_ruche_id ? autre(ev.autre_ruche_id) : null;
+      return `<div class="cl-evt"><span class="cl-evt-d">${esc(dateCourte(ev.date_evenement))}</span><span class="cl-evt-t"><b>${esc(types[ev.type] || ev.type)}</b>${ev.detail ? `<span class="small">${esc(ev.detail)}</span>` : ""}</span>
+        ${a ? `<button type="button" class="link" data-act="ruche" data-v="${a.id}">${esc(a.nom)}</button>` : ev._attente ? '<span class="tag watch">en attente</span>' : ""}</div>`;
+    }).join("");
   }
 
   let ongletRuche = { id: null, v: "journal" };

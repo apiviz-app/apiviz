@@ -1,0 +1,27 @@
+/* ---------- Reines et lignée, fiche colonie complète (IT-07, src/domaines/colonies/lignee.js, ux.js) ----------
+   En-tête de la colonie, onglets Santé et Reine & lignée, événements dans le journal. */
+/* Cinq onglets sur la fiche : ruban qui défile sur téléphone plutôt que des libellés coupés. */
+.wrap>.subtabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.wrap>.subtabs::-webkit-scrollbar{display:none}
+.wrap>.subtabs button{white-space:nowrap}
+
+.rn-entete{display:flex;flex-wrap:wrap;gap:6px}
+.rn-entete .u-chip{display:inline-flex;align-items:center;gap:6px;min-height:28px}
+.rn-chip{border:0;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.rn-chip .v3-pastille{width:12px;height:12px;flex:none}
+.v3-pastille.rn-sans{background:none;border:2px dashed var(--line2)}
+
+.rn-en-place .u-entete,.rn-varroa .u-entete{align-items:center}
+.rn-reine{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EDEFE7}
+.rn-reine:first-of-type{border-top:0}
+.rn-en-place .rn-reine{padding-bottom:0}
+.rn-reine .v3-reine-l{min-width:0}
+.rn-notes{font-style:italic}
+.rn-lignee .cl-ligne .link,.rn-reine .link{flex:none}
+.rn-suite{display:block;margin-top:10px;text-align:left}
+
+/* Événement de la colonie dans le journal, entre deux visites. */
+.cl-evt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-left:3px solid var(--honey);border-radius:10px;background:var(--card)}
+.cl-evt-d{font-size:12px;font-weight:600;color:var(--muted);min-width:52px}
+.cl-evt-t{display:flex;flex-direction:column;min-width:0}
+.rn-chip .v3-pastille{border-width:1.5px}

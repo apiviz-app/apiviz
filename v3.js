@@ -48,26 +48,18 @@ const V3 = (() => {
   ACT.go = (v) => (v === "livrer" ? (U.onglet("livrer"), go("clients")) : goAvant(v));
 
   // ---------- Colonie ----------
-  const MARQUE = { 1: ["Blanc", "#F4F4F4"], 6: ["Blanc", "#F4F4F4"], 2: ["Jaune", "#F2C200"], 7: ["Jaune", "#F2C200"], 3: ["Rouge", "#C62828"], 8: ["Rouge", "#C62828"],
-    4: ["Vert", "#2E7D32"], 9: ["Vert", "#2E7D32"], 5: ["Bleu", "#1565C0"], 0: ["Bleu", "#1565C0"] };
   const EQUIP = ["Grille à reine", "Nourrisseur", "Plateau grillagé", "Réducteur d’entrée", "Chasse-abeilles", "Partition"];
-  const ORIGINES = ["", "Élevée par la colonie", "Essaim naturel", "Achetée", "Élevage maison"];
   const TYPES = { installation: "Installation", division: "Division", essaimage: "Essaimage", reunion: "Réunion", reine: "Nouvelle reine", sortie: "Sortie", reactivation: "Remise en service",
     deplacement: "Déplacement", intervention: "Intervention" }; // lignes du registre (010) : libellé plutôt que le code
   const tousLesRuches = () => [...S.d.ruches, ...(S.d.ruchesSorties || [])];
   const rucheDe = (id) => byId(tousLesRuches(), id);
   const evt = (ruche_id, type, detail = "", autre_ruche_id = null, date_evenement = today()) => ({ ruche_id, type, detail, autre_ruche_id, date_evenement });
 
+  // Onglet « Colonie » : hausses, équipement, vie de la colonie. La reine et la lignée ont leur onglet, et les
+  // événements sont dans le journal de la fiche (IT-07, src/domaines/colonies/lignee.js et ux.js).
   function colonie(r) {
-    const an = new Date().getFullYear();
-    const m = r.annee_reine ? MARQUE[r.annee_reine % 10] : null;
-    const reine = `<section class="card v3-reine"><div class="u-entete"><h2>Reine</h2>${r.sortie ? "" : `<button type="button" class="link" data-act="v3reine" data-v="${r.id}">${r.annee_reine ? "Changer" : "Renseigner"}</button>`}</div>
-      ${r.annee_reine ? `<div class="v3-reine-l"><span class="v3-pastille" style="background:${m[1]}" aria-hidden="true"></span><span><b>Reine ${r.annee_reine}</b> · ${an - r.annee_reine <= 0 ? "de l’année" : an - r.annee_reine + " an" + (an - r.annee_reine > 1 ? "s" : "")}
-        <span class="small">Marquage ${m[0].toLowerCase()}${r.reine_origine ? " · " + esc(r.reine_origine.toLowerCase()) : ""}${r.reine_introduite ? " · introduite le " + esc(dfr(r.reine_introduite)) : ""}</span></span></div>
-        ${an - r.annee_reine >= 3 ? '<p class="small watch">Reine de 3 ans ou plus : pense à la remplacer.</p>' : ""}`
-        : '<p class="small">Année inconnue. Renseigne-la pour suivre son âge et sa couleur de marquage.</p>'}</section>`;
     const actif = !r.sortie;
-    const hausses = `<section class="card"><div class="v3-ligne"><span><b>Hausses posées</b><span class="small">retirées automatiquement à la récolte</span></span>
+    const hausses = `<section class="card v3-hausses"><div class="v3-ligne"><span><b>Hausses posées</b><span class="small">retirées automatiquement à la récolte</span></span>
       ${actif ? `<div class="ctl"><button type="button" aria-label="Retirer une hausse" data-act="v3hausse" data-v="-1" data-k="${r.id}">−</button><span>${r.hausses || 0}</span><button type="button" aria-label="Ajouter une hausse" data-act="v3hausse" data-v="1" data-k="${r.id}">+</button></div>` : `<b>${r.hausses || 0}</b>`}</div>
       <h2 class="v3-sous">Équipement en place</h2><div class="chips v3-equip">${EQUIP.map((x) => { const on = (r.equipement || []).includes(x);
         return `<button type="button" class="${on ? "on" : ""}" aria-pressed="${on}" ${actif ? `data-act="v3equip" data-k="${r.id}" data-v="${esc(x)}"` : "disabled"}>${esc(x)}</button>`; }).join("")}</div></section>`;
@@ -77,11 +69,7 @@ const V3 = (() => {
         <button type="button" class="btn" data-act="v3reunir" data-v="${r.id}" ${S.d.ruches.length < 2 ? "disabled" : ""}>Réunir</button>
         <button type="button" class="btn" data-act="v3sortie" data-v="${r.id}">Sortie</button></div></section>`
       : `<section class="card"><p>Cette colonie est sortie du rucher (${esc(r.sortie.toLowerCase())}). Elle n’est plus comptée dans tes ruches.</p><button type="button" class="btn" data-act="v3reactiver" data-v="${r.id}">Remettre en service</button></section>`;
-    const evs = S.d.evenements.filter((e) => e.ruche_id === r.id);
-    const lignes = evs.map((e) => `<div class="v3-evt"><span class="small">${esc(U.dateCourte(e.date_evenement))}</span><span><b>${esc(TYPES[e.type] || e.type)}</b>${e.detail ? `<span class="small">${esc(e.detail)}</span>` : ""}</span>
-      ${e.autre_ruche_id && rucheDe(e.autre_ruche_id) ? `<button type="button" class="link" data-act="ruche" data-v="${e.autre_ruche_id}">${esc(rucheDe(e.autre_ruche_id).nom)}</button>` : "<span></span>"}</div>`).join("");
-    const install = r.date_installation && !evs.some((e) => e.type === "installation") ? `<div class="v3-evt"><span class="small">${esc(U.dateCourte(r.date_installation))}</span><span><b>Installation</b></span><span></span></div>` : "";
-    return `${reine}${hausses}${vie}<section class="card"><h2>Historique</h2>${lignes + install || '<p class="small">Rien pour le moment : divisions, essaimages, changements de reine apparaîtront ici.</p>'}</section>`;
+    return `${hausses}${vie}`;
   }
 
   const nomSuivant = () => {
@@ -96,19 +84,6 @@ const V3 = (() => {
   const ruchersConnus = () => [...new Set(S.d.ruches.map((r) => r.rucher || "").filter(Boolean))];
 
   Object.assign(ACT, {
-    v3reine: (id) => {
-      const r = rucheDe(id);
-      sheet({ title: "Reine de " + r.nom, fields: [
-        { name: "annee", label: "Année de naissance", type: "number", step: "1", min: 2000, required: true, value: r.annee_reine || new Date().getFullYear() },
-        { name: "origine", label: "Origine", type: "select", options: ORIGINES.map((o) => [o, o || "Non précisée"]), value: r.reine_origine || "" },
-        { name: "date", label: "Introduite ou vue la première fois le", type: "date", value: r.reine_introduite || "" }],
-      submit: async (f) => {
-        const nouvelle = Number(f.annee) !== Number(r.annee_reine);
-        await ok(sb.from("ruches").update({ annee_reine: Number(f.annee), reine_origine: f.origine, reine_introduite: f.date || null }).eq("id", id));
-        if (nouvelle) await ok(sb.from("ruche_evenements").insert(evt(id, "reine", `Reine ${f.annee}${f.origine ? " · " + f.origine.toLowerCase() : ""}`, null, f.date || today())));
-        await refresh(); toast("Reine enregistrée");
-      } });
-    },
     v3hausse: (delta, id) => { const r = rucheDe(id); return write(sb.from("ruches").update({ hausses: Math.max(0, (r.hausses || 0) + Number(delta)) }).eq("id", id)); },
     v3equip: (x, id) => {
       const r = rucheDe(id), l = new Set(r.equipement || []);
@@ -640,5 +615,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { fil, chercher, plat, colonie, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES, completerVente };
+  return { fil, chercher, plat, colonie, TYPES, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES, completerVente };
 })();
