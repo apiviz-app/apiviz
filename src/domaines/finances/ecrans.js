@@ -1,4 +1,8 @@
 // Apiviz — écrans du domaine finances (IT-03).
+// Entre associés (v5.29) : installé ici ; ses compléments sont appelés par les écrans vente, Gestion et Réglages.
+import { installer } from "./entre-associes.js";
+
+installer();
 export default [
   // Dépenses : app.js, complétées par ergonomie.js (chiffres et filtre par poste).
   { id: "compta", titre: "Dépenses", rubrique: "plus", rendu: () => { viewCompta(); ER.completerDepenses(); } },
