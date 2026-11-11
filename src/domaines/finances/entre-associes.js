@@ -112,6 +112,8 @@ export function installer() {
 }
 
 export const completerVente = champsVente;
+/** « Acheté par » et « Payé avec », aussi pour l'achat en plusieurs lignes (v5.30, achat.js). */
+export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
 export const completerReglages = blocReglages;
 export const actions = { eadetail: detail, eaassocies: feuilleAssocies };

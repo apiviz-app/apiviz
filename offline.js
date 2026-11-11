@@ -106,6 +106,11 @@ const HL = (() => {
         Regles.colonies.appliquerStatut(d, it.args.p);
       } else if (it.type === "rpc" && it.nom === "affecter_contenant") {
         Regles.colonies.appliquerContenant(d, it.args.p);
+      } else if (it.type === "rpc" && it.nom === "enregistrer_achat") {
+        // Achat sans réseau (v5.30) : dépenses, nouveaux articles et stock, comme le fera la base (migration 018).
+        Regles.stock.appliquerAchat(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "mettre_en_pots") {
+        Regles.stock.appliquerMiseEnPots(d, it.args.p, { _attente: true });
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
@@ -290,6 +295,14 @@ const HL = (() => {
     if (it.type === "rpc" && it.nom === "affecter_contenant") {
       const p = it.args.p, r = byId(d.ruches || [], p.colonie_id), c = (d.contenants || []).find((x) => x.id === p.contenant_id);
       return ["Ruche physique · " + (r?.nom || "colonie"), (c ? "n° " + c.code : "sortie de sa caisse") + " · " + dfr(p.date)];
+    }
+    if (it.type === "rpc" && it.nom === "enregistrer_achat") {
+      const p = it.args.p, total = (p.lignes || []).reduce((t, x) => t + Number(x.montant || 0), 0);
+      return ["Achat · " + pluriel((p.lignes || []).length, "ligne"), dfr(p.date) + " · " + eur(total)];
+    }
+    if (it.type === "rpc" && it.nom === "mettre_en_pots") {
+      const p = it.args.p;
+      return ["Mise en pots · lot " + (p.code || ""), dfr(p.date) + " · " + pluriel(p.pots, "pot")];
     }
     const l = it.lignes[0] || {};
     if (it.table === "recoltes") return ["Récolte · " + n(l.kg) + " kg", dfr(l.date_recolte)];

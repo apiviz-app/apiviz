@@ -42,9 +42,11 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     deplacements: ["deplacements", "date_deplacement", !1],
     contenants: ["contenants", "code"],
     occupations: ["colonie_contenants", "du", !1],
+    // v5.30 (migration 018) : journal des mouvements de stock.
+    mouvements: ["mouvements_stock", "date_mouvement", !1],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -312,12 +314,14 @@ async function lireTout(nomTable, tri, croissant) {
   );
 }
 async function loadAll() {
-  const cles = Object.keys(TABLES),
+  // Tables facultatives absentes de la base (migration pas encore faite) : S.absentes, lu par les écrans qui en dépendent.
+  const absentes = new Set(),
+    cles = Object.keys(TABLES),
     tables = await Promise.all(
       cles.map((cle) =>
         lireTout(...TABLES[cle]).catch((erreur) =>
           TABLES_FACULTATIVES[cle] && /PGRST20[45]|42P01|does not exist|Could not find/.test(`${erreur?.code} ${erreur?.message}`)
-            ? []
+            ? (absentes.add(cle), [])
             : Promise.reject(erreur),
         ),
       ),
@@ -325,6 +329,7 @@ async function loadAll() {
     donnees = {};
   (tables.forEach((lignes, index) => (donnees[cles[index]] = lignes)),
     (S.d = donnees),
+    (S.absentes = absentes),
     typeof PH != "undefined" && (await PH.load()),
     S.lectureIncomplete &&
       ((S.lectureIncomplete = !1),

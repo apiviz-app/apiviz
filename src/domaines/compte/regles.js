@@ -21,7 +21,7 @@ export const peutEcrire = (role) => role === "responsable" || role === "membre";
 export const ACTIONS_LECTEUR = Object.freeze([
   // Navigation et consultation
   "go", "ruche", "cancel", "closesheet", "n4voisine", "uonglet", "utfiltre", "utout", "alrucher", "allent", "alclient",
-  "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer",
+  "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer", "stfiltre",
   // Impression et exports (rien n'est modifié)
   "exp", "erimprimer", "rgprint", "etiq", "v3copierdecla",
   // Compte, exploitation, affichage

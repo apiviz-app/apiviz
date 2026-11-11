@@ -10,10 +10,11 @@ import * as visites from "./domaines/visites/regles.js";
 import * as compte from "./domaines/compte/regles.js";
 import * as ruchers from "./domaines/ruchers/regles.js";
 import * as colonies from "./domaines/colonies/regles.js";
+import * as stock from "./domaines/materiel/regles.js";
 import { creerFile } from "./noyau/erreurs.js";
 import * as crochets from "./noyau/crochets.js";
 
-window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies });
+window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, stock });
 
 // Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
 // S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.
