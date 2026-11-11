@@ -6,8 +6,9 @@ Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migr
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
 ## v5.31 · à publier en recette · reines et liens de colonies (IT-07)
-**Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. **Pas encore
-appliquée** : à appliquer sur `apidoo-test` après 018, avant la recette, puis sur `apidoo` avant la production.
+**Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. Appliquée sur
+`apidoo-test` le 11 nov. 2026, après 018 (relevé `migrations/releves/structure-2026-11-11-recette-apres-019.json`).
+À appliquer sur `apidoo` avant la production, après accord.
 (La fiche IT-07 annonçait le numéro 017, pris depuis par 017-associes puis 018-stock-mouvements.)
 
 Pour l'apiculteur :
