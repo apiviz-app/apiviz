@@ -1,0 +1,65 @@
+    # v5.25 — Fiche ruche d'après les maquettes : ce qu'en dit API, courbe de poids resserrée, journal qui entre et
+    # visite qu'on vient d'enregistrer mise en avant. Avec CAPTURES=<dossier>, captures à 390 et 1 280 px.
+    import datetime, pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    rid = {r["nom"]: r["id"] for r in DATA["ruches"]}
+    def ouvrir(nom):  # attend que la fiche affichée soit bien celle de cette ruche
+        page.evaluate(f"ACT.ruche('{rid[nom]}')")
+        page.wait_for_function(f"document.querySelector('.wrap .head h1')?.textContent === '{nom}' && document.querySelector('.u-gros-hex')", timeout=5000)
+    # Ruche 2 : une visite enregistrée à l'instant ; Ruche 1 : en forme, rien à signaler (poids stable).
+    maintenant = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    DATA["visites"].insert(0, {"id": str(uuid.uuid4()), "ruche_id": rid["Ruche 2"], "date_visite": datetime.date.today().isoformat(), "activite": "Normale",
+        "provisions": "Bonnes", "reine": "Vue", "couvain": "Normal", "poids_kg": 41, "varroa": None, "note": "", "traitement": "", "lot_produit": "",
+        "traitement_dose": "", "retrait_prevu": None, "ordonnance": False, "created_at": maintenant})
+    for v in DATA["visites"]:
+        if v["ruche_id"] == rid["Ruche 1"]: v["poids_kg"] = 40
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # Ruche 5, critique : API parle, d'après ses pesées.
+    ouvrir("Ruche 5")
+    api = page.locator(".fr-api")
+    verif(api.count() == 1 and api.locator("api-compagnon").count() == 1, "API sur la fiche d'une colonie critique")
+    verif(api.inner_text().startswith("Elle a perdu 1 kg depuis le"), "constat de poids : " + api.inner_text().replace("\n", " "))
+    verif("Pèse-la de nouveau" in api.inner_text(), "conseil")
+    verif("D’après 3 pesées et 3 visites de Ruche 5" in api.inner_text(), "d'où vient le message")
+    verif("crit" in api.get_attribute("class"), "ton critique")
+    pos = page.evaluate("[...document.querySelectorAll('.wrap > *')].map(e => e.className)")
+    verif(pos.index("fr-api crit") == pos.index("u-ruche-tete") + 1, "le message suit l'en-tête : " + ", ".join(pos))
+    # Courbe : échelle autour des pesées (42 à 44 kg → 40 à 50), points datés, variation affichée.
+    verif(page.locator(".fr-courbe").count() == 1 and page.locator(".fr-point").count() == 3, "courbe resserrée, un point par pesée")
+    graduations = page.evaluate("[...document.querySelectorAll('.fr-courbe text.at')].map(t => t.textContent)")
+    verif(graduations[:3] == ["40", "45", "50"], "échelle autour des pesées : " + ", ".join(graduations))
+    verif(page.locator(".fr-ecart").inner_text().startswith("−2 kg depuis le"), "variation : " + page.locator(".fr-ecart").inner_text())
+    verif(page.locator(".fr-courbe.fr-trace").count() == 1, "la courbe se trace en arrivant sur la ruche")
+    verif(page.locator(".u-visite.fr-entre").count() == 3, "le journal entre carte après carte")
+    if cap: page.wait_for_timeout(1500); page.screenshot(path=f"{cap}/fiche-1.png")
+    if cap: page.locator(".u-pli").scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, 260)"); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/fiche-2.png")
+
+    # Changer d'onglet ne rejoue rien.
+    page.click(".subtabs button:has-text('Colonie')"); page.wait_for_timeout(200); page.click(".subtabs button:has-text('Journal')"); page.wait_for_timeout(200)
+    verif(page.locator(".fr-courbe.fr-trace").count() == 0 and page.locator(".u-visite.fr-entre").count() == 0, "changer d'onglet ne rejoue pas les animations")
+    verif(page.locator(".fr-api").count() == 1, "le message reste après un changement d'onglet")
+
+    # Ruche 2 : la visite qu'on vient d'enregistrer est mise en avant.
+    ouvrir("Ruche 2")
+    verif(page.locator(".u-visite").nth(0).locator(".fr-neuve-t").count() == 1 and page.locator(".fr-neuve").count() == 1, "visite à l'instant mise en avant, une seule")
+    if cap: page.locator(".u-visite").nth(0).scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, -120)"); page.wait_for_timeout(900); page.screenshot(path=f"{cap}/fiche-3.png")
+
+    # Ruche 1, en forme, poids stable : API ne dit rien.
+    ouvrir("Ruche 1")
+    verif(page.locator(".fr-api").count() == 0, "colonie en forme sans signal : pas de message")
+    verif(page.locator(".fr-ecart").inner_text().startswith("Stable depuis le"), "poids stable")
+
+    # Ordinateur : même fiche.
+    page.set_viewport_size({"width": 1280, "height": 900})
+    ouvrir("Ruche 5")
+    verif(page.locator(".fr-courbe").count() == 1, "ordinateur : message et courbe")
+    if cap: page.wait_for_timeout(1500); page.screenshot(path=f"{cap}/fiche-ordinateur.png")

@@ -12,8 +12,8 @@ Miel, Gestion, API au centre). Aucune étape ne déplace de rubrique.
 | 1 | **Météo lisible** | Verdict « maintenant » et pourquoi, jours, frise de la journée, détail d'une heure, créneaux | Tableau heure par heure, 5 jours, « Prévoir une visite » | **v5.22, PR #27** |
 | 2 | Barre du bas | Quatre rubriques, API au centre, bandeau miel doux | API au centre déjà en place (alveoles.js) | **Conforme, rien à changer** (vérifié en v5.23) |
 | 3 | Transitions | Aller, retour, onglets, feuilles qui montent, messages qui descendent ; « moins d'animations » respecté | Transitions de vue en partie (alveoles.js), feuilles | **v5.23, PR #28** |
-| 4 | Accueil | Phrase du jour, alvéoles une à une, créneau de visite | Phrase, alvéoles, créneau ; frise courte en v5.22 | **v5.24 en production** ; v5.25 (ordinateur, sans visite) en PR |
-| 5 | Fiche ruche | Courbe de poids tracée, message d'API, journal | Onglets, journal | À faire |
+| 4 | Accueil | Phrase du jour, alvéoles une à une, créneau de visite | Phrase, alvéoles, créneau ; frise courte en v5.22 | **v5.24, PR #31** (téléphone) |
+| 5 | Fiche ruche | Courbe de poids tracée, message d'API, journal | Courbe tracée mais à partir de 0 kg, onglets, journal | **v5.25, en PR** |
 | 6 | Visite et vente | Bouton d'enregistrement fixe en bas, compteurs qui réagissent | Barre d'enregistrement de visite | À comparer |
 | 7 | Gestion | Page centrale, carte « entre associés » | Gestion en blocs | À faire |
 | 8 | Feuille API | Ajouts rapides, suggestion du jour | Compagnon API, saisie rapide | À compléter |
@@ -37,3 +37,10 @@ Principe : l'apiculteur doit savoir en deux secondes **s'il peut ouvrir, quand, 
 
 Idées notées pour plus tard, non faites : alerte « créneau favorable » poussée le matin (dépend des notifications),
 miellée et floraisons, carte des ruchers colorée selon la météo.
+
+## Étape 5 — Fiche ruche (v5.25)
+
+Écart relevé avec les maquettes : la courbe se traçait déjà mais partait de 0 kg (variation invisible), API ne disait
+rien sur la fiche, le journal arrivait d'un bloc. Ajouté : le message d'API (règles pures `colonies/suivi.js`), la
+courbe resserrée et pointée, l'entrée du journal et la visite du jour mise en avant. Gardé tel quel : l'en-tête et son
+alvéole, les quatre chiffres, les onglets Journal, Colonie, Photos, la barre « Visiter cette ruche ».
