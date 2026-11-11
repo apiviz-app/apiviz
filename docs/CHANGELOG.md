@@ -105,6 +105,14 @@ styles `styles/40-fiche-ruche.css` ; scénario `tests/etapes_fr.txt` (captures �
 4. Après une visite enregistrée, retour sur la fiche : la carte du jour est sur fond miel.
 5. Réglage « réduire les animations » du téléphone : la fiche s'affiche d'un coup, sans tracé.
 
+**Correctif du 11 nov. 2026 · un écran n'entre plus deux fois.** Depuis les transitions (v5.23), chaque écran jouait
+deux entrées : la nouvelle (glissement ou fondu), puis l'ancienne (`.wrap.enter`, « rise ») qui repartait 0,6 s plus
+tard, quand le sens de la transition était retiré. D'où l'impression d'un écran qui se charge deux fois. `transitions.js`
+retire maintenant l'ancienne entrée quand la nouvelle joue ; `tests/etapes_vt.txt` compte une seule entrée par écran.
+Aucun chargement de données en double : c'était seulement l'animation.
+
+**À vérifier** : changer de rubrique, ouvrir une fiche ruche, revenir : le contenu arrive une fois, sans second fondu.
+
 ## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
 Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
 la vue d'ensemble ne change pas. La prise en main (exploitation sans ruche ou sans visite) ne change pas non plus.
