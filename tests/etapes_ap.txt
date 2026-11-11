@@ -1,0 +1,40 @@
+    # v5.27 — Feuille du bouton API d'après les maquettes : saisies rapides qui entrent l'une après l'autre, suggestion
+    # du jour (la priorité de l'accueil) avec « Visiter … » et « Ajouter à l'agenda » ; rien quand tout va bien.
+    # Avec CAPTURES=<dossier>, capture à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    r5 = next(r["id"] for r in DATA["ruches"] if r["nom"] == "Ruche 5")
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    f = page.locator("#sheet")
+    verif("Que veux-tu faire ?" in f.inner_text(), "titre de la feuille")
+    verif(f.locator(".fa-tuiles .n4-tuile").count() == 6, "six saisies rapides qui entrent l'une après l'autre")
+    s = f.locator(".fa-sugg")
+    verif(s.count() == 1 and "Ruche 5" in s.inner_text(), "suggestion du jour : la priorité de l'accueil")
+    verif("D’après 3 pesées de Ruche 5" in s.inner_text(), "d'où vient la suggestion")
+    verif(s.locator(".btn.main").inner_text() == "Visiter Ruche 5" and "Ajouter à l’agenda" in s.inner_text(), "deux gestes")
+    pos = page.evaluate("[...document.querySelectorAll('#sheetForm > *')].map(e => e.className)")
+    verif(pos.index("fa-sugg") == pos.index("n4-tuiles fa-tuiles") + 1, "la suggestion suit les saisies : " + ", ".join(pos))
+    if cap: page.wait_for_timeout(700); page.screenshot(path=f"{cap}/feuille-api.png")
+
+    s.locator(".btn.main").click(); page.wait_for_selector("form[data-form=visite]")
+    verif(page.evaluate(f"S.visite.ruche_id === '{r5}'") and not page.evaluate("document.getElementById('sheet').open"), "Visiter : visite de Ruche 5, feuille fermée")
+    page.evaluate("ACT.cancel()"); page.wait_for_timeout(200)
+
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .fa-sugg")
+    page.click("#sheet .fa-sugg [data-act=fasagenda]"); page.wait_for_timeout(300)
+    verif(page.evaluate("document.getElementById('sheet').open") and page.locator("#sheet select[name=ruche_id]").input_value() == r5, "Ajouter à l'agenda : tâche préremplie avec Ruche 5")
+    page.evaluate("$sheet.close()")
+
+    # Tout va bien : pas de suggestion.
+    page.evaluate("S.d.ruches.forEach(r => r.etat = 'Bonne'); ACT.go('dash')"); page.wait_for_timeout(200)
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    verif(page.locator("#sheet .fa-sugg").count() == 0, "aucune ruche à surveiller : pas de suggestion")

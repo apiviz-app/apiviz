@@ -1,0 +1,13 @@
+/* ---------- Saisies de visite et de vente d'après les maquettes (v5.26, src/domaines/ventes/saisie.js) ----------
+   Vente : barre d'enregistrement fixe, comme la visite (.u-barre, styles/06), avec le total ; barre du bas masquée.
+   Compteurs : le chiffre qui vient de changer rebondit. */
+body[data-route=vente] .bottom{display:none}
+body[data-route=vente] main{padding-bottom:0}
+.sv-barre{display:flex;align-items:center;gap:14px}
+.sv-total{flex:none;display:flex;flex-direction:column;line-height:1.1;min-width:84px}
+.sv-total b{display:inline-block;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;transform-origin:left center}
+.sv-barre .sv-envoyer{flex:1;width:auto}
+.stepper .ctl span{display:inline-block;font-variant-numeric:tabular-nums}
+.sv-rebond{animation:sv-rebond .26s var(--sortie)}
+@keyframes sv-rebond{40%{transform:scale(1.22)}}
+@media (prefers-reduced-motion:reduce){.sv-rebond{animation:none}}

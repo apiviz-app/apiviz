@@ -447,5 +447,6 @@ const ES = (() => {
   // Les écrans de VUES (météo, rappels, registre, lot, facture, saison) sont enregistrés dans le noyau :
   // src/domaines/*/ecrans.js.
 
-  return { VUES, memo, retour, phrase, jourLong, ecranReglages, completerMiel };
+  // bandeaux, bandeau, appliquerBandeau : repris par l'aperçu du bandeau (src/domaines/compte/apparence.js, v5.28).
+  return { VUES, memo, retour, phrase, jourLong, ecranReglages, completerMiel, bandeaux: BANDEAUX, bandeau, appliquerBandeau };
 })();

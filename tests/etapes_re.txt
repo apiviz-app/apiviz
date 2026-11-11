@@ -1,0 +1,40 @@
+    # v5.28 — Réglages d'après les maquettes : bloc « Toi » (prénom repris par le bonjour de l'accueil), couleur du
+    # bandeau choisie sur des alvéoles avec aperçu appliqué aussitôt, annulation qui remet la couleur d'avant.
+    # Avec CAPTURES=<dossier>, capture à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    fond = lambda: page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--bandeau').trim().toUpperCase()")
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # Prénom
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#rgToi")
+    verif("Ton prénom" in page.locator("#rgToi").inner_text(), "bloc Toi en tête, prénom à donner")
+    verif(page.evaluate("[...document.querySelectorAll('.g-blocs > *')][0].id") == "rgToi", "Toi en premier")
+    page.click("#rgToi"); page.wait_for_selector("#sheet[open] input[name=prenom]")
+    page.fill("#sheet input[name=prenom]", "Pierre-Louis"); page.click("#sheet .btn.main"); page.wait_for_timeout(300)
+    verif("Pierre-Louis" in page.locator("#rgToi").inner_text(), "prénom enregistré dans le bloc")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-hero")
+    verif(page.locator(".ac-hero h1").inner_text().endswith("Pierre-Louis"), "le bonjour de l'accueil reprend le prénom")
+
+    # Couleur du bandeau : aperçu, annulation, enregistrement
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#rgToi")
+    avant = fond()
+    page.click("[data-act=errgcouleur]"); page.wait_for_selector("#sheet[open] .rg-pastille")
+    verif(page.locator(".rg-pastille").count() == 4 and page.locator(".rg-pastille.on").get_attribute("data-v") == "miel", "quatre couleurs en alvéoles, miel doux choisi")
+    page.click(".rg-pastille[data-v=sauge]"); page.wait_for_timeout(200)
+    verif(fond() == "#DFEDE4" and page.locator(".rg-pastille[data-v=sauge]").get_attribute("aria-pressed") == "true", "aperçu appliqué aussitôt : " + fond())
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/reglages-couleur.png")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(300)
+    verif(fond() == avant and page.evaluate("localStorage.getItem('apidoo-bandeau')") in (None, "miel"), "Annuler remet la couleur d'avant")
+    page.click("[data-act=errgcouleur]"); page.wait_for_selector("#sheet[open] .rg-pastille")
+    page.click(".rg-pastille[data-v=sapin]"); page.click("#sheet .btn.main"); page.wait_for_timeout(400)
+    verif(page.evaluate("localStorage.getItem('apidoo-bandeau')") == "sapin" and fond() == "#1E2B24", "couleur enregistrée")
+    verif("Sapin" in page.locator("[data-act=errgcouleur]").inner_text(), "le bloc Apparence affiche la couleur")
+    page.evaluate("localStorage.removeItem('apidoo-bandeau')")

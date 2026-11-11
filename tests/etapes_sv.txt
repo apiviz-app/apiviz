@@ -1,0 +1,47 @@
+    # v5.26 — Saisies de visite et de vente d'après les maquettes : barre d'enregistrement fixe de la vente avec le
+    # total, barre du bas masquée pendant la vente, stock restant sous chaque compteur, chiffre qui rebondit quand il
+    # change. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # Vente
+    page.click(".ac-hero [data-act=newvente]"); page.wait_for_selector("form[data-form=vente]")
+    barre = page.locator("form[data-form=vente] .sv-barre")
+    verif(barre.count() == 1 and barre.locator(".btn.main.block").inner_text() == "Enregistrer la vente", "barre fixe : Enregistrer la vente")
+    verif(barre.locator(".sv-total b").inner_text().replace(" ", " ").replace("\xa0", " ") in ("0,00 €", "0 €"), "total à zéro : " + barre.locator(".sv-total b").inner_text())
+    verif(page.evaluate("getComputedStyle(document.querySelector('.bottom')).display") == "none", "barre du bas masquée pendant la vente")
+    verif(page.evaluate("getComputedStyle(document.querySelector('.sv-barre')).position") == "sticky", "barre d'enregistrement collée en bas")
+    page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']"); page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']")
+    ligne = page.locator(f".stepper:has([data-k='{L1}'])")
+    verif("16 restants" in ligne.locator(".small").inner_text(), "stock restant après 2 pots : " + ligne.locator(".small").inner_text())
+    verif(ligne.locator(".ctl span.sv-rebond").count() == 1, "le compteur changé rebondit")
+    total = page.locator(".sv-total")
+    verif("24" in total.locator("b").inner_text() and "2 pots" in total.inner_text(), "total et nombre de pots : " + total.inner_text().replace("\n", " "))
+    verif(total.locator("b.sv-rebond").count() == 1, "le total rebondit")
+    verif(page.locator(f".stepper:has([data-k='{L2}']) .ctl span.sv-rebond").count() == 0, "l'autre compteur ne bouge pas")
+    page.click("[data-act=spaye][data-v='0']"); page.wait_for_timeout(100)
+    verif(page.locator(".sv-total b.sv-rebond").count() == 0 and "2 pots" in page.locator(".sv-total").inner_text(), "changer le paiement ne fait pas rebondir le total et garde les pots")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vente.png")
+    page.select_option("#s_client", C1)
+    page.click("form[data-form=vente] .btn.main.block"); page.wait_for_timeout(1200)
+    verif(page.evaluate("S.route") != "vente", "la vente s'enregistre depuis la barre")
+
+    # Visite
+    page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.wait_for_selector("form[data-form=visite]")
+    page.locator("details[data-sec=intrants]").evaluate("d => d.open = true")
+    page.click(f"[data-act=vstep][data-k='{A1}'][data-v='0.5']")
+    page.wait_for_selector(f".stepper:has([data-k='{A1}'])")
+    l = page.locator(f".stepper:has([data-k='{A1}'])")
+    verif("0,5 kg restant" in l.locator(".small").inner_text() and "restants" not in l.locator(".small").inner_text(), "visite : stock restant au singulier : " + l.locator(".small").inner_text())
+    verif(l.locator(".ctl span.sv-rebond").count() == 1, "visite : le compteur rebondit")
+    verif(page.locator(".stepper", has_text="Pots 500 g vides").locator(".small").inner_text() == "40 en stock", "unité sans « unité » : " + page.locator(".stepper", has_text="Pots 500 g vides").locator(".small").inner_text())
+    verif(page.locator(".u-barre .btn.main").count() == 1, "visite : barre d'enregistrement inchangée")
+    if cap: l.scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/visite.png")
