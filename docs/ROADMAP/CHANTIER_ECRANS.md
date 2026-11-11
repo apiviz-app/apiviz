@@ -17,7 +17,7 @@ Miel, Gestion, API au centre). Aucune étape ne déplace de rubrique.
 | 6 | Visite et vente | Bouton d'enregistrement fixe en bas, compteurs qui réagissent | Barre fixe pour la visite seulement, compteurs muets | **v5.26, en PR** |
 | 7 | Gestion | Page centrale, carte « entre associés » | Gestion en blocs | À faire |
 | 8 | Feuille API | Ajouts rapides, suggestion du jour | Compagnon API, saisie rapide, sans suggestion | **v5.27, en PR** |
-| 9 | Réglages | Choix de la couleur du bandeau, en aperçu | Choix du bandeau (4 couleurs) | Aperçu à faire |
+| 9 | Réglages | Choix de la couleur du bandeau, en aperçu | Choix du bandeau (4 couleurs) en liste, pas de prénom | **v5.28, en PR** |
 
 Pour chaque étape : comparer d'abord à l'existant, ne coder que l'écart, un scénario `tests/etapes_*.txt` avec captures
 à 390 et 1 280 px, une entrée « À vérifier » dans `docs/CHANGELOG.md`.
@@ -55,3 +55,9 @@ le rebond du chiffre changé et du total. Gardé tel quel : l'ordre des champs, 
 
 Écart relevé : compagnon, recherche et six saisies rapides étaient déjà là. Ajouté : la suggestion du jour (même
 priorité que l'accueil, avec « Visiter … » et « Ajouter à l'agenda ») et l'entrée des tuiles une à une.
+
+## Étape 9 — Réglages (v5.28)
+
+Écart relevé : couleur du bandeau choisie dans une liste, sans aperçu ; pas d'endroit pour le prénom attendu par
+l'accueil. Ajouté : bloc « Toi » (prénom, sur l'appareil), alvéoles de couleur avec aperçu appliqué aussitôt et
+annulable. Le choix de couleur reste par appareil, comme avant.

@@ -1,0 +1,13 @@
+/* ---------- Réglages d'après les maquettes (v5.28, src/domaines/compte/apparence.js) ----------
+   Aperçu du bandeau dans la feuille, couleurs en alvéoles. */
+.rg-apercu{display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 14px 0 18px;border-radius:14px;background:var(--bandeau,#FBEFC9);color:var(--bandeau-texte,var(--ink));transition:background var(--duree) var(--sortie),color var(--duree) var(--sortie)}
+.rg-logo{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.03em}
+.rg-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--honey);color:var(--ink);font-weight:700}
+.rg-pastilles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:4px 0 6px}
+.rg-pastille{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:76px;padding:6px 0;border:0;border-radius:12px;background:none;font:inherit;font-size:13px;color:var(--ink);transition:transform var(--duree-rapide)}
+.rg-pastille:active{transform:scale(.95)}
+.rg-pastille span{width:48px;height:42px;background:var(--fond);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:transform var(--duree) var(--sortie)}
+.rg-pastille.on span{transform:scale(1.1);outline:0}
+.rg-pastille.on b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.rg-pastille b{font-weight:600}
+@media (prefers-reduced-motion:reduce){.rg-apercu,.rg-pastille span{transition:none}}

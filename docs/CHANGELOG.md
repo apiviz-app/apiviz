@@ -5,6 +5,28 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.28 · à publier en recette · réglages (chantier des écrans, étape 9)
+Aucune migration. S'appuie sur la v5.27.
+
+Écart relevé avec les maquettes : la couleur du bandeau se choisissait dans une liste, sans la voir avant
+d'enregistrer ; et aucun écran ne permettait de donner son prénom, que l'accueil attend depuis la v5.24.
+
+Pour l'apiculteur :
+1. **Bloc « Toi »** en tête des réglages : ton prénom. Il s'affiche dans le bonjour de l'accueil (« Bonsoir
+   Pierre-Louis »). Il reste sur cet appareil, comme la couleur du bandeau.
+2. **Couleur du bandeau** : quatre alvéoles (Miel doux, Sauge, Vert Apiviz, Sapin) et un aperçu du bandeau dans la
+   feuille ; toucher une couleur l'applique aussitôt à l'app. « Annuler » remet la couleur d'avant ; « Enregistrer »
+   la garde.
+
+Technique : `src/domaines/compte/apparence.js` complète l'écran « reglages » et remplace l'action `errgcouleur`
+(déclarée dans `remplace`) ; essentiels.js expose ses couleurs de bandeau ; styles `styles/43-reglages.css` ;
+scénario `tests/etapes_re.txt`.
+
+**À vérifier**
+1. Réglages › Toi : le prénom donné apparaît dans le bonjour de l'accueil.
+2. Réglages › Apparence : chaque alvéole change le bandeau tout de suite ; Annuler revient en arrière.
+3. Bandeaux Vert Apiviz et Sapin : logo clair, textes lisibles.
+
 ## v5.27 · à publier en recette · feuille d'API (chantier des écrans, étape 8)
 Aucune migration. S'appuie sur la v5.26.
 
