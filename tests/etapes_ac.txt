@@ -1,5 +1,5 @@
     # v5.24 — Accueil sur téléphone d'après les maquettes : bonjour et deux actions, priorité d'API, quatre chiffres,
-    # état des ruches, prochain créneau de visite, À faire étiqueté, dernières actions. L'ordinateur ne change pas.
+    # état des ruches, prochain créneau de visite, À faire étiqueté, dernières actions. v5.25 : ordinateur et « sans visite ».
     # Avec CAPTURES=<dossier>, enregistre l'accueil à 390 px (haut, milieu, bas).
     import datetime, pathlib as _pl, os
     _ici = _pl.Path(__file__).parent
@@ -71,6 +71,24 @@
     page.evaluate("localStorage.setItem('apiviz-prenom-' + S.session.user.email, 'Pierre-Louis'); ACT.go('dash')"); page.wait_for_selector(".ac-hero")
     verif(page.locator(".ac-hero h1").inner_text().endswith("Pierre-Louis"), "prénom dans le bonjour")
 
-    # Ordinateur : vue d'ensemble inchangée.
-    page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_selector(".ab-chiffre", timeout=5000)
-    verif(page.locator(".ac-hero").count() == 0 and page.locator(".ab-chiffre").count() == 4, "ordinateur : vue d'ensemble inchangée")
+    # v5.25 — Ordinateur : la même page en deux colonnes ; l'ancienne vue d'ensemble n'apparaît plus.
+    page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("localStorage.removeItem('apiviz-prenom-' + S.session.user.email)"); page.wait_for_selector(".ac-cols", timeout=5000)
+    verif(page.locator(".ab").count() == 0 and page.locator(".ac-haut .ac-hero").count() == 1 and page.locator(".ac-haut .ac-api").count() == 1, "ordinateur : bonjour et priorité côte à côte")
+    verif(page.locator(".ac-chiffre").count() == 4 and page.locator(".ac-cols .al-carte").count() == 1 and page.locator(".ac-cols .u-liste").count() == 1, "ordinateur : chiffres puis deux colonnes")
+    box = [page.locator(s).bounding_box() for s in (".ac-cols .al-carte", ".ac-cols .u-liste")]
+    verif(box[1]["x"] > box[0]["x"] + 300 and abs(box[1]["y"] - box[0]["y"]) < 5, "ordinateur : état des ruches à gauche, À faire à droite")
+    if cap:
+        page.set_viewport_size({"width": 1280, "height": 1400}); page.wait_for_timeout(1500); page.screenshot(path=f"{cap}/accueil-1280.png"); page.set_viewport_size({"width": 1280, "height": 900})
+    page.set_viewport_size({"width": 390, "height": 844}); page.wait_for_timeout(500); page.wait_for_selector(".ac-hero")
+    verif(page.locator(".ac-cols").count() == 0, "retour au téléphone : une colonne")
+
+    # Exploitation sans visite (comme Chez Christian) : le nouvel accueil aussi, avec la première visite en avant.
+    DATA["visites"].clear()
+    page.reload(); page.wait_for_selector(".ac-hero", timeout=15000); page.wait_for_timeout(1200)  # météo arrivée
+    verif(page.locator(".ac-hero h1").inner_text() in ("Bonjour", "Bonsoir"), "sans visite : même bonjour")
+    verif("Note ta première visite" in page.locator(".ac-api").inner_text() and page.locator(".ac-api [data-act=newvisite]").count() == 1, "sans visite : API propose la première visite")
+    verif(page.locator(".ac-chiffre").count() == 4 and page.locator(".al-carte .u-hex").count() == 6, "sans visite : chiffres et alvéoles")
+    g = page.evaluate("[...document.querySelectorAll('.wrap.ac > *')].map(e => e.className)")
+    verif(any("dm-guide" in c for c in g[:4]), "sans visite : le guide de prise en main juste sous la priorité")
+    if cap:
+        page.wait_for_timeout(600); page.screenshot(path=f"{cap}/accueil-sans-visite.png")

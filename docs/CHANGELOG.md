@@ -5,6 +5,26 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.25 · à publier en recette · le nouvel accueil partout
+Aucune migration. Correctif de la v5.24 après essai en production.
+
+- **Exploitation sans visite** (6 ruches en place, aucune visite, comme « Chez Christian ») : elle gardait l'ancien
+  accueil, la v5.24 étant réservée aux exploitations ayant déjà une visite. Elle a maintenant le nouvel accueil :
+  bonjour, puis API propose la première visite (« Noter une visite »), le guide « Bien démarrer » juste dessous,
+  les quatre chiffres et les alvéoles. Sans aucune ruche, la prise en main ne change pas.
+- **Ordinateur** : même accueil que sur téléphone, mis en page sur deux colonnes : bonjour et priorité côte à côte,
+  les quatre chiffres sur une ligne, puis l'état des ruches et le créneau à gauche, À faire et les dernières
+  actions à droite. L'ancienne vue d'ensemble (v5.10) ne s'affiche plus ; son code reste en secours.
+- À faire, le créneau et les dernières actions passent sur des cartes blanches, comme dans les maquettes.
+
+Technique : `accueil.js` s'applique à toutes les largeurs dès la première ruche ; `alveoles.js` n'appelle plus
+`accueilOrdinateur()` quand `AC` est présent. Test `ab` réécrit pour l'ordinateur ; `etapes_ac.txt` couvre
+l'ordinateur et l'exploitation sans visite.
+
+**À vérifier**
+1. « Chez Christian » sur téléphone : le nouvel accueil, avec « Noter une visite » dans la carte d'API.
+2. Sur ordinateur : deux colonnes, rien ne déborde ; en rétrécissant la fenêtre, on repasse sur une colonne.
+
 ## v5.24 · à publier en recette · accueil des maquettes (chantier des écrans, étape 4)
 Aucune migration. S'appuie sur les v5.22 (météo) et v5.23 (transitions). **Téléphone seulement** : sur ordinateur,
 la vue d'ensemble ne change pas. La prise en main (exploitation sans ruche ou sans visite) ne change pas non plus.
