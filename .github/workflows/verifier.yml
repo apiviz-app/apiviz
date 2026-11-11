@@ -40,7 +40,7 @@ jobs:
   # Job séparé, sans navigateur : il tourne en parallèle et répond en moins d'une minute.
   sql:
     name: Tests SQL
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
