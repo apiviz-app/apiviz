@@ -29,7 +29,8 @@ réelle d'une migration par ce chemin n'a pas encore tourné sur une vraie base.
 ## v5.31 · à publier en recette · reines et liens de colonies (IT-07)
 **Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. Appliquée sur
 `apidoo-test` le 11 nov. 2026, après 018 (relevé `migrations/releves/structure-2026-11-11-recette-apres-019.json`).
-À appliquer sur `apidoo` avant la production, après accord.
+**Appliquée sur `apidoo` le 12 nov. 2026**, avec l'accord de Pierre-Louis, après 017 et 018 (empreinte identique au
+rejeu des fichiers ; 1 reine reprise, aucun lien, aucune incohérence entre exploitations).
 (La fiche IT-07 annonçait le numéro 017, pris depuis par 017-associes puis 018-stock-mouvements.)
 
 Pour l'apiculteur :
@@ -70,8 +71,8 @@ Limites connues :
 6. Les cinq onglets défilent sur téléphone ; l'onglet Colonie garde statut, emplacements, hausses, équipement.
 
 ## v5.30 · à publier en recette · stock : catalogue, achats, mise en pots, traçabilité
-**Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. À appliquer sur
-`apidoo-test` avant la recette. S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».
+**Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. Appliquée sur
+`apidoo-test` le 11 nov. 2026 et sur `apidoo` le 12 nov. 2026 (stock inchangé : 257, repris en 3 mouvements d'ouverture). S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».
 
 Écart relevé par Pierre-Louis le 11 nov. 2026 : une dépense de pots vides ne créait pas de stock (la fiche dépense
 n'avait pas d'article), il n'y avait pas de liste d'articles à acheter ni d'Opex/Capex par article, et créer un lot ne
@@ -112,9 +113,8 @@ scénario le dit.
 5. Sans réseau : un achat et une mise en pots sont gardés et montrés tout de suite, puis envoyés au retour.
 
 ## v5.29 · à publier en recette · entre associés (chantier des écrans, étape 7)
-**Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, pas sur `apidoo`.
+**Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, sur `apidoo` le 12 nov. 2026.
 Additive : l'ancienne version continue de fonctionner (elle n'envoie pas « vendu par », la colonne reste vide).
-À appliquer sur `apidoo` avant de mettre la v5.29 en production.
 
 Pour l'apiculteur :
 1. **Achat** : « Acheté par » (l'associé qui l'a fait) et « Payé avec » : les fonds propres d'un associé, ou la

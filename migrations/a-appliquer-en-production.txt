@@ -2,7 +2,5 @@
 # La mise en ligne en production compare la structure de la base apidoo aux fichiers (scripts/controler-structure.mjs),
 # dit où en est la base, et applique elle-même les migrations manquantes quand le secret BASE_PRODUCTION existe
 # (scripts/appliquer-migrations.mjs, docs/PROCESSUS.md).
-# État relevé le 11 nov. 2026 : apidoo en est à 016 (014, 015 et 016 y sont).
-017-associes.sql
-018-stock-mouvements.sql
-019-reines-liens.sql
+# État au 12 nov. 2026 : apidoo en est à 019 (017, 018 et 019 appliquées ce jour avec l'accord de Pierre-Louis).
+# Rien en attente.
