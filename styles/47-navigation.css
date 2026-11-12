@@ -1,0 +1,58 @@
+/* ---------- Navigation par catégories (v5.32, navigation.js) ---------- */
+
+/* Ordinateur : menu latéral permanent, rangé par catégorie, sans compteur. Annule la barre du haut (21-piste-a-barre-du). */
+@media (min-width:801px){
+  .shell{flex-direction:row}
+  .side{position:sticky;top:0;z-index:20;flex:none;flex-direction:column;align-items:stretch;gap:2px;width:252px;height:100vh;min-height:0;padding:18px 12px 16px;overflow-y:auto;background:#fff;color:var(--ink);border-right:1px solid var(--line)}
+  .side .brand{padding:2px 10px 14px}
+  .side .nav{display:flex;align-items:center;justify-content:flex-start;gap:11px;width:100%;min-height:40px;padding:0 12px;border-radius:10px;color:var(--ink);font-weight:500;font-size:14.5px;text-align:left}
+  .side .nav svg{display:block;flex:none;width:18px;height:18px}
+  .side .nav:hover{background:var(--ground)}
+  .side .nav.on{background:var(--honeysoft);color:var(--ink);font-weight:600}
+  .side .nav[data-v=saisir]{margin:0 0 6px;min-height:48px;border-radius:14px;background:var(--pine);color:#fff;font-weight:600}
+  .side .nav[data-v=saisir]:hover{background:var(--pine2)}
+  .side .nav[data-v=saisir] api-compagnon{flex:none;width:30px;height:30px}
+  .side .nl-titre{margin:14px 12px 4px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .side .me{margin:auto 0 0;padding:14px 10px 0;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+  .side .me .mail{display:block;color:var(--ink);word-break:break-all}
+  .side .me .link{display:inline;color:var(--good)}
+  .side .er-barre,.side .er-cloche{display:none}
+  main{flex:1;min-width:0}
+  /* Bandeau du contenu : la recherche, à la couleur du bandeau choisie dans les réglages. */
+  .nl-entete{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:16px;min-height:66px;margin:-30px -32px 24px;padding:11px 32px;box-sizing:border-box;background:var(--bandeau);color:var(--bandeau-texte)}
+  .nl-entete .er-barre{display:block;flex:1 1 320px;max-width:520px;margin:0}
+  .nl-volet{display:none}
+}
+@media (max-width:800px){.nl-entete{display:none}}
+
+/* Téléphone : touche Menu et volet par la droite. */
+.nl-volet{position:fixed;inset:0 0 0 auto;width:min(340px,88vw);max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;border-radius:24px 0 0 24px;background:#fff;color:var(--ink);box-shadow:-12px 0 32px -12px rgba(30,43,36,.35);overflow:hidden}
+.nl-volet[open]{display:flex;flex-direction:column;animation:nl-entre var(--duree,.24s) var(--sortie,ease) both}
+.nl-volet::backdrop{background:rgba(27,36,32,.45)}
+@keyframes nl-entre{from{transform:translateX(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.nl-volet[open]{animation:none}}
+.nl-tete{display:flex;align-items:center;gap:12px;padding:calc(16px + env(safe-area-inset-top)) 14px 12px 18px;border-bottom:1px solid var(--line)}
+.nl-tete .avatar{flex:none;width:42px;height:42px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600}
+.nl-qui{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px;color:var(--muted)}
+.nl-qui b{font-size:15.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-fermer{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nl-corps{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:12px 16px calc(20px + env(safe-area-inset-bottom))}
+.nl-corps h2{margin:0 0 6px;font-family:'Instrument Sans',system-ui,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.nl-tuiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.nl-tuiles button{display:flex;align-items:center;gap:9px;min-height:44px;padding:0 10px;border:0;border-radius:11px;background:var(--ground);color:var(--ink);font:500 14px 'Instrument Sans',system-ui,sans-serif;text-align:left;cursor:pointer}
+.nl-tuiles button svg{flex:none;width:18px;height:18px}
+.nl-tuiles button.on{background:var(--honeysoft);font-weight:600}
+.nl-tuiles button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bottom [data-v=menu].on svg{color:inherit}
+
+/* Fil d'Ariane : la catégorie (ouvre le volet sur téléphone ; simple repère sur ordinateur). */
+.er-ariane .nl-categorie{margin:0;padding:0;min-height:32px;font-weight:600}
+@media (min-width:801px){.er-ariane [data-act=nlmenu]{pointer-events:none;color:var(--muted);text-decoration:none}}
+
+/* Écran « Entre associés » */
+.ea-fiches{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0 10px}
+.ea-fiche{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.ea-fiche h2{margin:0 0 2px;font-size:18px}
+.ea-fiche p{margin:0;font-size:14.5px}
+.ea-fiche .good{color:var(--good);font-weight:600}
+.ea-fiche .watch{color:var(--watch);font-weight:600}

@@ -1,6 +1,6 @@
 // Apiviz — transitions entre écrans (chantier des écrans, étape 3, v5.23).
 // Aller : le nouvel écran arrive de la droite. Retour (« ‹ … », Échap, l'écran d'avant) : il arrive de la gauche.
-// Changement de rubrique (barre du bas, menu de côté, racine d'une rubrique) : il monte en fondu.
+// Changement de rubrique (barre du bas, menu de côté, volet Menu, racine d'une rubrique) : il monte en fondu.
 // L'écran change tout de suite, comme avant : seul le contenu neuf joue son entrée (styles/38-transitions.css).
 // Aucun code ne voit donc un écran à moitié changé, et cela marche dans tous les navigateurs. Les barres ne bougent pas.
 // L'alvéole qui devient l'en-tête de la fiche ruche (alveoles.js) garde son mouvement propre.
@@ -27,7 +27,7 @@ const VT = (() => {
 
   document.addEventListener("click", (e) => {
     if (e.target.closest?.(".u-retour")) retourDemande = true;
-    if (e.target.closest?.(".bottom, .side, .subtabs")) barreTouchee = true; // sous-onglets : écrans voisins, fondu
+    if (e.target.closest?.(".bottom, .side, .subtabs, .nl-volet")) barreTouchee = true; // sous-onglets et volet Menu (v5.32) : fondu
   }, true);
   // Échap sur ordinateur : écran précédent. Jamais pendant une saisie (champ actif, visite, vente, tournée).
   document.addEventListener("keydown", (e) => {

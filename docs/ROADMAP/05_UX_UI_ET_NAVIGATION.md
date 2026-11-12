@@ -27,14 +27,24 @@ Ruchers
 Miel
  ├─ Ventes (à encaisser, à livrer) · Clients · Stock de pots
  └─ Production : récoltes · extractions · lots · étiquettes
-Gestion
- ├─ Agenda & tâches · Opérations (traitements, nourrissements) · Élevage*
- ├─ Registre & déclaration · Dépenses & budget · Matériel · Fournisseurs
- └─ Bilan & statistiques · Exploitation & membres · Réglages
+Finances
+ └─ Bilan · Dépenses & achats · Budget & prévisions · Entre associés
+Administration
+ └─ Matériel · Fournisseurs · Registre d'élevage · Déclaration · Opérations (traitements, nourrissements) · Élevage*
+Équipe et compte
+ └─ Équipe (exploitation & membres) · Réglages
+Au quotidien (avec l'Accueil) : Agenda & tâches · Rappels
 API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche, opération) · demander à API
 Compte (avatar) : exploitations · installer · plein soleil · aide · se déconnecter
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.32 (12 nov. 2026)** : « Gestion » disparaît des menus. Ses écrans sont rangés dans deux catégories aux noms
+plus parlants, **Finances** et **Administration**, plus **Équipe et compte**. Sur ordinateur, menu latéral permanent par
+catégorie (plus de barre du haut), sans compteur ni pastille ; la cloche cède la place à l'entrée « Rappels ». Sur
+téléphone, la 5e touche devient « Menu » et ouvre un volet par la droite avec les mêmes catégories. « Entre associés »
+devient un écran de Finances. L'écran en blocs (route `plus`) reste joignable par son adresse, hors des menus.
+Décision de Pierre-Louis (12 nov. 2026, maquettes validées).
 
 **v5.30 (11 nov. 2026)** : écran « Mise en pots » sous Miel › Production (pas de nouvelle rubrique), ouvert par
 « Nouveau lot » et depuis Matériel. Matériel (Gestion) devient le catalogue d'articles ; « Ajouter une dépense » ouvre
@@ -80,9 +90,9 @@ Contraintes : cibles ≥ 48 px, contraste AA en plein soleil, aucune saisie clav
 
 | Largeur | Navigation | Mise en page |
 |---|---|---|
-| < 800 px | barre du bas (Accueil, Ruchers, API, Miel, Gestion) | une colonne, feuilles du bas |
-| 800–1200 px | barre du haut | deux colonnes |
-| > 1200 px | barre du haut | trois colonnes (tournée, accueil), tableaux |
+| < 800 px | barre du bas (Accueil, Ruchers, API, Miel, Menu) + volet Menu par catégories | une colonne, feuilles du bas |
+| 800–1200 px | menu latéral par catégories (v5.32) | deux colonnes |
+| > 1200 px | menu latéral par catégories (v5.32) | trois colonnes (tournée, accueil), tableaux |
 
 ## 7. Améliorations de l'existant (sans refonte)
 
