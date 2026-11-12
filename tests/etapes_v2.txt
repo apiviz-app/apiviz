@@ -39,7 +39,7 @@
     verif(page.locator(".card.u-trois b").first.inner_text().endswith(" j"), "chiffres clés de la ruche")
     page.wait_for_timeout(400); page.screenshot(path="v2/ruche.png", full_page=True)
     # Visite
-    page.click(".n4-rbarre .btn.honey"); page.wait_for_selector(".u-visite-form")
+    page.click(".n4-rbarre [data-act=newvisite]"); page.wait_for_selector(".u-visite-form")  # « Visite complète » depuis la v5.32
     verif(not page.locator(".bottom").is_visible() and page.locator(".u-barre .btn").is_visible(), "visite : barre d'enregistrement à la place du menu")
     page.click("details[data-sec=poids] summary"); page.fill("#v_poids", "41.5")
     page.click("[data-act=vset][data-k=activite][data-v=Forte]")

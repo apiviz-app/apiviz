@@ -2,7 +2,7 @@
     # Les anciennes définitions window.view* ont été retirées : on vérifie qu'aucune n'existe plus.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     ids = page.evaluate("Noyau.ecrans()")
-    verif(len(ids) == 32 and len(set(ids)) == 32, "32 écrans enregistrés (dont Déplacer, IT-06, et Mise en pots, v5.30), chacun une seule fois : %s" % len(ids))
+    verif(len(ids) == 34 and len(set(ids)) == 34, "34 écrans enregistrés (dont Déplacer, IT-06, Mise en pots, v5.30, Visite express et Entre associés, v5.32), chacun une seule fois : %s" % len(ids))
     # Un écran enregistré : render() l'utilise et aucune autre définition n'est appelée.
     restes = page.evaluate("""() => ["viewDash", "viewPlus", "viewRuches", "viewRuche", "viewVisite", "viewClients"].filter((v) => v in window)""")
     verif(restes == [], "anciennes définitions recouvertes supprimées : %s" % restes)
