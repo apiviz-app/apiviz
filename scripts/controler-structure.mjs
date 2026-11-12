@@ -38,5 +38,18 @@ const ecarts = Object.keys({ ...attendu, ...obtenu }).filter((k) => attendu[k] !
 console.log(`Migrations du dépôt : ${ORDRE.join(", ")}`);
 if (!ecarts.length) { console.log(`Structure identique : ${url} correspond aux fichiers de migrations.`); process.exit(0); }
 console.log(`Écart de structure avec ${url} sur : ${ecarts.join(", ")}.`);
-console.log("Une migration du dépôt n'est pas appliquée sur cette base (voir migrations/a-appliquer-en-production.txt), ou la base a été modifiée hors fichier.");
+// Où en est la base ? On rejoue les fichiers en s'arrêtant de plus en plus tôt jusqu'à retrouver ses empreintes
+// (empreinte_structure() existe depuis 014).
+let trouve = "";
+for (let i = ORDRE.length - 2; i >= ORDRE.indexOf("014-roles-audit.sql") && !trouve; i--) {
+  const e = (await (await base({ jusqua: ORDRE[i] })).query("select public.empreinte_structure() e")).rows[0].e;
+  if (Object.keys({ ...e, ...obtenu }).every((k) => e[k] === obtenu[k])) trouve = ORDRE[i];
+}
+if (trouve) {
+  console.log(`La base en est à ${trouve}. Migrations à appliquer, dans l'ordre : ${ORDRE.slice(ORDRE.indexOf(trouve) + 1).join(", ")}.`);
+} else if (ecarts.join() === "fonctions") {
+  console.log("Tables, contraintes, règles d'accès et déclencheurs identiques aux fichiers ; seul le texte de certaines fonctions diffère (par exemple une indentation différente).");
+} else {
+  console.log("La base ne correspond exactement à aucune étape des migrations du dépôt : une migration n'y est pas appliquée (voir migrations/a-appliquer-en-production.txt), ou la base a été modifiée hors fichier.");
+}
 process.exit(1);

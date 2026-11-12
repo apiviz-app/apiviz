@@ -15,7 +15,8 @@ permissions:
 
 jobs:
   verifier:
-    runs-on: ubuntu-24.04
+    # ubuntu-latest : le 11 nov. 2026 au soir, les tâches sur « ubuntu-24.04 » n'ont trouvé aucune machine.
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

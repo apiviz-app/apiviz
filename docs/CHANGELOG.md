@@ -5,9 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## Outillage · 12 nov. 2026 · plus de mise en ligne en production refusée sans raison
+Trois causes, toutes traitées :
+- **« Cette version n'est pas celle en recette »** (11 nov., 23 h 21) : la production exigeait que `main` soit
+  identique à la recette ; une modification faite après la recette (ici le réglage des machines de GitHub) suffisait à
+  la bloquer. Désormais la production publie la version en recette telle quelle ; il suffit qu'elle soit sur `main`.
+- **Tâches sans machine** (11 nov. au soir) : les tâches sur `ubuntu-24.04` n'ont trouvé aucune machine et ont été
+  annulées, ce qui rendait « Vérifier » rouge. Toutes les tâches passent sur `ubuntu-latest` ; un « Vérifier » annulé
+  par GitHub est relancé et attendu par la mise en ligne (`scripts/attendre-verifier.sh`) ; seul un test en échec bloque.
+- **Base `apidoo` en retard** (cause des refus depuis le 3 nov.) : migrations de la version non appliquées, étape faite
+  à part et oubliée. Désormais :
+1. « Mise en ligne » applique d'abord les migrations qui manquent à la base de la cible, chacune dans sa transaction,
+   puis publie (`scripts/appliquer-migrations.mjs`). Il faut pour cela créer une fois les secrets `BASE_RECETTE` et
+   `BASE_PRODUCTION` (`docs/PROCESSUS.md`, « Mise à jour automatique des bases »). Lancer « production » vaut accord
+   pour mettre à jour `apidoo`.
+2. Sans secret, rien ne change, sauf le message : le contrôle dit où en est la base et quelles migrations manquent,
+   et la mise en ligne en recette l'annonce déjà dans son résumé, avant qu'on lance la production.
+3. Une migration en échec est annulée en entier et rien n'est publié.
+Aucun changement dans l'application. Tests : `tests/sql/test_appliquer.mjs` (15 vérifications). La reconnaissance de
+la base a été vérifiée en lecture seule sur les deux vraies bases (`apidoo` : 016 ; `apidoo-test` : 019). L'application
+réelle d'une migration par ce chemin n'a pas encore tourné sur une vraie base.
+
 ## v5.31 · à publier en recette · reines et liens de colonies (IT-07)
-**Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. **Pas encore
-appliquée** : à appliquer sur `apidoo-test` après 018, avant la recette, puis sur `apidoo` avant la production.
+**Migration 019** (`migrations/019-reines-liens.sql`), additive, ne casse pas l'ancienne version. Appliquée sur
+`apidoo-test` le 11 nov. 2026, après 018 (relevé `migrations/releves/structure-2026-11-11-recette-apres-019.json`).
+**Appliquée sur `apidoo` le 12 nov. 2026**, avec l'accord de Pierre-Louis, après 017 et 018 (empreinte identique au
+rejeu des fichiers ; 1 reine reprise, aucun lien, aucune incohérence entre exploitations).
 (La fiche IT-07 annonçait le numéro 017, pris depuis par 017-associes puis 018-stock-mouvements.)
 
 Pour l'apiculteur :
@@ -48,8 +71,8 @@ Limites connues :
 6. Les cinq onglets défilent sur téléphone ; l'onglet Colonie garde statut, emplacements, hausses, équipement.
 
 ## v5.30 · à publier en recette · stock : catalogue, achats, mise en pots, traçabilité
-**Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. À appliquer sur
-`apidoo-test` avant la recette. S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».
+**Migration 018** (`migrations/018-stock-mouvements.sql`), additive, ne casse pas l'ancienne version. Appliquée sur
+`apidoo-test` le 11 nov. 2026 et sur `apidoo` le 12 nov. 2026 (stock inchangé : 257, repris en 3 mouvements d'ouverture). S'appuie sur la v5.29 (entre associés, migration 017) : l'achat garde « Acheté par » et « Payé avec ».
 
 Écart relevé par Pierre-Louis le 11 nov. 2026 : une dépense de pots vides ne créait pas de stock (la fiche dépense
 n'avait pas d'article), il n'y avait pas de liste d'articles à acheter ni d'Opex/Capex par article, et créer un lot ne
@@ -90,9 +113,8 @@ scénario le dit.
 5. Sans réseau : un achat et une mise en pots sont gardés et montrés tout de suite, puis envoyés au retour.
 
 ## v5.29 · à publier en recette · entre associés (chantier des écrans, étape 7)
-**Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, pas sur `apidoo`.
+**Migration 017** (`migrations/017-associes.sql`) : **appliquée sur `apidoo-test` le 11 nov. 2026**, sur `apidoo` le 12 nov. 2026.
 Additive : l'ancienne version continue de fonctionner (elle n'envoie pas « vendu par », la colonne reste vide).
-À appliquer sur `apidoo` avant de mettre la v5.29 en production.
 
 Pour l'apiculteur :
 1. **Achat** : « Acheté par » (l'associé qui l'a fait) et « Payé avec » : les fonds propres d'un associé, ou la
