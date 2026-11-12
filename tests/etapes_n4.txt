@@ -11,7 +11,7 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     libs = page.locator(".bottom button span:not(.n4-badge)").all_inner_texts()
-    verif(libs == ["Accueil", "Ruchers", "API", "Miel", "Gestion"], "barre du bas : %s" % libs)
+    verif(libs == ["Accueil", "Ruchers", "API", "Miel", "Menu"], "barre du bas : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
     # Prochaine action
     # v5.24 : sur téléphone, la prochaine action (tournée) est proposée dans la carte d'API.
@@ -71,14 +71,17 @@
     shot("miel")
     page.click(".u-tuile[data-v=stock]"); page.wait_for_selector("text=Récoltes")
     verif(page.locator(".head h1").inner_text() == "Miel" and page.locator(".u-tuiles").count() == 1, "Stock et lots dans Miel, avec les récoltes")
-    # Gestion
-    page.click(".bottom button[data-v=plus]"); page.wait_for_selector(".n4-grille")
-    verif(page.locator(".g-bloc").count() >= 5 and page.locator(".n4-sect").count() == 0, "Gestion en blocs")
-    verif("stock bas" in page.locator(".n4-g[data-v=materiel]").inner_text(), "état affiché sur la tuile Matériel")
-    shot("gestion")
-    page.click(".n4-g[data-v=pilotage]"); page.wait_for_selector(".u-retour >> text=Gestion")
+    # Menu (v5.32) : volet par catégories à la place de Gestion
+    page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] .nl-tuiles")
+    cats = page.locator("#nlVolet h2").all_inner_texts()
+    verif([c.lower() for c in cats] == ["au quotidien", "ruchers", "miel et ventes", "finances", "administration", "équipe et compte"], "catégories du volet : %s" % cats)
+    shot("menu")
+    page.click("#nlVolet [data-v=pilotage]"); page.wait_for_selector(".er-ariane >> text=Finances")
+    verif(not page.evaluate("document.getElementById('nlVolet').open"), "le volet se ferme après un choix")
     verif(page.locator(".head h1").inner_text() == "Bilan", "« Pilotage » devient « Bilan »")
-    page.click(".u-retour"); page.click(".n4-g[data-v=materiel]"); page.wait_for_function("S.route === 'materiel' && document.querySelector('.head h1')?.textContent === 'Matériel'", timeout=5000)
+    verif(page.locator(".bottom button.on[data-v=menu]").count() == 1, "Bilan rangé derrière Menu")
+    page.click(".er-ariane [data-act=nlmenu]"); page.wait_for_selector("#nlVolet[open] button.on[data-v=pilotage]")
+    page.click("#nlVolet [data-v=materiel]"); page.wait_for_function("S.route === 'materiel' && document.querySelector('.head h1')?.textContent === 'Matériel'", timeout=5000)
     verif(page.locator(".head h1").inner_text() == "Matériel", "écran Matériel")
     # Compte
     page.click(".topbar .avatar"); page.wait_for_selector("#sheet[open] .n4-moi")

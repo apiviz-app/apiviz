@@ -12,10 +12,13 @@
     page.click(".subtabs [data-v=varroa]"); a = anim(); page.wait_for_timeout(700)
     verif(a == "vt-monte" and page.evaluate("S.route") == "varroa", "sous-onglet Santé : fondu, écran changé tout de suite")
     page.click(".subtabs [data-v=ruches]"); page.wait_for_timeout(700)
-    page.click(".bottom [data-v=plus]"); attendre()
-    verif(dernier() == "onglet", "Ruchers → Gestion : fondu")
-    page.evaluate("ACT.go('fournisseurs')"); a = anim(); page.wait_for_selector(".u-retour"); attendre()
-    verif(dernier() == "aller" and a == "vt-droite", "Gestion → Fournisseurs : le contenu arrive de la droite, sans attendre")
+    # v5.32 : le volet Menu remplace Gestion ; un choix dans le volet change de rubrique (fondu).
+    page.click(".bottom [data-v=menu]"); page.wait_for_selector("#nlVolet[open]")
+    page.click("#nlVolet [data-v=fournisseurs]"); attendre()
+    verif(dernier() == "onglet" and page.evaluate("S.route") == "fournisseurs", "Ruchers → Fournisseurs par le volet : fondu")
+    page.click(".bottom [data-v=dash]"); attendre()
+    page.evaluate("ACT.go('agenda')"); a = anim(); page.wait_for_selector(".u-retour"); attendre()
+    verif(dernier() == "aller" and a == "vt-droite", "Accueil → Agenda : le contenu arrive de la droite, sans attendre")
     cible = page.get_attribute(".u-retour", "data-v")
     page.click(".u-retour"); a = anim(); attendre()
     verif(dernier() == "retour" and page.evaluate("S.route") == cible, f"« ‹ … » : retour vers {cible}, l'écran revient de la gauche")
@@ -39,9 +42,9 @@
 
     # Une seule entrée par écran : l'ancienne entrée (« rise ») ne repart pas quand le sens est retiré.
     page.evaluate("""() => { window.entrees = []; document.addEventListener('animationstart', (e) => { if (e.target.classList?.contains('wrap')) entrees.push(e.animationName); }, true); }""")
-    page.click(".bottom [data-v=plus]"); page.wait_for_timeout(1200)
+    page.click(".bottom [data-v=dash]"); page.wait_for_timeout(1200)
     verif(page.evaluate("entrees") == ["vt-monte"], "changer d'écran : le contenu n'entre qu'une fois")
-    page.evaluate("ACT.go('fournisseurs')"); page.wait_for_timeout(1200)
+    page.evaluate("ACT.go('agenda')"); page.wait_for_timeout(1200)
     verif(page.evaluate("entrees") == ["vt-monte", "vt-droite"], "ouvrir un écran : une seule entrée, de la droite")
     page.evaluate("ACT.go('ruches')"); attendre()
 

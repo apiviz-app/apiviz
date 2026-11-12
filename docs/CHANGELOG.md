@@ -5,6 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.32 · à publier en recette · navigation par catégories (fin de « Gestion »)
+Aucune migration. Maquettes validées par Pierre-Louis le 12 nov. 2026.
+
+Pour l'apiculteur :
+1. **Ordinateur** : le menu est à gauche et toujours visible, rangé par catégorie : Au quotidien (Accueil, Agenda,
+   Rappels), Ruchers (Ruches, Carte, Santé et varroa), Miel et ventes (Stock et lots, Clients et ventes), Finances
+   (Bilan, Dépenses et achats, Budget et prévisions, Entre associés), Administration (Matériel, Fournisseurs, Registre
+   d'élevage, Déclaration), Équipe et compte (Équipe, Réglages). API est en tête du menu. Plus de barre du haut, ni de
+   compteur dans le menu ; la recherche est dans le bandeau en haut de l'écran, la cloche devient l'entrée « Rappels ».
+2. **Téléphone** : la touche « Gestion » devient **Menu**. Elle ouvre un volet par la droite avec les mêmes
+   catégories ; il se ferme d'un choix, de la croix ou en touchant à côté. Accueil, Ruchers, API et Miel ne changent pas.
+3. **« Gestion » est remplacée** par Finances et Administration. Au-dessus du titre d'un écran, la catégorie remplace
+   « ‹ Gestion » ; sur téléphone, elle rouvre le volet.
+4. **Entre associés** a son écran dans Finances : la phrase « qui doit combien à qui », puis le détail de chacun.
+
+Technique : `navigation.js` (menus, volet, fil d'Ariane), `styles/47-navigation.css` ; écran `associes`
+(`src/domaines/finances/`). Le logo du menu reste sombre quel que soit le bandeau (menu blanc). L'écran `plus` reste
+enregistré (adresse directe), hors des menus. Tests mis à jour : n4, al, eg, ab, vt, nk.
+
+### À vérifier
+- Téléphone : touche Menu, volet, choisir Bilan puis Matériel ; la catégorie au-dessus du titre rouvre le volet.
+- Téléphone : Échap ou toucher à côté ferme le volet ; la rubrique ouverte est surlignée dans le volet.
+- Ordinateur : menu à gauche à 1 280 et 1 440 px, et vers 900 px ; rien ne déborde ; recherche Ctrl K.
+- Ordinateur : bandeau Sapin ou Vert (Réglages › Apparence) : logo du menu toujours lisible.
+- Finances › Entre associés avec deux associés notés : phrase et détail justes.
+
 ## Outillage · 12 nov. 2026 · plus de mise en ligne en production refusée sans raison
 Trois causes, toutes traitées :
 - **« Cette version n'est pas celle en recette »** (11 nov., 23 h 21) : la production exigeait que `main` soit

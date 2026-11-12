@@ -17,7 +17,7 @@ function montrer(k) {
   const r = document.documentElement;
   VARIABLES.forEach((x) => (v[x] ? r.style.setProperty(x, v[x]) : r.style.removeProperty(x)));
   const sombre = k === "vert" || k === "sapin";
-  document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apiviz-clair.svg" : "logo-apiviz.svg"; });
+  document.querySelectorAll(".topbar > img").forEach((i) => { i.src = sombre ? "logo-apiviz-clair.svg" : "logo-apiviz.svg"; });
 }
 
 /** Complément de l'écran « reglages » : le bloc « Toi » en tête des blocs. */
