@@ -31,7 +31,8 @@
     verif("Placer sur la carte" in page.locator(".al-col", has_text="Bois").inner_text(), "rucher non placé : invitation à le placer")
     verif("Ruche 5" in page.locator(".ac-dernieres").inner_text(), "dernières actions")
     verif(page.locator(".ac-cols .u-liste").count() == 1, "À faire dans la colonne de droite")
-    fond = page.evaluate("getComputedStyle(document.querySelector('.side')).backgroundColor")
+    # v5.32 : le menu est à gauche, sur fond blanc ; le bandeau miel doux est en haut du contenu, avec la recherche.
+    fond = page.evaluate("getComputedStyle(document.querySelector('.nl-entete')).backgroundColor")
     verif(fond == "rgb(251, 239, 201)", "bandeau miel doux : %s" % fond)
     if os.environ.get("APIDOO_CAPTURE"):
         page.screenshot(path=os.environ["APIDOO_CAPTURE"], full_page=True)

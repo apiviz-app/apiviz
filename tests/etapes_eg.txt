@@ -10,7 +10,7 @@
     page.set_viewport_size({"width": 1440, "height": 900})
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Gestion en blocs
-    page.click(".side .nav[data-v=plus]"); page.wait_for_selector(".g-bloc")
+    page.evaluate("ACT.go('plus')"); page.wait_for_selector(".g-bloc")
     verif(page.locator(".g-bloc").count() == 7, "sept blocs")
     verif(page.locator(".g-bloc[data-v=registre]").count() == 1, "registre dans Gestion (AP-US-125)")
     verif("Un article est à racheter" in page.locator(".wrap .head h1").inner_text(), "phrase : " + page.locator(".wrap .head h1").inner_text())
@@ -20,7 +20,7 @@
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
     # Détail des dépenses et fil d'Ariane
     page.click(".g-bloc[data-v=compta]"); page.wait_for_selector(".er-ariane")
-    verif("Gestion" in page.locator(".er-ariane").inner_text() and "Dépenses" in page.locator(".er-ariane").inner_text(), "fil d'Ariane")
+    verif("Finances" in page.locator(".er-ariane").inner_text() and "Dépenses" in page.locator(".er-ariane").inner_text(), "fil d'Ariane")
     verif(page.locator(".ab-chiffre").count() == 3, "trois chiffres")
     page.click(".er-puces button[data-v=Autre]")
     verif(page.locator(".card.tbl tbody tr:visible").count() == 1, "filtre par poste")
@@ -82,13 +82,13 @@
     page.evaluate("document.activeElement.blur()"); page.keyboard.press("n"); page.wait_for_selector("#sheet[open]")
     verif(page.locator("#sheet .n4-tuiles").count() == 1, "N ouvre l'ajout rapide")
     page.mouse.click(20, 500); page.wait_for_timeout(100)
-    # Revenir au même endroit
+    # Revenir au même endroit (v5.32 : par le lien « Accueil » de l'Agenda ; le lien « ‹ Gestion » n'existe plus)
     page.set_viewport_size({"width": 1440, "height": 400})
-    page.click(".side .nav[data-v=plus]"); page.wait_for_selector(".g-bloc"); page.evaluate("scrollTo(0, 300)"); page.wait_for_timeout(50)
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".hero-head"); page.evaluate("scrollTo(0, 300)"); page.wait_for_timeout(50)
     y = page.evaluate("scrollY")
     # Clic sans défilement automatique de Playwright : la hauteur notée est bien celle du départ.
-    page.locator(".g-bloc[data-v=materiel]").dispatch_event("click"); page.wait_for_selector(".er-ariane")
-    page.click(".u-retour"); page.wait_for_selector(".g-bloc"); page.wait_for_timeout(100)
+    page.locator(".side .nav[data-v=agenda]").dispatch_event("click"); page.wait_for_selector(".er-ariane")
+    page.click(".er-ariane .u-retour"); page.wait_for_selector(".hero-head"); page.wait_for_timeout(100)
     verif(y > 0 and page.evaluate("scrollY") == y, "retour à la même hauteur : %s" % page.evaluate("scrollY"))
     # Téléphone
     page.set_viewport_size({"width": 390, "height": 844}); page.wait_for_timeout(100)
@@ -96,8 +96,9 @@
     if CAP: page.screenshot(path=CAP + ".tel.png", full_page=True)
     # Rappels et réglages
     page.set_viewport_size({"width": 1440, "height": 900})
-    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".side .er-cloche")
-    page.click(".side .er-cloche"); page.wait_for_selector(".er-rang")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".side .nav[data-v=rappels]")
+    verif(page.locator(".side .er-cloche").count() == 0, "ordinateur : pas de cloche, Rappels est dans le menu")
+    page.click(".side .nav[data-v=rappels]"); page.wait_for_selector(".er-rang")
     verif("Cire gaufrée : stock bas" in page.locator(".er-liste-r").inner_text(), "stock bas dans les rappels")
     nb = page.locator(".er-liste-r .u-todo").count()
     page.click(".er-bascule[data-v=stock]"); page.wait_for_timeout(100)
@@ -117,7 +118,7 @@
     page.click(".g-bloc[data-act=errgcouleur]"); page.wait_for_selector("#sheet[open]")
     page.click("#sheet .rg-pastille[data-v=sapin]"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     page.wait_for_timeout(300)
-    verif("logo-apiviz-clair" in page.locator(".side .brand img").get_attribute("src"), "bandeau sapin et logo clair")
+    verif("logo-apiviz-clair" in page.locator(".topbar > img").get_attribute("src") and "logo-apiviz-clair" not in page.locator(".side .brand img").get_attribute("src"), "bandeau sapin : logo clair dans le bandeau, sombre dans le menu blanc")
     if CAP: page.screenshot(path=CAP + ".reglages.png")
     page.evaluate("localStorage.setItem('apidoo-bandeau', 'miel'); render()")
     page.click(".g-bloc[data-act=errgform]"); page.wait_for_selector("form[data-form=reglages]")
@@ -146,4 +147,4 @@
     # Registre : toujours dans Gestion (AP-US-125)
     page.evaluate("ACT.go('plus')"); page.wait_for_selector(".g-bloc[data-v=registre]")
     page.click(".g-bloc[data-v=registre]"); page.wait_for_function("document.body.dataset.route === 'registre'")
-    verif("Gestion" in page.locator(".er-ariane").inner_text(), "registre ouvert depuis Gestion, retour vers Gestion")
+    verif("Administration" in page.locator(".er-ariane").inner_text(), "registre rangé dans Administration")

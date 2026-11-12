@@ -8,11 +8,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Se repérer
 
-- **Quatre rubriques** : Accueil, Ruchers, Miel, Gestion. Sur téléphone, elles sont dans la barre du bas avec **API**
-  au centre ; sur ordinateur, dans la barre en haut.
+- **Six catégories** *(v5.32)* : Au quotidien, Ruchers, Miel et ventes, Finances, Administration, Équipe et compte.
+  Sur ordinateur, elles sont toujours visibles dans le menu de gauche, avec **API** en tête. Sur téléphone, la barre
+  du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet par la droite avec
+  toutes les catégories. Dans un écran, le nom de la catégorie au-dessus du titre rouvre ce volet.
 - **API**, le compagnon : il ouvre la saisie et la recherche. Il saute quand une saisie est enregistrée et s'endort
   quand le réseau part. Il n'est pas encore relié à une intelligence artificielle.
-- **Recherche** : à côté d'API, ou Ctrl K sur ordinateur. Elle trouve ruches, clients, ventes, matériel, dépenses et
+- **Recherche** : la loupe sur téléphone, le bandeau en haut de l'écran sur ordinateur, ou Ctrl K. Elle trouve ruches, clients, ventes, matériel, dépenses et
   fournisseurs.
 - **Avatar (en haut à droite)** : exploitations (passer de l'une à l'autre), mode plein soleil, réglages et exports,
   installation sur le téléphone, déconnexion.
@@ -27,7 +29,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 ## Ruchers
 
 - Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un
-  raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Gestion).
+  raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Administration).
 - **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; sous le nom, le statut, la reine (âge, couleur) et la
   dernière visite ; onglets Journal (visites et événements dans l'ordre des dates), Santé (comptages varroa,
   traitements), Reine & lignée (nouvelle reine sans perdre l'ancienne, « Issue de … », colonies qui en sont issues),
@@ -57,9 +59,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Facture** : ouvrir une vente, « Créer la facture ». Le numéro (`F-année-0001`) est donné une fois et ne change
   plus ; Imprimer ou PDF. Adresse, code postal, ville et SIRET du client figurent sur la facture *(v5.16)*.
 
-## Gestion
+## Finances et Administration *(v5.32, anciennement Gestion)*
 
-- Blocs : Bilan de l'année, Dépenses, Budget, Stock matériel, Fournisseurs, **Registre et déclaration** *(v5.17)*, Équipe.
+- **Finances** : Bilan, Dépenses et achats, Budget et prévisions, **Entre associés** (qui a avancé quoi, et qui doit
+  combien à qui pour être à égalité ; un écran à part depuis la v5.32).
+- **Administration** : Matériel, Fournisseurs, Registre d'élevage, Déclaration.
+- L'ancien écran en blocs (Bilan, Dépenses, Budget, Stock matériel, Fournisseurs, Registre, Équipe) n'est plus dans les
+  menus.
 - **Matériel** *(v5.30)* : tes articles par famille (emballage, alimentation, traitements, cire, équipement), chacun
   Opex (consommable) ou Capex (équipement amorti), avec son stock et « À commander » sous le seuil. « Ajouter vite »
   propose les articles courants. La fiche d'un article montre ce qui a bougé (achats, visites, mises en pots,
@@ -67,18 +73,18 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Ajouter un achat** *(v5.30)* : une facture, une ligne par article touché (ou un nouvel article, ou des frais). Le
   stock monte dès l'enregistrement ; Opex ou Capex vient de l'article.
 - **Registre d'élevage** : onglets Traitements, Mouvements, Interventions, Exploitation. « Déplacer des ruches » et
-  « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel. Le lien « ‹ Gestion » ramène ici,
-  d'où que tu l'aies ouvert *(v5.17)*. La **déclaration annuelle** est rangée au même endroit.
-- **Opérations** (traitements et nourrissements hors visite) : prévue dans Gestion par l'arborescence, pas encore
+  « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel. La **déclaration annuelle**
+  est rangée dans Administration, juste à côté.
+- **Opérations** (traitements et nourrissements hors visite) : prévue dans Administration par l'arborescence, pas encore
   disponible.
 - **Entre associés** *(v5.32)* : la carte en tête de Gestion, et « Voir le détail » : ce qu'il faut régler pour être à
   égalité, ce que chacun a avancé, l'argent de vente à verser à la trésorerie, les derniers mouvements. « Noter le
   remboursement » et « Noter le versement » mettent le solde à jour.
 - **Équipe** : créer un lien d'invitation et l'envoyer. La personne ouvre le lien, crée son compte ou se connecte,
   et rejoint l'exploitation ; le nom de l'exploitation s'affiche sur le lien. Un responsable peut retirer un membre.
-- **Réglages** (depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,
+- **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,
   exports CSV et sauvegarde complète. À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
-- **Rappels** : la cloche ; sujets à couper, « Tout marquer comme vu ».
+- **Rappels** : la cloche sur téléphone, « Rappels » dans le menu sur ordinateur ; sujets à couper, « Tout marquer comme vu ».
 
 ## Ton de l'application
 

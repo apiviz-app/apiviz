@@ -116,6 +116,24 @@ function verser(nom) {
   feuilleReglement({ de: nom, a: SOCIETE, montant: v?.montant });
 }
 
+// ---------- Écran « Entre associés » (v5.32, catégorie Finances) ----------
+// La carte de Gestion en tête, puis le détail de chacun à même l'écran (plus besoin de la feuille).
+function ecran() {
+  const noms = associes(), soldes = noms.length ? soldesAssocies(S.d, noms) : [];
+  const pl = (k, mot) => `${k} ${mot}${k > 1 ? "s" : ""}`;
+  const lignes = soldes.map((s) => `<section class="card ea-fiche"><h2>${esc(s.nom)}</h2>
+      <p>${esc(pl(s.achats, "achat"))} · a avancé <b>${esc(eur(s.avance))}</b> de ses fonds propres</p>
+      <p>${esc(pl(s.ventes, "vente"))} · a récolté <b>${esc(eur(s.encaisse))}</b></p>
+      <p class="${s.solde > 0 ? "good" : s.solde < 0 ? "watch" : ""}">${s.solde > 0 ? `La société lui doit ${esc(eur(s.solde))}` : s.solde < 0 ? `Doit ${esc(eur(-s.solde))} à la société` : "À jour avec la société"}</p></section>`).join("");
+  const vide = `<section class="card"><p>Note d’abord les associés : ils seront proposés dans les achats et les ventes.</p>
+      <button type="button" class="btn main" data-act="eaassocies">Noter les associés</button></section>`;
+  shell("Entre associés", "Qui a avancé quoi, et ce qui reste à régler", noms.length ? '<button type="button" class="btn" data-act="eaassocies">Associés</button>' : "",
+    noms.length ? `<div class="ea-fiches">${lignes}</div><p class="small">Sur toute la durée, à parts égales. Les achats payés par la trésorerie de la société et l’argent de vente
+    gardé sur son compte ne comptent pour personne. Les ventes à encaisser ne comptent pas encore.</p>` : vide);
+  carteGestion();
+  document.querySelector(".ea-carte [data-act=eadetail]")?.closest("div")?.remove();
+}
+
 // ---------- Réglages ----------
 function blocReglages() {
   const grille = document.querySelector(".wrap .g-blocs");
@@ -166,6 +184,7 @@ export const completerVente = champsVente;
 /** « Acheté par » et « Payé avec », aussi pour l'achat en plusieurs lignes (v5.30, achat.js). */
 export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
+export const ecranAssocies = ecran;
 export const completerReglages = blocReglages;
 if (typeof GROUP != "undefined") GROUP.associes = "plus";
 export const actions = { eadetail: () => go("associes"), eaassocies: feuilleAssocies, earegler: regler, eaverser: verser };

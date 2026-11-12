@@ -215,7 +215,7 @@ const ES = (() => {
     ["--bandeau", "--bandeau-texte", "--bandeau-lien", "--bandeau-actif", "--bandeau-actif-texte", "--bandeau-survol"].forEach((k) => (v[k] ? r.style.setProperty(k, v[k]) : r.style.removeProperty(k)));
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", v["--bandeau"] || "#FBEFC9");
     const sombre = bandeau() === "vert" || bandeau() === "sapin";
-    document.querySelectorAll(".side .brand img, .topbar > img").forEach((i) => { i.src = sombre ? "logo-apiviz-clair.svg" : "logo-apiviz.svg"; });
+    document.querySelectorAll(".topbar > img").forEach((i) => { i.src = sombre ? "logo-apiviz-clair.svg" : "logo-apiviz.svg"; });
   }
   appliquerBandeau();
   // Écran « reglages » : enregistré dans le noyau (src/domaines/compte/ecrans.js, ES.ecranReglages).
