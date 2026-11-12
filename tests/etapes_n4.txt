@@ -53,7 +53,7 @@
     nom1 = page.locator(".head h1").inner_text()
     page.click(".n4-fleches [aria-label^='Ruche suivante']"); page.wait_for_selector(".n4-fleches >> text=2 sur 3")
     verif(page.locator(".head h1").inner_text() != nom1, "flèche : ruche suivante (%s)" % page.locator(".head h1").inner_text())
-    verif(page.locator(".u-quatre > div").count() == 4 and page.locator(".n4-rbarre .btn.honey").is_visible(), "4 chiffres clés et « Visiter cette ruche » en bas")
+    verif(page.locator(".u-quatre > div").count() == 4 and page.locator(".n4-rbarre [data-act=newvisite]").is_visible() and page.locator(".n4-rbarre [data-act=veruche]").is_visible(), "4 chiffres clés, « Visite express » et « Visite complète » en bas (v5.32)")
     shot("ruche")
     # Supprimer avec Annuler
     nv = page.locator(".u-visite").count()

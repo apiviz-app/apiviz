@@ -1,5 +1,6 @@
     # v5.29 — Entre associés : qui a acheté et avec quel argent, qui a vendu et qui a récolté l'argent ; carte de
-    # Gestion (qui doit combien à qui) et son détail ; liste des associés dans Réglages. Migration 017.
+    # Gestion (qui doit combien à qui) et l'écran « Entre associés » (v5.32 : remboursement noté, migration 020) ; liste
+    # des associés dans Réglages. Migrations 017 et 020.
     # Avec CAPTURES=<dossier>, captures à 390 px.
     import pathlib as _pl, os
     _ici = _pl.Path(__file__).parent
@@ -25,12 +26,30 @@
     pos = page.evaluate("[...document.querySelectorAll('.wrap > *')].map(e => e.className)")
     verif(pos.index("ea-carte") == pos.index("head g-tete") + 1, "la carte suit le titre de Gestion : " + ", ".join(pos))
     if cap: page.wait_for_timeout(500); page.screenshot(path=f"{cap}/gestion.png")
-    page.click("[data-act=eadetail]"); page.wait_for_selector("#sheet[open] .ea-ligne")
-    t = page.locator("#sheet").inner_text()
-    verif("1 achat · a avancé 48" in t and "La société lui doit 48" in t, "détail Pierre-Louis : " + page.locator(".ea-ligne").nth(0).inner_text().replace("\n", " "))
-    verif("2 achats · a avancé 12" in t and "1 vente · a récolté 36" in t and "Doit 24" in t, "détail Johan : achat payé par la caisse commune hors solde")
-    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/gestion-detail.png")
-    page.evaluate("$sheet.close()")
+    # v5.32 : « Voir le détail » ouvre l'écran « Entre associés » (maquettes du 12 nov. 2026).
+    page.click("[data-act=eadetail]"); page.wait_for_selector(".ea-solde")
+    verif(page.evaluate("S.route") == "associes", "écran Entre associés ouvert")
+    verif("36" in page.locator(".ea-montant").inner_text() and page.locator(".ea-qui").inner_text() == "Johan doit à Pierre-Louis", "solde : " + page.locator(".ea-solde").inner_text().replace("\n", " "))
+    tu = page.locator(".ea-tuiles").inner_text()
+    verif("Avancé par Pierre-Louis" in tu and "48" in tu and "Avancé par Johan" in tu and "a récolté 36" in tu, "ce que chacun a avancé : " + tu.replace("\n", " "))
+    verif("24" in page.locator(".ea-verser").inner_text() and "récoltés par Johan" in page.locator(".ea-verser").inner_text(), "à verser à la trésorerie : " + page.locator(".ea-verser").inner_text().replace("\n", " "))
+    verif(page.locator(".ea-mvts li").count() == 4, "derniers mouvements : 3 achats et la vente encaissée (%s)" % page.locator(".ea-mvts li").count())
+    verif("payé avec la trésorerie" in page.locator(".ea-mvts").inner_text(), "la caisse commune de l'ancienne version vaut la trésorerie")
+    if cap: page.wait_for_timeout(500); page.screenshot(path=f"{cap}/associes.png", full_page=True)
+    # Noter le remboursement : prérempli, puis les associés sont à égalité.
+    page.click("[data-act=earegler]"); page.wait_for_selector("#sheet[open] select[name=de]")
+    verif(page.locator("#sheet select[name=de]").input_value() == "Johan" and page.locator("#sheet select[name=a]").input_value() == "Pierre-Louis"
+          and float(page.locator("#sheet [name=montant]").input_value()) == 36, "remboursement prérempli : Johan → Pierre-Louis, 36")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/associes-remboursement.png")
+    page.select_option("#sheet select[name=a]", "Johan"); page.click("#sheet .btn.main"); page.wait_for_timeout(500)
+    verif(page.locator("#sheet[open]").count() == 1 and not DATA.get("reglements_associes"), "de Johan à Johan : refusé, rien d'envoyé")
+    page.select_option("#sheet select[name=a]", "Pierre-Louis"); page.click("#sheet .btn.main"); page.wait_for_timeout(1000)
+    rg = DATA.get("reglements_associes") or [{}]
+    verif(len(rg) == 1 and rg[0].get("de") == "Johan" and rg[0].get("a") == "Pierre-Louis" and rg[0].get("montant") == 36 and rg[0].get("id"), "règlement envoyé : %s" % rg[0])
+    page.wait_for_selector(".ea-solde >> text=À égalité")
+    verif(page.locator(".ea-verser").count() == 0, "après le remboursement : plus rien à verser (la société doit 12 à chacun)")
+    verif("Johan a remboursé Pierre-Louis" in page.locator(".ea-mvts").inner_text(), "le remboursement est dans les derniers mouvements")
+    if cap: page.wait_for_timeout(400); page.screenshot(path=f"{cap}/associes-egalite.png", full_page=True)
 
     # Achat : acheté par, payé avec.
     page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] select[name=achete_par]")

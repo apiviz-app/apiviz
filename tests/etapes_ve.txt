@@ -1,0 +1,73 @@
+    # v5.32 — Visite express (AP-FEAT-037, migration 020) : la visite reprend la précédente, on ne touche que ce qui
+    # change ; observes et duree_s envoyés à creer_visite ; enchaînement sur la ruche suivante du rucher ; journal ;
+    # sans réseau. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    R7 = str(uuid.uuid4())
+    DATA["ruches"].append({"id": R7, "nom": "Ruche 7", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""})
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    visites = lambda: [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
+
+    # Fiche d'une ruche déjà visitée : « Visite express » en premier, la visite complète reste là.
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.wait_for_selector(".n4-rbarre [data-act=veruche]")
+    verif(page.locator(".n4-rbarre .btn").first.inner_text() == "Visite express" and page.locator(".n4-rbarre [data-act=newvisite]").inner_text() == "Visite complète",
+          "fiche : Visite express puis Visite complète")
+    page.click(".n4-rbarre [data-act=veruche]"); page.wait_for_selector(".ve-liste")
+    verif(page.evaluate("S.route") == "visiteexpress", "écran Visite express ouvert")
+    lignes = page.locator(".ve-ligne").all_inner_texts()
+    verif(len(lignes) == 6 and "Normale" in lignes[0] and "repris" in lignes[0] and "38 kg" in lignes[4], "valeurs de la dernière visite reprises : " + " | ".join(l.replace("\n", " ") for l in lignes))
+    verif("Pas cherchée" in lignes[3] and "à regarder" in lignes[3], "la reine n'est jamais reprise")
+    verif(page.locator(".ve-resume").inner_text() == "Aucun changement · 5 valeurs reprises", "résumé de départ : " + page.locator(".ve-resume").inner_text())
+    verif("Enregistrer et passer à Ruche 2" in page.locator(".ve-ok").inner_text(), "bouton : passer à la ruche suivante du rucher")
+    if cap: page.wait_for_timeout(400); page.screenshot(path=f"{cap}/express.png")
+
+    # Poids : +0,5 deux fois ; reine vue.
+    page.click("[data-act=veouvrir][data-v=poids_kg]"); page.wait_for_selector("#ve_poids")
+    page.click("[data-act=vepoids][data-v='0.5']"); page.click("[data-act=vepoids][data-v='0.5']")
+    verif(page.locator("#ve_poids").input_value() == "39", "poids : 38 + 0,5 + 0,5 = 39")
+    verif("changé" in page.locator(".ve-modifie").inner_text() and "38 kg" in page.locator(".ve-modifie s").inner_text(), "ligne poids : avant barré, « changé »")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/express-poids.png")
+    page.click("[data-act=veouvrir][data-v=reine]"); page.click("[data-act=vechoix][data-k=reine][data-v=Vue]")
+    verif(page.locator(".ve-resume").inner_text() == "2 changements · 4 valeurs reprises", "résumé : " + page.locator(".ve-resume").inner_text())
+    page.click("[data-act=veouvrir][data-v=provisions]"); page.click("[data-act=vechoix][data-k=provisions][data-v=Moyennes]")
+    verif("pareil" in page.locator(".ve-ligne").nth(1).inner_text(), "même valeur touchée : « pareil » (observée)")
+    page.click(".ve-ok"); page.wait_for_function("S.route === 'visiteexpress' && document.querySelector('.wrap .head h1')?.textContent === 'Ruche 2'", timeout=10000)
+    p = visites()[-1] if visites() else {}
+    verif(p.get("ruche_id") == R[0] and p.get("observes") == ["provisions", "reine", "poids_kg"] and p.get("poids_kg") == 39 and p.get("reine") == "Vue"
+          and p.get("activite") == "Normale" and p.get("couvain") == "Normal" and isinstance(p.get("duree_s"), int), "visite envoyée : %s" % {k: p.get(k) for k in ("observes", "poids_kg", "reine", "activite", "couvain", "duree_s")})
+    verif(page.evaluate("S.route") == "visiteexpress" and page.locator(".wrap .head h1").inner_text() == "Ruche 2", "enchaîne sur Ruche 2 : " + page.locator(".wrap .head h1").inner_text())
+    verif("Enregistrer et passer à Ruche 3" in page.locator(".ve-ok").inner_text(), "Ruche 1 vue aujourd'hui : la suivante est Ruche 3")
+
+    # Ruche 2 : rien de changé, on revient à la fiche ; le journal dit ce qui a été repris.
+    page.click(".ve-seul"); page.wait_for_selector(".ve-journal", timeout=10000)
+    p = visites()[-1]
+    verif(p.get("ruche_id") == R[1] and p.get("observes") == [], "visite sans changement : rien d'observé (%s)" % p.get("observes"))
+    verif(page.evaluate("S.route") == "ruche", "retour à la fiche de Ruche 2")
+    verif(page.locator(".ve-journal").first.inner_text() == "Visite express · repris de la précédente : activité, provisions, couvain, poids, état",
+          "journal : " + page.locator(".ve-journal").first.inner_text())
+    if cap: page.locator(".ve-journal").first.scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/express-journal.png")
+
+    # Ruche sans visite : pas de visite express (rien à reprendre).
+    page.evaluate(f"ACT.ruche('{R7}')"); page.wait_for_selector(".n4-rbarre")
+    verif(page.locator("[data-act=veruche]").count() == 0, "ruche jamais visitée : pas de visite express")
+
+    # Sans réseau : la visite express est gardée sur le téléphone.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate(f"ACT.ruche('{R[2]}')"); page.wait_for_selector(".n4-rbarre [data-act=veruche]")
+    page.click(".n4-rbarre [data-act=veruche]"); page.wait_for_selector(".ve-liste")
+    page.click("[data-act=veouvrir][data-v=activite]"); page.click("[data-act=vechoix][data-k=activite][data-v=Forte]")
+    verif("Enregistrer et passer à Ruche 7" in page.locator(".ve-ok").inner_text(), "Ruches 1 et 2 vues : la suivante est Ruche 7 (jamais visitée : visite complète)")
+    page.click(".ve-seul"); page.wait_for_selector(".toast >> text=Visite gardée sur le téléphone", timeout=10000)
+    verif(page.locator(".ve-journal").count() >= 1 and page.locator(".u-visite .tag.watch >> text=en attente").count() >= 1, "visite express en attente dans le journal")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_selector(".toast >> text=/envoyée/", timeout=20000)
+    envoyee = [x for x in visites() if x.get("ruche_id") == R[2]]
+    verif(len(envoyee) == 1 and envoyee[0].get("observes") == ["activite"], "au retour du réseau : envoyée avec ses champs observés (%s)" % [x.get("observes") for x in envoyee])
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

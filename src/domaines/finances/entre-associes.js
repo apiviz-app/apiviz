@@ -1,11 +1,14 @@
 // Apiviz — entre associés à l'écran (chantier des écrans, étape 7, v5.29). Règles : associes.js. Base : migration 017.
 //   - Achat : « Acheté par » et « Payé avec » (fonds propres d'un associé, ou trésorerie de la société).
 //   - Vente : « Vendu par » et, si elle est payée, « Argent récolté par » (un associé, ou la société).
-//   - Gestion : la carte « Entre associés » en tête (qui doit combien à qui pour être à égalité) et son détail.
+//   - Gestion : la carte « Entre associés » en tête (qui doit combien à qui pour être à égalité) ; « Voir le détail »
+//     ouvre l'écran « Entre associés » (v5.32, maquettes du 12 nov. 2026) : le solde, ce que chacun a avancé, l'argent
+//     de vente à verser à la trésorerie, les derniers mouvements, et « Noter le remboursement » / « Noter le versement »
+//     (table reglements_associes, migration 020 ; sans elle, l'écran se lit mais ne note rien).
 //   - Réglages : la liste des associés (partagée par toute l'exploitation).
 // Par défaut, l'associé est le prénom donné sur cet appareil (Réglages › Toi, v5.28).
-// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL.
-import { SOCIETE, estSociete, associesConnus, soldesAssocies, reglementEntreAssocies } from "./associes.js";
+// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX, GROUP.
+import { SOCIETE, estSociete, associesConnus, soldesAssocies, reglementEntreAssocies, aVerserALaSociete, mouvementsAssocies } from "./associes.js";
 
 const moi = () => { try { return String(localStorage.getItem(`apiviz-prenom-${S.session?.user?.email || ""}`) || "").trim(); } catch { return ""; } };
 const associes = () => associesConnus(S.d || {}, typeof cfg == "function" ? cfg() : {}, moi());
@@ -49,20 +52,68 @@ function carteGestion() {
     <p class="ea-phrase">${esc(phrase)}</p><div><button type="button" class="btn ea-ghost" data-act="eadetail">Voir le détail</button></div></section>`);
 }
 
-function detail() {
+// ---------- Écran « Entre associés » (v5.32) ----------
+const sans020 = () => !!S.absentes?.has("reglements");
+const phraseSolde = (noms, soldes, r) => (r ? `${r.de} doit ${eur(r.montant)} à ${r.a} pour être à égalité.`
+  : noms.length === 2 ? "À égalité entre associés : rien à régler."
+  : noms.length === 1 ? (soldes[0].solde > 0 ? `La société te doit ${eur(soldes[0].solde)}.` : soldes[0].solde < 0 ? `Tu dois ${eur(-soldes[0].solde)} à la société.` : "Tu es à jour avec la société.")
+  : "Chacun règle son solde avec la société.");
+
+export function ecranAssocies() {
   const noms = associes(), soldes = soldesAssocies(S.d, noms), r = reglementEntreAssocies(soldes);
-  const pl = (k, mot) => `${k} ${mot}${k > 1 ? "s" : ""}`;
-  const lignes = soldes.map((s) => `<div class="ea-ligne"><b>${esc(s.nom)}</b>
-      <span>${esc(pl(s.achats, "achat"))} · a avancé <b>${esc(eur(s.avance))}</b> de ses fonds propres</span>
-      <span>${esc(pl(s.ventes, "vente"))} · a récolté <b>${esc(eur(s.encaisse))}</b></span>
-      <span class="${s.solde > 0 ? "good" : s.solde < 0 ? "watch" : ""}">${s.solde > 0 ? `La société lui doit ${esc(eur(s.solde))}` : s.solde < 0 ? `Doit ${esc(eur(-s.solde))} à la société` : "À jour avec la société"}</span></div>`).join("");
-  $sheetForm.onsubmit = (e) => e.preventDefault();
-  $sheetForm.innerHTML = `<div class="u-entete"><h2>Entre associés</h2><button type="button" class="link" data-act="closesheet">Fermer</button></div>
-    ${r ? `<p class="ea-phrase-f">${esc(`${r.de} doit ${eur(r.montant)} à ${r.a}`)}</p>` : ""}
-    ${lignes || sansAssocie}
-    <p class="small">Sur toute la durée, à parts égales. Les achats payés par la trésorerie de la société et l'argent de vente
-    gardé sur son compte ne comptent pour personne. Les ventes à encaisser ne comptent pas encore.</p>`;
-  $sheet.showModal();
+  const verser = aVerserALaSociete(soldes), mvts = mouvementsAssocies(S.d);
+  const ecrire = !sans020() && !(typeof EX != "undefined" && EX.lecteur());
+  const tete = !noms.length ? `<section class="card">${sansAssocie}<button type="button" class="btn" data-act="eaassocies">Noter les associés</button></section>`
+    : `<section class="ea-solde" aria-label="Solde entre associés">
+        <p class="ea-oeil">${r ? "Pour être à égalité" : "Entre associés"}</p>
+        ${r ? `<p class="ea-montant">${esc(eur(r.montant))}</p><p class="ea-qui">${esc(`${r.de} doit à ${r.a}`)}</p>` : `<p class="ea-phrase">${esc(phraseSolde(noms, soldes, r))}</p>`}
+        ${r && ecrire ? `<button type="button" class="btn ea-miel" data-act="earegler">Noter le remboursement</button>` : ""}
+      </section>`;
+  const tuiles = soldes.length ? `<section class="ea-tuiles">${soldes.map((x) => `<div class="ea-tuile"><span class="small">Avancé par ${esc(x.nom)}</span>
+      <b>${esc(eur(x.avance))}</b><span class="small">${x.encaisse ? `a récolté ${esc(eur(x.encaisse))} de ventes` : "fonds propres"}</span></div>`).join("")}</section>` : "";
+  const aVerser = verser.map((v) => `<div class="ea-verser"><p>${esc(`${eur(v.montant)} de ventes récoltés par ${v.nom} sont à verser à la trésorerie.`)}</p>
+      ${ecrire ? `<button type="button" class="btn" data-act="eaverser" data-v="${esc(v.nom)}">Noter le versement</button>` : ""}</div>`).join("");
+  const liste = mvts.length ? `<h2 class="u-titre">Derniers mouvements</h2><ul class="ea-mvts">${mvts.map((m) => `<li><span class="ea-mvt-t"><b>${esc(m.titre)}</b>
+      <span class="small">${esc(m.detail)}${m.attente ? " · en attente" : ""}</span></span>
+      <b class="ea-mvt-m ${m.signe > 0 ? "good" : ""}">${m.signe > 0 ? "+" : ""}${esc(eur(m.montant))}</b></li>`).join("")}</ul>` : "";
+  shell("Entre associés", "Qui a avancé quoi, et ce qu'il reste à régler", `<button type="button" class="btn" data-act="go" data-v="plus">Gestion</button>`,
+    `<div class="ea-ecran">${tete}${tuiles}${aVerser}${liste}
+      <p class="small ea-regle">Sur toute la durée, à parts égales. Ce qu'un associé avance de ses fonds propres, la société le lui doit ;
+      l'argent de vente qu'il garde, il le doit à la société. Les achats payés par la trésorerie et les ventes à encaisser ne comptent pour personne.
+      ${sans020() ? "Noter un remboursement arrivera avec la mise à jour de la base." : ""}</p>
+    </div>`);
+}
+
+/** Feuille « Noter un remboursement » ou « Noter un versement à la société ». */
+function feuilleReglement(pre) {
+  const noms = associes(), options = [...noms.map((x) => [x, x]), [SOCIETE, "La société (trésorerie)"]];
+  sheet({
+    title: pre.a === SOCIETE ? "Noter un versement" : "Noter un remboursement",
+    intro: pre.a === SOCIETE ? "L'argent de vente remis à la trésorerie de la société." : "L'argent remis d'un associé à l'autre pour être à égalité.",
+    fields: [
+      { name: "de", label: "De", type: "select", options, value: pre.de || noms[0] },
+      { name: "a", label: "À", type: "select", options, value: pre.a || noms[1] || SOCIETE },
+      { name: "montant", label: "Montant (€)", type: "number", step: "0.01", min: "0.01", value: pre.montant ?? "", required: true },
+      { name: "date_reglement", label: "Date", type: "date", value: today(), required: true },
+      { name: "note", label: "Note (facultatif)", value: "", list: ["Virement", "Espèces", "Chèque"] },
+    ],
+    label: "Noter",
+    submit: (v) => {
+      const montant = Math.round(Number(String(v.montant).replace(",", ".")) * 100) / 100;
+      if (!(montant > 0)) throw new Error("Indique un montant.");
+      if (String(v.de).trim().toLowerCase() === String(v.a).trim().toLowerCase()) throw new Error("Choisis deux personnes différentes.");
+      const ligne = { id: crypto.randomUUID(), de: v.de, a: v.a, montant, date_reglement: v.date_reglement || today(), note: String(v.note || "").trim() };
+      return write(sb.from("reglements_associes").insert(ligne), estSociete(v.a) ? "Versement noté" : "Remboursement noté");
+    },
+  });
+}
+function regler() {
+  const r = reglementEntreAssocies(soldesAssocies(S.d, associes()));
+  feuilleReglement(r ? { de: r.de, a: r.a, montant: r.montant } : {});
+}
+function verser(nom) {
+  const v = aVerserALaSociete(soldesAssocies(S.d, associes())).find((x) => x.nom === nom);
+  feuilleReglement({ de: nom, a: SOCIETE, montant: v?.montant });
 }
 
 // ---------- Écran « Entre associés » (v5.32, catégorie Finances) ----------
@@ -135,4 +186,5 @@ export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
 export const ecranAssocies = ecran;
 export const completerReglages = blocReglages;
-export const actions = { eadetail: detail, eaassocies: feuilleAssocies };
+if (typeof GROUP != "undefined") GROUP.associes = "plus";
+export const actions = { eadetail: () => go("associes"), eaassocies: feuilleAssocies, earegler: regler, eaverser: verser };

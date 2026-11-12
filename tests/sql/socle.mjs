@@ -10,13 +10,13 @@ export const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
   "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql",
   "012-correctifs.sql", "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql"];
 
 // Migrations relançables après 008 (000 à 009 ne le sont pas toutes : 008 ne se lance qu'une fois,
 // et 009 ne doit jamais être relancée en entier après 008).
 export const RELANCABLES = ["010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql",
   "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql"];
 
 export const SUPABASE = `
 create role anon; create role authenticated; create role service_role;
@@ -114,6 +114,9 @@ export async function donnees(db) {
         insert into public.deplacements (id, nb_colonies, exploitation_id) values ('${I(17)}', 1, '${e}');
         insert into public.contenants (id, code, exploitation_id) values ('${I(18)}', 'C${k}', '${e}');
         insert into public.colonie_contenants (id, colonie_id, contenant_id, du, exploitation_id) values ('${I(19)}', '${I(3)}', '${I(18)}', '2026-01-01', '${e}');
+      end if; end $r$;
+      do $r$ begin if to_regclass('public.reglements_associes') is not null then
+        insert into public.reglements_associes (id, de, a, montant, exploitation_id) values ('${I(20)}', 'Associé A', 'Associé B', 5, '${e}');
       end if; end $r$;`);
   }
 }
@@ -142,6 +145,7 @@ export const TABLES = {
   contenants: (k) => ({ code: "N" + k }),
   colonie_contenants: (k) => ({ colonie_id: id(k, 13), contenant_id: id(k, 18), du: "2020-01-01", au: "2020-02-01" }),
   mouvements_stock: (k) => ({ article_id: id(k, 2), type: "ajustement", quantite: 1, origine: "saisie" }),
+  reglements_associes: (k) => ({ de: "Johan", a: "Pierre-Louis", montant: 10 }),
 };
 
 /** Requête d'insertion paramétrée pour une table et un objet { colonne: valeur }. */

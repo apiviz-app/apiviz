@@ -1,0 +1,28 @@
+/* ---------- Visite express (v5.32, src/domaines/visites/express.js) ----------
+   Maquettes du 12 nov. 2026 : message d'API, une ligne par point (repris, pareil, changé), un geste pour enregistrer. */
+.ve{display:flex;flex-direction:column;gap:14px;max-width:560px}
+.ve-api{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.ve-api p{margin:0;font-size:15px;line-height:1.4}
+.ve-api-i{flex:none;width:28px;height:24px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.ve-liste{margin:0;padding:0;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ve-ligne{border-top:1px solid var(--line)}
+.ve-ligne:first-child{border-top:0}
+.ve-tete{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:12px 14px;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.ve-nom{flex:none;width:96px;font-size:14px;color:var(--muted)}
+.ve-val{flex:1;font-size:16px;font-weight:600}
+.ve-val s{font-weight:400;color:var(--muted)}
+.ve-etat{flex:none;font-size:12px;color:var(--muted)}
+.ve-modifie{background:var(--honeysoft)}
+.ve-etat.ve-change{font-weight:700;color:var(--watch)}
+.ve-vu .ve-etat,.ve-etat.ve-vu{color:var(--good);font-weight:600}
+.ve-ouvert .ve-tete{padding-bottom:6px}
+.ve-choix,.ve-poids{padding:0 14px 14px}
+.ve-poids{display:flex;gap:8px;align-items:center}
+.ve-poids-i{flex:1;min-height:48px;font-size:18px;text-align:center}
+.ve-pas{flex:none;width:52px;height:48px;border:1px solid var(--line2);border-radius:10px;background:#fff;font-size:22px;font-weight:700;color:var(--pine)}
+.ve-note{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.ve-note textarea{font-size:16px}
+.ve-resume{margin:0;font-size:14px;color:var(--muted)}
+.ve-ok{min-height:56px;font-size:17px}
+.ve-seul{align-self:center;min-height:44px}
+.ve-journal{margin:0;color:var(--muted)}

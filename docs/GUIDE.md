@@ -42,6 +42,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   bon »). Photos réduites avant l'envoi, 10 au plus par visite.
 - **Faire la tournée** d'un rucher : ruches par priorité, trois modes (je parle librement, API me pose les questions,
   je remplis moi-même), vérification avant d'enregistrer. Une tournée quittée en cours reprend à la réouverture.
+- **Visite express** *(v5.32)* : sur la fiche d'une ruche déjà visitée. La visite précédente est reprise (activité,
+  provisions, couvain, poids, état) ; touche seulement ce qui a changé. La reine n'est jamais reprise. « Enregistrer et
+  passer à … » ouvre la ruche suivante du rucher ; le journal dit ce qui a été repris.
 - Récolte, vente, dépense, tâche, note vocale, photo.
 
 ## Miel
@@ -74,6 +77,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   est rangée dans Administration, juste à côté.
 - **Opérations** (traitements et nourrissements hors visite) : prévue dans Administration par l'arborescence, pas encore
   disponible.
+- **Entre associés** *(v5.32)* : la carte en tête de Gestion, et « Voir le détail » : ce qu'il faut régler pour être à
+  égalité, ce que chacun a avancé, l'argent de vente à verser à la trésorerie, les derniers mouvements. « Noter le
+  remboursement » et « Noter le versement » mettent le solde à jour.
 - **Équipe** : créer un lien d'invitation et l'envoyer. La personne ouvre le lien, crée son compte ou se connecte,
   et rejoint l'exploitation ; le nom de l'exploitation s'affiche sur le lien. Un responsable peut retirer un membre.
 - **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,
