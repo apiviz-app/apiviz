@@ -5,6 +5,28 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.33 · à publier en recette · installer Apiviz sur ordinateur
+Aucune migration. Étape 1 de la sortie sur toutes les plateformes (`docs/MOBILE.md`) : Apiviz était déjà installable
+sur téléphone ; l'installation sur ordinateur est maintenant guidée elle aussi.
+
+Pour l'apiculteur :
+1. **Ordinateur** : le menu du compte propose « Installer sur cet ordinateur » ; l'accueil de démarrage dit
+   « Installer Apiviz sur ton ordinateur » (et toujours « sur ton téléphone » sur téléphone).
+2. **Mode d'emploi selon le navigateur** : Chrome et Edge (icône d'installation de la barre d'adresse, ou fenêtre
+   d'installation directe quand le navigateur la propose), **Safari sur Mac** (Fichier › « Ajouter au Dock »),
+   **Firefox** (qui n'installe pas : il renvoie vers Chrome, Edge ou Safari).
+3. **Une seule fenêtre** : rouvrir Apiviz installé sur ordinateur ramène la fenêtre déjà ouverte au lieu d'en créer une
+   seconde (`launch_handler` du manifeste, Chrome et Edge).
+
+Technique : `nav4.js` (appareils `mac` et `firefox`, `N4.support()`), `demarrage.js`, manifestes production et
+recette. Test : `etapes_in` (Chrome, Safari Mac, Firefox, et manifeste).
+
+### À vérifier
+- Ordinateur, Chrome ou Edge : menu du compte › « Installer sur cet ordinateur » ouvre la fenêtre d'installation ;
+  après installation, la ligne disparaît et Apiviz s'ouvre dans sa propre fenêtre.
+- Mac, Safari : le mode d'emploi parle de « Ajouter au Dock ».
+- Téléphone : rien ne change (« Installer sur l'écran d'accueil »).
+
 ## v5.32 · à publier en recette · navigation par catégories (fin de « Gestion »)
 Aucune migration. Maquettes validées par Pierre-Louis le 12 nov. 2026.
 
