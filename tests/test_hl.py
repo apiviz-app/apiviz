@@ -75,7 +75,8 @@ def supabase(route):
             p = body["p"]
             if not any(v["id"] == p["id"] for v in DATA["visites"]):
                 DATA["visites"].append({"id": p["id"], "ruche_id": p["ruche_id"], "date_visite": p["date_visite"], "activite": p["activite"],
-                    "provisions": p["provisions"], "reine": p["reine"], "couvain": p.get("couvain", ""), "poids_kg": None, "varroa": None, "note": p.get("note", "")})
+                    "provisions": p["provisions"], "reine": p["reine"], "couvain": p.get("couvain", ""), "poids_kg": p.get("poids_kg") or None,
+                    "observes": p.get("observes"), "duree_s": p.get("duree_s"), "varroa": None, "note": p.get("note", "")})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
         # v5.30 (migration 018) : achat en plusieurs lignes et mise en pots, idempotents comme la base.
         if nom == "enregistrer_achat":

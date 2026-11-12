@@ -47,9 +47,11 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     // IT-07 (migration 019) : historique des reines, liens de filiation entre colonies.
     reines: ["reines", "en_place_du", !1],
     liens: ["colonie_liens", "date_lien", !1],
+    // v5.32 (migration 020) : argent passé d'un associé à l'autre, ou versé à la société.
+    reglements: ["reglements_associes", "date_reglement", !1],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",

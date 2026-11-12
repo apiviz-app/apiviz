@@ -5,6 +5,53 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.32 · à publier en recette · visite express et comptes entre associés (maquettes du 12 nov. 2026)
+**Migration 020** (`migrations/020-visite-express-reglements.sql`), additive, ne casse pas l'ancienne version. À appliquer
+d'abord sur `apidoo-test` ; **en attente pour `apidoo`** (accord de Pierre-Louis). Sans 020, la visite express est
+enregistrée comme une visite complète et l'écran « Entre associés » se lit sans pouvoir noter de remboursement.
+
+Pour l'apiculteur :
+1. **Visite express** (AP-FEAT-037) : sur la fiche d'une ruche déjà visitée, « Visite express » passe en premier
+   (« Visite complète » reste à côté). L'écran reprend la visite précédente : activité, provisions, couvain, poids et
+   état sont marqués « repris » ; on touche seulement ce qui change (« changé », l'ancienne valeur barrée) ou ce qu'on
+   a revu (« pareil »). Le poids se règle par ± 500 g ou au clavier. **La reine n'est jamais reprise** : elle reste
+   « pas cherchée » tant qu'on ne l'a pas regardée (même règle que la tournée).
+2. « Enregistrer et passer à Ruche 2 » : la ruche suivante du même rucher, pas encore vue ce jour-là ; ou « Enregistrer
+   et revenir à la ruche ». Le message dit la durée (« Visite enregistrée en 12 s »).
+3. **Journal** : une visite express affiche « Visite express · repris de la précédente : … », pour distinguer ce qui a
+   été vu ce jour-là de ce qui a été reporté.
+4. **Entre associés** : « Voir le détail » de la carte de Gestion ouvre un écran : le montant à régler pour être à
+   égalité (« 36 € · Johan doit à Pierre-Louis »), ce que chacun a avancé de ses fonds propres et récolté de ventes,
+   l'argent de vente **à verser à la trésorerie**, et les derniers mouvements (achats, ventes encaissées, règlements).
+5. **Noter le remboursement** (prérempli : qui, à qui, combien) et **Noter le versement** à la société : une fois noté,
+   le solde en tient compte et la carte de Gestion le dit (« À égalité entre associés »). Sans réseau, le règlement est
+   gardé sur le téléphone et envoyé au retour.
+
+Technique : `visites.observes` (champs observés ; vide = visite complète) et `visites.duree_s` ; `creer_visite()` de 014
+plus ces deux champs ; table `reglements_associes` (de, à, montant > 0, date, note ; deux personnes différentes ; RLS et
+audit comme 014), lue en table facultative (`S.d.reglements`) et écrite directement (file d'envoi : `INSERTS`).
+Règles pures : `src/domaines/visites/regles.js` (`departExpress`, `etatChamp`, `chargeExpress`, `champsRepris`,
+`rucheSuivante`) et `src/domaines/finances/associes.js` (`soldesAssocies` compte les règlements, `aVerserALaSociete`,
+`mouvementsAssocies`). Écrans : `src/domaines/visites/express.js` (écran `visiteexpress`, actions `ve…`),
+`entre-associes.js` (écran `associes`, actions `earegler`, `eaverser`). Styles `styles/47-visite-express.css`,
+`styles/44-associes.css`. Tests : `tests/sql/test_020.mjs` (21 vérifications), `tests/unitaires/visites.test.mjs` et
+`associes.test.mjs`, scénarios `tests/etapes_ve.txt` (nouveau) et `tests/etapes_as.txt` (écran et remboursement).
+`etapes_dl` : 24 lectures à l'ouverture (une table de plus). `eadetail` est permise au rôle lecteur (consultation).
+
+Limites connues :
+- La visite express ne contient ni varroa, ni traitement, ni intrants, ni photo : « Visite complète » pour ceux-là.
+  La dictée (« Dire un changement ») et la photo des maquettes ne sont pas encore branchées.
+- Les alertes lisent toujours la dernière visite telle quelle : une valeur reprise y compte comme si elle avait été vue.
+- Un règlement noté par erreur ne se modifie pas encore depuis l'écran (il se supprime par le journal d'audit).
+
+**À vérifier**
+1. Fiche d'une ruche visitée : « Visite express », la dernière visite reprise, reine « pas cherchée ».
+2. Changer le poids et la reine : « 2 changements · 4 valeurs reprises » ; enregistrer : on passe à la ruche suivante du rucher.
+3. Le journal de la ruche dit « Visite express · repris de la précédente : … ».
+4. Gestion › Voir le détail : le montant, ce que chacun a avancé, l'argent à verser à la trésorerie, les mouvements.
+5. Noter le remboursement proposé : l'écran affiche « À égalité entre associés ».
+6. Sans réseau : une visite express et un remboursement sont gardés puis envoyés au retour du réseau.
+
 ## Outillage · 12 nov. 2026 · plus de mise en ligne en production refusée sans raison
 Trois causes, toutes traitées :
 - **« Cette version n'est pas celle en recette »** (11 nov., 23 h 21) : la production exigeait que `main` soit

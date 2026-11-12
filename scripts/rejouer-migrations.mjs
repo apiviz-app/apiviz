@@ -14,7 +14,7 @@ const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql", "005
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
   "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql",
   "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql"];
 
 // Le strict minimum de ce que Supabase fournit (rôles, auth, storage), pour que les fichiers passent.
 const SUPABASE = `
