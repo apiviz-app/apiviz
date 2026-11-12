@@ -4,6 +4,7 @@
     m = json.loads((racine / "manifest.webmanifest").read_text(encoding="utf-8"))
     adapt = [i for i in m["icons"] if i.get("purpose") == "maskable"]
     verif(m["display"] == "standalone" and m.get("id") and m.get("scope"), "manifeste : identité et portée définies")
+    verif("focus-existing" in m.get("launch_handler", {}).get("client_mode", []), "manifeste : une seule fenêtre sur ordinateur (launch_handler)")
     verif({i["sizes"] for i in adapt} == {"192x192", "512x512"}, "manifeste : icônes adaptatives 192 et 512")
     verif(all((racine / i["src"]).exists() for i in m["icons"]), "manifeste : tous les fichiers d'icône existent")
     sw = (racine / "sw.js").read_text(encoding="utf-8")
@@ -16,9 +17,28 @@
     page.click("[data-act=n4installer]"); page.wait_for_selector(".n4-installer")
     txt = page.locator(".n4-installer").inner_text()
     verif(page.locator(".n4-installer li").count() == 3 and "Safari" in txt and "Partager" in txt, "iPhone : trois étapes, avec Safari et Partager")
+    verif(page.evaluate("N4.support()") == "ton téléphone", "iPhone : libellés « sur ton téléphone »")
     page.click(".n4-installer ~ [data-act=n4compte]"); page.wait_for_selector("[data-act=n4installer]")
     verif(True, "retour au menu du compte")
     page.evaluate("document.querySelector('#sheet, dialog[open]')?.close?.()")
+
+    # Sur ordinateur : le libellé et le mode d'emploi suivent le navigateur (Chrome, Safari sur Mac, Firefox).
+    for nom, ua, attendu in [
+        ("Chrome", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "barre d’adresse"),
+        ("Safari Mac", "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15", "Ajouter au Dock"),
+        ("Firefox", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0", "Firefox ne sait pas"),
+    ]:
+        p2 = page.context.new_page()
+        p2.add_init_script("Object.defineProperty(navigator,'userAgent',{get:()=>%r})" % ua)
+        p2.add_init_script("Object.defineProperty(navigator,'maxTouchPoints',{get:()=>0})")
+        p2.goto(url); p2.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+        p2.evaluate("ACT.n4compte()"); p2.wait_for_selector("[data-act=n4installer]")
+        verif("cet ordinateur" in p2.locator("[data-act=n4installer]").inner_text(), nom + " : « Installer sur cet ordinateur »")
+        verif(p2.evaluate("N4.support()") == "ton ordinateur", nom + " : libellés « sur ton ordinateur »")
+        p2.click("[data-act=n4installer]"); p2.wait_for_selector(".n4-installer")
+        t2 = p2.locator(".n4-installer").inner_text()
+        verif(p2.locator(".n4-installer li").count() == 3 and attendu in t2 and "propre fenêtre" in t2, nom + " : trois étapes adaptées au navigateur")
+        p2.close()
 
     # Déjà installée : la ligne disparaît.
     page.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true})")

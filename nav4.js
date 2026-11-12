@@ -211,13 +211,21 @@ const N4 = (() => {
   const appareil = () => {
     const ua = navigator.userAgent;
     if (/iphone|ipod|ipad/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
-    return /android/i.test(ua) ? "android" : "ordinateur";
+    if (/android/i.test(ua)) return "android";
+    // Ordinateur : le navigateur décide de la méthode (Safari sur Mac : « Ajouter au Dock » ; Firefox n'installe pas).
+    if (/firefox/i.test(ua)) return "firefox";
+    if (/macintosh/i.test(ua) && /safari/i.test(ua) && !/chrome|chromium|crios|edg/i.test(ua)) return "mac";
+    return "ordinateur";
   };
   const ETAPES_INSTALLATION = {
     ios: ["Ouvre Apiviz dans Safari. Si tu viens d’un lien reçu par e-mail ou message, choisis d’abord « Ouvrir dans Safari ».", "Touche le bouton Partager, le carré avec une flèche vers le haut.", "Choisis « Sur l’écran d’accueil », puis « Ajouter »."],
     android: ["Ouvre Apiviz dans Chrome.", "Touche le menu ⋮, en haut à droite.", "Choisis « Installer l’application » ou « Ajouter à l’écran d’accueil »."],
     ordinateur: ["Ouvre Apiviz dans Chrome ou Edge.", "Clique sur l’icône d’installation, à droite de la barre d’adresse.", "Confirme avec « Installer »."],
+    mac: ["Ouvre Apiviz dans Safari (macOS Sonoma ou plus récent).", "Dans la barre des menus, choisis Fichier › « Ajouter au Dock ».", "Confirme avec « Ajouter » : Apiviz s’ouvre ensuite depuis le Dock, dans sa propre fenêtre."],
+    firefox: ["Firefox ne sait pas installer d’application : ouvre Apiviz dans Chrome ou Edge (ou Safari sur Mac).", "Clique sur l’icône d’installation, à droite de la barre d’adresse.", "Confirme avec « Installer »."],
   };
+  // Pour les libellés : « sur ton téléphone » ou « sur ton ordinateur ».
+  const support = () => (["ios", "android"].includes(appareil()) ? "ton téléphone" : "ton ordinateur");
   ACT.n4compte = () => {
     const mail = S.session?.user?.email || "";
     const ex = typeof EX != "undefined" && EX.liste ? EX.liste() : [];
@@ -229,7 +237,7 @@ const N4 = (() => {
       <section class="n4-bloc">
         <button type="button" class="n4-ligne" data-act="n4soleil" aria-pressed="${soleil()}"><span class="u-todo-t"><b>Mode plein soleil</b><span class="small">Plus de contraste dehors</span></span><span class="n4-inter ${soleil() ? "on" : ""}" aria-hidden="true"></span></button>
         <button type="button" class="n4-ligne" data-act="n4q" data-v="go" data-k="reglages"><span class="u-todo-t"><b>Réglages, exports et sauvegarde</b></span><span aria-hidden="true">›</span></button>
-        ${installee() ? "" : `<button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>Installer sur l’écran d’accueil</b></span><span aria-hidden="true">›</span></button>`}
+        ${installee() ? "" : `<button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>${appareil() === "ios" || appareil() === "android" ? "Installer sur l’écran d’accueil" : "Installer sur cet ordinateur"}</b></span><span aria-hidden="true">›</span></button>`}
       </section>
       <section class="n4-bloc"><a class="n4-ligne" href="confidentialite.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Confidentialité</b><span class="small">Où vont tes données, services utilisés</span></span><span aria-hidden="true">›</span></a></section>
       <button type="button" class="btn n4-sortir" data-act="logout">Se déconnecter</button>`;
@@ -242,7 +250,7 @@ const N4 = (() => {
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<section class="n4-bloc n4-installer"><h3>Installer Apiviz</h3>
       <ol>${ETAPES_INSTALLATION[appareil()].map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
-      <p class="small">Apiviz s’ouvre ensuite depuis son icône, en plein écran, et reste utilisable sans réseau. Tu n’as rien à télécharger depuis un store.</p></section>
+      <p class="small">${appareil() === "ios" || appareil() === "android" ? "Apiviz s’ouvre ensuite depuis son icône, en plein écran" : "Apiviz s’ouvre ensuite dans sa propre fenêtre, sans barre d’adresse"}, et reste utilisable sans réseau. Tu n’as rien à télécharger depuis un store.</p></section>
       <button type="button" class="btn" data-act="n4compte">Retour</button>`;
     if (!$sheet.open) $sheet.showModal();
   };
@@ -269,5 +277,5 @@ const N4 = (() => {
   ACT.delvente = delVente;
   ACT.uvsuppr = delVente;
 
-  return { prochaine, navRuche, plusTard, ecranRuchers, completerMiel };
+  return { prochaine, navRuche, plusTard, ecranRuchers, completerMiel, support };
 })();

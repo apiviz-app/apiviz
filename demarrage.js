@@ -113,13 +113,15 @@ const DM = (() => {
 
   // ---------- Accueil de démarrage ----------
   const installee = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  // « ton téléphone » ou « ton ordinateur », selon l'appareil (nav4.js).
+  const surQuoi = () => (typeof N4 != "undefined" && N4.support ? N4.support() : "ton téléphone");
   function etapes() {
     const d = S.d;
     return [[d.ruches.length > 0, "Ajouter tes ruches", "newruches"],
       [d.ruches.some((r) => r.lat != null), "Placer ton rucher sur la carte", "dmcarte"],
       [d.visites.length > 0, "Noter une première visite", "dmvisite"],
       [!!memo(cle("invite")), "Inviter ton associé (facultatif)", "dminviter"],
-      [installee() || !!memo(cle("installe")), "Installer Apiviz sur ton téléphone", "dminstaller"]];
+      [installee() || !!memo(cle("installe")), `Installer Apiviz sur ${surQuoi()}`, "dminstaller"]];
   }
   function saison() {
     const d = S.d, m = new Date().getMonth();
@@ -182,7 +184,7 @@ const DM = (() => {
     const haut = wrap.querySelector(".hero-head, .head, .hero");
     const sec = `<section class="card dm-guide"><div class="u-entete"><h2>Tu fais partie de ${esc(cfg().nom)}</h2><button type="button" class="link" data-act="dmarrivee">Fermer</button></div>
       <p class="small">${d.ruches.length} ruche${d.ruches.length > 1 ? "s" : ""} déjà en place, rien à ressaisir.</p>${lignes ? `<ul class="dm-liste">${lignes}</ul>` : ""}
-      ${installee() ? "" : '<button type="button" class="btn block" data-act="dminstaller">Installer Apiviz sur ton téléphone</button>'}</section>`;
+      ${installee() ? "" : `<button type="button" class="btn block" data-act="dminstaller">Installer Apiviz sur ${surQuoi()}</button>`}</section>`;
     if (haut) haut.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
   }
   ACT.dmarrivee = () => { memo(cle("arrivee"), "1"); redessiner("dash"); };
