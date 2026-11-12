@@ -161,6 +161,13 @@ const UX = (() => {
     if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");
     return chip(`Varroa ${n(t, 1)} %`, t >= seuilVarroa() ? "crit" : t >= seuilVarroa() * 0.66 ? "watch" : "good");
   }
+  // Visite express (v5.32, migration 020) : ce qui a été repris de la précédente, pas observé ce jour-là.
+  const NOMS_REPRIS = { activite: "activité", provisions: "provisions", couvain: "couvain", poids_kg: "poids", etat: "état" };
+  function repris(v) {
+    if (!Array.isArray(v.observes)) return "";
+    const l = Regles.visites.champsRepris(v).map((k) => NOMS_REPRIS[k]);
+    return `<p class="small ve-journal">Visite express${l.length ? " · repris de la précédente : " + esc(l.join(", ")) : ""}</p>`;
+  }
   function carteVisite(v) {
     const d = S.d;
     const chips = [
@@ -177,6 +184,7 @@ const UX = (() => {
     return `<article class="card u-visite">
       <div class="u-visite-h"><b>${esc(quand(v.date_visite))}</b><span class="small">${esc(qui(v.auteur))}</span></div>
       <div class="u-chips">${chips}</div>
+      ${repris(v)}
       ${v.note ? `<p class="u-note">${esc(v.note)}</p>` : ""}
       ${intr ? `<p class="small">Utilisé : ${esc(intr)}</p>` : ""}${trt ? `<p class="small">Traitement : ${esc(trt)}</p>` : ""}
       ${typeof PH != "undefined" ? PH.vignettes(v.id) : ""}

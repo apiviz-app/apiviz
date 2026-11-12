@@ -3,7 +3,7 @@
 // (visites, ventes, récoltes, dépenses, tâches), puis les envoie au retour du réseau.
 // S'appuie sur app.js (S, sb, loadAll, refresh, render, toast…) et photos.js (PH).
 const HL = (() => {
-  const INSERTS = { recoltes: "recoltes", depenses: "depenses", taches: "taches" }; // table -> clé de S.d
+  const INSERTS = { recoltes: "recoltes", depenses: "depenses", taches: "taches", reglements_associes: "reglements" }; // table -> clé de S.d
   const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID()
     : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
   const reseau = (e) => !!e && /fetch|network|load failed|internet|offline|connexion|timed? ?out/i.test(String(e.message || e));
@@ -317,6 +317,7 @@ const HL = (() => {
     const l = it.lignes[0] || {};
     if (it.table === "recoltes") return ["Récolte · " + n(l.kg) + " kg", dfr(l.date_recolte)];
     if (it.table === "depenses") return ["Dépense · " + (l.libelle || ""), dfr(l.date_depense) + " · " + eur(l.montant)];
+    if (it.table === "reglements_associes") return ["Règlement · " + (l.de || "") + " → " + (l.a || ""), dfr(l.date_reglement) + " · " + eur(l.montant)];
     return ["Tâche · " + (l.titre || ""), l.echeance ? dfr(l.echeance) : "Sans date"];
   }
   function section() {

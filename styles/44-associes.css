@@ -11,3 +11,24 @@
 .ea-ligne .watch{color:#7D5200}
 .ea-aide{margin:0}
 @media (prefers-reduced-motion:reduce){.ea-carte{animation:none}}
+
+/* ---------- Écran « Entre associés » (v5.32, maquettes du 12 nov. 2026) ---------- */
+.ea-ecran{display:flex;flex-direction:column;gap:14px;max-width:620px}
+.ea-solde{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 18px;border-radius:18px;background:var(--pine);color:#fff;text-align:center;animation:vt-monte var(--duree-lente) var(--sortie) both}
+.ea-solde .ea-oeil{align-self:stretch}
+.ea-montant{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:42px;line-height:1;font-weight:700}
+.ea-qui{margin:0;font-size:15px;color:#C9D2CC}
+.ea-miel{margin-top:8px;align-self:stretch;min-height:48px;border:0;background:var(--honey);color:var(--ink);font-weight:700}
+.ea-tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.ea-tuile{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.ea-tuile b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-weight:700}
+.ea-verser{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--honeysoft)}
+.ea-verser p{flex:1 1 200px;margin:0;font-size:14px;line-height:1.35}
+.ea-mvts{margin:0;padding:0;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.ea-mvts li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+.ea-mvts li:first-child{border-top:0}
+.ea-mvt-t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ea-mvt-m{flex:none}
+.ea-mvt-m.good{color:var(--good)}
+.ea-regle{margin:0}
+@media (prefers-reduced-motion:reduce){.ea-solde{animation:none}}

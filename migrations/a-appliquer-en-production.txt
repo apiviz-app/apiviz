@@ -3,4 +3,4 @@
 # dit où en est la base, et applique elle-même les migrations manquantes quand le secret BASE_PRODUCTION existe
 # (scripts/appliquer-migrations.mjs, docs/PROCESSUS.md).
 # État au 12 nov. 2026 : apidoo en est à 019 (017, 018 et 019 appliquées ce jour avec l'accord de Pierre-Louis).
-# Rien en attente.
+020-visite-express-reglements.sql
