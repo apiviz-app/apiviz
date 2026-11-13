@@ -558,13 +558,27 @@ const V3 = (() => {
   let requete = "";
   const plat = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   // Résultats par groupe : [titre, [{ t, s, act, v }]]. Sert à l'écran Rechercher et à la barre du haut.
+  // Recommandation UX n° 9 : un simple numéro (« 3 ») suffit pour une ruche ; le code peint sur la caisse compte aussi.
+  const assezLong = (q) => { const t = plat(q).trim(); return t.length >= 2 || /^\d+$/.test(t); };
+  const numeroDe = (r) => String(r.nom || "").match(/(\d+)\s*$/)?.[1] || "";
+  const CLE_RECENTS = "apiviz-ruches-recentes";
+  const recents = () => { try { return JSON.parse(memo(CLE_RECENTS) || "[]").filter((id) => tousLesRuches().some((r) => r.id === id)); } catch { return []; } };
+  function noterRecent(id) {
+    if (!id) return;
+    try { memo(CLE_RECENTS, JSON.stringify([id, ...JSON.parse(memo(CLE_RECENTS) || "[]").filter((x) => x !== id)].slice(0, 6))); } catch {}
+  }
   function chercher(q) {
     const d = S.d, t = plat(q).trim();
-    if (t.length < 2 || !d) return [];
+    if (!assezLong(q) || !d) return [];
     const m = (...xs) => xs.some((x) => plat(x).includes(t));
     const L = (titre, sous, act, v) => ({ t: titre, s: sous, act, v });
+    const sousRuche = (r) => [r.code ? "n° " + r.code : "", r.rucher, r.sortie || r.etat].filter(Boolean).join(" · ");
+    if (t.length < 2) { // un chiffre seul : seulement les ruches qui portent ce numéro (nom ou code)
+      const l = tousLesRuches().filter((r) => numeroDe(r) === t || plat(r.code) === t).map((r) => L(r.nom, sousRuche(r), "ruche", r.id));
+      return l.length ? [["Ruches", l]] : [];
+    }
     return [
-      ["Ruches", tousLesRuches().filter((r) => m(r.nom, r.rucher, r.notes)).map((r) => L(r.nom, [r.rucher, r.sortie || r.etat].filter(Boolean).join(" · "), "ruche", r.id))],
+      ["Ruches", tousLesRuches().filter((r) => m(r.nom, r.rucher, r.notes, r.code)).map((r) => L(r.nom, sousRuche(r), "ruche", r.id))],
       ["Clients", d.clients.filter((c) => m(c.nom, c.telephone, c.email, c.notes)).map((c) => L(c.nom, [c.cercle, c.telephone].filter(Boolean).join(" · "), "editclient", c.id))],
       ["Lots", d.lots.filter((l) => m(l.code, l.miel, l.extraction)).map((l) => L(`Lot ${l.code}`, `${l.miel} · ${n(l.format_g, 0)} g · ${l.pots_restants} en stock`, "editlot", l.id))],
       ["Matériel", d.articles.filter((a) => m(a.nom, a.type)).map((a) => L(a.nom, `${n(a.stock)} ${a.unite}${Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil) ? " · stock bas" : ""}`, "editarticle", a.id))],
@@ -576,8 +590,12 @@ const V3 = (() => {
     ].filter(([, l]) => l.length);
   }
   function resultats(q) {
-    if (plat(q).trim().length < 2) return '<p class="small">Tape au moins 2 lettres : ruche, client, lot, matériel, dépense, mot d’une note…</p>';
     const ligne = (x) => `<button type="button" class="u-todo" data-act="${x.act}" data-v="${esc(x.v)}"><span class="u-todo-t"><b>${esc(x.t)}</b><span class="small">${esc(x.s)}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`;
+    if (!assezLong(q)) {
+      const r = recents().map((id) => tousLesRuches().find((x) => x.id === id)).filter(Boolean);
+      return '<p class="small">Tape un numéro de ruche ou au moins 2 lettres : ruche, client, lot, matériel, dépense, mot d’une note…</p>' +
+        (r.length ? `<section class="card u-liste"><h2>Ouvertes récemment</h2>${r.map((x) => ligne({ t: x.nom, s: [x.code ? "n° " + x.code : "", x.rucher].filter(Boolean).join(" · "), act: "ruche", v: x.id })).join("")}</section>` : "");
+    }
     const groupes = chercher(q);
     return groupes.length ? groupes.map(([g, l]) => `<section class="card u-liste"><h2>${g}</h2>${l.map(ligne).join("")}</section>`).join("") : '<p class="small">Aucun résultat.</p>';
   }
@@ -615,5 +633,5 @@ const V3 = (() => {
     } catch (x) { fail(x); } finally { S.busy = false; }
   });
 
-  return { fil, chercher, plat, colonie, TYPES, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES, completerVente };
+  return { fil, chercher, assezLong, noterRecent, recents, plat, colonie, TYPES, livraisons, tourneeDe, enteteTournee, boutonDictee, boutonSoleil, separer, vues: VUES, completerVente };
 })();

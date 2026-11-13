@@ -196,6 +196,7 @@ const UX = (() => {
     const d = S.d, r = byId(d.ruches, S.ruche) || byId(d.ruchesSorties || [], S.ruche);
     if (!r) { S.route = "ruches"; return render(); }
     if (ongletRuche.id !== r.id) ongletRuche = { id: r.id, v: "journal" };
+    if (typeof V3 != "undefined" && V3.noterRecent) V3.noterRecent(r.id); // « Ouvertes récemment » dans Rechercher
     const vis = d.visites.filter((v) => v.ruche_id === r.id);
     const der = vis[0];
     const pesees = vis.filter((v) => v.poids_kg);
@@ -209,7 +210,7 @@ const UX = (() => {
       <div><b>${pesees[0] ? n(pesees[0].poids_kg) + " kg" : "–"}</b><span>${ecart === null ? "poids" : ecart < 0 ? `poids ↘ ${n(-ecart)}` : ecart > 0 ? `poids ↗ ${n(ecart)}` : "poids stable"}</span></div>
       <div class="${tx !== null && tx >= seuilVarroa() ? "u-alerte" : ""}"><b>${!varroa ? "–" : tx !== null ? n(tx, 1) + " %" : varroa.varroa}</b><span>varroa</span></div>
       <div><b>${r.hausses || 0}</b><span>hausse${(r.hausses || 0) > 1 ? "s" : ""}</span></div></section>`;
-    const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>${r.sortie ? `<span class="tag crit">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span>` : `<span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>`}${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
+    const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>${r.code ? `<span class="tag u-code">n° ${esc(r.code)}</span>` : ""}${r.sortie ? `<span class="tag crit">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span>` : `<span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>`}${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
     const poids = pesees.length > 1 ? `<details class="card u-pli"><summary><h2>Évolution du poids</h2><span class="u-chev" aria-hidden="true">›</span></summary>${lineChart({ labels: pesees.slice().reverse().map((v) => dshort(v.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.slice().reverse().map((v) => Number(v.poids_kg)) }], fmt: (x) => n(x) + " kg", title: "Évolution du poids de la ruche", h: 170 })}</details>` : "";
     shell(r.nom, [r.type_ruche, r.annee_reine ? "reine " + r.annee_reine : ""].filter(Boolean).join(" · ") || "Fiche de la ruche",
       r.sortie || typeof N4 != "undefined" ? `<button class="btn" data-act="editruche" data-v="${r.id}" aria-label="Modifier ou supprimer la ruche">⋯</button>`

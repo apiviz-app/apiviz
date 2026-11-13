@@ -1522,6 +1522,13 @@ function rucheForm(ruche) {
     fields: [
       { name: "nom", label: "Nom", required: !0, value: ruche.nom },
       { name: "rucher", label: "Rucher", value: ruche.rucher, list: ruchers() },
+      // Recommandation UX n° 9 : code peint sur la caisse et origine (colonnes de la migration 016). Absents si la base
+      // n'a pas encore 016 : la ruche chargée n'a alors pas ces clés.
+      ...("code" in ruche ? [{ name: "code", label: "Code sur la ruche (facultatif)", value: ruche.code }] : []),
+      ...("origine" in ruche
+        ? [{ name: "origine", label: "Origine", type: "select", value: ruche.origine,
+            options: [["", "Non précisée"], ["achat", "Achat"], ["essaim", "Essaim récupéré"], ["division", "Division"], ["elevage", "Élevage"]] }]
+        : []),
       {
         name: "type_ruche",
         label: "Type de ruche",
@@ -1544,6 +1551,7 @@ function rucheForm(ruche) {
           .update({
             // IT-07 : la reine ne se change plus ici (onglet « Reine & lignée », changer_reine() de la migration 019).
             ...saisie,
+            ...("code" in saisie ? { code: String(saisie.code || "").trim() } : {}),
             date_installation: orNull(saisie.date_installation),
           })
           .eq("id", ruche.id),
