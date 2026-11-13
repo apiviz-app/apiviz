@@ -292,11 +292,14 @@ const AL = (() => {
   function transition(action, source) {
     if (!fluide()) return action();
     if (source) source.style.viewTransitionName = "al-hex";
-    document.startViewTransition(() => {
+    const t = document.startViewTransition(() => {
       if (source) source.style.viewTransitionName = "";
       action();
       document.querySelector(".u-gros-hex")?.style.setProperty("view-transition-name", "al-hex");
     });
+    // Deux navigations rapprochées : la première transition est abandonnée (l'écran s'affiche quand même) ;
+    // sans ces captures, le navigateur signale une erreur non traitée (« Transition was skipped »).
+    t?.ready?.catch(() => {}); t?.finished?.catch(() => {});
   }
   const versRuche = ACT.ruche;
   ACT.ruche = (id) => {

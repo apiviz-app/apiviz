@@ -76,8 +76,7 @@ export function ecranAssocies() {
   const liste = mvts.length ? `<h2 class="u-titre">Derniers mouvements</h2><ul class="ea-mvts">${mvts.map((m) => `<li><span class="ea-mvt-t"><b>${esc(m.titre)}</b>
       <span class="small">${esc(m.detail)}${m.attente ? " · en attente" : ""}</span></span>
       <b class="ea-mvt-m ${m.signe > 0 ? "good" : ""}">${m.signe > 0 ? "+" : ""}${esc(eur(m.montant))}</b></li>`).join("")}</ul>` : "";
-  // En tête, « Associés » (la liste) plutôt qu'un retour à Gestion, qui n'est plus au menu depuis la navigation par catégories.
-  shell("Entre associés", "Qui a avancé quoi, et ce qu'il reste à régler", noms.length ? `<button type="button" class="btn" data-act="eaassocies">Associés</button>` : "",
+  shell("Entre associés", "Qui a avancé quoi, et ce qu'il reste à régler", noms.length ? '<button type="button" class="btn" data-act="eaassocies">Associés</button>' : "",
     `<div class="ea-ecran">${tete}${tuiles}${aVerser}${liste}
       <p class="small ea-regle">Sur toute la durée, à parts égales. Ce qu'un associé avance de ses fonds propres, la société le lui doit ;
       l'argent de vente qu'il garde, il le doit à la société. Les achats payés par la trésorerie et les ventes à encaisser ne comptent pour personne.
@@ -117,6 +116,8 @@ function verser(nom) {
   feuilleReglement({ de: nom, a: SOCIETE, montant: v?.montant });
 }
 
+// ---------- Écran « Entre associés » (v5.32, catégorie Finances) ----------
+// La carte de Gestion en tête, puis le détail de chacun à même l'écran (plus besoin de la feuille).
 // ---------- Réglages ----------
 function blocReglages() {
   const grille = document.querySelector(".wrap .g-blocs");
