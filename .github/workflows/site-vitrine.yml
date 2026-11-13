@@ -1,0 +1,54 @@
+# Site vitrine (apiviz.fr), à la main seulement : Actions › Site vitrine › Run workflow.
+# Publie le dossier site/ de la branche choisie sur le Worker Cloudflare apiviz-site (wrangler.jsonc, --env site).
+# Indépendant de l'application : aucune base, aucune migration. Secrets : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+name: Site vitrine
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Branche à publier"
+        type: string
+        default: main
+
+concurrency:
+  group: site-vitrine
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    name: Publier apiviz.fr
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Contrôles
+        run: |
+          test -f site/index.html || { echo "::error::site/index.html introuvable."; exit 1; }
+          # Le site ne parle à aucune base : aucune adresse Supabase ne doit s'y trouver.
+          if grep -rq "supabase.co" site; then echo "::error::Une adresse Supabase est dans site/."; exit 1; fi
+      - name: Publier sur Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID absents (Settings › Secrets and variables › Actions)."; exit 1
+          fi
+          npx --yes wrangler@4 deploy --env site
+          printf 'Site vitrine publié sur https://apiviz.fr/ (version %s)\n' "$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Le site répond ?
+        run: |
+          for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            curl -fsS https://apiviz.fr/ | grep -q 'Voir clair dans ses ruches' && { echo "https://apiviz.fr/ répond."; exit 0; }
+            sleep 10
+          done
+          echo "::error::https://apiviz.fr/ ne répond pas (premier certificat HTTPS : quelques minutes, relancer ce contrôle)."; exit 1

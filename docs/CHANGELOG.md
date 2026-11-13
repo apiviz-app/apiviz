@@ -6,23 +6,31 @@ Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migr
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
 ## v5.34 · à publier en recette · apiviz.fr chez Cloudflare (IT-29, première partie)
-Aucune migration, aucun changement d'écran. La mise en ligne publie aussi sur Cloudflare.
+Aucune migration, aucun changement d'écran. Domaine et serveurs DNS en place depuis le 13 nov. 2026 (OVH → Cloudflare).
 
-- **Recette** : `https://recette.apiviz.fr` (Worker `apiviz-recette`). **Production** : `https://apiviz.fr` (Worker
-  `apiviz`). Domaine et serveurs DNS en place depuis le 13 nov. 2026 (OVH → Cloudflare).
-- « Mise en ligne » publie la cible sur son domaine Cloudflare, en plus de GitHub Pages, avec les mêmes garde-fous.
-  Sans les secrets `CLOUDFLARE_API_TOKEN` et `CLOUDFLARE_ACCOUNT_ID`, l'étape est sautée.
-- Les liens de connexion et d'invitation suivent l'adresse ouverte (`location.origin`) : rien à changer dans le code,
-  seulement les adresses autorisées dans Supabase (avant la recette pour `apidoo-test`, avant la bascule pour `apidoo`).
-- GitHub Pages reste en place jusqu'à la bascule de la production ; `www.apiviz.fr` sera ajouté ensuite.
+Adresses (décidées le 13 nov. 2026) :
+- **Site vitrine** : `https://apiviz.fr` (Worker `apiviz-site`, dossier `site/`), publié par l'action « Site vitrine ».
+- **Application** : `https://app.apiviz.fr` (Worker `apiviz`) ; **recette** : `https://recette.apiviz.fr`
+  (Worker `apiviz-recette`), publiées par « Mise en ligne », en plus de GitHub Pages jusqu'à la bascule.
 
-Technique : `wrangler.jsonc`, étape « Publier sur Cloudflare » et contrôle « Le domaine apiviz.fr répond ? » dans
-`.github/workflows/mise-en-ligne.yml`.
+Pour l'apiculteur :
+1. **Site vitrine en test** : la maquette du 11 nov. 2026 (« Voir clair dans ses ruches. »), convertie en page
+   autonome, sans bibliothèque. Bandeau « Page en test » : les demandes d'accès ne sont pas encore enregistrées.
+   Pas d'indexation par les moteurs de recherche (`noindex`, `robots.txt`). « Se connecter » mène à
+   `app.apiviz.fr` ; contact : `contact@apiviz.fr` (renvoyé vers la boîte Gmail d'Apiviz).
+2. L'application ne change pas ; elle sera ouverte sur `app.apiviz.fr` après la bascule de la production.
+
+Technique : `wrangler.jsonc` (trois Workers), `site/`, `.github/workflows/site-vitrine.yml`, étape « Publier sur
+Cloudflare » et contrôle « Le domaine Cloudflare répond ? » dans `mise-en-ligne.yml`. Sans les secrets
+`CLOUDFLARE_API_TOKEN` et `CLOUDFLARE_ACCOUNT_ID`, la mise en ligne publie sur GitHub Pages seulement. Les liens de
+connexion et d'invitation suivent l'adresse ouverte (`location.origin`) : seules les adresses autorisées dans
+Supabase changent.
 
 ### À vérifier
-- Résumé de l'action : « Cloudflare : recette publiée sur https://recette.apiviz.fr/ ».
-- `recette.apiviz.fr` s'ouvre avec le cadenas et l'étiquette RECETTE ; connexion et mot de passe oublié (après le
-  réglage Supabase) ; installation et ouverture sans réseau.
+- Actions › Site vitrine › Run workflow (main) : `apiviz.fr` s'ouvre, sur ordinateur et sur téléphone ; démo du
+  téléphone, curseur des tarifs, greffe du nom, formulaire (rien n'est envoyé).
+- Mise en ligne › recette : « Cloudflare : recette publiée sur https://recette.apiviz.fr/ » dans le résumé ;
+  `recette.apiviz.fr` s'ouvre avec le cadenas et l'étiquette RECETTE.
 
 ## v5.33 · à publier en recette · installer Apiviz sur ordinateur
 Aucune migration. Étape 1 de la sortie sur toutes les plateformes (`docs/MOBILE.md`) : Apiviz était déjà installable

@@ -10,9 +10,9 @@ Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en li
 | Reconnaissable | étiquette « RECETTE » en haut de l'écran, mêmes couleurs que la production | aucun |
 
 **Cloudflare (IT-29, depuis le 13 nov. 2026)** : chaque mise en ligne publie aussi la cible sur son domaine,
-`https://recette.apiviz.fr` ou `https://apiviz.fr` (`wrangler.jsonc`), avec le jeton `CLOUDFLARE_API_TOKEN` et
-`CLOUDFLARE_ACCOUNT_ID` (secrets du dépôt, créés par Pierre-Louis ; jamais dans un fichier). GitHub Pages reste en
-place jusqu'à la bascule de la production.
+`https://recette.apiviz.fr` ou `https://app.apiviz.fr` (`wrangler.jsonc`), avec les secrets `CLOUDFLARE_API_TOKEN`
+et `CLOUDFLARE_ACCOUNT_ID` (créés par Pierre-Louis ; jamais dans un fichier). GitHub Pages reste en place jusqu'à la
+bascule de la production. Le site vitrine `https://apiviz.fr` (dossier `site/`) part à part : Actions › Site vitrine.
 
 Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) et le préfixe de `sw.js` diffèrent, appliqués par `scripts/assembler-site.sh`.
 
