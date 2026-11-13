@@ -197,7 +197,7 @@ const DM = (() => {
     const t = document.createElement("script"); t.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"; t.onload = dessine; document.head.append(t);
   }
   // Une astuce par ouverture, trois en tout.
-  const ASTUCES = [["Tout se saisit ici", "Visite, récolte, vente ou dépense : touche API au centre du menu."], ["Dicte ta tournée", "Depuis un rucher, Faire la tournée te laisse dicter toutes tes ruches d’un coup."], ["Sans réseau aussi", "Tes saisies restent sur le téléphone et partent au retour du réseau."]];
+  const ASTUCES = [["Tout se saisit ici", "Visite, récolte, vente ou dépense : touche API au centre du menu."], ["Dicte ta tournée", "Depuis un rucher, Faire la tournée te laisse dicter toutes tes ruches d’un coup."], ["Sans réseau aussi", "Tes saisies restent sur le téléphone et partent au retour du réseau."], ["Toutes tes ruches d’un coup d’œil", "Dans Ruchers, la bascule Tableau trie et filtre toutes tes colonies : varroa, provisions, dernière visite."]];
   function astuce(wrap) {
     const i = Number(memo(cle("astuce")) || 0);
     if (!S.d.visites.length || i >= ASTUCES.length || wrap.querySelector(".dm-bravo")) return;

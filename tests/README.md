@@ -25,6 +25,10 @@ Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 
+Scénario v5.37 : `etapes_tb` (Ruchers en tableau : bascule gardée sur l'appareil, recherche, filtres et puces, tri,
+colonnes, colonne Colonie fixe au défilement, synthèse en bas, sélection et visite groupée, fiche rapide, cartes, version
+ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 

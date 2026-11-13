@@ -23,6 +23,8 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "go", "ruche", "cancel", "closesheet", "n4voisine", "uonglet", "utfiltre", "utout", "alrucher", "allent", "alclient",
   "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer", "stfiltre",
   "eadetail", // écran « Entre associés » (v5.32) : consultation
+  // Ruchers en tableau (v5.37) : affichage, filtres, tri, colonnes, fiche rapide, export (la sélection reste une saisie)
+  "tbvue", "tbaff", "tbfeuille", "tbfermer", "tbfiltre", "tbseuil", "tbsugg", "tbeffacer", "tbcol", "tbcompact", "tbtri", "tbouvrir", "tbexport",
   // Impression et exports (rien n'est modifié)
   "exp", "erimprimer", "rgprint", "etiq", "v3copierdecla",
   // Compte, exploitation, affichage
