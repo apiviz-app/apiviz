@@ -26,6 +26,12 @@ def normaliser(base, cible):
 
 # ---------- Feuilles de style ----------
 liens = re.findall(r'[ \t]*<link rel="stylesheet" href="(styles/[^"]+)">\n', index)
+# Une feuille citée deux fois (reste de fusion) n'arrête pas l'assemblage : elle est gardée à sa dernière place,
+# celle qui l'emporte dans la cascade quand le site n'est pas regroupé.
+doublons = sorted({rel for rel in liens if liens.count(rel) > 1})
+if doublons:
+    print("Attention regrouper : feuille(s) citée(s) plusieurs fois dans index.html, gardée(s) une fois : " + ", ".join(doublons))
+    liens = [rel for i, rel in enumerate(liens) if rel not in liens[i + 1:]]
 if liens:
     morceaux = []
     for rel in liens:
@@ -95,6 +101,13 @@ def transformer(rel):
 
 
 entrees = re.findall(r'<script type="module" src="\./(src/[^"]+)"></script>', index)
+# Un module cité deux fois (reste de fusion) ne s'exécute qu'une fois, comme dans un navigateur : le doublon est retiré.
+for e in sorted({e for e in entrees if entrees.count(e) > 1}):
+    print(f"Attention regrouper : module cité plusieurs fois dans index.html, gardé une fois : {e}")
+    balise = f'<script type="module" src="./{e}"></script>'
+    premier_i = index.index(balise) + len(balise)
+    index = index[:premier_i] + re.sub(r'[ \t]*' + re.escape(balise) + r'\n?', "", index[premier_i:])
+entrees = list(dict.fromkeys(entrees))
 if entrees:
     for e in entrees: transformer(e)
     tete = """// Apiviz — modules de src/ regroupés à l'assemblage (scripts/regrouper.py). Ne pas modifier : modifier src/.

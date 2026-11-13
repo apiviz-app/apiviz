@@ -56,6 +56,21 @@ test("modules : un seul exemplaire partagé, points d'entrée à leur place, exp
   assert.ok(!fs.existsSync(path.join(d, "src/commun.js")));
 });
 
+test("feuille ou module cité deux fois (reste de fusion) : gardé une fois, l'assemblage continue", () => {
+  const index = INDEX.replace("</head>", '<link rel="stylesheet" href="styles/a.css">\n</head>')
+    .replace("</body>", '<script type="module" src="./src/premier.js"></script>\n</body>');
+  const d = site({ "index.html": index, "app.js": "", "src/premier.js": "globalThis.journal.push(1);\n", "src/second.js": "",
+    "styles/a.css": ".a{}", "styles/composants/b.css": ".b{}" });
+  const sortie = lancer(d);
+  assert.match(sortie, /plusieurs fois/);
+  const css = fs.readFileSync(path.join(d, "styles/apidoo.css"), "utf8");
+  assert.equal((css.match(/\.a\{\}/g) || []).length, 1);
+  assert.ok(css.indexOf(".b{") < css.indexOf(".a{"), "gardée à sa dernière place");
+  const html = fs.readFileSync(path.join(d, "index.html"), "utf8");
+  assert.equal((html.match(/src\/apidoo\.js/g) || []).length, 1);
+  assert.ok(!html.includes("src/premier.js"));
+});
+
 test("forme non prise en charge : l'assemblage s'arrête", () => {
   const d = site({ "index.html": INDEX, "app.js": "", "src/premier.js": "const x = await import(\"./a.js\");\n", "src/second.js": "",
     "styles/a.css": "", "styles/composants/b.css": "" });
