@@ -3,3 +3,5 @@ _site/
 tests/test_*.py
 !tests/test_hl.py
 __pycache__/
+_cloudflare/
+.wrangler/
