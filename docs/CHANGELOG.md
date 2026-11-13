@@ -5,25 +5,47 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.35 · à publier en recette · file d'attente visible, photo supprimée avec « Annuler »
-Aucune migration. Deux gains rapides issus des recommandations UX du 13 nov. 2026 (n° 5 et n° 8).
+## v5.35 · à publier en recette · écrans compacts, agenda en calendrier, sélecteur de date (maquettes du 13 nov. 2026)
+Aucune migration. Seulement des écrans : aucune donnée n'est modifiée.
 
-- **Hors ligne visible** : le bandeau « Hors ligne » ou « n saisies en attente » porte un bouton **Voir**. Il ouvre la
-  fiche « En attente d'envoi » : « Tout est enregistré sur ce téléphone », la liste des saisies et des photos en attente,
-  et « Tu peux fermer l'app sans rien perdre ». Avec du réseau, **Envoyer maintenant** relance l'envoi sans attendre.
-- **Photo supprimée avec « Annuler »** : dans la visionneuse, Supprimer retire la photo tout de suite et laisse
-  5 secondes pour annuler, comme pour les visites et les ventes. Plus de confirmation en deux temps.
-- La n° 10 (premiers pas guidés, colonies créées en lot, écrans vides utiles) existait déjà (`demarrage.js`) : rien à
-  ajouter.
+Pour l'apiculteur :
+1. **Menu latéral** (ordinateur) : il ne remonte plus en haut quand on choisit une rubrique, garde sa position d'un
+   écran à l'autre et se resserre pour tenir sur l'écran. **« Nouvelle visite »** est en tête, à côté du bouton **API**
+   (l'ancien bouton +). « Se déconnecter » devient une icône à côté de l'adresse.
+2. **Accueil sur ordinateur** : tout tient sur un écran. Bonjour et priorité du jour resserrés, quatre chiffres, puis
+   trois colonnes (état des ruches, météo, à faire et dernières actions) qui défilent chacune de leur côté. Sur
+   téléphone, le haut de l'accueil est plus serré.
+3. **Météo de l'accueil** : les heures du jour sont affichées d'emblée (en lignes sur ordinateur), avec le bon créneau,
+   le choix du jour et du rucher. Une bascule « Heures / 5 jours » et un bouton « agrandir » remplacent le lien souligné
+   « Voir heure par heure » : il ouvre un panneau avec chaque heure (température, pluie, vent, visite possible ou non)
+   et un accès à la page météo complète.
+4. **Agenda en calendrier** : vue Mois ou Semaine, avec les tâches à leur échéance (en retard en rouge), les visites,
+   les ventes et les récoltes, chacune à sa couleur ; filtres par type. Un clic sur un jour l'affiche à droite (en
+   dessous sur téléphone) ; « Ajouter une tâche ce jour » préremplit l'échéance. Les listes d'origine (À faire, idées
+   du mois, terminées) restent à côté.
+5. **Sélecteur de date** : sur tous les champs date, un calendrier aux couleurs d'Apiviz remplace celui du navigateur
+   (sous le champ sur ordinateur, en feuille du bas sur téléphone) : raccourcis « Aujourd’hui / Hier / Il y a 7 jours »
+   (« Demain / Dans 7 jours » pour une échéance), aujourd'hui entouré de miel, choix rapide du mois, clavier (flèches,
+   Entrée, Échap).
+6. **Plus de textes soulignés** : les liens d'action (« Tout voir », « Ouvrir », « Plus tard », fil d'Ariane, « Voir
+   les chiffres »…) deviennent des boutons sans soulignement, avec un fond au survol et une flèche quand ils mènent
+   ailleurs. Le sélecteur d'année du Bilan a des flèches ‹ ›.
 
-Technique : `offline.js` (`ficheAttente`, actions `hlvoir` et `hlenvoyer`), `photos.js` (`phsuppr` via `N4.plusTard`,
-`PH.nbAttente`), `styles/04-hors-ligne.css`. Tests : `etapes_dp` (fiche sans réseau), `etapes_ph` (Annuler, puis
-suppression après 5 secondes).
+Technique : `compact.js` (menu, accueil, météo, année), `agenda-mois.js`, `calendrier.js` ; styles `48-compact.css`,
+`49-agenda.css`, `50-calendrier.css`. Crochets `avantCoquille` / `apresCoquille` / `apresRendu` (aucune surcharge de
+`shell()`), chargés après `navigation.js`. Les gestes de navigation (jour, mois, filtres, météo) passent par `data-cp`,
+permis en lecture seule ; ouvrir une tâche, une ruche ou une vente garde ses `data-act` et leurs droits. Les champs
+restent des `input type=date` (valeur AAAA-MM-JJ) ; `data-cal-natif` garde le calendrier du navigateur sur un champ.
 
 ### À vérifier
-- Mode avion, noter une visite : le bandeau affiche « Voir » ; la fiche liste la visite (et ses photos), sans bouton
-  « Envoyer maintenant ». Réseau revenu : le bandeau disparaît après l'envoi.
-- Ouvrir une photo, Supprimer : « Photo supprimée · Annuler ». Annuler la remet ; sans rien toucher, elle est supprimée.
+- Ordinateur 1 280 × 800 et 1 440 × 900 : le menu tient sans barre de défilement ; en bas du menu, choisir « Réglages »
+  puis « Équipe » : le menu ne remonte pas.
+- « Nouvelle visite » (menu) ouvre la visite ; le bouton API à côté ouvre sa feuille. En lecture seule, « Nouvelle visite » n’apparaît pas.
+- Accueil sur ordinateur : rien ne déborde sous la fenêtre ; chaque colonne défile seule. Météo : changer de jour, de
+  rucher, « 5 jours », puis le bouton agrandir (panneau, Échap pour fermer).
+- Agenda : mois précédent / suivant, « Aujourd’hui », vue Semaine, filtres ; cocher une tâche dans le détail du jour.
+- Champs date (visite, vente, tâche, dépense) sur iPhone et Android : le calendrier Apiviz s'ouvre, pas celui du
+  téléphone ; la date choisie est bien enregistrée.
 
 ## Landing page · apiviz.fr en ligne le 13 nov. 2026 · l'application passe sur app.apiviz.fr
 Aucune migration, aucun changement d'écran dans l'application.

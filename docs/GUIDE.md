@@ -9,7 +9,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 ## Se repérer
 
 - **Six catégories** *(v5.32)* : Au quotidien, Ruchers, Miel et ventes, Finances, Administration, Équipe et compte.
-  Sur ordinateur, elles sont toujours visibles dans le menu de gauche, avec **API** en tête. Sur téléphone, la barre
+  Sur ordinateur, elles sont toujours visibles dans le menu de gauche, avec **Nouvelle visite** et **API** en tête
+  *(v5.35)* ; le menu garde sa position quand on change d'écran. Sur téléphone, la barre
   du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet par la droite avec
   toutes les catégories. Dans un écran, le nom de la catégorie au-dessus du titre rouvre ce volet.
 - **API**, le compagnon : il ouvre la saisie et la recherche. Il saute quand une saisie est enregistrée et s'endort
@@ -23,7 +24,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 - Une phrase donne la priorité du jour, avec ses boutons.
 - Un rucher par colonne : alvéoles des ruches (couleur selon l'état), météo, meilleur créneau, tournée.
+- **Météo** *(v5.35)* : les heures du jour d'emblée, le bon créneau, le choix du jour et du rucher ; « 5 jours » et le
+  bouton agrandir (détail heure par heure dans un panneau). Sur ordinateur, l'accueil tient sur un écran, en trois
+  colonnes : ruches, météo, à faire.
 - **À faire**, **Agenda** et **Activité** ; **Ce mois-ci** propose les travaux du mois, à ajouter à l'agenda.
+- **Agenda** *(v5.35)* : un calendrier (mois ou semaine) avec tâches, visites, ventes et récoltes ; un clic sur un jour
+  affiche son détail et permet d'y ajouter une tâche.
+- **Dates** *(v5.35)* : chaque champ date ouvre le calendrier d'Apiviz, avec des raccourcis (aujourd'hui, hier…).
 - **Bien démarrer** guide les premiers pas ; le bouton Masquer le retire.
 
 ## Ruchers

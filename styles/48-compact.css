@@ -1,0 +1,185 @@
+/* ---------- Écrans compacts et boutons sans soulignement (v5.35, compact.js) ---------- */
+
+/* 1. Plus aucun texte souligné : les liens d'action deviennent des boutons « tertiaires »
+      (texte vert sapin, fond au survol), les liens dans un texte gardent leur couleur et ne se soulignent qu'au survol. */
+.link,.al-titre{display:inline-flex;align-items:center;gap:4px;width:auto;min-height:32px;padding:0 8px;margin:0 -8px;border:0;border-radius:9px;background:none;color:var(--pine);font:inherit;font-weight:600;text-decoration:none;cursor:pointer;transition:background var(--duree-rapide) ease}
+.link:hover,.al-titre:hover{background:rgba(30,43,36,.07)}
+.link:active{transform:scale(.97)}
+.u-entete .link::after,.u-plus.link::after,.al-heures.link::after{content:"";width:7px;height:7px;margin-left:2px;border:solid currentColor;border-width:2px 2px 0 0;transform:rotate(45deg);opacity:.7}
+.u-entete .link{margin:0 -8px 0 0}
+.side .me .link{margin:0}
+a{text-decoration:none}
+p a,li a,.small a,.sub a,.notice a{text-decoration:none;font-weight:600}
+p a:hover,li a:hover,.small a:hover,.sub a:hover,.notice a:hover{text-decoration:underline;text-underline-offset:3px}
+/* « Voir les chiffres » des graphiques : un bouton, plus un dépliant souligné. */
+.dt summary{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:9px;background:#EEF0E8;color:var(--ink);font-size:13px;font-weight:600;list-style:none;text-decoration:none}
+.dt summary::-webkit-details-marker{display:none}
+.dt summary::before{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform var(--duree-rapide) ease}
+.dt[open] summary::before{transform:rotate(45deg)}
+.dt summary:hover{background:#E4E7DD}
+/* Fil d'Ariane : un repère discret, sans soulignement. */
+.er-ariane .link,.er-ariane .u-retour{margin:0 -6px;padding:0 6px;min-height:30px;color:var(--muted);font-weight:600}
+.er-ariane .link:hover,.er-ariane .u-retour:hover{color:var(--ink)}
+.rg-pastille.on b{text-decoration:none}
+
+/* Bouton icône commun. */
+.cp-icone{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:10px;background:none;color:var(--ink);cursor:pointer;transition:background var(--duree-rapide) ease}
+.cp-icone:hover{background:rgba(30,43,36,.07)}
+.cp-icone:disabled{opacity:.4;cursor:default}
+
+/* 2. Menu latéral : compact, « Nouvelle visite » et API côte à côte, déconnexion en icône. */
+@media (min-width:801px){
+  .side{gap:1px;padding:16px 12px 12px;overscroll-behavior:contain;scrollbar-width:thin}
+  .side .brand{padding:2px 10px 12px}
+  .side .nav{min-height:36px;font-size:14px}
+  .side .nl-titre{margin:10px 12px 3px;font-size:11px}
+  .side .cp-actions{display:flex;gap:6px;margin:0 0 4px}
+  .side .cp-actions .cp-visite{flex:1;min-width:0;min-height:44px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:14px;white-space:nowrap}
+  .side .cp-actions .nav[data-v=saisir]{flex:none;width:52px;min-height:44px;margin:0;padding:0;justify-content:center;gap:0;font-size:0;border-radius:12px}
+  .side .cp-actions .nav[data-v=saisir] api-compagnon{width:34px;height:34px}
+  .side .me{padding:10px 4px 0 8px}
+  .side .me .mail{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:normal;max-width:150px}
+  .side .me>span:not(.avatar){flex:1;min-width:0}
+  .side .me .cp-sortir{color:var(--muted)}
+  .side .me .cp-sortir:hover{color:var(--ink)}
+}
+/* Écrans d'ordinateur moins hauts : le menu se resserre pour tenir sans défiler (24 entrées et titres). */
+@media (min-width:801px) and (max-height:960px){
+  .side{padding-top:12px;padding-bottom:10px}
+  .side .brand{padding-bottom:8px}
+  .side .brand img{height:26px}
+  .side .nav{min-height:31px}
+  .side .nl-titre{margin:7px 12px 1px;font-size:10.5px}
+  .side .cp-actions .cp-visite,.side .cp-actions .nav[data-v=saisir]{min-height:40px}
+  .side .me{padding-top:8px}
+}
+@media (min-width:801px) and (max-height:820px){
+  .side .nav{min-height:27px;font-size:13.5px}
+  .side .nl-titre{margin:4px 12px 0}
+  .side .brand img{height:22px}
+  .side .me .avatar{width:30px;height:30px}
+}
+@media (min-width:801px) and (max-height:720px){
+  .side .nav{min-height:24px;font-size:13px}
+  .side .nav svg{width:16px;height:16px}
+}
+
+/* 3. Accueil sur ordinateur : bonjour resserré, chiffres sur une ligne, trois colonnes qui défilent chacune. */
+@media (min-width:801px){
+  .wrap.ac.cp{gap:14px}
+  .wrap.ac.cp .ac-haut{gap:14px}
+  .wrap.ac.cp .head.hero-head.ac-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"oeil actions" "titre actions" "resume actions";align-items:center;column-gap:16px;padding:18px 22px;border-radius:18px}
+  .wrap.ac.cp .ac-hero .ac-oeil{grid-area:oeil;margin:0 0 2px}
+  .wrap.ac.cp .ac-hero h1{grid-area:titre;font-size:28px}
+  .wrap.ac.cp .ac-hero .ac-resume{grid-area:resume;margin:4px 0 0}
+  .wrap.ac.cp .ac-hero .ac-actions{grid-area:actions;display:flex;flex-direction:column;gap:8px;margin:0}
+  .wrap.ac.cp .ac-hero .ac-actions .btn{min-height:42px}
+  .wrap.ac.cp .ac-hero .ac-actions [data-act=newvisite]{display:none} /* dans le menu latéral */
+  .wrap.ac.cp .ac-api{padding:16px 18px;gap:12px;border-radius:18px}
+  .wrap.ac.cp .ac-api-t b{font-size:17px}
+  .wrap.ac.cp .ac-api-a{margin-top:2px}
+  .wrap.ac.cp .ac-api-a .btn{min-height:40px}
+  .wrap.ac.cp .ac-chiffres{gap:12px}
+  .wrap.ac.cp .ac-chiffre{padding:12px 16px}
+  .wrap.ac.cp .ac-chiffre b{font-size:24px}
+  .wrap.ac.cp .ac-cols.cp-trois{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch;min-height:380px}
+  .wrap.ac.cp .cp-trois>.ac-col{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;display:flex;flex-direction:column;gap:14px;padding:2px 2px 4px}
+  .wrap.ac.cp .cp-trois>.ac-col>*{flex:none;margin:0}
+  /* Ruches : la météo de chaque rucher se résume (temps, créneau) ; les jours et la frise sont dans la colonne Météo. */
+  .wrap.ac.cp .cp-trois .al-wx .al-jours,.wrap.ac.cp .cp-trois .al-wx .mt-frise-c{display:none}
+  .wrap.ac.cp .cp-trois .al-wx{margin-top:4px}
+  .wrap.ac.cp .cp-trois .al-creneau{margin:2px 0 0;font-size:13px}
+  .wrap.ac.cp .cp-trois .u-rucher>.btn{min-height:38px;font-size:13.5px}
+  .wrap.ac.cp .cp-trois .u-hex{width:66px;height:58px}
+}
+
+/* 4. Bloc météo de l'accueil. */
+.cp-meteo svg:not(.al-api *),.cp-tiroir svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cp-meteo{display:flex;flex-direction:column;gap:12px}
+.cp-meteo .u-entete{align-items:center}
+.cp-meteo .cp-agrandir{margin:-6px -6px -6px 0}
+.cp-hbloc{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.cp-htitre{margin:0;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.cp-heures{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(52px,1fr);gap:4px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.cp-h{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 10px;border-radius:10px;background:var(--ground);font-variant-numeric:tabular-nums}
+.cp-h span{font-size:11.5px;font-weight:600;color:var(--muted)}
+.cp-h svg{width:20px;height:20px;color:var(--muted)}
+.cp-h b{font-size:14.5px}
+.cp-h small{font-size:11px;font-weight:600;color:#2F5E9E}
+.cp-h i{position:absolute;left:8px;right:8px;bottom:4px;height:3px;border-radius:2px;background:transparent}
+.cp-h.n2 i{background:var(--good)}.cp-h.n1 i{background:var(--honey)}.cp-h.n0 i{background:#D8DCD2}
+.cp-h.now{background:var(--honeysoft)}
+.cp-h.now span{color:var(--ink)}
+.cp-h u,.cp-h em{display:none}
+/* Ordinateur : dans la colonne Météo de l'accueil, les heures se lisent en lignes, sans clic. */
+@media (min-width:801px){
+  .cp-milieu .cp-heures{grid-auto-flow:row;grid-auto-columns:auto;gap:0;overflow:visible}
+  .cp-milieu .cp-h{display:grid;grid-template-columns:50px 24px 38px 40px minmax(0,1fr) auto;align-items:center;column-gap:8px;padding:0 8px;min-height:36px;border-radius:9px;background:none;border-bottom:1px solid #EDEFE7}
+  .cp-milieu .cp-h span{text-align:left}
+  .cp-milieu .cp-h b{font-size:14px}
+  .cp-milieu .cp-h u{display:block;text-decoration:none;font-size:12px;color:var(--muted);white-space:nowrap}
+  .cp-milieu .cp-h em{display:inline-flex;font-style:normal;font-size:11px;justify-self:end}
+  .cp-milieu .cp-h i{display:none}
+  .cp-milieu .cp-h.now{background:var(--honeysoft);border-bottom-color:transparent}
+}
+@media (min-width:801px) and (max-width:1560px){
+  .cp-milieu .cp-h{grid-template-columns:46px 22px 34px minmax(0,1fr) auto}
+  .cp-milieu .cp-h u{display:none}
+}
+
+/* 5. Panneau heure par heure. */
+.cp-tiroir{position:fixed;inset:0 0 0 auto;width:min(560px,100vw);max-width:none;height:100%;max-height:none;margin:0;padding:20px 22px;box-sizing:border-box;border:0;border-radius:20px 0 0 20px;background:#fff;color:var(--ink);box-shadow:-24px 0 60px rgba(20,28,24,.3);overflow:auto}
+.cp-tiroir[open]{display:flex;flex-direction:column;gap:14px;animation:cp-entre var(--duree) var(--sortie) both}
+.cp-tiroir::backdrop{background:rgba(20,28,24,.45)}
+@keyframes cp-entre{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+.cp-ttete{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cp-ttete h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px}
+.cp-tjours{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.cp-tjours button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:inherit;cursor:pointer}
+.cp-tjours button span{font-size:12px;font-weight:600}
+.cp-tjours button[aria-selected=true]{background:var(--pine);border-color:var(--pine);color:#fff}
+.cp-tplage{margin:0;padding:10px 12px;border-radius:12px;background:var(--ground);font-size:13.5px}
+.cp-tplage.n2{background:var(--goodbg);color:#174A33}.cp-tplage.n1{background:var(--watchbg);color:#5C3D00}
+.cp-tlignes{display:flex;flex-direction:column}
+.cp-tl{display:grid;grid-template-columns:56px 30px 48px minmax(0,1fr) 70px 104px;align-items:center;column-gap:10px;min-height:40px;padding:0 8px;border-bottom:1px solid #EDEFE7;border-radius:8px;font-variant-numeric:tabular-nums;font-size:13.5px}
+.cp-tl svg{width:20px;height:20px;color:var(--muted)}
+.cp-tl-t{min-height:30px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom-color:var(--line)}
+.cp-tl.now{background:var(--honeysoft);font-weight:700}
+.cp-tl.passee{color:#8A938C}
+.cp-pluie{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#2F5E9E}
+.cp-pluie i{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#2F5E9E var(--p),#ECEEE6 var(--p))}
+.cp-tl .tag{font-size:11.5px}
+.cp-tpied{display:flex;justify-content:flex-end;margin-top:auto}
+@media (max-width:800px){
+  .cp-tiroir{inset:auto 0 0 0;width:100vw;height:auto;max-height:90vh;border-radius:20px 20px 0 0;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+  .cp-tl{grid-template-columns:48px 26px 40px minmax(0,1fr) 92px;column-gap:6px}
+  .cp-tl>:nth-child(5){display:none}
+  .cp-tjours button span{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){.cp-tiroir[open]{animation:none}}
+
+/* 6. Accueil sur téléphone : plus serré, pour voir l'essentiel sans faire défiler. */
+@media (max-width:800px){
+  .wrap.ac.cp{gap:10px}
+  .wrap.ac.cp .head.hero-head.ac-hero{padding:14px 16px 14px;border-radius:18px}
+  .wrap.ac.cp .ac-hero h1{font-size:24px}
+  .wrap.ac.cp .ac-hero .ac-resume{margin-top:2px;font-size:13px}
+  .wrap.ac.cp .ac-hero .ac-actions{margin-top:10px;gap:8px}
+  .wrap.ac.cp .ac-hero .ac-actions .btn{min-height:44px}
+  .wrap.ac.cp .ac-api{padding:12px 14px;gap:10px;border-radius:18px}
+  .wrap.ac.cp .ac-api api-compagnon{--api-taille:36px}
+  .wrap.ac.cp .ac-api-t{gap:3px}
+  .wrap.ac.cp .ac-api-t b{font-size:15.5px}
+  .wrap.ac.cp .ac-api-a{gap:6px;margin-top:6px;align-items:center}
+  .wrap.ac.cp .ac-api-a .btn{min-height:40px;padding:0 12px;font-size:14px}
+  .wrap.ac.cp .ac-api-a .link{min-height:40px}
+  .wrap.ac.cp .ac-chiffres{gap:8px}
+  .wrap.ac.cp .ac-chiffre{padding:9px 12px}
+  .wrap.ac.cp .ac-chiffre b{font-size:20px}
+  .wrap.ac.cp .ac-chiffre small{font-size:11.5px}
+}
+
+/* 7. Sélecteur d'année : ‹ 2026 › */
+.cp-annee{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:#F1EEE2}
+.cp-annee select{width:auto;min-height:36px;padding:0 6px;border:0;background:transparent;box-shadow:none;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;-webkit-appearance:none;appearance:none;cursor:pointer}
+.cp-annee .cp-icone{width:34px;height:34px}

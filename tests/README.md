@@ -22,6 +22,9 @@ Scénario IT-07 : `etapes_rn` (en-tête de la fiche colonie, nouvelle reine qui 
 Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie sans réseau, aucune écriture directe de
 `annee_reine`, base sans 019). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.
 
+Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
+soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 
