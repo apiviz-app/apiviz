@@ -55,7 +55,8 @@
     if cap: page.locator(".ve-journal").first.scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/express-journal.png")
 
     # Ruche sans visite : pas de visite express (rien à reprendre).
-    page.evaluate(f"ACT.ruche('{R7}')"); page.wait_for_selector(".n4-rbarre")
+    page.evaluate(f"ACT.ruche('{R7}')"); page.wait_for_function(f"S.ruche === '{R7}' && !!document.querySelector('.n4-rbarre')", timeout=10000)
+    page.wait_for_timeout(400)  # la transition d'écran se termine
     verif(page.locator("[data-act=veruche]").count() == 0, "ruche jamais visitée : pas de visite express")
 
     # Sans réseau : la visite express est gardée sur le téléphone.
