@@ -1,0 +1,14 @@
+// Landing page publique d'apiviz (apiviz.fr et www.apiviz.fr) : Worker « apiviz-landing », indépendant de l'application.
+// Publication : `cd landing && npx wrangler@4 deploy` (secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID).
+{
+  "name": "apiviz-landing",
+  "main": "src.js",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public", "binding": "ASSETS", "not_found_handling": "404-page", "run_worker_first": true },
+  "routes": [
+    { "pattern": "apiviz.fr", "custom_domain": true },
+    { "pattern": "www.apiviz.fr", "custom_domain": true }
+  ],
+  "workers_dev": false,
+  "observability": { "enabled": true }
+}

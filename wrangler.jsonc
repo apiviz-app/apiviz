@@ -1,5 +1,5 @@
 // Publication sur Cloudflare (IT-29) : deux Workers qui ne servent que des fichiers statiques.
-// Production : apiviz.fr · recette : recette.apiviz.fr. Les dossiers sont préparés par l'action « Mise en ligne »
+// Production : app.apiviz.fr · recette : recette.apiviz.fr. (apiviz.fr porte la landing page : dossier landing/.) Les dossiers sont préparés par l'action « Mise en ligne »
 // à partir du site assemblé (_site) : la racine sans /recette pour la production, /recette pour la recette.
 // Cloudflare crée lui-même les enregistrements DNS et les certificats HTTPS des domaines ci-dessous.
 {
@@ -7,7 +7,7 @@
   "name": "apiviz",
   "compatibility_date": "2026-06-01",
   "assets": { "directory": "./_cloudflare/production" },
-  "routes": [{ "pattern": "apiviz.fr", "custom_domain": true }],
+  "routes": [{ "pattern": "app.apiviz.fr", "custom_domain": true }],
   "workers_dev": false,
   "env": {
     "recette": {
