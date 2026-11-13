@@ -48,11 +48,4 @@
 /* Fil d'Ariane : la catégorie (ouvre le volet sur téléphone ; simple repère sur ordinateur). */
 .er-ariane .nl-categorie{margin:0;padding:0;min-height:32px;font-weight:600}
 @media (min-width:801px){.er-ariane [data-act=nlmenu]{pointer-events:none;color:var(--muted);text-decoration:none}}
-
-/* Écran « Entre associés » */
-.ea-fiches{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0 10px}
-.ea-fiche{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:18px}
-.ea-fiche h2{margin:0 0 2px;font-size:18px}
-.ea-fiche p{margin:0;font-size:14.5px}
-.ea-fiche .good{color:var(--good);font-weight:600}
-.ea-fiche .watch{color:var(--watch);font-weight:600}
+/* L'écran « Entre associés » a ses styles dans 44-associes.css (v5.32, visite express et comptes entre associés). */

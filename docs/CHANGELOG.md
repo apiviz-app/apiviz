@@ -46,8 +46,10 @@ recette. Test : `etapes_in` (Chrome, Safari Mac, Firefox, et manifeste).
 - Mac, Safari : le mode d'emploi parle de « Ajouter au Dock ».
 - Téléphone : rien ne change (« Installer sur l'écran d'accueil »).
 
-## v5.32 · à publier en recette · navigation par catégories (fin de « Gestion »)
-Aucune migration. Maquettes validées par Pierre-Louis le 12 nov. 2026.
+## v5.32 · à publier en recette · visite express et comptes entre associés (maquettes du 12 nov. 2026)
+**Migration 020** (`migrations/020-visite-express-reglements.sql`), additive, ne casse pas l'ancienne version. À appliquer
+d'abord sur `apidoo-test` ; **en attente pour `apidoo`** (accord de Pierre-Louis). Sans 020, la visite express est
+enregistrée comme une visite complète et l'écran « Entre associés » se lit sans pouvoir noter de remboursement.
 
 Pour l'apiculteur :
 1. **Visite express** (AP-FEAT-037) : sur la fiche d'une ruche déjà visitée, « Visite express » passe en premier
@@ -59,9 +61,10 @@ Pour l'apiculteur :
    et revenir à la ruche ». Le message dit la durée (« Visite enregistrée en 12 s »).
 3. **Journal** : une visite express affiche « Visite express · repris de la précédente : … », pour distinguer ce qui a
    été vu ce jour-là de ce qui a été reporté.
-4. **Entre associés** : « Voir le détail » de la carte de Gestion ouvre un écran : le montant à régler pour être à
-   égalité (« 36 € · Johan doit à Pierre-Louis »), ce que chacun a avancé de ses fonds propres et récolté de ventes,
-   l'argent de vente **à verser à la trésorerie**, et les derniers mouvements (achats, ventes encaissées, règlements).
+4. **Entre associés** (menu Finances › Entre associés, ou « Voir le détail » de la carte de Gestion) : le montant à
+   régler pour être à égalité (« 36 € · Johan doit à Pierre-Louis »), ce que chacun a avancé de ses fonds propres et
+   récolté de ventes, l'argent de vente **à verser à la trésorerie**, et les derniers mouvements (achats, ventes
+   encaissées, règlements). En tête, « Associés » ouvre la liste des associés.
 5. **Noter le remboursement** (prérempli : qui, à qui, combien) et **Noter le versement** à la société : une fois noté,
    le solde en tient compte et la carte de Gestion le dit (« À égalité entre associés »). Sans réseau, le règlement est
    gardé sur le téléphone et envoyé au retour.
@@ -87,9 +90,35 @@ Limites connues :
 1. Fiche d'une ruche visitée : « Visite express », la dernière visite reprise, reine « pas cherchée ».
 2. Changer le poids et la reine : « 2 changements · 4 valeurs reprises » ; enregistrer : on passe à la ruche suivante du rucher.
 3. Le journal de la ruche dit « Visite express · repris de la précédente : … ».
-4. Gestion › Voir le détail : le montant, ce que chacun a avancé, l'argent à verser à la trésorerie, les mouvements.
+4. Finances › Entre associés : le montant, ce que chacun a avancé, l'argent à verser à la trésorerie, les mouvements.
 5. Noter le remboursement proposé : l'écran affiche « À égalité entre associés ».
 6. Sans réseau : une visite express et un remboursement sont gardés puis envoyés au retour du réseau.
+
+## v5.32 · à publier en recette · navigation par catégories (fin de « Gestion »)
+Aucune migration. Maquettes validées par Pierre-Louis le 12 nov. 2026.
+
+Pour l'apiculteur :
+1. **Ordinateur** : le menu est à gauche et toujours visible, rangé par catégorie : Au quotidien (Accueil, Agenda,
+   Rappels), Ruchers (Ruches, Carte, Santé et varroa), Miel et ventes (Stock et lots, Clients et ventes), Finances
+   (Bilan, Dépenses et achats, Budget et prévisions, Entre associés), Administration (Matériel, Fournisseurs, Registre
+   d'élevage, Déclaration), Équipe et compte (Équipe, Réglages). API est en tête du menu. Plus de barre du haut, ni de
+   compteur dans le menu ; la recherche est dans le bandeau en haut de l'écran, la cloche devient l'entrée « Rappels ».
+2. **Téléphone** : la touche « Gestion » devient **Menu**. Elle ouvre un volet par la droite avec les mêmes
+   catégories ; il se ferme d'un choix, de la croix ou en touchant à côté. Accueil, Ruchers, API et Miel ne changent pas.
+3. **« Gestion » est remplacée** par Finances et Administration. Au-dessus du titre d'un écran, la catégorie remplace
+   « ‹ Gestion » ; sur téléphone, elle rouvre le volet.
+4. **Entre associés** a son écran dans Finances : celui de la visite express, ci-dessus (solde, avances, remboursements).
+
+Technique : `navigation.js` (menus, volet, fil d'Ariane), `styles/47-navigation.css` ; écran `associes`
+(`src/domaines/finances/`). Le logo du menu reste sombre quel que soit le bandeau (menu blanc). L'écran `plus` reste
+enregistré (adresse directe), hors des menus. Tests mis à jour : n4, al, eg, ab, vt, nk.
+
+### À vérifier
+- Téléphone : touche Menu, volet, choisir Bilan puis Matériel ; la catégorie au-dessus du titre rouvre le volet.
+- Téléphone : Échap ou toucher à côté ferme le volet ; la rubrique ouverte est surlignée dans le volet.
+- Ordinateur : menu à gauche à 1 280 et 1 440 px, et vers 900 px ; rien ne déborde ; recherche Ctrl K.
+- Ordinateur : bandeau Sapin ou Vert (Réglages › Apparence) : logo du menu toujours lisible.
+- Finances › Entre associés avec deux associés notés : phrase et détail justes.
 
 ## Outillage · 12 nov. 2026 · plus de mise en ligne en production refusée sans raison
 Trois causes, toutes traitées :

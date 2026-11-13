@@ -13,7 +13,8 @@ export default [
   { id: "pilotage", titre: "Bilan", rubrique: "plus", rendu: () => viewPilotage() },
   // Prévisions et budget : app.js, migré sans changement.
   { id: "previsions", titre: "Prévisions", rubrique: "plus", rendu: () => viewPrevisions() },
-  // Entre associés (v5.32) : écran à part dans Finances ; la carte reste aussi en tête de l'ancien écran « plus ».
-  // Ses actions (détail, liste des associés) sont déjà déclarées par l'écran « plus » (src/domaines/compte/ecrans.js).
+  // Entre associés (v5.32) : écran à part dans Finances (menu), aussi ouvert par « Voir le détail » de la carte de
+  // Gestion ; enregistré ici seulement. Ses actions (détail, associés, remboursement, versement) sont déclarées par
+  // l'écran « plus » (src/domaines/compte/ecrans.js).
   { id: "associes", titre: "Entre associés", rubrique: "plus", rendu: () => ecranAssocies() },
 ];
