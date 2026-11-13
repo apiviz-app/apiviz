@@ -1,0 +1,90 @@
+/* ---------- Agenda en calendrier (v5.35, agenda-mois.js) ---------- */
+.ag-page{display:flex;flex-direction:column;gap:14px}
+.ag-cal{display:flex;flex-direction:column;gap:10px;padding:12px 14px 14px}
+.ag-cote{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ag-cote>*{margin:0}
+.ag-barre{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ag-nav{display:flex;align-items:center;gap:2px}
+.ag-nav h2{margin:0 8px 0 6px;font-size:18px}
+.ag-auj{min-height:34px}
+.ag-filtres{display:flex;flex-wrap:wrap;gap:6px}
+.ag-filtre{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:600 12.5px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.ag-filtre i{width:9px;height:9px;border-radius:3px}
+.ag-filtre[aria-pressed=false]{color:var(--muted);background:var(--ground);border-style:dashed}
+.ag-filtre[aria-pressed=false] i{opacity:.35}
+.ag-filtre:hover{background:var(--ground)}
+
+/* Couleurs par type : pastille (fond clair + texte foncé) et repère plein. */
+.ag-v{--ag-fond:#DFEDE4;--ag-texte:#174A33;--ag-plein:#2F6B4F}
+.ag-t{--ag-fond:#FBEFC9;--ag-texte:#5C3D00;--ag-plein:#E3A008}
+.ag-s{--ag-fond:#E3EBF6;--ag-texte:#23477A;--ag-plein:#2F5E9E}
+.ag-r{--ag-fond:#EEE8F6;--ag-texte:#4B3577;--ag-plein:#6B4FA0}
+.ag-late{--ag-fond:#F8E3E0;--ag-texte:#8E1616;--ag-plein:#A61B1B}
+.ag-filtre i,.ag-points i,.ag-ligne>i{background:var(--ag-plein)}
+
+.ag-grille{display:flex;flex-direction:column;flex:1;min-height:0}
+.ag-entetes,.ag-cases{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.ag-entetes{border-bottom:1px solid var(--line)}
+.ag-entetes span{padding:6px 8px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ag-cases{flex:1;grid-auto-rows:minmax(0,1fr)}
+.ag-case{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;min-height:44px;padding:5px 5px 4px;border:0;border-right:1px solid #EDEFE7;border-bottom:1px solid #EDEFE7;background:#fff;color:var(--ink);font:inherit;text-align:left;cursor:pointer;overflow:hidden;transition:background var(--duree-rapide) ease}
+.ag-case:nth-child(7n){border-right:0}
+.ag-case:hover{background:#FAFBF7}
+.ag-case.we{background:#FCFCFA}
+.ag-case.dehors{background:#F8F9F5}
+.ag-case.dehors .ag-num{color:#99A19B}
+.ag-case.dehors .ag-ev{opacity:.55}
+.ag-num{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:26px;height:26px;padding:0 5px;box-sizing:border-box;border-radius:13px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.ag-num small{font-size:11px;font-weight:600;color:var(--muted);text-transform:capitalize}
+.ag-case.auj .ag-num{background:var(--honey);color:var(--ink)}
+.ag-case.choisi{box-shadow:inset 0 0 0 2px var(--pine);background:#fff}
+.ag-ev{display:block;padding:2px 6px;border-radius:5px;background:var(--ag-fond);color:var(--ag-texte);font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-ev.fait{text-decoration:line-through;opacity:.6}
+.ag-plus{padding:0 6px;font-size:11px;font-weight:700;color:var(--muted)}
+.ag-points{display:flex;justify-content:center;gap:3px;margin-top:auto}
+.ag-points i{width:6px;height:6px;border-radius:50%}
+.ag-semaine .ag-cases{grid-auto-rows:minmax(220px,1fr)}
+.ag-semaine .ag-entetes{display:none}
+.ag-semaine .ag-case{gap:4px;padding:8px 6px}
+.ag-semaine .ag-ev{white-space:normal;font-size:12px;padding:4px 7px}
+
+/* Le jour choisi. */
+.ag-jour{display:flex;flex-direction:column;gap:6px}
+.ag-jour h2{margin:0 0 6px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;letter-spacing:-.01em}
+.ag-sur{margin:0;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7D5200}
+.ag-ligne{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #EDEFE7}
+.ag-ligne>i{flex:none;align-self:stretch;width:4px;border-radius:2px}
+.ag-ouvrir{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;min-height:44px;justify-content:center;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.ag-ouvrir b{font-size:14px}
+.ag-ouvrir span{font-size:12.5px;color:var(--muted)}
+.ag-ouvrir:hover b{color:var(--pine2)}
+.ag-ligne.fait b{text-decoration:line-through;color:var(--muted);font-weight:500}
+.ag-ligne .check{flex:none;width:30px;height:30px;border-radius:8px;border:2px solid var(--line2);background:#fff;color:#fff;font-weight:700;cursor:pointer}
+.ag-ligne.fait .check{background:var(--good);border-color:var(--good)}
+.ag-ajout{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;margin-top:6px;border:1px dashed var(--line2);border-radius:10px;background:none;color:var(--pine);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.ag-ajout:hover{background:var(--ground)}
+html.lecteur .ag-ajout{display:none}
+
+/* Ordinateur : le calendrier à gauche sur toute la hauteur, le jour et les listes à droite (qui défilent seules). */
+@media (min-width:801px){
+  .wrap.ag{gap:14px}
+  .wrap.ag>.head{margin-bottom:0}
+  .ag-page{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:stretch;min-height:460px}
+  .ag-cal{min-height:0}
+  .ag-cote{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:0 2px 4px}
+  .ag-cote>*{flex:none}
+}
+@media (min-width:801px) and (max-width:1100px){.ag-page{grid-template-columns:minmax(0,1fr) 290px}}
+/* Téléphone : cases carrées avec des points, le détail du jour en dessous. */
+@media (max-width:800px){
+  .ag-cal{padding:10px}
+  .ag-nav h2{font-size:16px}
+  .ag-barre .cp-bascule{order:3}
+  .ag-filtres{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -10px;padding:0 10px}
+  .ag-filtre{flex:none}
+  .ag-case{min-height:48px;align-items:center;padding:4px 2px}
+  .ag-num{align-self:center}
+  .ag-semaine .ag-cases{grid-auto-rows:auto}
+  .ag-semaine .ag-case{min-height:150px;align-items:stretch}
+  .ag-semaine .ag-ev{font-size:10.5px;padding:2px 3px}
+}

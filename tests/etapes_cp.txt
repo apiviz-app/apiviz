@@ -1,0 +1,59 @@
+    # v5.35 : écrans compacts (compact.js), agenda en calendrier (agenda-mois.js), sélecteur de date (calendrier.js).
+    import datetime
+    auj = datetime.date.today()
+    DATA["taches"] = [
+        {"id": str(uuid.uuid4()), "titre": "Resserrer les entrées", "echeance": (auj - datetime.timedelta(days=1)).isoformat(), "faite": False, "ruche_id": None, "assigne": ""},
+        {"id": str(uuid.uuid4()), "titre": "Commander des pots", "echeance": auj.isoformat(), "faite": False, "ruche_id": None, "assigne": ""},
+    ]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    page.set_viewport_size({"width": 1280, "height": 640})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Menu latéral : il garde sa position d'un écran à l'autre ; Nouvelle visite et API côte à côte.
+    page.evaluate("document.querySelector('.side').scrollTop = 9999")
+    avant = page.evaluate("document.querySelector('.side').scrollTop")
+    page.click(".side .nav[data-v=reglages]"); page.wait_for_function("S.route === 'reglages'")
+    apres = page.evaluate("document.querySelector('.side').scrollTop")
+    verif(abs(avant - apres) < 2, f"menu latéral : position gardée après un clic ({avant} → {apres})")
+    verif(page.locator(".side .cp-actions [data-act=newvisite]").count() == 1 and page.locator(".side .cp-actions .nav[data-v=saisir]").count() == 1, "Nouvelle visite et API côte à côte")
+    verif(page.locator(".side .cp-sortir[data-act=logout]").count() == 1 and page.locator(".side .me .link").count() == 0, "déconnexion en icône, plus de texte souligné")
+    page.set_viewport_size({"width": 1440, "height": 900}); page.evaluate("ACT.go('dash')"); page.wait_for_selector(".wrap.ac.cp")
+    verif(page.evaluate("(() => { const s = document.querySelector('.side'); return s.scrollHeight <= s.clientHeight + 1; })()"), "1 440 × 900 : le menu tient sans défiler")
+    verif(page.evaluate("getComputedStyle(document.querySelector('.link, .u-entete button')).textDecorationLine") == "none", "liens d'action sans soulignement")
+
+    # 2. Sélecteur de date : il remplace celui du navigateur et renseigne le champ (AAAA-MM-JJ).
+    page.evaluate("ACT.newtache()"); page.wait_for_selector("#sheetForm [name=echeance]")
+    page.click("#sheetForm [name=echeance]"); page.wait_for_selector("#calDate[open]")
+    verif(page.locator("#calDate .cal-j.auj").count() == 1, "calendrier ouvert au clic, aujourd'hui repéré")
+    page.click("#calDate .cal-raccourci >> text=Demain")
+    demain = (auj + datetime.timedelta(days=1)).isoformat()
+    verif(page.input_value("#sheetForm [name=echeance]") == demain and page.locator("#calDate[open]").count() == 0, "raccourci « Demain » : " + page.input_value("#sheetForm [name=echeance]"))
+    page.click("#sheetForm [name=echeance]"); page.wait_for_selector("#calDate[open]")
+    page.keyboard.press("ArrowRight"); page.keyboard.press("Enter")
+    verif(page.input_value("#sheetForm [name=echeance]") == (auj + datetime.timedelta(days=2)).isoformat(), "clavier : flèche puis Entrée")
+    verif(page.locator("#sheet[open]").count() == 1, "la fenêtre de la tâche reste ouverte")
+    page.keyboard.press("Escape"); page.wait_for_timeout(300)
+
+    # 3. Agenda en calendrier : jour choisi, mois suivant, tâche en retard, ajout prérempli.
+    page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-case")
+    hier = (auj - datetime.timedelta(days=1)).isoformat()
+    verif(page.locator(f".ag-case[data-v='{hier}'] .ag-late").count() == 1, "tâche en retard en rouge à sa date")
+    verif(page.locator(".ag-case.auj").count() == 1 and "Commander des pots" in page.locator("#agJour").inner_text(), "aujourd'hui : la tâche du jour dans le détail")
+    jour = auj.replace(day=20).isoformat()
+    page.click(f".ag-case[data-v='{jour}']"); page.wait_for_timeout(200)
+    verif("20" in page.locator("#agJour h2").inner_text(), "clic sur un jour : son détail")
+    page.click(".ag-ajout"); page.wait_for_selector("#sheet[open] [name=echeance]")
+    verif(page.input_value("#sheetForm [name=echeance]") == jour, "« Ajouter une tâche ce jour » : échéance préremplie")
+    page.keyboard.press("Escape"); page.wait_for_timeout(300)
+    titre = page.locator(".ag-nav h2").inner_text()
+    page.click("[data-cp=agpas][data-v='1']"); page.wait_for_timeout(200)
+    verif(page.locator(".ag-nav h2").inner_text() != titre, "mois suivant : " + page.locator(".ag-nav h2").inner_text())
+    page.click("[data-cp=agvue][data-v=semaine]"); page.wait_for_timeout(200)
+    verif(page.locator(".ag-case").count() == 7, "vue Semaine : sept jours")
+    verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
+
+    # 4. Téléphone : pas de bouton en double dans le menu caché ; l'agenda reste lisible.
+    page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-case")
+    verif(page.locator(".side .cp-actions").count() == 0, "téléphone : pas de « Nouvelle visite » dans le menu caché")
+    verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "téléphone : pas de défilement horizontal")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

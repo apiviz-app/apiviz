@@ -1,0 +1,51 @@
+/* ---------- Sélecteur de date maison (v5.35, calendrier.js) ---------- */
+input[type=date]{cursor:pointer}
+input[type=date]::-webkit-calendar-picker-indicator{display:none}
+input[type=date]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2355605A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v16H4zM4 10h16M9 3v4M15 3v4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px}
+
+.cal{position:fixed;inset:auto;width:320px;max-width:calc(100vw - 16px);margin:0;padding:14px;box-sizing:border-box;border:0;border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 16px 44px rgba(20,28,24,.28),0 0 0 1px rgba(30,43,36,.06);font-family:'Instrument Sans',system-ui,sans-serif}
+.cal[open]{display:flex;flex-direction:column;gap:10px;animation:cal-pop var(--duree-rapide) var(--sortie) both}
+.cal::backdrop{background:transparent;backdrop-filter:none}
+@keyframes cal-pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.cal-tete{display:none;align-items:center;justify-content:space-between}
+.cal-tete b{font-size:17px}
+.cal-x{width:40px;height:40px;border:0;border-radius:10px;background:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cal-raccourcis{display:flex;gap:6px;flex-wrap:wrap}
+.cal-raccourci{min-height:30px;padding:0 10px;border:0;border-radius:999px;background:#F1EEE2;color:var(--ink);font:600 12.5px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.cal-raccourci:hover{background:#E9E4D3}
+.cal-raccourci[aria-pressed=true]{background:var(--pine);color:#fff}
+.cal-raccourci:disabled{opacity:.4;cursor:default}
+.cal-nav{display:flex;align-items:center;justify-content:space-between}
+.cal-nav>span{display:flex;gap:2px}
+.cal-titre,.cal-pas{display:inline-flex;align-items:center;gap:4px;height:34px;border:0;border-radius:9px;background:none;color:var(--ink);cursor:pointer}
+.cal-titre{padding:0 8px;margin-left:-8px;font:700 15px 'Instrument Sans',system-ui,sans-serif}
+.cal-pas{width:34px;justify-content:center}
+.cal-titre:hover,.cal-pas:hover{background:#F1EEE2}
+.cal-grille{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:2px}
+.cal-grille>span{height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted)}
+.cal-j{height:38px;border:0;border-radius:10px;background:none;color:var(--ink);font:500 13.5px 'Instrument Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer}
+.cal-j:hover{background:var(--ground)}
+.cal-j.dehors{color:#A3AAA5}
+.cal-j.auj{box-shadow:inset 0 0 0 2px var(--honey);font-weight:700}
+.cal-j.choisi{background:var(--pine);color:#fff;font-weight:700;box-shadow:none}
+.cal-j:disabled{color:#C9CDC4;background:none;cursor:default;text-decoration:line-through}
+.cal-j:focus-visible{outline:3px solid var(--honey);outline-offset:1px}
+.cal-mois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cal-mois button{height:44px;border:0;border-radius:10px;background:var(--ground);color:var(--ink);font:600 13.5px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.cal-mois button[aria-pressed=true]{background:var(--pine);color:#fff}
+.cal-pied{display:flex;justify-content:flex-start;padding-top:8px;border-top:1px solid #EDEFE7}
+.cal-effacer{min-height:32px;padding:0 8px;margin-left:-8px;border:0;border-radius:9px;background:none;color:var(--muted);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.cal-effacer:hover{background:var(--ground);color:var(--ink)}
+
+/* Téléphone : feuille du bas, grosses cases. */
+.cal.feuille{inset:auto 0 0 0;width:100vw;max-width:100vw;padding:10px 16px calc(18px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;gap:12px}
+.cal.feuille::before{content:"";align-self:center;width:40px;height:4px;border-radius:2px;background:#D5D8CE}
+.cal.feuille::backdrop{background:rgba(20,28,24,.45)}
+.cal.feuille[open]{animation:cal-monte var(--duree) var(--sortie) both}
+@keyframes cal-monte{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.cal.feuille .cal-tete{display:flex}
+.cal.feuille .cal-raccourcis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.cal.feuille .cal-raccourci{min-height:40px;border-radius:10px;font-size:13px}
+.cal.feuille .cal-j{height:44px;font-size:15px;border-radius:12px}
+.cal.feuille .cal-pas{width:44px;height:44px}
+@media (prefers-reduced-motion:reduce){.cal[open],.cal.feuille[open]{animation:none}}
