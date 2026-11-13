@@ -1,0 +1,39 @@
+    # Recommandation UX n° 9 : retrouver une ruche. Code et origine saisissables (migration 016), recherche par code
+    # ou par simple numéro, fiches ouvertes récemment.
+    R3 = str(uuid.uuid4())
+    for r in DATA["ruches"]: r.setdefault("code", ""); r.setdefault("origine", "")
+    DATA["ruches"].append({"id": R3, "nom": "Ruche 3", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": "", "code": "", "origine": ""})
+    DATA["ruches"].append({"id": str(uuid.uuid4()), "nom": "Ruche 13", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": "", "code": "", "origine": ""})
+    maj = []
+    def ruches_patch(route):
+        if route.request.method != "PATCH": return route.fallback()
+        corps = route.request.post_data_json or {}
+        maj.append(corps)
+        for r in DATA["ruches"]:
+            if r["id"] == R3: r.update({k: v for k, v in corps.items() if k in r})
+        return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*"}, body="")
+    page.route("**/rest/v1/ruches*", ruches_patch)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    page.evaluate("ACT.editruche('%s')" % R3); page.wait_for_selector("#sheet[open] [name=code]", timeout=5000)
+    verif(page.locator("#sheet [name=origine] option").count() == 5, "formulaire : origine en 5 choix")
+    page.fill("#sheet [name=code]", "  B12 "); page.select_option("#sheet [name=origine]", "essaim")
+    page.click("#sheet button.main"); page.wait_for_timeout(1200)
+    verif(len(maj) == 1 and maj[0].get("code") == "B12" and maj[0].get("origine") == "essaim", "enregistré : code « B12 » (sans espaces) et origine essaim : %s" % maj)
+
+    page.evaluate("ACT.ruche('%s')" % R3)
+    page.wait_for_timeout(800)
+    verif(page.locator("text=n° B12").count() >= 1, "fiche : le code « n° B12 » est affiché")
+
+    page.evaluate("S.route='recherche'; render()"); page.wait_for_selector("#v3q", timeout=5000)
+    verif("Ouvertes récemment" in page.locator("#v3res").inner_text() and "Ruche 3" in page.locator("#v3res").inner_text(), "recherche vide : Ruche 3 dans « Ouvertes récemment »")
+    page.fill("#v3q", "b12"); page.wait_for_timeout(300)
+    t = page.locator("#v3res").inner_text()
+    verif("Ruche 3" in t and "n° B12" in t, "recherche « b12 » : Ruche 3, avec son code")
+    page.fill("#v3q", "3"); page.wait_for_timeout(300)
+    t = page.locator("#v3res").inner_text()
+    verif("Ruche 3" in t and "Ruche 13" not in t, "recherche « 3 » : Ruche 3 seulement, pas Ruche 13")
+    page.fill("#v3q", "9"); page.wait_for_timeout(300)
+    verif("Aucun résultat" in page.locator("#v3res").inner_text(), "recherche « 9 » : aucun résultat")
+    page.unroute("**/rest/v1/ruches*")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

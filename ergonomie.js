@@ -212,7 +212,7 @@ const ER = (() => {
   };
   function liste(q) {
     const t = V3.plat(q).trim();
-    if (t.length < 2) return '<p class="small er-aide">Ruche, client, lot, matériel, dépense, mot d’une note…</p>';
+    if (!(V3.assezLong ? V3.assezLong(q) : t.length >= 2)) return '<p class="small er-aide">Numéro de ruche, client, lot, matériel, dépense, mot d’une note…</p>';
     const groupes = [...V3.chercher(q)];
     const pages = PAGES.filter(([n]) => V3.plat(n).includes(t)).map(([x, v]) => ({ t: x, s: "", act: "go", v }));
     if (pages.length) groupes.push(["Aller à", pages]);
