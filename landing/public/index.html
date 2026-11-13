@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>apiviz — le carnet de rucher des apiculteurs</title>
+<meta name="description" content="apiviz suit vos colonies de la visite à la vente : observations au rucher, photos, transhumance, récoltes, stock de miel, ventes et comptes. Fonctionne même sans réseau.">
+<meta name="theme-color" content="#1E2B24">
+<meta property="og:title" content="apiviz — le carnet de rucher des apiculteurs">
+<meta property="og:description" content="Visites, photos, récoltes, ventes et comptes de vos ruchers, au même endroit. Même sans réseau.">
+<meta property="og:url" content="https://apiviz.fr/">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Ctitle%3EApiviz%3C/title%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22%231E2B24%22/%3E%3Cpolygon%20points%3D%22171.5%2C108.8%20340.5%2C108.8%20425.0%2C256.0%20340.5%2C403.2%20171.5%2C403.2%2087.0%2C256.0%22%20fill%3D%22%23E3A008%22/%3E%3Cpolygon%20points%3D%22217.1%2C188.3%20294.9%2C188.3%20333.7%2C256.0%20294.9%2C323.7%20217.1%2C323.7%20178.3%2C256.0%22%20fill%3D%22%231E2B24%22/%3E%3Cpolygon%20points%3D%22271.2%2C209.5%20290.6%2C209.5%20300.3%2C226.5%20290.6%2C243.4%20271.2%2C243.4%20261.4%2C226.5%22%20fill%3D%22%23FFF8E7%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:image" content="https://apiviz.fr/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --pine:#1E2B24;--pine2:#2C3D33;--pine3:#3A4F42;--pine4:#5C7466;
+  --honey:#E3A008;--honey-l:#F6C453;--wax:#FBF1D3;--wax2:#F6E5B4;
+  --ground:#F4F4EE;--ink:#1B2420;--muted:#56605A;--line:#DDE0D5;
+  --good:#1F7350;--watch:#B9500A;--crit:#A61B1B;
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --text:'Instrument Sans',system-ui,sans-serif;
+  --hex:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--ground);color:var(--ink);font:400 17px/1.55 var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-.02em}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--honey);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 24px;border-radius:12px;font:600 16px/1 var(--text);text-decoration:none;border:1.5px solid transparent;cursor:pointer;transition:background .15s,transform .12s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn.honey{background:var(--honey);color:var(--ink);box-shadow:0 8px 24px -10px rgba(227,160,8,.7)}
+.btn.honey:hover{background:#F0B021;box-shadow:0 12px 30px -10px rgba(227,160,8,.8)}
+.btn.line{border-color:rgba(255,255,255,.3);color:#fff}
+.btn.line:hover{background:rgba(255,255,255,.08)}
+.btn.sm{min-height:40px;padding:0 16px;font-size:15px;box-shadow:none}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.tag::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.tag.good{color:var(--good);background:#E3F2EA}.tag.watch{color:var(--watch);background:#FDEBDD}.tag.crit{color:var(--crit);background:#FBE6E6}
+
+/* En-tête */
+.top{position:fixed;inset:0 0 auto;z-index:40;color:#fff;transition:background .25s,box-shadow .25s}
+.top.scrolled{background:rgba(30,43,36,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 0 rgba(255,255,255,.06)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 24px/1 var(--display);letter-spacing:-.03em}
+.logo .wm{height:30px;width:auto;display:block}
+.top nav{display:flex;align-items:center;gap:28px;font-size:15px;font-weight:500}
+.top nav a{text-decoration:none;color:#D5DDD7}
+.top nav a:hover{color:#fff}
+.top nav .btn{color:var(--ink)}
+
+/* Héros */
+.hero{position:relative;background:var(--pine);color:#fff;padding:136px 0 96px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='146' viewBox='0 0 84 146'%3E%3Cpath d='M42 0l42 24v49L42 97 0 73V24zM42 97v49M0 24L-42 0M84 24l42-24' fill='none' stroke='%23fff' stroke-opacity='.045' stroke-width='2'/%3E%3C/svg%3E");mask-image:radial-gradient(ellipse at 70% 40%,#000 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 70% 40%,#000 20%,transparent 70%)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:56px;align-items:center}
+.hero h1{font-size:clamp(44px,6.4vw,84px);line-height:.96;font-weight:800;letter-spacing:-.04em;max-width:10ch}
+.hero .lead{margin-top:26px;font-size:20px;line-height:1.5;color:#C9D2CB;max-width:32em}
+.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.platforms{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:30px;font-size:14px;color:#9FADA4}
+.platforms span{display:inline-flex;align-items:center;gap:7px}
+.platforms svg{width:16px;height:16px;stroke:var(--honey-l);fill:none;stroke-width:2}
+
+.bee{position:absolute;width:30px;height:30px;top:0;left:0;z-index:3;pointer-events:none;offset-path:path("M 40 360 C 160 120, 360 40, 520 140 S 700 420, 560 470 S 300 300, 420 200");offset-rotate:auto;animation:fly 14s linear infinite}
+@keyframes fly{to{offset-distance:100%}}
+.bee .w{transform-origin:15px 12px;animation:flap .12s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(.4)}}
+
+.app{position:relative;background:#F4F4EE;color:var(--ink);border-radius:20px;box-shadow:0 40px 90px -30px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.06);overflow:hidden;transform:perspective(1400px) rotateY(-6deg) rotateX(3deg);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.app:hover{transform:perspective(1400px) rotateY(0) rotateX(0)}
+.app-bar{display:flex;align-items:center;gap:6px;padding:12px 16px;background:#E9EAE2}
+.app-bar i{width:10px;height:10px;border-radius:50%;background:#C9CDC1}
+.app-bar span{margin-left:10px;font-size:12px;color:var(--muted);background:#fff;border-radius:6px;padding:3px 10px}
+.app-body{padding:20px}
+.app-head{background:var(--pine);color:#fff;border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.app-head b{font:800 22px/1.1 var(--display)}
+.app-head small{display:block;color:#C9D2CB;font-size:12.5px;margin-top:3px}
+.app-head .chip{background:var(--honey);color:var(--ink);font-weight:600;font-size:12.5px;padding:7px 12px;border-radius:9px;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.kpi{background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(30,43,36,.05)}
+.kpi small{display:block;font-size:11.5px;color:var(--muted);font-weight:600}
+.kpi b{font:800 22px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.app-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-top:12px}
+.panel{background:#fff;border-radius:12px;padding:12px 14px;min-width:0}
+.panel h5{margin:0 0 8px;font:700 13px/1.2 var(--text)}
+.comb{display:flex;flex-direction:column;align-items:flex-start;width:max-content;margin:4px auto 0}
+.row{display:flex;gap:4px;margin-top:-11px}
+.row:first-child{margin-top:0}
+.row:nth-child(even){margin-left:31px}
+.cell{width:58px;height:50px;border:0;padding:0 5px;clip-path:var(--hex);color:#fff;font:600 10.5px/1.1 var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .15s,transform .15s}
+.cell:hover{filter:brightness(1.15)}
+.cell[aria-pressed="true"]{transform:scale(1.12);filter:brightness(1.2);z-index:2}
+.cell.good{background:var(--good)}.cell.watch{background:var(--watch)}.cell.crit{background:var(--crit)}
+.cell.empty{background:#ECEEE6;cursor:default}
+.peek .h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.peek b{font:700 16px/1.2 var(--display)}
+.peek dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0 0;font-size:12.5px}
+.peek dt{color:var(--muted)}
+.peek dd{margin:0;font-weight:600}
+.peek .tag{font-size:11px;padding:2px 8px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  .cell:not(.empty){animation:fill .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*60ms + 300ms)}
+  @keyframes fill{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+  .hero .reveal{animation:up .8s cubic-bezier(.2,.8,.2,1) both}
+  .hero .reveal:nth-child(2){animation-delay:.08s}.hero .reveal:nth-child(3){animation-delay:.16s}.hero .reveal:nth-child(4){animation-delay:.24s}
+  @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+}
+
+/* Manifeste */
+.manifesto{padding:140px 0 120px}
+.manifesto p{font:600 clamp(28px,3.6vw,46px)/1.22 var(--display);letter-spacing:-.025em;max-width:24ch}
+.manifesto .w{color:#C3C8BE;transition:color .3s}
+.manifesto .w.on{color:var(--ink)}
+.manifesto .w.hl.on{color:var(--watch)}
+.manifesto .sign{margin-top:36px;display:flex;gap:40px;flex-wrap:wrap;font-size:16px;color:var(--muted);max-width:60em}
+.manifesto .sign div{max-width:22em}
+.manifesto .sign b{display:block;color:var(--ink);font:700 18px/1.3 var(--display);margin-bottom:4px}
+
+/* Récit au défilement */
+.story{background:var(--wax);padding:120px 0}
+.story .head{max-width:640px}
+.story h2,.sec h2{font-size:clamp(34px,4.4vw,54px);line-height:1.02;font-weight:800;letter-spacing:-.035em}
+.story .head p,.sec .sub{margin-top:18px;font-size:19px;color:var(--muted);max-width:36em}
+.story-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:80px;margin-top:40px}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.32;transition:opacity .4s}
+.steps li.on{opacity:1}
+.steps .when{font-size:14px;font-weight:600;color:var(--watch);margin-bottom:10px}
+.steps h3{font:800 clamp(26px,2.8vw,36px)/1.1 var(--display);letter-spacing:-.025em;max-width:16ch}
+.steps p{margin-top:14px;font-size:18px;color:#4A544E;max-width:28em}
+.phone-wrap{position:sticky;top:calc(50vh - 330px);height:660px}
+.phone{position:relative;width:330px;height:660px;margin:0 auto;background:var(--pine);border-radius:48px;padding:12px;box-shadow:0 50px 90px -35px rgba(30,43,36,.6)}
+.phone::before{content:"";position:absolute;top:22px;left:50%;width:90px;height:24px;margin-left:-45px;background:var(--pine);border-radius:14px;z-index:5}
+.screens{position:relative;height:100%;border-radius:38px;overflow:hidden;background:var(--ground)}
+.screen{position:absolute;inset:0;padding:56px 18px 18px;font-size:13.5px;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .45s,transform .55s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.screen.on{opacity:1;transform:none}
+.screen h4{font:800 23px/1.1 var(--display);letter-spacing:-.02em}
+.screen .s{color:var(--muted);margin:2px 0 14px;font-size:12.5px}
+.sbar{position:absolute;top:18px;left:28px;right:28px;display:flex;justify-content:space-between;font-size:12px;font-weight:600;z-index:6}
+.sbar .net{color:var(--good)}
+.sbar .net.off{color:var(--watch)}
+.card{background:#fff;border-radius:13px;padding:11px 13px;box-shadow:0 1px 2px rgba(30,43,36,.05);margin-top:8px}
+.todo{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #EDEFE7}
+.todo:first-of-type{border-top:0}
+.todo b{flex:none;font-size:11.5px;width:66px}
+.mini-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini-kpis .card{margin:0}
+.mini-kpis small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.mini-kpis b{font:800 20px/1.2 var(--display)}
+.q{margin-top:10px}
+.q .t{font-weight:600;margin-bottom:5px;font-size:12px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.seg span{min-height:34px;display:flex;align-items:center;justify-content:center;border:1px solid #C9CDC1;border-radius:9px;background:#fff;font-weight:600;font-size:12px}
+.seg span.on{background:var(--pine);border-color:var(--pine);color:#fff}
+.stepper{display:flex;justify-content:space-between;align-items:center}
+.stepper .c{display:flex;gap:6px;align-items:center;font-weight:700}
+.stepper .c i{width:30px;height:30px;border:1px solid #C9CDC1;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.thumbs i{aspect-ratio:1;border-radius:10px;background:linear-gradient(135deg,#E2B33B,#8A5A12);position:relative;overflow:hidden}
+.thumbs i:nth-child(2){background:linear-gradient(160deg,#C9B07A,#6B4B1E)}
+.thumbs i:nth-child(3){background:linear-gradient(120deg,#E8C770,#A5741C)}
+.thumbs i:nth-child(4){background:linear-gradient(140deg,#B98A2E,#5E3D0E)}
+.thumbs i::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='42' viewBox='0 0 24 42'%3E%3Cpath d='M12 0l12 7v14l-12 7L0 21V7z' fill='none' stroke='%23fff' stroke-opacity='.22' stroke-width='1.5'/%3E%3C/svg%3E")}
+.thumbs i.up::before{content:"Envoi…";position:absolute;left:0;right:0;bottom:0;z-index:1;background:rgba(20,28,24,.7);color:#fff;font-size:10px;text-align:center;padding:2px 0;font-style:normal}
+.thumbs i.add{background:#fff;border:1.5px dashed #C9CDC1;display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--muted);font-size:22px}
+.thumbs i.add::after{display:none}
+.sync{display:flex;align-items:center;gap:10px}
+.sync .dot{width:28px;height:28px;flex:none;border-radius:50%;background:var(--wax);display:flex;align-items:center;justify-content:center;font-size:13px}
+.sync .dot.ok{background:#E3F2EA;color:var(--good)}
+.map{position:relative;height:150px;border-radius:12px;background:#E6EADF;overflow:hidden;margin-top:8px}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-100%);background:var(--pine);color:#fff;font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:7px;white-space:nowrap}
+.pin.to{background:var(--honey);color:var(--ink)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:110px;margin-top:8px}
+.bars i{flex:1;background:var(--honey);border-radius:4px 4px 0 0;height:var(--h);transform-origin:bottom;transform:scaleY(.05);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.screen.on .bars i{transform:scaleY(1)}
+.bars i:nth-child(n){transition-delay:calc(var(--d)*50ms)}
+.axis{display:flex;gap:5px;font-size:9.5px;color:var(--muted);margin-top:4px}
+.axis span{flex:1;text-align:center}
+
+/* Sections génériques */
+.sec{padding:120px 0}
+.sec.dark{background:var(--pine);color:#fff}
+.sec.dark .sub{color:#C9D2CB}
+
+/* Démo hors ligne */
+.offline-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:center}
+.lab{background:var(--pine2);border-radius:22px;padding:26px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.lab-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.switch{display:flex;align-items:center;gap:12px;background:none;border:0;cursor:pointer;padding:0;font-weight:600}
+.switch .track{width:56px;height:32px;border-radius:16px;background:var(--good);position:relative;transition:background .2s}
+.switch .track::after{content:"";position:absolute;top:4px;left:28px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.switch[aria-checked="false"] .track{background:#6B776F}
+.switch[aria-checked="false"] .track::after{left:4px}
+.lab .btn{margin-top:20px;width:100%}
+.flow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin-top:24px}
+.node{background:var(--pine);border-radius:14px;padding:14px;text-align:center;font-size:14px;color:#C9D2CB;min-height:118px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.node b{color:#fff;font:700 15px/1.2 var(--display)}
+.node .n{font:800 34px/1 var(--display);color:var(--honey-l);font-variant-numeric:tabular-nums}
+.wire{position:relative;width:70px;height:4px;background:var(--pine3);border-radius:2px;overflow:hidden}
+.wire.cut{background:repeating-linear-gradient(90deg,var(--pine3) 0 8px,transparent 8px 14px)}
+.wire i{position:absolute;top:0;left:-20px;width:20px;height:4px;background:var(--honey);border-radius:2px;opacity:0}
+.wire.flowing i{animation:pkt .7s linear infinite;opacity:1}
+@keyframes pkt{to{left:70px}}
+.log{margin-top:18px;font-size:14px;color:#C9D2CB;min-height:22px}
+.lab-points{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:16px}
+.lab-points li{display:grid;grid-template-columns:32px 1fr;gap:12px;color:#C9D2CB}
+.lab-points li::before{content:"";width:26px;height:22px;margin-top:3px;background:var(--honey);clip-path:var(--hex)}
+.lab-points b{color:#fff;display:block}
+
+/* Saison */
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:44px}
+.months button{min-height:64px;border:0;border-radius:12px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:14px;transition:background .15s,transform .15s;box-shadow:0 1px 2px rgba(30,43,36,.06)}
+.months button:hover{transform:translateY(-2px)}
+.months button i{width:100%;max-width:34px;height:5px;border-radius:3px;background:var(--line)}
+.months button i.l1{background:#F3D27A}.months button i.l2{background:var(--honey)}.months button i.l3{background:var(--watch)}
+.months button[aria-pressed="true"]{background:var(--pine);color:#fff}
+.season{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:32px;margin-top:22px;background:#fff;border-radius:22px;padding:32px;box-shadow:0 1px 2px rgba(30,43,36,.05),0 20px 40px -30px rgba(30,43,36,.3)}
+.season h3{font:800 34px/1.05 var(--display);letter-spacing:-.03em}
+.season .phase{margin-top:8px;color:var(--watch);font-weight:600}
+.season .desc{margin-top:14px;color:#4A544E}
+.season ul{list-style:none;margin:0;padding:0}
+.season li{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:12px 0;border-top:1px solid #EDEFE7}
+.season li:first-child{border-top:0}
+.season li .ck{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);margin-top:1px}
+.season li b{display:block}
+.season li span{font-size:15px;color:var(--muted)}
+.season-swap{animation:swap .35s ease both}
+@keyframes swap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Pilotage */
+.dash{margin-top:48px;background:var(--pine2);border-radius:22px;padding:28px}
+.tabs{display:inline-flex;background:var(--pine);border-radius:12px;padding:4px;gap:4px}
+.tabs button{min-height:40px;border:0;border-radius:9px;background:none;padding:0 18px;font-weight:600;color:#C9D2CB;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--honey);color:var(--ink)}
+.dash-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+.dk{background:var(--pine);border-radius:14px;padding:16px}
+.dk small{display:block;color:#9FADA4;font-size:13px;font-weight:600}
+.dk b{display:block;font:800 30px/1.2 var(--display);margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dk span{font-size:13px;color:#9FADA4}
+.chart{background:var(--pine);border-radius:14px;padding:18px 18px 12px;margin-top:12px}
+.chart h5{margin:0 0 14px;font:600 14px var(--text);color:#C9D2CB}
+.cbars{display:flex;align-items:flex-end;gap:8px;height:180px}
+.cbars i{flex:1;border-radius:6px 6px 0 0;background:var(--honey);height:0;transition:height .8s cubic-bezier(.2,.8,.2,1);position:relative}
+.cbars i.alt{background:#4FA37B}
+.cbars i:hover::after{content:attr(data-v);position:absolute;bottom:100%;left:50%;transform:translate(-50%,-6px);background:#fff;color:var(--ink);font-size:12px;font-weight:600;padding:3px 7px;border-radius:6px;white-space:nowrap;font-style:normal}
+.caxis{display:flex;gap:8px;margin-top:8px;font-size:12px;color:#9FADA4}
+.caxis span{flex:1;text-align:center}
+.demo-note{margin-top:12px;font-size:13px;color:#9FADA4}
+
+/* Fonctions */
+.domains{margin-top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-radius:20px;overflow:hidden}
+.domain{background:var(--ground);padding:28px 24px;transition:background .2s}
+.domain:hover{background:#fff}
+.domain svg{width:30px;height:30px;stroke:var(--watch);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.domain h3{font:700 20px/1.25 var(--display);margin-top:16px}
+.domain p{margin-top:8px;color:#4A544E;font-size:15.5px}
+
+/* Feuille de route */
+.timeline{margin-top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));list-style:none;padding:0}
+.timeline li{position:relative;padding:30px 28px 0 0;border-top:2px solid var(--pine3)}
+.timeline li::before{content:"";position:absolute;top:-10px;left:0;width:20px;height:18px;background:var(--pine3);clip-path:var(--hex)}
+.timeline li.done{border-top-color:var(--honey)}
+.timeline li.done::before,.timeline li.now::before{background:var(--honey)}
+.timeline li.now::after{content:"";position:absolute;top:-16px;left:-6px;width:32px;height:30px;background:var(--honey);clip-path:var(--hex);opacity:.35;animation:pulse 2s ease-out infinite}
+@keyframes pulse{from{transform:scale(.6);opacity:.6}to{transform:scale(1.4);opacity:0}}
+.timeline .when{font-size:14px;font-weight:600;color:var(--honey-l)}
+.timeline li:not(.done):not(.now) .when{color:#9FADA4}
+.timeline h3{font:700 21px/1.25 var(--display);margin:6px 0 8px}
+.timeline p{font-size:15px;color:#C9D2CB}
+
+/* Fin */
+.end{position:relative;padding:140px 0;text-align:center;overflow:hidden}
+.end h2{font-size:clamp(38px,5.4vw,70px);line-height:1;font-weight:800;letter-spacing:-.04em;max-width:14ch;margin:0 auto}
+.end .sub{margin:20px auto 0;font-size:19px;color:var(--muted);max-width:32em}
+.end .cta{margin-top:36px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.end .btn.dk{background:var(--pine);color:#fff}
+.end .btn.dk:hover{background:var(--pine2)}
+.end .floaty{position:absolute;width:120px;height:104px;clip-path:var(--hex);background:var(--wax2);z-index:-1}
+footer{border-top:1px solid var(--line);padding:32px 0 40px;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+footer .logo{font-size:18px;color:var(--ink)}
+footer .logo .wm{height:22px}
+
+/* Apparition au défilement */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+@media (max-width:1000px){
+  .hero .wrap,.offline-grid,.season{grid-template-columns:1fr}
+  .app{transform:none}
+  .domains{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dash-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .timeline{grid-template-columns:1fr 1fr;row-gap:40px}
+  .months{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .story-grid{grid-template-columns:1fr;gap:0}
+  .phone-wrap{top:76px;height:auto;z-index:1;order:-1}
+  .phone{width:230px;height:350px;border-radius:34px;padding:8px;-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+  .screens{height:440px}
+  .phone::before{top:14px;width:64px;height:18px;margin-left:-32px}
+  .screens{border-radius:27px}
+  .phone-wrap{display:flex;justify-content:center}
+  .screen{padding:42px 12px 12px;font-size:11.5px;transform-origin:top center}
+  .screen h4{font-size:18px}
+  .steps li{min-height:auto;padding:0 0 38vh;justify-content:flex-start;position:relative;z-index:2;opacity:.25}
+  .steps li:first-child{padding-top:24px}
+  .steps li:last-child{padding-bottom:40px}
+  .steps li>div{background:var(--wax);padding:20px 0;box-shadow:0 -30px 30px -10px var(--wax)}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .wrap{padding:0 20px}
+  .top nav a:not(.btn){display:none}
+  .hero{padding:110px 0 72px}
+  .hero .lead{font-size:18px}
+  .app-body{padding:12px}
+  .kpi b{font-size:18px}
+  .app-grid{grid-template-columns:1fr}
+  .manifesto{padding:96px 0 80px}
+  .story,.sec,.end{padding:84px 0}
+  .domains,.dash-grid,.timeline{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr;justify-items:center}
+  .wire{width:4px;height:40px}
+  .wire i{width:4px;height:12px;left:0;top:-12px}
+  @keyframes pkt{to{top:40px}}
+  .node{width:100%}
+  .months{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .season{padding:22px}
+  .bee{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .rv{opacity:1;transform:none}
+  .bee{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="apiviz, accueil"><svg class="wm" role="img" aria-label="apiviz" xmlns="http://www.w3.org/2000/svg" viewBox="-20 -800 2578 968"><path d="M175 14Q135 14 99.0 0.0Q63 -14 40.0 -45.5Q17 -77 17 -130Q17 -179 36.0 -209.5Q55 -240 87.0 -258.5Q119 -277 157.0 -286.5Q195 -296 232 -303Q284 -313 310.0 -319.0Q336 -325 345.5 -333.0Q355 -341 355 -355Q355 -384 333.5 -399.0Q312 -414 277 -414Q255 -414 233.0 -406.0Q211 -398 197.0 -377.5Q183 -357 184 -319L40 -329Q38 -392 59.0 -433.5Q80 -475 116.5 -498.5Q153 -522 196.5 -532.0Q240 -542 283 -542Q362 -542 413.0 -512.5Q464 -483 488.5 -427.5Q513 -372 513 -293V-199Q513 -166 513.0 -132.5Q513 -99 513.0 -66.0Q513 -33 513 0H373Q373 -36 373.0 -73.0Q373 -110 373 -151H367Q363 -106 337.5 -68.5Q312 -31 270.5 -8.5Q229 14 175 14ZM242 -104Q259 -104 278.5 -110.5Q298 -117 315.5 -132.0Q333 -147 344.0 -173.5Q355 -200 355 -239V-263L382 -266Q374 -253 355.5 -245.0Q337 -237 314.0 -232.5Q291 -228 267.5 -223.5Q244 -219 224.0 -211.5Q204 -204 191.5 -191.5Q179 -179 179 -157Q179 -131 197.5 -117.5Q216 -104 242 -104Z M567 148V-340V-528H709V-365H716Q727 -424 749.0 -463.5Q771 -503 805.5 -522.5Q840 -542 889 -542Q951 -542 994.5 -510.5Q1038 -479 1060.5 -417.5Q1083 -356 1083 -266Q1083 -169 1057.5 -107.0Q1032 -45 988.0 -15.5Q944 14 888 14Q843 14 808.5 -5.0Q774 -24 751.5 -63.5Q729 -103 720 -163H711Q716 -134 720.0 -102.5Q724 -71 726.5 -40.5Q729 -10 729 18V148ZM827 -119Q859 -119 879.5 -139.0Q900 -159 909.5 -191.5Q919 -224 919 -260Q919 -300 908.5 -332.5Q898 -365 877.5 -384.5Q857 -404 827 -404Q808 -404 790.0 -395.5Q772 -387 758.0 -369.5Q744 -352 735.5 -325.0Q727 -298 727 -260V-254Q727 -224 733.0 -202.0Q739 -180 749.0 -164.0Q759 -148 772.0 -138.0Q785 -128 799.0 -123.5Q813 -119 827 -119Z M1129 0V-528H1291V0Z M1477 0 1318 -528H1490L1581 -134H1585L1680 -528H1842L1683 0Z M1869 0V-528H2031V0Z M2075 0V-136L2326 -392V-398H2080V-528H2515V-391L2264 -134V-130H2518V0Z" fill="#FFF8E7"/><polygon points="1157.5,-780.0 1262.5,-780.0 1315.0,-689.0 1262.5,-598.0 1157.5,-598.0 1105.0,-689.0" fill="#E3A008"/><polygon points="1897.5,-780.0 2002.5,-780.0 2055.0,-689.0 2002.5,-598.0 1897.5,-598.0 1845.0,-689.0" fill="#E3A008"/></svg></a>
+    <nav aria-label="Navigation principale">
+      <a href="#projet">Le projet</a>
+      <a href="#journee">Au rucher</a>
+      <a href="#saison">La saison</a>
+      <a href="#feuille-de-route">Feuille de route</a>
+      <a class="btn honey sm" data-app href="#">Demander un accès</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- Héros -->
+<section class="hero">
+  <svg class="bee" viewBox="0 0 30 30" aria-hidden="true">
+    <g class="w"><ellipse cx="11" cy="9" rx="6" ry="4" fill="#fff" fill-opacity=".7"/><ellipse cx="19" cy="9" rx="6" ry="4" fill="#fff" fill-opacity=".55"/></g>
+    <ellipse cx="15" cy="17" rx="9" ry="6.5" fill="#E3A008"/>
+    <path d="M12 11.5v11M16 11v12M20 12v10" stroke="#1E2B24" stroke-width="2.2"/>
+    <circle cx="24" cy="16" r="3" fill="#1E2B24"/>
+  </svg>
+  <div class="wrap">
+    <div>
+      <h1 class="reveal">Toutes vos ruches, d'un coup d'œil.</h1>
+      <p class="lead reveal">apiviz est le carnet de rucher numérique des apiculteurs. Visites, photos, transhumances, récoltes, ventes et comptes : tout au même endroit, même sans réseau au fond du rucher.</p>
+      <div class="cta reveal">
+        <a class="btn honey" data-app href="#">Demander un accès</a>
+        <a class="btn line" href="#journee">Voir comment ça marche</a>
+      </div>
+      <div class="platforms reveal">
+        <span><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>Téléphone</span>
+        <span><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg>Ordinateur</span>
+        <span><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18"/></svg>Hors ligne</span>
+      </div>
+    </div>
+
+    <div class="app" aria-label="Aperçu interactif de l'accueil d'apiviz">
+      <div class="app-bar"><i></i><i></i><i></i><span>apiviz.fr</span></div>
+      <div class="app-body">
+        <div class="app-head"><div><b>Bonjour</b><small>13 ruches · 4 à surveiller · 3 tâches à faire</small></div><span class="chip">Nouvelle visite</span></div>
+        <div class="kpis">
+          <div class="kpi"><small>Miel en stock</small><b data-count="184">0</b> <small style="display:inline">kg</small></div>
+          <div class="kpi"><small>Ventes 2026</small><b data-count="3420" data-suffix=" €">0</b></div>
+          <div class="kpi"><small>Pots en stock</small><b data-count="368">0</b></div>
+        </div>
+        <div class="app-grid">
+          <div class="panel"><h5>État des ruches</h5><div class="comb" id="comb" role="group" aria-label="Touchez une ruche pour voir sa fiche"></div></div>
+          <div class="panel peek" id="peek" aria-live="polite"></div>
+        </div>
+        <p class="hint">Touchez une ruche pour ouvrir sa fiche. Données d'exemple.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Manifeste -->
+<section class="manifesto" id="projet">
+  <div class="wrap">
+    <p id="manif">Un apiculteur passe ses journées au rucher, les mains dans les cadres, loin de tout réseau. Ses notes finissent sur un carnet taché de propolis, puis dans un tableur jamais à jour. apiviz remplace les deux par un seul outil, qu'on remplit en quelques gestes et qui aide à décider.</p>
+    <div class="sign rv">
+      <div><b>Pour qui</b>Les apiculteurs amateurs et les petites exploitations, de quelques ruches à plusieurs ruchers.</div>
+      <div><b>Pour quoi faire</b>Savoir quelle colonie surveiller, quand nourrir, combien de pots vendre et si la saison a été rentable.</div>
+      <div><b>Comment</b>Une application web qui s'installe sur l'écran d'accueil du téléphone, bientôt aussi sur l'App Store et Google Play.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Récit au défilement -->
+<section class="story" id="journee">
+  <div class="wrap">
+    <div class="head rv">
+      <h2>Une matinée au rucher avec apiviz</h2>
+      <p>Faites défiler : le téléphone suit votre tournée, de l'accueil jusqu'au bilan.</p>
+    </div>
+    <div class="story-grid">
+      <ol class="steps" id="steps">
+        <li data-s="0" class="on"><div><div class="when">7 h 30, avant de partir</div><h3>L'accueil vous dit quoi faire</h3><p>Les ruches à surveiller, les tâches du jour et les colonies pas visitées depuis longtemps remontent en premier.</p></div></li>
+        <li data-s="1"><div><div class="when">9 h, au rucher</div><h3>Une visite en quelques gestes</h3><p>Activité, provisions, reine, couvain, poids, varroa : un bouton par observation, gants compris. Les intrants utilisés sortent du stock tout seuls.</p></div></li>
+        <li data-s="2"><div><div class="when">9 h 10</div><h3>La photo vaut mieux qu'une note</h3><p>Jusqu'à dix photos par visite, réduites automatiquement pour ne pas saturer votre forfait. Elles restent rattachées au journal de la ruche.</p></div></li>
+        <li data-s="3"><div><div class="when">10 h, plus de réseau</div><h3>Rien n'est perdu</h3><p>Sans réseau, tout est gardé sur le téléphone. L'envoi part de lui-même dès que la connexion revient.</p></div></li>
+        <li data-s="4"><div><div class="when">11 h, départ en transhumance</div><h3>Déplacez vos colonies en une fois</h3><p>Choisissez les colonies et le rucher d'arrivée. L'historique des emplacements se tient tout seul, visite par visite.</p></div></li>
+        <li data-s="5"><div><div class="when">Le soir</div><h3>Le bilan se fait tout seul</h3><p>Récoltes, ventes, dépenses et trésorerie se calculent au fil de l'eau. Vous voyez où en est la saison sans ouvrir un tableur.</p></div></li>
+      </ol>
+      <div class="phone-wrap">
+        <div class="phone" aria-hidden="true">
+          <div class="sbar"><span>9:41</span><span class="net" id="pnet">Réseau</span></div>
+          <div class="screens">
+            <div class="screen on">
+              <h4>Bonjour</h4><div class="s">Mercredi 15 avril</div>
+              <div class="mini-kpis"><div class="card"><small>À surveiller</small><b style="color:var(--watch)">4</b></div><div class="card"><small>Tâches</small><b>3</b></div></div>
+              <div class="card"><div style="font-weight:700;font-size:12.5px;margin-bottom:4px">À faire</div>
+                <div class="todo"><b class="tag crit" style="font-size:10px">Urgent</b><span>Ruche 6 : reine absente</span></div>
+                <div class="todo"><b class="tag watch" style="font-size:10px">Visite</b><span>Ruche 11, pas vue depuis 14 j</span></div>
+                <div class="todo"><b class="tag good" style="font-size:10px">Tâche</b><span>Poser les hausses, rucher du Bois</span></div>
+              </div>
+            </div>
+            <div class="screen">
+              <h4>Nouvelle visite</h4><div class="s">Rucher du Bois · Ruche 7</div>
+              <div class="q"><div class="t">Activité</div><div class="seg"><span>Faible</span><span class="on">Normale</span><span>Forte</span></div></div>
+              <div class="q"><div class="t">Provisions</div><div class="seg"><span>Faibles</span><span>Moyennes</span><span class="on">Bonnes</span></div></div>
+              <div class="q"><div class="t">Reine</div><div class="seg"><span class="on">Vue</span><span>Œufs vus</span><span>Absente</span></div></div>
+              <div class="card stepper"><div><b>Sirop 50/50</b><div style="color:var(--muted);font-size:11px">12 L en stock</div></div><div class="c"><i>−</i>1<i>+</i></div></div>
+              <div class="card stepper"><div><b>Varroa</b><div style="color:var(--muted);font-size:11px">pour 100 abeilles</div></div><div class="c"><i>−</i>2<i>+</i></div></div>
+            </div>
+            <div class="screen">
+              <h4>Photos</h4><div class="s">Ruche 7 · 4 photos</div>
+              <div class="thumbs"><i></i><i></i><i class="up"></i><i></i><i class="add">+</i></div>
+              <div class="card" style="font-size:12px;color:var(--muted)">Photo réduite à 250 Ko au lieu de 11 Mo. Rattachée à la visite du 15 avril.</div>
+            </div>
+            <div class="screen">
+              <h4>En attente d'envoi</h4><div class="s">Aucune connexion</div>
+              <div class="card sync"><span class="dot">1</span><div><b>Visite Ruche 7</b><div style="font-size:11.5px;color:var(--muted)">Gardée sur le téléphone</div></div></div>
+              <div class="card sync"><span class="dot">2</span><div><b>3 photos</b><div style="font-size:11.5px;color:var(--muted)">Envoi au retour du réseau</div></div></div>
+              <div class="card sync"><span class="dot ok">✓</span><div><b>Visite Ruche 5</b><div style="font-size:11.5px;color:var(--muted)">Envoyée à 8 h 52</div></div></div>
+            </div>
+            <div class="screen">
+              <h4>Déplacer</h4><div class="s">3 colonies sélectionnées</div>
+              <div class="map">
+                <svg viewBox="0 0 300 150" preserveAspectRatio="none"><path d="M0 110 C60 90 90 120 150 95 S240 60 300 70" stroke="#CDD3C4" stroke-width="10" fill="none"/><path d="M70 105 C120 60 180 40 225 45" stroke="#E3A008" stroke-width="2.5" stroke-dasharray="6 5" fill="none"/></svg>
+                <span class="pin" style="left:23%;top:72%">Rucher du Bois</span>
+                <span class="pin to" style="left:75%;top:32%">Colza, Saint-Jean</span>
+              </div>
+              <div class="card" style="display:flex;justify-content:space-between"><span>Ruche 7, Ruche 9, Ruche 10</span><b style="color:var(--good)">Prêt</b></div>
+            </div>
+            <div class="screen">
+              <h4>Pilotage</h4><div class="s">Saison 2026</div>
+              <div class="mini-kpis"><div class="card"><small>Résultat</small><b>1 980 €</b></div><div class="card"><small>Miel récolté</small><b>412 kg</b></div></div>
+              <div class="card"><div style="font-weight:700;font-size:12.5px">Pots vendus par mois</div>
+                <div class="bars"><i style="--h:20%;--d:0"></i><i style="--h:15%;--d:1"></i><i style="--h:25%;--d:2"></i><i style="--h:35%;--d:3"></i><i style="--h:50%;--d:4"></i><i style="--h:80%;--d:5"></i><i style="--h:95%;--d:6"></i><i style="--h:70%;--d:7"></i><i style="--h:60%;--d:8"></i><i style="--h:55%;--d:9"></i><i style="--h:75%;--d:10"></i><i style="--h:100%;--d:11"></i></div>
+                <div class="axis"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Hors ligne -->
+<section class="sec dark" id="hors-ligne">
+  <div class="wrap offline-grid">
+    <div class="rv">
+      <h2>Pas de réseau au rucher ? Essayez.</h2>
+      <p class="sub">Coupez le réseau, enregistrez quelques visites, puis rallumez-le. C'est exactement ce que fait apiviz sur votre téléphone.</p>
+      <ul class="lab-points">
+        <li><div><b>Tout est gardé sur l'appareil</b>Les visites et les photos attendent dans une file sur le téléphone.</div></li>
+        <li><div><b>L'envoi repart tout seul</b>Au retour du réseau, au retour dans l'application et toutes les minutes.</div></li>
+        <li><div><b>Vous gardez la main</b>Ce qui attend reste visible jusqu'à ce que ce soit envoyé.</div></li>
+      </ul>
+    </div>
+    <div class="lab rv" role="group" aria-label="Démonstration du mode hors ligne">
+      <div class="lab-top">
+        <button class="switch" id="netSwitch" role="switch" aria-checked="true"><span class="track"></span><span id="netLabel">Réseau disponible</span></button>
+      </div>
+      <div class="flow">
+        <div class="node"><b>Votre téléphone</b><span class="n" id="qCount">0</span>en attente</div>
+        <div class="wire" id="wire"><i></i></div>
+        <div class="node"><b>Votre compte</b><span class="n" id="sCount">0</span>visites enregistrées</div>
+      </div>
+      <button class="btn honey" id="addVisit">Enregistrer une visite</button>
+      <p class="log" id="log" aria-live="polite">Coupez le réseau pour voir la différence.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Saison -->
+<section class="sec" id="saison">
+  <div class="wrap">
+    <div class="rv">
+      <h2>Une saison apicole, mois par mois</h2>
+      <p class="sub">apiviz suit le rythme des abeilles. Choisissez un mois pour voir ce que l'application vous aide à préparer.</p>
+    </div>
+    <div class="months rv" id="months" role="group" aria-label="Mois de l'année"></div>
+    <div class="season rv" id="season" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- Pilotage -->
+<section class="sec dark" id="pilotage">
+  <div class="wrap">
+    <div class="rv">
+      <h2>Vos chiffres, sans tableur</h2>
+      <p class="sub">Chaque visite, récolte, vente ou dépense alimente vos tableaux de bord. Deux vues : le financier pour la trésorerie, l'opérationnel pour les colonies.</p>
+    </div>
+    <div class="dash rv">
+      <div class="tabs" role="tablist" aria-label="Vue du pilotage">
+        <button role="tab" aria-selected="true" data-tab="fin">Financier</button>
+        <button role="tab" aria-selected="false" data-tab="ops">Opérationnel</button>
+      </div>
+      <div class="dash-grid" id="dk"></div>
+      <div class="chart"><h5 id="chartTitle"></h5><div class="cbars" id="cbars"></div><div class="caxis"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div></div>
+      <p class="demo-note">Données d'exemple pour un rucher de 13 colonies. Survolez les barres pour voir les valeurs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Fonctions -->
+<section class="sec" id="fonctions">
+  <div class="wrap">
+    <div class="rv">
+      <h2>De la colonie au pot vendu</h2>
+      <p class="sub">Tout le cycle de l'apiculteur dans une seule application.</p>
+    </div>
+    <div class="domains rv">
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M12 8l3.46 2v4L12 16l-3.46-2v-4z"/></svg><h3>Colonies et ruchers</h3><p>Une fiche par colonie : état, reine, historique, emplacement à n'importe quelle date.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M4 18c4-8 12-8 16-12"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="6" r="2"/></svg><h3>Transhumance</h3><p>Plusieurs colonies déplacées en une fois, historique des emplacements automatique.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><h3>Visites</h3><p>Observations, poids, varroa, intrants, photos. Le journal de chaque ruche se construit seul.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><h3>Agenda et tâches</h3><p>Nourrissements, traitements, contrôles, ruche par ruche, avec les priorités à l'accueil.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 4H8z"/><path d="M6 8h12v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/></svg><h3>Récoltes et stock</h3><p>Récoltes par ruche ou par rucher, lots, miel en stock en kilos et en pots.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M3 11h18"/><circle cx="16" cy="15" r="1.5"/></svg><h3>Ventes et dépenses</h3><p>Ventes, encaissements en attente, dépenses par fournisseur, trésorerie calculée.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>Pilotage</h3><p>Rendement par ruche, résultat de l'année, prévisions et budget.</p></div>
+      <div class="domain"><svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12z"/><path d="M9 21v-6h6v6"/></svg><h3>Matériel et intrants</h3><p>Ruches physiques, consommables et leur autonomie au rythme actuel.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Feuille de route -->
+<section class="sec dark" id="feuille-de-route">
+  <div class="wrap">
+    <div class="rv">
+      <h2>Où en est le projet</h2>
+      <p class="sub">apiviz avance par étapes, chaque version est testée sur le terrain avant sa mise en ligne.</p>
+    </div>
+    <ol class="timeline rv">
+      <li class="done"><div class="when">En service</div><h3>Le carnet de rucher</h3><p>Ruches, visites, récoltes, ventes, dépenses, tâches et tableaux de pilotage.</p></li>
+      <li class="done"><div class="when">En service</div><h3>Terrain et hors ligne</h3><p>Photos de visite, saisie sans réseau avec envoi différé, gestion des ruchers.</p></li>
+      <li class="now"><div class="when">En cours</div><h3>Transhumance et matériel</h3><p>Déplacements de colonies, historique des emplacements, ruches physiques.</p></li>
+      <li><div class="when">Ensuite</div><h3>Applications mobiles</h3><p>apiviz sur l'App Store et Google Play, à partir du même code que la version web.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="end">
+  <span class="floaty" style="left:6%;top:18%" data-par="0.12"></span>
+  <span class="floaty" style="right:8%;top:52%;width:80px;height:70px" data-par="-0.08"></span>
+  <span class="floaty" style="left:18%;bottom:8%;width:56px;height:49px;background:#F3D27A" data-par="0.18"></span>
+  <div class="wrap rv">
+    <h2>Votre prochaine visite, déjà notée.</h2>
+    <p class="sub">apiviz s'ouvre progressivement. Écrivez-nous à <a href="mailto:contact@apiviz.fr">contact@apiviz.fr</a> pour obtenir un accès et suivre le lancement.</p>
+    <div class="cta">
+      <a class="btn honey" data-app href="#">Demander un accès</a>
+      <a class="btn dk" href="#journee">Revoir la tournée</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="apiviz, accueil"><svg class="wm" role="img" aria-label="apiviz" xmlns="http://www.w3.org/2000/svg" viewBox="-20 -800 2578 968"><path d="M175 14Q135 14 99.0 0.0Q63 -14 40.0 -45.5Q17 -77 17 -130Q17 -179 36.0 -209.5Q55 -240 87.0 -258.5Q119 -277 157.0 -286.5Q195 -296 232 -303Q284 -313 310.0 -319.0Q336 -325 345.5 -333.0Q355 -341 355 -355Q355 -384 333.5 -399.0Q312 -414 277 -414Q255 -414 233.0 -406.0Q211 -398 197.0 -377.5Q183 -357 184 -319L40 -329Q38 -392 59.0 -433.5Q80 -475 116.5 -498.5Q153 -522 196.5 -532.0Q240 -542 283 -542Q362 -542 413.0 -512.5Q464 -483 488.5 -427.5Q513 -372 513 -293V-199Q513 -166 513.0 -132.5Q513 -99 513.0 -66.0Q513 -33 513 0H373Q373 -36 373.0 -73.0Q373 -110 373 -151H367Q363 -106 337.5 -68.5Q312 -31 270.5 -8.5Q229 14 175 14ZM242 -104Q259 -104 278.5 -110.5Q298 -117 315.5 -132.0Q333 -147 344.0 -173.5Q355 -200 355 -239V-263L382 -266Q374 -253 355.5 -245.0Q337 -237 314.0 -232.5Q291 -228 267.5 -223.5Q244 -219 224.0 -211.5Q204 -204 191.5 -191.5Q179 -179 179 -157Q179 -131 197.5 -117.5Q216 -104 242 -104Z M567 148V-340V-528H709V-365H716Q727 -424 749.0 -463.5Q771 -503 805.5 -522.5Q840 -542 889 -542Q951 -542 994.5 -510.5Q1038 -479 1060.5 -417.5Q1083 -356 1083 -266Q1083 -169 1057.5 -107.0Q1032 -45 988.0 -15.5Q944 14 888 14Q843 14 808.5 -5.0Q774 -24 751.5 -63.5Q729 -103 720 -163H711Q716 -134 720.0 -102.5Q724 -71 726.5 -40.5Q729 -10 729 18V148ZM827 -119Q859 -119 879.5 -139.0Q900 -159 909.5 -191.5Q919 -224 919 -260Q919 -300 908.5 -332.5Q898 -365 877.5 -384.5Q857 -404 827 -404Q808 -404 790.0 -395.5Q772 -387 758.0 -369.5Q744 -352 735.5 -325.0Q727 -298 727 -260V-254Q727 -224 733.0 -202.0Q739 -180 749.0 -164.0Q759 -148 772.0 -138.0Q785 -128 799.0 -123.5Q813 -119 827 -119Z M1129 0V-528H1291V0Z M1477 0 1318 -528H1490L1581 -134H1585L1680 -528H1842L1683 0Z M1869 0V-528H2031V0Z M2075 0V-136L2326 -392V-398H2080V-528H2515V-391L2264 -134V-130H2518V0Z" fill="#1E2B24"/><polygon points="1157.5,-780.0 1262.5,-780.0 1315.0,-689.0 1262.5,-598.0 1157.5,-598.0 1105.0,-689.0" fill="#E3A008"/><polygon points="1897.5,-780.0 2002.5,-780.0 2055.0,-689.0 2002.5,-598.0 1897.5,-598.0 1845.0,-689.0" fill="#E3A008"/></svg></a>
+    <span>Le carnet de rucher des apiculteurs. Conçu en France. <a href="mailto:contact@apiviz.fr">contact@apiviz.fr</a></span>
+    <span>© <span id="yr">2026</span> apiviz</span>
+  </div>
+</footer>
+
+<script>
+// Lien des boutons principaux. Le jour où l'application est ouverte au public, remplacer par son adresse (ex. https://app.apiviz.fr/).
+const APP_URL = "mailto:contact@apiviz.fr?subject=" + encodeURIComponent("Demande d'accès à apiviz");
+document.querySelectorAll("[data-app]").forEach(a => a.href = APP_URL);
+document.getElementById("yr").textContent = new Date().getFullYear();
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fr = (n, d=0) => n.toLocaleString("fr-FR", {maximumFractionDigits:d, minimumFractionDigits:d});
+
+// En-tête
+const head = document.getElementById("top");
+const onScrollHead = () => head.classList.toggle("scrolled", scrollY > 30);
+
+// Compteurs du héros
+function count(el){
+  const to = +el.dataset.count, suf = el.dataset.suffix || "", t0 = performance.now(), dur = RM ? 0 : 1400;
+  const step = t => { const p = dur ? Math.min(1, (t - t0) / dur) : 1, e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fr(Math.round(to * e)) + suf; if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+setTimeout(() => document.querySelectorAll("[data-count]").forEach(count), 500);
+
+// Nid d'abeille
+const L = {good:"Bonne", watch:"À surveiller", crit:"Critique"};
+const ruches = [
+  ["Ruche 1","good",4,"Bonnes","Vue",1,31.5],["Ruche 2","good",4,"Bonnes","Œufs vus",0,29],["Ruche 3","watch",12,"Faibles","Vue",3,18.5],["Ruche 4","good",6,"Moyennes","Vue",1,26],
+  ["Ruche 5","good",6,"Bonnes","Vue",2,30.5],["Ruche 6","crit",19,"Faibles","Absente",6,12],["Ruche 7","good",2,"Moyennes","Vue",1,24.5],
+  ["Essaim","watch",9,"Moyennes","Œufs vus",4,15],["Ruche 9","good",5,"Bonnes","Vue",0,33],["Ruche 10","good",5,"Bonnes","Vue",1,28.5],["Ruche 11","watch",14,"Faibles","Vue",2,19.5],
+  ["Ruche 12","good",3,"Bonnes","Œufs vus",1,27],["Ruche 13","watch",3,"Moyennes","Vue",3,22]
+];
+const comb = document.getElementById("comb"), peek = document.getElementById("peek");
+let k = 0;
+[4,3,4,3].forEach(n => {
+  const row = document.createElement("div"); row.className = "row";
+  for (let j = 0; j < n; j++, k++) {
+    const b = document.createElement("button"), r = ruches[k];
+    if (r) {
+      b.className = "cell " + r[1]; b.type = "button"; b.style.setProperty("--i", k);
+      b.innerHTML = "<span>" + r[0].replace("Ruche ", "R") + "</span>";
+      b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", r[0] + ", état " + L[r[1]]);
+      const i = k; b.onclick = () => show(i, b);
+    } else { b.className = "cell empty"; b.tabIndex = -1; b.setAttribute("aria-hidden", "true"); }
+    row.appendChild(b);
+  }
+  comb.appendChild(row);
+});
+function show(i, btn){
+  const r = ruches[i];
+  comb.querySelectorAll(".cell[aria-pressed]").forEach(c => c.setAttribute("aria-pressed", "false"));
+  btn.setAttribute("aria-pressed", "true");
+  peek.innerHTML = `<div class="h"><b>${r[0]}</b><span class="tag ${r[1]}">${L[r[1]]}</span></div>
+  <dl><dt>Visite</dt><dd>il y a ${r[2]} j</dd><dt>Provisions</dt><dd>${r[3]}</dd><dt>Reine</dt><dd>${r[4]}</dd><dt>Varroa</dt><dd>${r[5]} %</dd><dt>Poids</dt><dd>${fr(r[6],1)} kg</dd></dl>`;
+}
+show(5, comb.querySelectorAll(".cell")[5]);
+
+// Manifeste : mots révélés au défilement
+const manif = document.getElementById("manif");
+const HL = ["carnet","tableur","seul","décider."];
+manif.innerHTML = manif.textContent.split(" ").map(w => `<span class="w${HL.includes(w.replace(/,$/,""))?" hl":""}">${w}</span>`).join(" ");
+const words = [...manif.querySelectorAll(".w")];
+function onScrollManif(){
+  const r = manif.getBoundingClientRect(), vh = innerHeight;
+  const p = RM ? 1 : Math.min(1, Math.max(0, (vh * .85 - r.top) / (r.height + vh * .35)));
+  const n = Math.round(p * words.length);
+  words.forEach((w, i) => w.classList.toggle("on", i < n));
+}
+
+// Récit : téléphone piloté par les étapes
+const steps = [...document.querySelectorAll("#steps li")], screens = [...document.querySelectorAll(".screen")], pnet = document.getElementById("pnet");
+function setStep(s){
+  steps.forEach(li => li.classList.toggle("on", +li.dataset.s === s));
+  screens.forEach((sc, i) => sc.classList.toggle("on", i === s));
+  pnet.textContent = s === 3 ? "Hors ligne" : "Réseau"; pnet.classList.toggle("off", s === 3);
+}
+const stepObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setStep(+e.target.dataset.s); }), {rootMargin: matchMedia("(max-width:1000px)").matches ? "-58% 0px -22% 0px" : "-45% 0px -45% 0px"});
+steps.forEach(li => stepObs.observe(li));
+
+// Démo hors ligne
+let online = true, queue = 0, saved = 0, syncing = false;
+const sw = document.getElementById("netSwitch"), wire = document.getElementById("wire"), log = document.getElementById("log"),
+      qC = document.getElementById("qCount"), sC = document.getElementById("sCount");
+const paint = () => { qC.textContent = queue; sC.textContent = saved; wire.classList.toggle("cut", !online); };
+function flush(){
+  if (!online || !queue || syncing) return;
+  syncing = true; wire.classList.add("flowing");
+  const tick = () => {
+    if (!online) { syncing = false; wire.classList.remove("flowing"); return; }
+    queue--; saved++; paint();
+    if (queue > 0) setTimeout(tick, RM ? 0 : 450);
+    else { syncing = false; wire.classList.remove("flowing"); log.textContent = "Tout est envoyé. Rien n'a été perdu."; }
+  };
+  log.textContent = "Réseau retrouvé : envoi en cours…";
+  setTimeout(tick, RM ? 0 : 450);
+}
+sw.onclick = () => {
+  online = !online; sw.setAttribute("aria-checked", online);
+  document.getElementById("netLabel").textContent = online ? "Réseau disponible" : "Pas de réseau";
+  paint();
+  if (online) flush(); else log.textContent = "Plus de réseau. Continuez à enregistrer, tout est gardé sur le téléphone.";
+};
+document.getElementById("addVisit").onclick = () => {
+  queue++; paint();
+  if (online) { log.textContent = "Visite enregistrée."; flush(); }
+  else log.textContent = `${queue} visite${queue > 1 ? "s" : ""} en attente sur le téléphone.`;
+};
+paint();
+
+// Saison
+const SEASON = [
+  ["Janvier","Repos hivernal",0,"Les colonies sont en grappe. C'est le moment du matériel et des comptes.",[["Préparer le matériel","Inventaire des ruches physiques et des cadres"],["Bilan de l'année","Résultat, rendement par ruche, ventes"],["Traitement d'hiver","À noter dans la visite de la colonie"]]],
+  ["Février","Fin d'hiver",1,"Premières sorties par beau temps. On surveille les réserves sans ouvrir.",[["Peser les ruches","Le poids suit l'évolution des réserves"],["Nourrir si besoin","Candi ou pâte, sortis du stock d'intrants"],["Commander les consommables","L'autonomie indique ce qui va manquer"]]],
+  ["Mars","Visite de printemps",2,"Première vraie ouverture : reine, couvain, provisions.",[["Visite de printemps","Activité, reine, couvain, provisions"],["Repérer les colonies faibles","Elles passent en « à surveiller »"],["Comptage varroa","À noter dans la visite"]]],
+  ["Avril","Développement",3,"Les colonies grossissent vite. Vigilance sur l'essaimage.",[["Visites tous les 7 à 10 jours","L'accueil signale les ruches oubliées"],["Poser les hausses","Tâche planifiée par rucher"],["Préparer la transhumance","Choisir colonies et emplacement"]]],
+  ["Mai","Essaimage et miellées",3,"Période de pointe : essaims, divisions, premières miellées.",[["Gérer les essaims","Nouvelle colonie, origine notée"],["Déplacer vers le colza ou l'acacia","Transhumance en une fois"],["Photos des cadres","Pour comparer d'une visite à l'autre"]]],
+  ["Juin","Récolte de printemps",3,"Premières récoltes et mise en pots.",[["Saisir la récolte","Par ruche ou par rucher"],["Créer les lots","Le stock de miel se met à jour"],["Surveiller les provisions","Après la récolte"]]],
+  ["Juillet","Miellées d'été",2,"Châtaignier, lavande, tournesol selon les régions.",[["Transhumance d'été","Historique des emplacements"],["Ventes sur les marchés","Vente saisie, stock décompté"],["Récolte d'été","Rendement par ruche"]]],
+  ["Août","Traitement et préparation",3,"Dernières récoltes, puis traitement contre le varroa.",[["Traitement varroa","Intrant noté, stock décompté"],["Comptage avant et après","Pour juger l'efficacité"],["Réunir les colonies faibles","Changement de statut"]]],
+  ["Septembre","Mise en hivernage",2,"On prépare les colonies à passer l'hiver.",[["Nourrissement","Sirop sorti du stock, autonomie suivie"],["Peser les ruches","Réserves suffisantes ou non"],["Vérifier les reines","Colonies orphelines signalées"]]],
+  ["Octobre","Dernières visites",1,"Dernières ouvertures avant le froid.",[["Dernière visite complète","État de chaque colonie avant l'hiver"],["Réduire les entrées","Tâche par rucher"],["Ventes de fin de saison","Encaissements en attente suivis"]]],
+  ["Novembre","Entrée en hiver",1,"Les colonies se mettent en grappe. Place aux ventes et aux chiffres.",[["Ventes de fin d'année","Le stock de pots indique ce qu'il reste"],["Suivre la trésorerie","Encaissé moins dépensé"],["Traitement d'hiver","À programmer pour décembre"]]],
+  ["Décembre","Repos et bilan",0,"Les abeilles se reposent, l'apiculteur fait ses comptes.",[["Bilan de la saison","Résultat, miel récolté, ventes"],["Prévoir le budget","Prévisions pour l'an prochain"],["Exporter vos données","Pour la comptabilité ou vos archives"]]]
+];
+const months = document.getElementById("months"), season = document.getElementById("season");
+SEASON.forEach((m, i) => {
+  const b = document.createElement("button"); b.type = "button";
+  b.innerHTML = `${m[0].slice(0,3)}.<i class="${m[2] ? "l" + m[2] : ""}"></i>`;
+  b.setAttribute("aria-label", m[0] + ", " + m[1]);
+  b.onclick = () => pickMonth(i);
+  months.appendChild(b);
+});
+function pickMonth(i){
+  const m = SEASON[i];
+  [...months.children].forEach((b, j) => b.setAttribute("aria-pressed", i === j));
+  season.innerHTML = `<div class="season-swap"><h3>${m[0]}</h3><div class="phase">${m[1]}</div><p class="desc">${m[3]}</p></div>
+  <ul class="season-swap">${m[4].map(t => `<li><span class="ck"></span><div><b>${t[0]}</b><span>${t[1]}</span></div></li>`).join("")}</ul>`;
+}
+pickMonth(new Date().getMonth());
+
+// Pilotage
+const DASH = {
+  fin:{k:[["Ventes","3 420 €","142 ventes"],["Dépenses","1 440 €","sirop, cire, pots"],["Résultat","1 980 €","après dépenses"],["À encaisser","260 €","3 ventes"]],
+       t:"Ventes par mois (€)", v:[60,40,90,140,220,380,520,410,330,290,420,520], alt:false, u:" €"},
+  ops:{k:[["Miel récolté","412 kg","31,7 kg par ruche"],["Visites","186","14,3 par ruche"],["À surveiller","4","sur 13 colonies"],["Autonomie sirop","3 mois","au rythme actuel"]],
+       t:"Visites par mois", v:[1,3,12,24,28,22,18,20,26,16,6,2], alt:true, u:" visites"}
+};
+const dk = document.getElementById("dk"), cbars = document.getElementById("cbars");
+function drawDash(key){
+  const d = DASH[key], max = Math.max(...d.v);
+  dk.innerHTML = d.k.map(x => `<div class="dk"><small>${x[0]}</small><b>${x[1]}</b><span>${x[2]}</span></div>`).join("");
+  document.getElementById("chartTitle").textContent = d.t;
+  if (!cbars.children.length) cbars.innerHTML = d.v.map(() => "<i></i>").join("");
+  [...cbars.children].forEach((b, i) => { b.classList.toggle("alt", d.alt); b.dataset.v = fr(d.v[i]) + d.u;
+    b.style.transitionDelay = (i * 40) + "ms"; b.style.height = dashSeen ? (d.v[i] / max * 100) + "%" : "0"; });
+}
+let dashSeen = false;
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b)); drawDash(b.dataset.tab);
+});
+drawDash("fin");
+new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { dashSeen = true;
+  drawDash(document.querySelector('.tabs [aria-selected="true"]').dataset.tab); o.disconnect(); } }), {threshold:.35}).observe(cbars);
+
+// Apparitions
+const rvObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); rvObs.unobserve(e.target); } }), {threshold:.12});
+document.querySelectorAll(".rv").forEach(el => rvObs.observe(el));
+
+// Parallaxe légère des alvéoles finales
+const floaty = [...document.querySelectorAll("[data-par]")];
+function onScrollPar(){ if (RM) return; floaty.forEach(f => { const r = f.parentElement.getBoundingClientRect(); f.style.transform = `translateY(${(r.top) * +f.dataset.par}px) rotate(${r.top * .02}deg)`; }); }
+
+let ticking = false;
+addEventListener("scroll", () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { onScrollHead(); onScrollManif(); onScrollPar(); ticking = false; }); }, {passive:true});
+onScrollHead(); onScrollManif(); onScrollPar();
+</script>
+</body>
+</html>

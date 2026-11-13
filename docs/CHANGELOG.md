@@ -5,6 +5,22 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## Landing page · apiviz.fr en ligne le 13 nov. 2026 · l'application passe sur app.apiviz.fr
+Aucune migration, aucun changement d'écran dans l'application.
+
+- **apiviz.fr** sert désormais la landing page publique (Worker `apiviz-landing`, dossier `landing/`), en ligne depuis
+  le 13 nov. 2026 ; `www.apiviz.fr` redirige vers `apiviz.fr`.
+- **Production de l'application** : `https://app.apiviz.fr` (Worker `apiviz`) au lieu de `https://apiviz.fr`, pour ne pas
+  écraser la landing page. Recette inchangée : `https://recette.apiviz.fr`.
+- Avant la bascule de la production : ajouter `https://app.apiviz.fr` aux adresses autorisées dans Supabase (`apidoo`).
+
+Technique : `wrangler.jsonc` (route de production), étape « Publier sur Cloudflare » et contrôle « Le domaine
+app.apiviz.fr répond ? » dans `.github/workflows/mise-en-ligne.yml`, dossier `landing/`.
+
+### À vérifier
+- `https://apiviz.fr` affiche la landing page ; `https://www.apiviz.fr` redirige vers `https://apiviz.fr`.
+- Première mise en ligne production : résumé « Cloudflare : production publiée sur https://app.apiviz.fr/ ».
+
 ## v5.34 · à publier en recette · apiviz.fr chez Cloudflare (IT-29, première partie)
 Aucune migration, aucun changement d'écran. La mise en ligne publie aussi sur Cloudflare.
 
