@@ -530,6 +530,7 @@ footer .logo .wm{height:22px}
   .mood-stage{min-height:min(440px,calc(100vh - 140px))}
 }
 
+
 /* Apparition au défilement */
 .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1)}
 .rv.in{opacity:1;transform:none}
@@ -590,6 +591,28 @@ footer .logo .wm{height:22px}
   .rv{opacity:1;transform:none}
   .bee{display:none}
 }
+/* ---------- v7 : téléphone ---------- */
+@media (max-width:1000px){
+  .story-grid{display:block;margin-top:24px}
+  .phone-wrap{display:none}
+  .steps{display:grid;gap:16px}
+  .steps li,.steps li:first-child,.steps li:last-child{min-height:0;padding:0;opacity:1;display:block;position:static}
+  .steps li>div{background:#fff;border-radius:22px;padding:14px 14px 22px;box-shadow:0 1px 2px rgba(30,43,36,.06)}
+  .steps .step-photo{margin-bottom:16px;border-radius:14px;box-shadow:none}
+  .steps h3{font-size:24px}
+  .steps p{font-size:16px;margin-top:10px}
+  .demo{height:min(700px,calc(100svh - 24px))}
+  .end .floaty{display:none}
+}
+@media (max-width:640px){
+  .hero h1{font-size:clamp(36px,11vw,48px)}
+  .manifesto p{font-size:clamp(24px,7vw,30px)}
+  .story h2,.sec h2{font-size:clamp(28px,8.4vw,38px)}
+  .end h2{font-size:clamp(32px,9.5vw,44px)}
+  .mood-stage .bubble{font-size:15px}
+  .try-photo{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -677,7 +700,7 @@ footer .logo .wm{height:22px}
   <div class="wrap">
     <div class="head rv">
       <h2>Une matinée au rucher avec apiviz</h2>
-      <p>Faites défiler : le téléphone suit votre tournée, de l'accueil jusqu'au bilan.</p>
+      <p>Suivez la tournée d'un apiculteur, de l'accueil jusqu'au bilan du soir.</p>
     </div>
     <div class="story-grid">
       <ol class="steps" id="steps">
