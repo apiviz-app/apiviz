@@ -7,7 +7,7 @@
 //     (table reglements_associes, migration 020 ; sans elle, l'écran se lit mais ne note rien).
 //   - Réglages : la liste des associés (partagée par toute l'exploitation).
 // Par défaut, l'associé est le prénom donné sur cet appareil (Réglages › Toi, v5.28).
-// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX, GROUP.
+// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX.
 import { SOCIETE, estSociete, associesConnus, soldesAssocies, reglementEntreAssocies, aVerserALaSociete, mouvementsAssocies } from "./associes.js";
 
 const moi = () => { try { return String(localStorage.getItem(`apiviz-prenom-${S.session?.user?.email || ""}`) || "").trim(); } catch { return ""; } };
@@ -76,7 +76,8 @@ export function ecranAssocies() {
   const liste = mvts.length ? `<h2 class="u-titre">Derniers mouvements</h2><ul class="ea-mvts">${mvts.map((m) => `<li><span class="ea-mvt-t"><b>${esc(m.titre)}</b>
       <span class="small">${esc(m.detail)}${m.attente ? " · en attente" : ""}</span></span>
       <b class="ea-mvt-m ${m.signe > 0 ? "good" : ""}">${m.signe > 0 ? "+" : ""}${esc(eur(m.montant))}</b></li>`).join("")}</ul>` : "";
-  shell("Entre associés", "Qui a avancé quoi, et ce qu'il reste à régler", `<button type="button" class="btn" data-act="go" data-v="plus">Gestion</button>`,
+  // En tête, « Associés » (la liste) plutôt qu'un retour à Gestion, qui n'est plus au menu depuis la navigation par catégories.
+  shell("Entre associés", "Qui a avancé quoi, et ce qu'il reste à régler", noms.length ? `<button type="button" class="btn" data-act="eaassocies">Associés</button>` : "",
     `<div class="ea-ecran">${tete}${tuiles}${aVerser}${liste}
       <p class="small ea-regle">Sur toute la durée, à parts égales. Ce qu'un associé avance de ses fonds propres, la société le lui doit ;
       l'argent de vente qu'il garde, il le doit à la société. Les achats payés par la trésorerie et les ventes à encaisser ne comptent pour personne.
@@ -114,24 +115,6 @@ function regler() {
 function verser(nom) {
   const v = aVerserALaSociete(soldesAssocies(S.d, associes())).find((x) => x.nom === nom);
   feuilleReglement({ de: nom, a: SOCIETE, montant: v?.montant });
-}
-
-// ---------- Écran « Entre associés » (v5.32, catégorie Finances) ----------
-// La carte de Gestion en tête, puis le détail de chacun à même l'écran (plus besoin de la feuille).
-function ecran() {
-  const noms = associes(), soldes = noms.length ? soldesAssocies(S.d, noms) : [];
-  const pl = (k, mot) => `${k} ${mot}${k > 1 ? "s" : ""}`;
-  const lignes = soldes.map((s) => `<section class="card ea-fiche"><h2>${esc(s.nom)}</h2>
-      <p>${esc(pl(s.achats, "achat"))} · a avancé <b>${esc(eur(s.avance))}</b> de ses fonds propres</p>
-      <p>${esc(pl(s.ventes, "vente"))} · a récolté <b>${esc(eur(s.encaisse))}</b></p>
-      <p class="${s.solde > 0 ? "good" : s.solde < 0 ? "watch" : ""}">${s.solde > 0 ? `La société lui doit ${esc(eur(s.solde))}` : s.solde < 0 ? `Doit ${esc(eur(-s.solde))} à la société` : "À jour avec la société"}</p></section>`).join("");
-  const vide = `<section class="card"><p>Note d’abord les associés : ils seront proposés dans les achats et les ventes.</p>
-      <button type="button" class="btn main" data-act="eaassocies">Noter les associés</button></section>`;
-  shell("Entre associés", "Qui a avancé quoi, et ce qui reste à régler", noms.length ? '<button type="button" class="btn" data-act="eaassocies">Associés</button>' : "",
-    noms.length ? `<div class="ea-fiches">${lignes}</div><p class="small">Sur toute la durée, à parts égales. Les achats payés par la trésorerie de la société et l’argent de vente
-    gardé sur son compte ne comptent pour personne. Les ventes à encaisser ne comptent pas encore.</p>` : vide);
-  carteGestion();
-  document.querySelector(".ea-carte [data-act=eadetail]")?.closest("div")?.remove();
 }
 
 // ---------- Réglages ----------
@@ -184,7 +167,6 @@ export const completerVente = champsVente;
 /** « Acheté par » et « Payé avec », aussi pour l'achat en plusieurs lignes (v5.30, achat.js). */
 export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
-export const ecranAssocies = ecran;
 export const completerReglages = blocReglages;
-if (typeof GROUP != "undefined") GROUP.associes = "plus";
+// Rubrique de l'écran dans la barre du bas : « Menu », comme les autres écrans de Finances (navigation.js, v5.32).
 export const actions = { eadetail: () => go("associes"), eaassocies: feuilleAssocies, earegler: regler, eaverser: verser };
