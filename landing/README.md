@@ -7,4 +7,6 @@ Page d'accueil publique d'apiviz, servie par le Worker Cloudflare `apiviz-landin
 - `wrangler.jsonc` : Worker et domaines.
 
 Publier : `cd landing && npx wrangler@4 deploy`.
-Boutons « Demander un accès » : constante `APP_URL` en bas de `public/index.html` (aujourd'hui un e-mail à contact@apiviz.fr ; à remplacer par `https://app.apiviz.fr/` à l'ouverture de l'application).
+Boutons « Créer mon compte » et « Se connecter » : `https://app.apiviz.fr/` (constante `APP_URL` en bas de `public/index.html`).
+`public/api-compagnon.js` est une copie de `api-compagnon.js` (racine du dépôt) : la recopier quand API change.
+Photos : Unsplash (licence Unsplash, usage commercial libre), en WebP dans `public/img/`.
