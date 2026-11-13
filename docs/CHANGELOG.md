@@ -5,6 +5,26 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.35 · à publier en recette · file d'attente visible, photo supprimée avec « Annuler »
+Aucune migration. Deux gains rapides issus des recommandations UX du 13 nov. 2026 (n° 5 et n° 8).
+
+- **Hors ligne visible** : le bandeau « Hors ligne » ou « n saisies en attente » porte un bouton **Voir**. Il ouvre la
+  fiche « En attente d'envoi » : « Tout est enregistré sur ce téléphone », la liste des saisies et des photos en attente,
+  et « Tu peux fermer l'app sans rien perdre ». Avec du réseau, **Envoyer maintenant** relance l'envoi sans attendre.
+- **Photo supprimée avec « Annuler »** : dans la visionneuse, Supprimer retire la photo tout de suite et laisse
+  5 secondes pour annuler, comme pour les visites et les ventes. Plus de confirmation en deux temps.
+- La n° 10 (premiers pas guidés, colonies créées en lot, écrans vides utiles) existait déjà (`demarrage.js`) : rien à
+  ajouter.
+
+Technique : `offline.js` (`ficheAttente`, actions `hlvoir` et `hlenvoyer`), `photos.js` (`phsuppr` via `N4.plusTard`,
+`PH.nbAttente`), `styles/04-hors-ligne.css`. Tests : `etapes_dp` (fiche sans réseau), `etapes_ph` (Annuler, puis
+suppression après 5 secondes).
+
+### À vérifier
+- Mode avion, noter une visite : le bandeau affiche « Voir » ; la fiche liste la visite (et ses photos), sans bouton
+  « Envoyer maintenant ». Réseau revenu : le bandeau disparaît après l'envoi.
+- Ouvrir une photo, Supprimer : « Photo supprimée · Annuler ». Annuler la remet ; sans rien toucher, elle est supprimée.
+
 ## Landing page · apiviz.fr en ligne le 13 nov. 2026 · l'application passe sur app.apiviz.fr
 Aucune migration, aucun changement d'écran dans l'application.
 
