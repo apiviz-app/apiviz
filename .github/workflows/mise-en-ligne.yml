@@ -165,8 +165,15 @@ jobs:
           cp -R _site/recette _cloudflare/recette
           (cd _site && find . -mindepth 1 -maxdepth 1 ! -name recette -exec cp -R {} ../_cloudflare/production/ \;)
           if [ "$CIBLE" = production ]; then env_wr=""; url=https://app.apiviz.fr/; else env_wr="--env recette"; url=https://recette.apiviz.fr/; fi
-          # shellcheck disable=SC2086 # --env recette : deux mots voulus
-          npx --yes wrangler@4 deploy $env_wr
+          # Cloudflare répond parfois « unknown error [code: 10013] » : erreur passagère de son côté (13 nov. 2026,
+          # étape /versions). Trois essais espacés avant d'arrêter ; un nouvel essai ne renvoie que les fichiers manquants.
+          ok=0
+          for essai in 1 2 3; do
+            # shellcheck disable=SC2086 # --env recette : deux mots voulus
+            if npx --yes wrangler@4 deploy $env_wr; then ok=1; break; fi
+            if [ "$essai" -lt 3 ]; then echo "::warning::Cloudflare a refusé l'essai $essai, nouvel essai dans $((essai * 20)) s."; sleep $((essai * 20)); fi
+          done
+          [ "$ok" = 1 ] || { echo "::error::Cloudflare a refusé les 3 essais : rien n'est publié. Relancer plus tard."; exit 1; }
           printf 'Cloudflare : %s publiée sur %s\n' "$CIBLE" "$url" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-pages-artifact@v3
         with:
