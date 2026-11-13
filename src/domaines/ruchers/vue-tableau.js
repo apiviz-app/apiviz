@@ -1,4 +1,4 @@
-// Apiviz — écran Ruchers, affichage « Tableau » (v5.36, maquettes « Affichage des ruches » validées le 13 nov. 2026,
+// Apiviz — écran Ruchers, affichage « Tableau » (v5.37, maquettes « Affichage des ruches » validées le 13 nov. 2026,
 // pistes 5 et 6). Bascule « Par rucher / Tableau » en haut de l'écran Ruchers ; le choix est gardé sur l'appareil.
 //   - Téléphone : recherche, bouton Filtres (feuille du bas), filtres actifs en puces, colonnes au choix, tri par
 //     en-tête, colonne Colonie et en-tête fixes, synthèse fixée en bas, cases à cocher et barre d'actions groupées,

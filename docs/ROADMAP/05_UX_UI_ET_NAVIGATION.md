@@ -39,7 +39,7 @@ Compte (avatar) : exploitations · installer · plein soleil · aide · se déco
 * visible au niveau Professionnel ou après activation
 ```
 
-**v5.36 (13 nov. 2026)** : l'écran Ruches (Ruchers › Liste) gagne une bascule **« Par rucher / Tableau »** : même
+**v5.37 (13 nov. 2026)** : l’écran Ruches (Ruchers › Liste) gagne une bascule **« Par rucher / Tableau »** : même
 écran, même route (`ruches`), deux affichages ; pas de nouvelle rubrique ni de nouvel onglet. L'affichage Tableau liste
 toutes les colonies actives avec recherche, filtres (rucher, état, reine, seuils d'alerte), tri, colonnes au choix,
 synthèse, sélection pour une visite groupée ou un déplacement, fiche rapide, et une présentation en cartes ; sur

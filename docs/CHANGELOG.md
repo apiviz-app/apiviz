@@ -5,7 +5,7 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.36 · à publier en recette · Ruchers en tableau (maquettes « Affichage des ruches » du 13 nov. 2026)
+## v5.37 · à publier en recette · Ruchers en tableau (maquettes « Affichage des ruches » du 13 nov. 2026)
 Aucune migration. Seulement un affichage : aucune donnée n'est modifiée, rien de nouveau n'est enregistré en base.
 
 Pour l'apiculteur :
@@ -52,6 +52,30 @@ seule (`ACTIONS_LECTEUR`), la sélection et les actions groupées non. Préfére
 - Ordinateur 1 280 × 800 : filtres à gauche, fiche à droite, « Exporter » ouvre un fichier lisible dans un tableur.
 - Lecture seule : filtres et tri marchent ; pas de cases à cocher ni de « Commencer la visite ».
 - Fermer et rouvrir l'app : l'affichage choisi (par rucher ou tableau) est retrouvé.
+
+## v5.36 · à publier en recette · retrouver une ruche : code, origine, recherche par numéro
+Aucune migration : les colonnes `ruches.code` et `ruches.origine` existent depuis 016 (vides en production). Recommandation
+UX n° 9 du 13 nov. 2026. Ne casse pas l'ancienne version ; sur une base sans 016, les deux champs ne s'affichent pas.
+
+- **Code et origine saisissables** : « Modifier la ruche » propose « Code sur la ruche » (le numéro peint ou gravé sur la
+  caisse) et « Origine » (achat, essaim récupéré, division, élevage). Le code s'affiche en tête de fiche (« n° B12 »).
+- **Recherche** : le code compte dans la recherche, il est rappelé sous chaque ruche trouvée. Un simple chiffre (« 3 »)
+  suffit : il ne montre que les ruches qui portent ce numéro (Ruche 3, pas Ruche 13). Même chose dans la barre de
+  recherche de l'ordinateur.
+- **Ouvertes récemment** : recherche vide, les 6 dernières fiches ouvertes (gardées sur le téléphone).
+
+Les autres recommandations restantes existaient déjà dans l'app, aucun code ajouté : n° 1 (tournée colonie par colonie,
+brouillon sur le téléphone, vérification, bilan : `tournee.js`), n° 2 (bouton API central), n° 4 (priorité d'API avec
+ses boutons à l'accueil : `accueil.js`), n° 6 (mode « au doigt » qui repart de la dernière visite, reine à revoir),
+n° 7 (fiche : chiffres clés, courbe de poids, message d'API, onglets). Le scan d'étiquette est laissé pour plus tard : il
+demande une bibliothèque de lecture de QR code ou l'app native (Capacitor). Le code saisi ici en est la base.
+
+Technique : `v3.js` (`assezLong`, `noterRecent`, `recents`), `ergonomie.js`, `app.js` (`rucheForm`), `ux.js`.
+Test : `etapes_rr` (nouveau).
+
+### À vérifier
+- Fiche d'une ruche, « ⋯ » : saisir un code et une origine, enregistrer ; le code apparaît en tête de fiche.
+- Rechercher : taper le code, puis un seul chiffre ; recherche vide : « Ouvertes récemment ».
 
 ## v5.35 · à publier en recette · écrans compacts, agenda en calendrier, sélecteur de date (maquettes du 13 nov. 2026)
 Aucune migration. Seulement des écrans : aucune donnée n'est modifiée.

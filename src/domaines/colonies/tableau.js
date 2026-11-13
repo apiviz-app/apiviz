@@ -1,4 +1,4 @@
-// Apiviz — règles du tableau des colonies (v5.36, maquettes « Affichage des ruches » validées le 13 nov. 2026, piste 5).
+// Apiviz — règles du tableau des colonies (v5.37, maquettes « Affichage des ruches » validées le 13 nov. 2026, piste 5).
 // Fonctions pures, testées par tests/unitaires/tableau.test.mjs : une ligne par colonie active (état, force, reine,
 // varroa, provisions, dernière visite, rucher, à faire), filtres, tri et synthèse. Aucune donnée nouvelle : tout vient
 // des colonnes existantes (ruches, visites, reines) ; aucun seuil nouveau sauf ceux déjà en usage dans l'app

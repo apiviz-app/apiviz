@@ -7,7 +7,7 @@ export default [
   // Liste des ruchers : nav4.js (un bloc par rucher de la table, y compris sans colonie, IT-05), complétée par
   // Alvéoles (météo et poids sur chaque bloc).
   // Filtre des ruches sorties par statut (IT-06, AP-TECH-109), déclaré ici.
-  // Affichage « Tableau » (v5.36) : vue-tableau.js, choisi par la bascule « Par rucher / Tableau » posée en haut des deux
+  // Affichage « Tableau » (v5.37) : vue-tableau.js, choisi par la bascule « Par rucher / Tableau » posée en haut des deux
   // affichages ; le choix est gardé sur l'appareil.
   { id: "ruches", titre: "Ruchers", rubrique: "ruches",
     rendu: () => {

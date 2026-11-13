@@ -37,7 +37,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 - Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un
   raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Administration).
-- **Par rucher / Tableau** *(v5.36)* : en haut de la liste, la bascule « Tableau » montre toutes les colonies en lignes :
+- **Par rucher / Tableau** *(v5.37)* : en haut de la liste, la bascule « Tableau » montre toutes les colonies en lignes :
   état, force, reine, varroa, provisions, dernière visite (et, au choix, rucher et « À faire »). Cherche par nom ou par
   code ; **Filtres** par rucher, état, année de la reine et seuils d'alerte (varroa au-dessus du seuil, provisions
   faibles, pas visitée depuis 30 jours) ; les filtres actifs s'affichent en puces, retirables d'un toucher. Touche un

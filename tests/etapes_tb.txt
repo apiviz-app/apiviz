@@ -1,4 +1,4 @@
-    # v5.36 — Ruchers en tableau (maquettes « Affichage des ruches » validées le 13 nov. 2026, pistes 5 et 6) : bascule
+    # v5.37 — Ruchers en tableau (maquettes « Affichage des ruches » validées le 13 nov. 2026, pistes 5 et 6) : bascule
     # gardée sur l'appareil, recherche, filtres et puces, tri, colonnes, colonne Colonie fixe au défilement horizontal,
     # synthèse fixée en bas, sélection et visite groupée, fiche rapide, cartes, version ordinateur.
     import os, datetime

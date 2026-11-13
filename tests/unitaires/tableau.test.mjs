@@ -1,4 +1,4 @@
-// Tableau des colonies (src/domaines/colonies/tableau.js, v5.36). Lancer : npm test
+// Tableau des colonies (src/domaines/colonies/tableau.js, v5.37). Lancer : npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as T from "../../src/domaines/colonies/tableau.js";
