@@ -77,9 +77,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   est rangée dans Administration, juste à côté.
 - **Opérations** (traitements et nourrissements hors visite) : prévue dans Administration par l'arborescence, pas encore
   disponible.
-- **Entre associés** *(v5.32)* : la carte en tête de Gestion, et « Voir le détail » : ce qu'il faut régler pour être à
-  égalité, ce que chacun a avancé, l'argent de vente à verser à la trésorerie, les derniers mouvements. « Noter le
-  remboursement » et « Noter le versement » mettent le solde à jour.
+- **Entre associés** *(v5.32)* : dans Finances : ce qu'il faut régler pour être à égalité, ce que chacun a avancé,
+  l'argent de vente à verser à la trésorerie, les derniers mouvements. « Noter le remboursement » et « Noter le
+  versement » mettent le solde à jour ; « Associés », en tête, ouvre la liste des associés.
 - **Équipe** : créer un lien d'invitation et l'envoyer. La personne ouvre le lien, crée son compte ou se connecte,
   et rejoint l'exploitation ; le nom de l'exploitation s'affiche sur le lien. Un responsable peut retirer un membre.
 - **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,

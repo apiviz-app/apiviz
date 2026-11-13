@@ -9,13 +9,22 @@ Même méthode que Gladoo : un seul dépôt, un seul code, et rien ne part en li
 | Repère de version | étiquette git `recette` | étiquette git `deploiement` |
 | Reconnaissable | étiquette « RECETTE » en haut de l'écran, mêmes couleurs que la production | aucun |
 
+**Cloudflare (IT-29, depuis le 13 nov. 2026)** : chaque mise en ligne publie aussi la cible sur son domaine,
+`https://recette.apiviz.fr` ou `https://apiviz.fr` (`wrangler.jsonc`), avec le jeton `CLOUDFLARE_API_TOKEN` et
+`CLOUDFLARE_ACCOUNT_ID` (secrets du dépôt, créés par Pierre-Louis ; jamais dans un fichier). GitHub Pages reste en
+place jusqu'à la bascule de la production.
+
 Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) et le préfixe de `sw.js` diffèrent, appliqués par `scripts/assembler-site.sh`.
 
 ## Cycle d'une version
 
 1. **Branche** : créer `claude/…` depuis `main`. Jamais d'envoi direct sur `main`.
 2. **Base de données** : toute migration est appliquée d'abord sur `apidoo-test`, notée dans `migrations/README.md`, et ajoutée à `migrations/a-appliquer-en-production.txt`.
-3. **Pull request vers `main`** : « Vérifier » lance les tests. La fusion ne publie rien.
+3. **Pull request vers `main`** : « Vérifier » lance les tests. La fusion ne publie rien. **Ne pas fusionner tant que
+   « Vérifier » est rouge** : l'erreur passe sur `main` et sur toutes les pull requests suivantes (#46, #47, #48 le
+   12 nov. 2026). En cas de conflit (« This branch has conflicts »), ne pas le résoudre dans l'éditeur de GitHub :
+   demander à Claude de remettre la branche à jour. Deux fusions y ont perdu une feuille de style et une rubrique du
+   CHANGELOG (#33, #46).
 4. **Recette** : Actions › Mise en ligne › Run workflow, cible `recette`. Une branche peut y être essayée avant fusion.
 5. **Validation** : tester sur téléphone avec la rubrique « À vérifier » de `docs/CHANGELOG.md`.
 6. **Base de production** : plus d'étape à part. Quand le secret `BASE_PRODUCTION` existe (voir « Mise à jour

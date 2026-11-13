@@ -2,7 +2,8 @@
 import { completerReglages, actions as actionsReglages, remplace } from "./apparence.js";
 import { completerGestion, completerReglages as associesReglages, actions as actionsAssocies } from "../finances/entre-associes.js";
 export default [
-  // Gestion (route « plus ») : ergonomie.js (blocs), complétée par la carte « Entre associés » (v5.29).
+  // Gestion (route « plus ») : ergonomie.js (blocs), complétée par la carte « Entre associés » (v5.29). Les actions
+  // déclarées ici servent aussi à l'écran « Entre associés » (src/domaines/finances/ecrans.js).
   { id: "plus", titre: "Gestion", rubrique: "plus", rendu: () => { ER.ecranGestion(); completerGestion(); }, actions: actionsAssocies },
   // Réglages : essentiels.js (blocs), qui reprend le formulaire d'app.js quand on l'ouvre, complété par apparence.js
   // (v5.28 : bloc « Toi » pour le prénom, couleur du bandeau choisie avec un aperçu).

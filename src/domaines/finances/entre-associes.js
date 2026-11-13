@@ -7,7 +7,7 @@
 //     (table reglements_associes, migration 020 ; sans elle, l'écran se lit mais ne note rien).
 //   - Réglages : la liste des associés (partagée par toute l'exploitation).
 // Par défaut, l'associé est le prénom donné sur cet appareil (Réglages › Toi, v5.28).
-// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX, GROUP.
+// Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX.
 import { SOCIETE, estSociete, associesConnus, soldesAssocies, reglementEntreAssocies, aVerserALaSociete, mouvementsAssocies } from "./associes.js";
 
 const moi = () => { try { return String(localStorage.getItem(`apiviz-prenom-${S.session?.user?.email || ""}`) || "").trim(); } catch { return ""; } };
@@ -169,5 +169,5 @@ export const completerVente = champsVente;
 export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
 export const completerReglages = blocReglages;
-if (typeof GROUP != "undefined") GROUP.associes = "plus";
+// Rubrique de l'écran dans la barre du bas : « Menu », comme les autres écrans de Finances (navigation.js, v5.32).
 export const actions = { eadetail: () => go("associes"), eaassocies: feuilleAssocies, earegler: regler, eaverser: verser };

@@ -149,6 +149,25 @@ jobs:
             fi
           fi
           rm -f node_modules
+      # Cloudflare (IT-29) : la cible seule part sur son domaine, recette.apiviz.fr ou apiviz.fr (wrangler.jsonc).
+      # Sans les secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID, l'étape est sautée et GitHub Pages publie seul.
+      # Une erreur ici arrête la mise en ligne : rien n'est publié nulle part.
+      - name: Publier sur Cloudflare
+        env:
+          CIBLE: ${{ inputs.cible }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Secrets Cloudflare absents : publication sur GitHub Pages seulement."; exit 0
+          fi
+          rm -rf _cloudflare && mkdir -p _cloudflare/production
+          cp -R _site/recette _cloudflare/recette
+          (cd _site && find . -mindepth 1 -maxdepth 1 ! -name recette -exec cp -R {} ../_cloudflare/production/ \;)
+          if [ "$CIBLE" = production ]; then env_wr=""; url=https://apiviz.fr/; else env_wr="--env recette"; url=https://recette.apiviz.fr/; fi
+          # shellcheck disable=SC2086 # --env recette : deux mots voulus
+          npx --yes wrangler@4 deploy $env_wr
+          printf 'Cloudflare : %s publiée sur %s\n' "$CIBLE" "$url" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
@@ -195,3 +214,16 @@ jobs:
             sleep 10
           done
           echo "::error::$url ne répond pas."; exit 1
+      - name: Le domaine apiviz.fr répond ?
+        env:
+          CF: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CIBLE: ${{ inputs.cible }}
+        run: |
+          # Même contrôle sur Cloudflare (IT-29) : la page doit répondre et annoncer la version publiée.
+          [ -n "$CF" ] || { echo "Pas de publication Cloudflare (secrets absents)."; exit 0; }
+          url=https://apiviz.fr/; [ "$CIBLE" = recette ] && url=https://recette.apiviz.fr/
+          for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            curl -fsS "$url" | grep -q 'apidoo-version' && { echo "$url répond."; exit 0; }
+            sleep 10
+          done
+          echo "::error::$url ne répond pas (premier certificat HTTPS : quelques minutes, relancer ce contrôle)."; exit 1
