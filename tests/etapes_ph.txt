@@ -36,5 +36,21 @@
     verif(sorted(efface) == attendus, "les 3 fichiers de ses visites sont effacés : %s" % efface)
     verif(not any(V3 in c for c in efface), "les photos de l'autre ruche ne sont pas touchées")
     verif(page.evaluate("S.d.photos.length") == 1, "il reste la photo de la ruche 2")
+    # Recommandation UX n° 8 : supprimer une photo laisse 5 secondes pour annuler, sans confirmation.
+    P4 = page.evaluate("S.d.photos[0].id")
+    suppr_ph = []
+    def vphotos(route):
+        if route.request.method != "DELETE": return route.fallback()
+        suppr_ph.append(route.request.url)
+        return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*"}, body="")
+    page.route("**/rest/v1/visite_photos*", vphotos)
+    page.evaluate("ACT.phsuppr('%s')" % P4); page.wait_for_selector(".n4-annuler", timeout=5000)
+    verif("Photo supprimée" in page.locator(".n4-annuler").inner_text(), "bandeau « Photo supprimée · Annuler »")
+    page.click(".n4-annuler button"); page.wait_for_timeout(5600)
+    verif(not suppr_ph and page.evaluate("S.d.photos.length") == 1, "Annuler : la photo reste, rien n'est supprimé")
+    page.evaluate("ACT.phsuppr('%s')" % P4); page.wait_for_selector(".n4-annuler", timeout=5000)
+    page.wait_for_function("() => !document.querySelector('.n4-annuler')", timeout=10000); page.wait_for_timeout(800)
+    verif(len(suppr_ph) == 1 and page.evaluate("S.d.photos.length") == 0, "sans Annuler : la photo est supprimée après 5 secondes")
+    page.unroute("**/rest/v1/visite_photos*")
     page.unroute("**/storage/v1/object/**"); page.unroute("**/rest/v1/ruches*")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

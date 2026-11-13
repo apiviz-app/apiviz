@@ -262,8 +262,10 @@ const HL = (() => {
   function bandeau() {
     const n = aEnvoyer().length, k = aCorriger().length;
     const pastille = k ? `<button type="button" class="hl-pastille" data-act="hlcorriger" aria-label="${esc(pluriel(k, "saisie") + " à corriger")}">${k} à corriger</button>` : "";
-    if (st.hors) return `<div class="hl-band off" role="status">${ICO_OFF}<span>Hors ligne${st.depuis ? " · chiffres du " + esc(quand(st.depuis)) : ""}${n ? " · " + pluriel(n, "saisie") + " en attente" : ""}</span>${pastille}</div>`;
-    if (n) return `<div class="hl-band sync" role="status">${ICO_SYNC}<span>${st.envoi ? "Envoi de " + pluriel(n, "saisie") + "…" : pluriel(n, "saisie") + " en attente d’envoi"}</span>${pastille}</div>`;
+    // Recommandation UX n° 5 : le bandeau s'ouvre sur ce qui attend, avec une phrase qui rassure.
+    const voir = n ? '<button type="button" class="hl-voir" data-act="hlvoir">Voir</button>' : "";
+    if (st.hors) return `<div class="hl-band off" role="status">${ICO_OFF}<span>Hors ligne${st.depuis ? " · chiffres du " + esc(quand(st.depuis)) : ""}${n ? " · " + pluriel(n, "saisie") + " en attente" : ""}</span>${voir}${pastille}</div>`;
+    if (n) return `<div class="hl-band sync" role="status">${ICO_SYNC}<span>${st.envoi ? "Envoi de " + pluriel(n, "saisie") + "…" : pluriel(n, "saisie") + " en attente d’envoi"}</span>${voir}${pastille}</div>`;
     if (k) return `<div class="hl-band corr" role="status">${ICO_SYNC}<span>${k > 1 ? "Des saisies ont été refusées" : "Une saisie a été refusée"} par le serveur</span>${pastille}</div>`;
     return "";
   }
@@ -347,6 +349,22 @@ const HL = (() => {
       <button type="button" class="btn" data-act="closesheet">Fermer</button>`;
     if (!$sheet.open) $sheet.showModal();
   }
+  // ---------- Fiche « En attente d'envoi » (recommandation UX n° 5) ----------
+  // Ouverte depuis le bandeau : ce qui est gardé sur le téléphone, et la certitude que rien ne se perd.
+  function ficheAttente() {
+    const l = aEnvoyer(), k = aCorriger().length;
+    const photos = typeof PH != "undefined" && PH.nbAttente ? PH.nbAttente() : 0;
+    if (!l.length && !photos) { if ($sheet.open) $sheet.close(); return k ? ficheCorriger() : void 0; }
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    const quoi = [l.length ? pluriel(l.length, "saisie") : "", photos ? pluriel(photos, "photo") : ""].filter(Boolean).join(" et ");
+    $sheetForm.innerHTML = `<h2>En attente d’envoi</h2>
+      <div class="hl-rassure"><b>Tout est enregistré sur ce téléphone.</b><span class="small">${esc(quoi)} ${l.length + photos > 1 ? "partiront" : "partira"} ${st.hors || navigator.onLine === false ? "toutes seules au retour du réseau" : "dès que possible"}. Tu peux fermer l’app sans rien perdre.</span></div>
+      ${l.map((it) => { const [t, s] = libelle(it); return `<div class="hl-row"><span><b>${esc(t)}</b><span class="small">${esc(s)}</span></span><span class="tag watch">en attente</span></div>`; }).join("")}
+      ${photos ? `<div class="hl-row"><span><b>${esc(pluriel(photos, "photo"))} de visite</b><span class="small">réduites, prêtes à partir</span></span><span class="tag watch">en attente</span></div>` : ""}
+      ${k ? `<button type="button" class="btn" data-act="hlcorriger">${esc(pluriel(k, "saisie"))} à corriger</button>` : ""}
+      <div class="actions">${st.hors || navigator.onLine === false ? "" : `<button type="button" class="btn main" data-act="hlenvoyer"${st.envoi ? " aria-busy=\"true\" disabled" : ""}>Envoyer maintenant</button>`}<button type="button" class="btn" data-act="closesheet">Fermer</button></div>`;
+    if (!$sheet.open) $sheet.showModal();
+  }
   const enFile = (id) => st.file.find((it) => it.id === id);
   const CHAMPS = {
     recoltes: [["kg", "Quantité (kg)", "number", "0.1"], ["date_recolte", "Date", "date"]],
@@ -366,6 +384,14 @@ const HL = (() => {
   }
   Object.assign(ACT, {
     hlcorriger: () => ficheCorriger(),
+    hlvoir: () => ficheAttente(),
+    hlenvoyer: async () => {
+      st.essai = 0;
+      await envoyer(false);
+      if (typeof PH != "undefined" && PH.envoyer) await PH.envoyer().catch(() => {});
+      majBandeau();
+      if ($sheet.open) ficheAttente();
+    },
     hlrenvoyer: async (id) => { const it = enFile(id); if (it) await renvoyer(it); },
     hlabandonner: (id, _k, btn) => twoStep(btn, "Confirmer l’abandon", async () => {
       const it = enFile(id); if (!it) return;
@@ -423,7 +449,7 @@ const HL = (() => {
       d?.close(); dbP = null;
       st.file = []; memoire.kv.clear(); memoire.file.clear();
     },
-    ficheCorriger,
+    ficheCorriger, ficheAttente,
     enAttente: (id) => !!saisieDe(id),
   };
 })();

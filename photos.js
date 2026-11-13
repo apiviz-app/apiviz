@@ -247,16 +247,23 @@ const PH = (() => {
     },
     phvoir: (id) => voir(id),
     phfermer: () => $v.close(),
-    phsuppr: (id, _k, btn) => twoStep(btn, "Confirmer", async () => {
-      const p = S.d.photos.find((x) => x.id === id);
-      if (!p) return;
-      const { error } = await sb.from("visite_photos").delete().eq("id", id);
-      if (error) throw error;
-      await sb.storage.from(BUCKET).remove([p.chemin]);
-      S.d.photos = S.d.photos.filter((x) => x.id !== id);
-      st.espace = st.espace !== null ? Math.max(0, st.espace - (p.octets || 0)) : null;
-      $v.close(); render(); toast("Photo supprimée");
-    }),
+    // Recommandation UX n° 8 : la photo disparaît tout de suite, « Annuler » reste 5 secondes (N4.plusTard),
+    // et la suppression n'est faite qu'ensuite. Sans nav4.js, l'ancienne confirmation en deux temps reste.
+    phsuppr: (id, _k, btn) => {
+      const supprimer = async () => {
+        const p = S.d.photos.find((x) => x.id === id);
+        if (!p) return;
+        const { error } = await sb.from("visite_photos").delete().eq("id", id);
+        if (error) throw error;
+        await sb.storage.from(BUCKET).remove([p.chemin]);
+        S.d.photos = S.d.photos.filter((x) => x.id !== id);
+        st.espace = st.espace !== null ? Math.max(0, st.espace - (p.octets || 0)) : null;
+        render();
+      };
+      if (typeof N4 == "undefined" || !N4.plusTard) return twoStep(btn, "Confirmer", async () => { await supprimer(); $v.close(); toast("Photo supprimée"); });
+      $v.close();
+      N4.plusTard(null, "Photo supprimée", supprimer, document.querySelector(`.ph-th[data-v="${CSS.escape(id)}"]`));
+    },
   });
 
   // Avant de supprimer une visite : retirer ses fichiers du stockage.
@@ -300,5 +307,5 @@ const PH = (() => {
     st.attente = []; st.brouillon = []; memoire.clear(); st.urls.clear();
   }
 
-  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA };
+  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA, nbAttente: () => st.attente.length };
 })();

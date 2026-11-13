@@ -69,6 +69,12 @@
     page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
     verif(page.evaluate("S.d.ruches.filter(r => ['V1','V2'].includes(r.nom)).every(r => r.rucher === 'Bois')"), "sans réseau : les 2 colonies apparaissent tout de suite au Bois")
     verif("1 saisie en attente" in page.locator(".hl-band").inner_text(), "bandeau : 1 saisie en attente")
+    # Recommandation UX n° 5 : « Voir » ouvre la fiche « En attente d'envoi », qui rassure.
+    page.click(".hl-band .hl-voir"); page.wait_for_selector("#sheet[open] .hl-rassure", timeout=5000)
+    t = page.locator("#sheet").inner_text()
+    verif("Tout est enregistré sur ce téléphone" in t and "Déplacement" in t and "au retour du réseau" in t, "fiche : phrase rassurante et déplacement en attente")
+    verif(page.locator("#sheet [data-act=hlenvoyer]").count() == 0, "sans réseau : pas de bouton « Envoyer maintenant »")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
     page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
     verif(page.evaluate("S.d.ruches.filter(r => ['V1','V2'].includes(r.nom)).every(r => r.rucher === 'Bois')"), "après rechargement sans réseau : toujours au Bois")
     verif(not [1 for n, b in recu["rpc"] if n == "deplacer_colonies" and b["p"]["rucher_id"] == RB], "rien envoyé sans réseau")
