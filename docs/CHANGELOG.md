@@ -5,6 +5,54 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.36 · à publier en recette · Ruchers en tableau (maquettes « Affichage des ruches » du 13 nov. 2026)
+Aucune migration. Seulement un affichage : aucune donnée n'est modifiée, rien de nouveau n'est enregistré en base.
+
+Pour l'apiculteur :
+1. **Bascule « Par rucher / Tableau »** en haut de Ruchers › Liste. L'affichage par rucher ne change pas ; le choix est
+   gardé sur l'appareil.
+2. **Tableau** : une ligne par colonie active, avec son état (OK, à surveiller, urgent), sa force (activité à la
+   dernière visite), sa reine (année, couleur de marquage, ou absente), son varroa (dernier comptage), ses provisions,
+   et les jours depuis sa dernière visite ; au choix aussi le rucher et « À faire » (pourquoi elle demande de
+   l'attention). Les valeurs hors seuil sont en rouge.
+3. **Recherche et filtres** : par nom ou par code ; feuille « Filtres » (rucher, état, année de la reine, seuils
+   d'alerte : varroa au-dessus du seuil, provisions faibles, pas visitée depuis 30 jours) avec le nombre de colonies de
+   chaque choix et « Voir N colonies ». Les filtres actifs s'affichent en puces retirables ; sans filtre, des raccourcis
+   (À voir, Varroa, Provisions faibles, Sans reine).
+4. **Tri** en touchant un en-tête (deux fois pour inverser) ; **colonnes** au choix et lignes compactes.
+5. **Lecture** : la colonne Colonie et l'en-tête restent en place au défilement (rien ne passe à côté du nom), la ligne
+   **Synthèse** reste en bas de la zone (urgentes et à voir, reines absentes, varroa moyen, provisions faibles, délai
+   moyen depuis la visite).
+6. **Sélection** : cases à cocher, « tout sélectionner », puis **Visite groupée** (une saisie pour toutes) ou
+   **Déplacer** (écran Déplacer prérempli). Pas de cases en lecture seule.
+7. **Fiche rapide** en touchant une colonie : ce qui demande de l'attention, six chiffres, les trois dernières visites,
+   « Commencer la visite » et « Fiche complète ». Échap ferme.
+8. **Cartes** : même liste et mêmes filtres, en cartes (pratique au rucher).
+9. **Ordinateur** (1 024 px et plus) : filtres toujours visibles à gauche, menu « Colonnes », « Compact »,
+   « Exporter » (fichier pour tableur des colonies affichées), fiche rapide à droite ; Rucher et À faire affichés d'emblée.
+
+Règles : état « urgent » si orpheline, état critique ou varroa au seuil ou au-dessus ; « à surveiller » si état à
+surveiller, varroa aux deux tiers du seuil, provisions faibles ou plus de 30 jours sans visite. Aucun seuil nouveau :
+seuil varroa réglable (3 % par défaut), deux tiers comme la puce varroa de la fiche, 30 jours comme l'accueil.
+
+Technique : règles pures `src/domaines/colonies/tableau.js` (tests `tests/unitaires/tableau.test.mjs`), écran
+`src/domaines/ruchers/vue-tableau.js`, enregistré avec l'écran `ruches` (`src/domaines/ruchers/ecrans.js`, même route :
+toujours 34 écrans) ; style `51-ruches-tableau.css`. Actions `tb…` ; celles de consultation sont permises en lecture
+seule (`ACTIONS_LECTEUR`), la sélection et les actions groupées non. Préférences sur l'appareil :
+`localStorage["apiviz-ruches-affichage"]`. Roadmap 05 §2 (décision notée), guide et astuce mis à jour. Scénario
+`etapes_tb`.
+
+### À vérifier
+- Téléphone : Ruchers › Liste › « Tableau » ; faire défiler le tableau vers la droite : rien ne passe à gauche de la
+  colonne Colonie ; la ligne Synthèse reste en bas, même avec une seule colonie filtrée.
+- Filtres : Les Chênes (ou un de tes ruchers) + Urgent, « Voir N colonies », puis retirer une puce.
+- Cocher deux colonies : la barre apparaît au-dessus du menu du bas (sans cacher la synthèse) ; « Visite groupée »
+  ouvre la visite pour les deux.
+- Toucher une colonie : fiche rapide ; « Commencer la visite ».
+- Ordinateur 1 280 × 800 : filtres à gauche, fiche à droite, « Exporter » ouvre un fichier lisible dans un tableur.
+- Lecture seule : filtres et tri marchent ; pas de cases à cocher ni de « Commencer la visite ».
+- Fermer et rouvrir l'app : l'affichage choisi (par rucher ou tableau) est retrouvé.
+
 ## v5.35 · à publier en recette · écrans compacts, agenda en calendrier, sélecteur de date (maquettes du 13 nov. 2026)
 Aucune migration. Seulement des écrans : aucune donnée n'est modifiée.
 

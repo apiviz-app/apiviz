@@ -20,7 +20,7 @@ Inspiration Linear, Stripe, Qonto, Pennylane : peu d'éléments, hiérarchie net
 Accueil
  ├─ Priorité du jour · Ce mois-ci · Mes ruchers (alvéoles, météo) · À faire · Activité
 Ruchers
- ├─ Liste / Carte / Santé
+ ├─ Liste (par rucher ou en tableau) / Carte / Santé
  ├─ Fiche rucher : colonies · météo 5 j · tâches · historique · infos (accès, propriétaire)
  └─ Fiche colonie : en-tête (état, reine, force, dernière visite)
        onglets Journal · Santé · Reine & lignée · Production · Photos
@@ -38,6 +38,13 @@ API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, 
 Compte (avatar) : exploitations · installer · plein soleil · aide · se déconnecter
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.36 (13 nov. 2026)** : l'écran Ruches (Ruchers › Liste) gagne une bascule **« Par rucher / Tableau »** : même
+écran, même route (`ruches`), deux affichages ; pas de nouvelle rubrique ni de nouvel onglet. L'affichage Tableau liste
+toutes les colonies actives avec recherche, filtres (rucher, état, reine, seuils d'alerte), tri, colonnes au choix,
+synthèse, sélection pour une visite groupée ou un déplacement, fiche rapide, et une présentation en cartes ; sur
+ordinateur, les filtres restent visibles à gauche et la fiche rapide s'ouvre à droite. Le choix d'affichage est gardé
+sur l'appareil. Décision de Pierre-Louis (13 nov. 2026, maquettes « Affichage des ruches », pistes 5 et 6 validées).
 
 **v5.32 (12 nov. 2026)** : « Gestion » disparaît des menus. Ses écrans sont rangés dans deux catégories aux noms
 plus parlants, **Finances** et **Administration**, plus **Équipe et compte**. Sur ordinateur, menu latéral permanent par
