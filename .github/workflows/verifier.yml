@@ -3,8 +3,9 @@
 name: Vérifier
 
 on:
+  # Toutes les pull requests, documentation comprise : « verifier » et « Tests SQL » sont obligatoires pour fusionner
+  # sur main (règle GitHub « main protégée ») ; une pull request sans vérification resterait bloquée.
   pull_request:
-    paths-ignore: ['docs/**', '**.md']
   push:
     branches: [main]
     paths-ignore: ['docs/**', '**.md']

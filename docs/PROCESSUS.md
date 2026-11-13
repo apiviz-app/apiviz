@@ -20,9 +20,10 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
 
 1. **Branche** : créer `claude/…` depuis `main`. Jamais d'envoi direct sur `main`.
 2. **Base de données** : toute migration est appliquée d'abord sur `apidoo-test`, notée dans `migrations/README.md`, et ajoutée à `migrations/a-appliquer-en-production.txt`.
-3. **Pull request vers `main`** : « Vérifier » lance les tests. La fusion ne publie rien. **Ne pas fusionner tant que
-   « Vérifier » est rouge** : l'erreur passe sur `main` et sur toutes les pull requests suivantes (#46, #47, #48 le
-   12 nov. 2026). En cas de conflit (« This branch has conflicts »), ne pas le résoudre dans l'éditeur de GitHub :
+3. **Pull request vers `main`** : « Vérifier » lance les tests. La fusion ne publie rien. **GitHub refuse la fusion
+   tant que « verifier » et « Tests SQL » ne sont pas verts sur la branche à jour avec `main`** (règle « main
+   protégée », posée le 13 nov. 2026 après #46, #47, #48 et #50 fusionnées en rouge). Si GitHub demande « Update
+   branch », cliquer, attendre le vert, puis fusionner. En cas de conflit (« This branch has conflicts »), ne pas le résoudre dans l'éditeur de GitHub :
    demander à Claude de remettre la branche à jour. Deux fusions y ont perdu une feuille de style et une rubrique du
    CHANGELOG (#33, #46).
 4. **Recette** : Actions › Mise en ligne › Run workflow, cible `recette`. Une branche peut y être essayée avant fusion.
