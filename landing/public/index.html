@@ -290,12 +290,236 @@ footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:1
 footer .logo{font-size:18px;color:var(--ink)}
 footer .logo .wm{height:22px}
 
+/* Photos */
+.hero-visual .app-grid{grid-template-columns:1.4fr 1fr}
+.hero-visual .cell{width:50px;height:43px;font-size:10px}
+.hero-visual .row{gap:3px;margin-top:-10px}
+.hero-visual .row:first-child{margin-top:0}
+.hero-visual .row:nth-child(even){margin-left:26.5px}
+.hero-visual{position:relative;min-height:600px}
+.hero-visual .kpis+*{}
+.hero-photo{position:absolute;right:-12px;top:-40px;width:64%;aspect-ratio:4/5;margin:0;border-radius:26px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+.hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-photo figcaption{position:absolute;right:14px;top:14px;background:rgba(30,43,36,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:13px;font-weight:600;padding:6px 11px;border-radius:999px}
+.hero-visual .app{position:absolute;left:-24px;bottom:-56px;width:80%;transform:perspective(1400px) rotateY(-6deg) rotateX(3deg) scale(.88);transform-origin:left bottom}
+.hero-visual .app:hover{transform:perspective(1400px) scale(.88)}
+.gallery{display:grid;grid-template-columns:1.25fr 1fr 1fr 1.25fr;gap:14px;margin-top:64px}
+.gallery figure{position:relative;margin:0;border-radius:20px;overflow:hidden;aspect-ratio:3/4;background:#E6E8DF}
+.gallery figure:nth-child(odd){margin-top:40px}
+.gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.gallery figure:hover img{transform:scale(1.05)}
+.gallery figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 14px;background:linear-gradient(transparent,rgba(20,28,24,.75));color:#fff;font-weight:600;font-size:15px}
+.step-photo{width:100%;max-width:440px;aspect-ratio:16/9;object-fit:cover;border-radius:18px;display:block;margin-bottom:22px;box-shadow:0 20px 40px -24px rgba(30,43,36,.5)}
+.thumbs i.ph{background-size:cover;background-position:center}
+.thumbs i.ph::after{display:none}
+
+/* Essayez apiviz */
+.try{background:var(--ground)}
+.try-grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:72px;align-items:start;margin-top:48px}
+.missions{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-width:460px}
+.missions li{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(30,43,36,.05);transition:background .25s}
+.missions .ck{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;transition:background .2s,border-color .2s}
+.missions li.done{background:#E3F2EA}
+.missions li.done .ck{background:var(--good);border-color:var(--good)}
+.missions b{display:block;font:700 17px/1.3 var(--display)}
+.missions span{font-size:15px;color:var(--muted)}
+.try-photo{margin-top:24px;max-width:460px;aspect-ratio:16/9;width:100%;object-fit:cover;border-radius:18px;display:block}
+.try-reset{margin-top:14px;background:none;border:0;color:var(--watch);font-weight:600;cursor:pointer;padding:6px 0;text-decoration:underline}
+.try-done{margin-top:18px;font-weight:600;color:var(--good);min-height:24px;max-width:460px}
+.demo{position:sticky;top:96px;width:390px;height:760px;background:var(--pine);border-radius:52px;padding:12px;box-shadow:0 50px 90px -35px rgba(30,43,36,.6)}
+.demo-in{position:relative;height:100%;border-radius:42px;overflow:hidden;background:var(--ground);display:flex;flex-direction:column;font-size:14px}
+.demo-top{display:flex;justify-content:space-between;padding:16px 26px 6px;font-size:12px;font-weight:600}
+.demo-top .ok{color:var(--good)}
+.demo-scr{flex:1;overflow-y:auto;padding:6px 16px 16px;scrollbar-width:none}
+.demo-scr::-webkit-scrollbar{display:none}
+.demo-scr h4{font:800 26px/1.1 var(--display);letter-spacing:-.02em;margin:6px 0 2px}
+.demo-scr .s{color:var(--muted);font-size:13px;margin-bottom:12px}
+.demo-nav{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;box-shadow:0 -6px 20px rgba(30,43,36,.08);padding:6px 6px 14px}
+.demo-nav button{background:none;border:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:12px}
+.demo-nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.demo-nav button[aria-current="page"]{color:var(--pine)}
+.demo-nav button[aria-current="page"] svg{background:#FBEBC4;border-radius:10px;padding:2px 9px;box-sizing:content-box}
+.demo-nav .plus svg{background:var(--honey);border-radius:12px;width:40px;height:28px;color:var(--ink);box-sizing:border-box;padding:3px 9px}
+.d-card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(30,43,36,.05);margin-top:10px}
+.d-card h5{margin:0 0 6px;font:700 13.5px var(--text)}
+.d-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.d-kpis .d-card{margin:0}
+.d-kpis small{display:block;font-size:11.5px;color:var(--muted);font-weight:600}
+.d-kpis b{font:800 24px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.d-row{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-top:1px solid #EDEFE7;padding:10px 0;text-align:left;cursor:pointer;font-size:14px}
+.d-row:first-of-type{border-top:0}
+.d-row .hx{flex:none;width:26px;height:23px;clip-path:var(--hex)}
+.d-row .m{flex:1;min-width:0}
+.d-row .m small{display:block;color:var(--muted);font-size:12px}
+.hx.good{background:var(--good)}.hx.watch{background:var(--watch)}.hx.crit{background:var(--crit)}
+.d-comb{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:4px 10px}
+.d-comb button{width:58px;height:50px;border:0;clip-path:var(--hex);color:#fff;font:700 11.5px var(--text);cursor:pointer;transition:filter .15s}
+.d-comb button:hover{filter:brightness(1.15)}
+.d-comb button.good{background:var(--good)}.d-comb button.watch{background:var(--watch)}.d-comb button.crit{background:var(--crit)}
+.d-btn{width:100%;min-height:46px;border:0;border-radius:12px;background:var(--pine);color:#fff;font:600 15px var(--text);cursor:pointer;margin-top:12px}
+.d-btn.honey{background:var(--honey);color:var(--ink)}
+.d-chips{display:flex;flex-wrap:wrap;gap:6px}
+.d-chips button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #C9CDC1;background:#fff;font:600 13px var(--text);cursor:pointer}
+.d-chips button[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:#fff}
+.d-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.d-seg button{min-height:40px;border:1px solid #C9CDC1;border-radius:10px;background:#fff;font:600 13px var(--text);cursor:pointer}
+.d-seg button[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:#fff}
+.d-q{margin-top:12px}
+.d-q .t{font-weight:600;font-size:12.5px;margin-bottom:6px}
+.d-step{display:flex;justify-content:space-between;align-items:center}
+.d-step .c{display:flex;gap:8px;align-items:center;font-weight:700;font-size:16px}
+.d-step .c button{width:36px;height:36px;border:1px solid #C9CDC1;border-radius:10px;background:#fff;font-size:18px;cursor:pointer}
+.d-photos{display:flex;gap:6px;flex-wrap:wrap}
+.d-photos img,.d-photos button{width:58px;height:58px;border-radius:10px;object-fit:cover}
+.d-photos button{border:1.5px dashed #C9CDC1;background:#fff;font-size:22px;color:var(--muted);cursor:pointer}
+.d-journal{border-top:1px solid #EDEFE7;padding:10px 0}
+.d-journal:first-of-type{border-top:0}
+.d-journal b{font-size:13px}
+.d-journal p{font-size:13px;color:#4A544E;margin-top:2px}
+.d-journal .d-photos img{width:46px;height:46px}
+.d-back{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:4px 0}
+.d-toast{position:absolute;left:50%;top:44px;transform:translate(-50%,-20px);opacity:0;background:var(--pine);color:#fff;font-weight:600;font-size:13px;padding:9px 14px;border-radius:12px;transition:opacity .2s,transform .25s;pointer-events:none;white-space:nowrap;z-index:5}
+.d-toast.on{opacity:1;transform:translate(-50%,0)}
+.d-new{animation:dnew 1.2s ease}
+@keyframes dnew{from{background:#FBEBC4}to{background:transparent}}
+
+/* ---------- v5 : API ---------- */
+.top nav .login{color:#fff;font-weight:600}
+.app-head{justify-content:flex-start}
+.app-head .say{flex:1;min-width:0}
+.app-head b{font-size:17px;line-height:1.25}
+.app-head api-compagnon{margin:-6px 4px -6px -4px}
+
+.api-sec{position:relative;background:var(--pine);color:#fff;overflow:hidden}
+.api-sec .sub{color:#C9D2CB}
+.api-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
+.envol{position:relative;height:300px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:38px;background:var(--pine2);border-radius:28px;overflow:hidden}
+.envol .deco{position:absolute;background:var(--pine3);opacity:.5;clip-path:var(--hex)}
+.envol .wm{position:relative;display:inline-flex;align-items:baseline;font:800 92px/1 var(--display);letter-spacing:-.045em;color:#FFF8E7}
+.envol .wm .i{position:relative;display:inline-block}
+.envol .wm .dot{position:absolute;left:50%;top:.05em;width:.21em;height:.18em;margin-left:-.118em;background:var(--honey);clip-path:var(--hex)}
+.envol svg.mini{position:absolute;left:50%;top:26px;width:120px;margin-left:-60px;overflow:visible}
+.mini .ant{stroke:#FFF8E7;stroke-width:4;stroke-linecap:round;fill:none}
+.mini .tip{fill:#FFF8E7}
+.mini .body{fill:var(--honey)}
+.mini .pup{fill:var(--pine)}
+.mini .glint{fill:#FFF8E7}
+.mini .mouth{stroke:var(--pine);stroke-width:4;stroke-linecap:round;fill:none}
+.mini .eye-l{transform:translate(44px,78px)}.mini .eye-r{transform:translate(84px,78px)}
+.mini .lid{transform-box:fill-box;transform-origin:center}
+.envol .dot{animation:env-dot 7s ease-in-out infinite}
+.envol .all{transform-origin:64px 82px;animation:env-api 7s ease-in-out infinite}
+.envol .lid{animation:env-lid 7s ease-in-out infinite}
+@keyframes env-dot{0%,10%{translate:0 0;scale:1;rotate:0deg;opacity:1}16%{translate:0 .1em;scale:1.2 .75;opacity:1}34%{translate:var(--dx) var(--dy);scale:2.4;rotate:360deg;opacity:1}36%,74%{translate:var(--dx) var(--dy);scale:2.4;rotate:360deg;opacity:0}76%{translate:var(--dx) var(--dy);scale:2.4;rotate:360deg;opacity:1}92%,100%{translate:0 0;scale:1;rotate:0deg;opacity:1}}
+@keyframes env-api{0%,33%{transform:scale(0)}40%{transform:scale(1.15)}44%,54%{transform:scale(1) rotate(0)}57%{transform:rotate(-8deg)}61%{transform:rotate(8deg)}65%{transform:rotate(-5deg)}68%,72%{transform:scale(1) rotate(0)}77%,100%{transform:scale(0)}}
+@keyframes env-lid{0%,48%{transform:scale(1,1)}50%{transform:scale(1,.1)}52%,100%{transform:scale(1,1)}}
+.envol.off *{animation-play-state:paused!important}
+
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+.duo>div{background:var(--pine2);border-radius:22px;padding:26px 28px}
+.duo h3{font:800 24px/1.15 var(--display);display:flex;align-items:center;gap:12px}
+.duo h3 .you{width:44px;height:38px;clip-path:var(--hex);background:#FFF8E7;display:inline-block}
+.duo ul{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px}
+.duo li{display:grid;grid-template-columns:22px 1fr;gap:10px;color:#C9D2CB;font-size:16px}
+.duo li::before{content:"";width:16px;height:14px;margin-top:5px;clip-path:var(--hex);background:#FFF8E7}
+.duo .api-col li::before{background:var(--honey)}
+.duo li b{color:#fff;font-weight:600}
+
+.moods{margin-top:72px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:48px;align-items:center}
+.mood-tabs{display:grid;gap:8px}
+.mood-tabs button{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;text-align:left;background:transparent;border:1.5px solid var(--pine3);border-radius:16px;padding:12px 16px;color:#C9D2CB;cursor:pointer;transition:background .2s,border-color .2s}
+.mood-tabs button:hover{border-color:var(--pine4)}
+.mood-tabs button[aria-selected="true"]{background:var(--pine2);border-color:var(--honey);color:#fff}
+.mood-tabs b{display:block;color:#fff;font:700 17px/1.2 var(--display)}
+.mood-tabs small{font-size:14px}
+.mood-stage{position:relative;background:var(--pine2);border-radius:28px;min-height:440px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:36px 28px;text-align:center}
+.mood-stage .bubble{position:relative;background:#FFF8E7;color:var(--ink);border-radius:18px;padding:14px 18px;font-weight:600;font-size:17px;max-width:420px;line-height:1.4}
+.mood-stage .bubble::after{content:"";position:absolute;left:50%;bottom:-7px;width:16px;height:16px;margin-left:-8px;background:#FFF8E7;transform:rotate(45deg)}
+.mood-stage .where{font-size:14px;color:#9FADA4;max-width:400px}
+.mood-stage .extra{min-height:28px}
+.wave{display:flex;gap:4px;align-items:center;height:28px}
+.wave i{width:5px;border-radius:3px;background:var(--honey);animation:wave 1s ease-in-out infinite;animation-delay:calc(var(--i)*.1s)}
+@keyframes wave{0%,100%{height:6px}50%{height:26px}}
+.frise{display:flex;gap:3px}
+.frise span{width:26px;height:22px;border-radius:5px;background:var(--pine3);font-size:10px;color:#C9D2CB;display:flex;align-items:center;justify-content:center}
+.frise span.ok{background:#2F6B4F;color:#fff}
+.frise span.best{background:var(--honey);color:var(--ink);font-weight:700}
+.honest{margin-top:40px;color:#9FADA4;font-size:15px;max-width:52em}
+
+/* ---------- v5 : démo ---------- */
+.d-api{display:flex;gap:10px;align-items:center;background:var(--pine);color:#fff;border-radius:16px;padding:10px 12px;margin-top:4px}
+.d-api b{display:block;font-size:13.5px;line-height:1.3}
+.d-api small{color:#C9D2CB;font-size:11.5px}
+.demo-nav{grid-template-columns:repeat(5,1fr)}
+.demo-nav .apib{position:relative}
+.demo-nav .apib api-compagnon{margin-top:-18px;filter:drop-shadow(0 4px 8px rgba(160,110,0,.35))}
+.d-sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:26px 26px 0 0;padding:16px 16px 22px;box-shadow:0 -14px 40px rgba(30,43,36,.25);transform:translateY(105%);transition:transform .32s cubic-bezier(.22,1,.36,1);z-index:6}
+.d-sheet.on{transform:none}
+.d-sheet::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:#D5D8CE;margin:-4px auto 10px}
+.d-sheet .t{display:flex;align-items:center;gap:10px;font:800 21px var(--display)}
+.d-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.d-tiles button{min-height:74px;border:0;border-radius:14px;background:var(--ground);text-align:left;padding:10px 12px;font:600 13.5px var(--text);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
+.d-tiles button small{color:var(--muted);font-weight:500;font-size:11.5px}
+.d-tiles button:hover{background:#ECEEE5}
+.d-veil{position:absolute;inset:0;background:rgba(20,28,24,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:5}
+.d-veil.on{opacity:1;pointer-events:auto}
+.d-splash{position:absolute;inset:0;background:var(--pine);color:#C5D0C8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:8;transition:opacity .4s}
+.d-splash.gone{opacity:0;pointer-events:none}
+.d-splash .cells{display:flex;gap:7px}
+.d-splash .cells span{width:20px;height:17px;clip-path:var(--hex);background:var(--pine3);animation:dcell 1.8s ease-in-out both;animation-delay:calc(var(--i)*.22s)}
+@keyframes dcell{0%{background:var(--pine3);scale:1}30%{background:var(--honey);scale:1.4}50%,100%{background:var(--honey);scale:1}}
+.d-voice{text-align:center}
+.d-voice .txt{min-height:66px;margin:12px 0;font-size:14px;color:var(--ink);background:#fff;border-radius:14px;padding:10px 12px;text-align:left}
+.d-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
+.d-fields div{display:flex;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:8px 10px;font-size:12px;color:var(--muted)}
+.d-fields div i{flex:none;width:18px;height:16px;clip-path:var(--hex);background:#E1E3DA;transition:background .3s}
+.d-fields div.ok i{background:var(--honey)}
+.d-fields div b{display:block;color:var(--ink);font-size:13px}
+.d-burst{position:absolute;left:50%;top:120px;z-index:7;pointer-events:none}
+.d-burst i{position:absolute;width:12px;height:10px;margin:-5px 0 0 -6px;clip-path:var(--hex);background:var(--c);opacity:0;animation:dburst .9s ease-out both}
+@keyframes dburst{0%{transform:rotate(var(--a)) translateY(0) scale(0);opacity:0}25%{opacity:1;transform:rotate(var(--a)) translateY(-24px) scale(1)}100%{transform:rotate(var(--a)) translateY(-90px) scale(.4);opacity:0}}
+
+/* ---------- v5 : fonctions ---------- */
+.feat{margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.feat article{background:#fff;border-radius:20px;padding:22px;box-shadow:0 1px 2px rgba(30,43,36,.05);display:flex;flex-direction:column;gap:8px}
+.feat svg{width:30px;height:30px;stroke:var(--watch);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font:700 20px/1.25 var(--display);margin-top:6px}
+.feat p{color:#4A544E;font-size:15.5px;flex:1}
+.feat .beta{display:inline-block;font-size:12px;font-weight:600;color:var(--watch);background:#FDEBDD;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.feat .try-it{align-self:flex-start;margin-top:6px;background:var(--ground);border:0;border-radius:10px;padding:8px 12px;font:600 14px var(--text);color:var(--pine);cursor:pointer}
+.feat .try-it:hover{background:var(--wax)}
+
+/* ---------- v5 : fin ---------- */
+.eye-follow{width:140px;height:122px;background:var(--honey);clip-path:var(--hex);display:grid;place-items:center;margin:0 auto 28px;cursor:crosshair}
+.eye-follow .look{translate:calc(var(--px,0)*1px) calc(var(--py,0)*1px);transition:translate .18s ease-out}
+.eye-follow .pupil{position:relative;width:64px;height:56px;background:var(--pine);clip-path:var(--hex);animation:eblink 4.6s ease-in-out infinite}
+.eye-follow .pupil i{position:absolute;left:36px;top:10px;width:16px;height:14px;background:#FFF8E7;clip-path:var(--hex)}
+@keyframes eblink{0%,90%{scale:1 1}94%{scale:1 .06}98%,100%{scale:1 1}}
+
+@media (max-width:1000px){
+  .api-intro,.moods,.duo{grid-template-columns:1fr}
+  .feat{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .envol .wm{font-size:64px}
+  .feat{grid-template-columns:1fr}
+  .top nav .login{display:none}
+  .mood-stage{min-height:380px}
+}
+
 /* Apparition au défilement */
 .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1)}
 .rv.in{opacity:1;transform:none}
 
 @media (max-width:1000px){
-  .hero .wrap,.offline-grid,.season{grid-template-columns:1fr}
+  .hero .wrap,.offline-grid,.season,.try-grid{grid-template-columns:1fr}
+  .hero-visual{min-height:0;display:flex;flex-direction:column;gap:16px}
+  .hero-photo,.hero-visual .app{position:relative;width:100%;left:0;right:0;top:0;bottom:0;transform:none}
+  .hero-photo{aspect-ratio:16/10}
+  .gallery{grid-template-columns:1fr 1fr}
+  .gallery figure:nth-child(odd){margin-top:0}
+  .demo{position:relative;top:0;margin:0 auto;width:min(390px,100%)}
+  .step-photo{max-width:none}
   .app{transform:none}
   .domains{grid-template-columns:repeat(2,minmax(0,1fr))}
   .dash-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -323,7 +547,7 @@ footer .logo .wm{height:22px}
   .hero .lead{font-size:18px}
   .app-body{padding:12px}
   .kpi b{font-size:18px}
-  .app-grid{grid-template-columns:1fr}
+  .app-grid,.hero-visual .app-grid{grid-template-columns:1fr}
   .manifesto{padding:96px 0 80px}
   .story,.sec,.end{padding:84px 0}
   .domains,.dash-grid,.timeline{grid-template-columns:1fr}
@@ -334,6 +558,8 @@ footer .logo .wm{height:22px}
   .node{width:100%}
   .months{grid-template-columns:repeat(4,minmax(0,1fr))}
   .season{padding:22px}
+  .demo{height:700px;border-radius:44px}
+  .demo-in{border-radius:34px}
   .bee{display:none}
 }
 @media (prefers-reduced-motion:reduce){
@@ -350,10 +576,11 @@ footer .logo .wm{height:22px}
     <a class="logo" href="#" aria-label="apiviz, accueil"><svg class="wm" role="img" aria-label="apiviz" xmlns="http://www.w3.org/2000/svg" viewBox="-20 -800 2578 968"><path d="M175 14Q135 14 99.0 0.0Q63 -14 40.0 -45.5Q17 -77 17 -130Q17 -179 36.0 -209.5Q55 -240 87.0 -258.5Q119 -277 157.0 -286.5Q195 -296 232 -303Q284 -313 310.0 -319.0Q336 -325 345.5 -333.0Q355 -341 355 -355Q355 -384 333.5 -399.0Q312 -414 277 -414Q255 -414 233.0 -406.0Q211 -398 197.0 -377.5Q183 -357 184 -319L40 -329Q38 -392 59.0 -433.5Q80 -475 116.5 -498.5Q153 -522 196.5 -532.0Q240 -542 283 -542Q362 -542 413.0 -512.5Q464 -483 488.5 -427.5Q513 -372 513 -293V-199Q513 -166 513.0 -132.5Q513 -99 513.0 -66.0Q513 -33 513 0H373Q373 -36 373.0 -73.0Q373 -110 373 -151H367Q363 -106 337.5 -68.5Q312 -31 270.5 -8.5Q229 14 175 14ZM242 -104Q259 -104 278.5 -110.5Q298 -117 315.5 -132.0Q333 -147 344.0 -173.5Q355 -200 355 -239V-263L382 -266Q374 -253 355.5 -245.0Q337 -237 314.0 -232.5Q291 -228 267.5 -223.5Q244 -219 224.0 -211.5Q204 -204 191.5 -191.5Q179 -179 179 -157Q179 -131 197.5 -117.5Q216 -104 242 -104Z M567 148V-340V-528H709V-365H716Q727 -424 749.0 -463.5Q771 -503 805.5 -522.5Q840 -542 889 -542Q951 -542 994.5 -510.5Q1038 -479 1060.5 -417.5Q1083 -356 1083 -266Q1083 -169 1057.5 -107.0Q1032 -45 988.0 -15.5Q944 14 888 14Q843 14 808.5 -5.0Q774 -24 751.5 -63.5Q729 -103 720 -163H711Q716 -134 720.0 -102.5Q724 -71 726.5 -40.5Q729 -10 729 18V148ZM827 -119Q859 -119 879.5 -139.0Q900 -159 909.5 -191.5Q919 -224 919 -260Q919 -300 908.5 -332.5Q898 -365 877.5 -384.5Q857 -404 827 -404Q808 -404 790.0 -395.5Q772 -387 758.0 -369.5Q744 -352 735.5 -325.0Q727 -298 727 -260V-254Q727 -224 733.0 -202.0Q739 -180 749.0 -164.0Q759 -148 772.0 -138.0Q785 -128 799.0 -123.5Q813 -119 827 -119Z M1129 0V-528H1291V0Z M1477 0 1318 -528H1490L1581 -134H1585L1680 -528H1842L1683 0Z M1869 0V-528H2031V0Z M2075 0V-136L2326 -392V-398H2080V-528H2515V-391L2264 -134V-130H2518V0Z" fill="#FFF8E7"/><polygon points="1157.5,-780.0 1262.5,-780.0 1315.0,-689.0 1262.5,-598.0 1157.5,-598.0 1105.0,-689.0" fill="#E3A008"/><polygon points="1897.5,-780.0 2002.5,-780.0 2055.0,-689.0 2002.5,-598.0 1897.5,-598.0 1845.0,-689.0" fill="#E3A008"/></svg></a>
     <nav aria-label="Navigation principale">
       <a href="#projet">Le projet</a>
-      <a href="#journee">Au rucher</a>
-      <a href="#saison">La saison</a>
-      <a href="#feuille-de-route">Feuille de route</a>
-      <a class="btn honey sm" data-app href="#">Demander un accès</a>
+      <a href="#api">API</a>
+      <a href="#essayer">Essayer</a>
+      <a href="#fonctions">Fonctions</a>
+      <a class="login" href="https://app.apiviz.fr/">Se connecter</a>
+      <a class="btn honey sm" data-app href="https://app.apiviz.fr/">Créer mon compte</a>
     </nav>
   </div>
 </header>
@@ -372,8 +599,8 @@ footer .logo .wm{height:22px}
       <h1 class="reveal">Toutes vos ruches, d'un coup d'œil.</h1>
       <p class="lead reveal">apiviz est le carnet de rucher numérique des apiculteurs. Visites, photos, transhumances, récoltes, ventes et comptes : tout au même endroit, même sans réseau au fond du rucher.</p>
       <div class="cta reveal">
-        <a class="btn honey" data-app href="#">Demander un accès</a>
-        <a class="btn line" href="#journee">Voir comment ça marche</a>
+        <a class="btn honey" data-app href="https://app.apiviz.fr/">Créer mon compte</a>
+        <a class="btn line" href="#essayer">Essayer la démo</a>
       </div>
       <div class="platforms reveal">
         <span><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>Téléphone</span>
@@ -382,10 +609,12 @@ footer .logo .wm{height:22px}
       </div>
     </div>
 
+    <div class="hero-visual">
+    <figure class="hero-photo"><img src="img/rucher.webp" alt="Apiculteur en tenue au milieu de ses ruches" width="960" height="1200" fetchpriority="high"><figcaption>Rucher du Bois, 9 h</figcaption></figure>
     <div class="app" aria-label="Aperçu interactif de l'accueil d'apiviz">
       <div class="app-bar"><i></i><i></i><i></i><span>apiviz.fr</span></div>
       <div class="app-body">
-        <div class="app-head"><div><b>Bonjour</b><small>13 ruches · 4 à surveiller · 3 tâches à faire</small></div><span class="chip">Nouvelle visite</span></div>
+        <div class="app-head"><api-compagnon etat="attention" taille="54" fond="sombre" muet></api-compagnon><div class="say"><b>Bonjour. Bon créneau vers 14 h au Rucher du Bois. Ruche 6 est en état critique : commence par elle.</b><small>D'après la dernière visite de Ruche 6</small></div></div>
         <div class="kpis">
           <div class="kpi"><small>Miel en stock</small><b data-count="184">0</b> <small style="display:inline">kg</small></div>
           <div class="kpi"><small>Ventes 2026</small><b data-count="3420" data-suffix=" €">0</b></div>
@@ -397,6 +626,7 @@ footer .logo .wm{height:22px}
         </div>
         <p class="hint">Touchez une ruche pour ouvrir sa fiche. Données d'exemple.</p>
       </div>
+    </div>
     </div>
   </div>
 </section>
@@ -410,6 +640,12 @@ footer .logo .wm{height:22px}
       <div><b>Pour quoi faire</b>Savoir quelle colonie surveiller, quand nourrir, combien de pots vendre et si la saison a été rentable.</div>
       <div><b>Comment</b>Une application web qui s'installe sur l'écran d'accueil du téléphone, bientôt aussi sur l'App Store et Google Play.</div>
     </div>
+    <div class="gallery rv">
+      <figure><img src="img/femme.webp" alt="Apicultrice souriante montrant un cadre couvert d'abeilles" loading="lazy"><figcaption>Le cadre du jour</figcaption></figure>
+      <figure><img src="img/blanc.webp" alt="Mains gantées sortant un cadre de la ruche" loading="lazy"><figcaption>La visite</figcaption></figure>
+      <figure><img src="img/cadre.webp" alt="Abeilles sur des alvéoles" loading="lazy"><figcaption>Le couvain</figcaption></figure>
+      <figure><img src="img/jaune3.webp" alt="Apiculteur dans un champ de colza en fleurs" loading="lazy"><figcaption>La transhumance</figcaption></figure>
+    </div>
   </div>
 </section>
 
@@ -422,12 +658,12 @@ footer .logo .wm{height:22px}
     </div>
     <div class="story-grid">
       <ol class="steps" id="steps">
-        <li data-s="0" class="on"><div><div class="when">7 h 30, avant de partir</div><h3>L'accueil vous dit quoi faire</h3><p>Les ruches à surveiller, les tâches du jour et les colonies pas visitées depuis longtemps remontent en premier.</p></div></li>
-        <li data-s="1"><div><div class="when">9 h, au rucher</div><h3>Une visite en quelques gestes</h3><p>Activité, provisions, reine, couvain, poids, varroa : un bouton par observation, gants compris. Les intrants utilisés sortent du stock tout seuls.</p></div></li>
-        <li data-s="2"><div><div class="when">9 h 10</div><h3>La photo vaut mieux qu'une note</h3><p>Jusqu'à dix photos par visite, réduites automatiquement pour ne pas saturer votre forfait. Elles restent rattachées au journal de la ruche.</p></div></li>
-        <li data-s="3"><div><div class="when">10 h, plus de réseau</div><h3>Rien n'est perdu</h3><p>Sans réseau, tout est gardé sur le téléphone. L'envoi part de lui-même dès que la connexion revient.</p></div></li>
-        <li data-s="4"><div><div class="when">11 h, départ en transhumance</div><h3>Déplacez vos colonies en une fois</h3><p>Choisissez les colonies et le rucher d'arrivée. L'historique des emplacements se tient tout seul, visite par visite.</p></div></li>
-        <li data-s="5"><div><div class="when">Le soir</div><h3>Le bilan se fait tout seul</h3><p>Récoltes, ventes, dépenses et trésorerie se calculent au fil de l'eau. Vous voyez où en est la saison sans ouvrir un tableur.</p></div></li>
+        <li data-s="0" class="on"><div><img class="step-photo" src="img/fleurs.webp" alt="Abeilles à l'entrée d'une ruche au petit matin" loading="lazy"><div class="when">7 h 30, avant de partir</div><h3>L'accueil vous dit quoi faire</h3><p>Les ruches à surveiller, les tâches du jour et les colonies pas visitées depuis longtemps remontent en premier.</p></div></li>
+        <li data-s="1"><div><img class="step-photo" src="img/blanc.webp" alt="Cadre sorti de la ruche pendant une visite" loading="lazy"><div class="when">9 h, au rucher</div><h3>Une visite en quelques gestes</h3><p>Activité, provisions, reine, couvain, poids, varroa : un bouton par observation, gants compris. Les intrants utilisés sortent du stock tout seuls.</p></div></li>
+        <li data-s="2"><div><img class="step-photo" src="img/femme.webp" alt="Apicultrice tenant un cadre" loading="lazy"><div class="when">9 h 10</div><h3>La photo vaut mieux qu'une note</h3><p>Jusqu'à dix photos par visite, réduites automatiquement pour ne pas saturer votre forfait. Elles restent rattachées au journal de la ruche.</p></div></li>
+        <li data-s="3"><div><img class="step-photo" src="img/jaune3.webp" alt="Rucher isolé dans un champ de colza" loading="lazy"><div class="when">10 h, plus de réseau</div><h3>Rien n'est perdu</h3><p>Sans réseau, tout est gardé sur le téléphone. L'envoi part de lui-même dès que la connexion revient.</p></div></li>
+        <li data-s="4"><div><img class="step-photo" src="img/rucher.webp" alt="Ruches colorées sur palettes" loading="lazy"><div class="when">11 h, départ en transhumance</div><h3>Déplacez vos colonies en une fois</h3><p>Choisissez les colonies et le rucher d'arrivée. L'historique des emplacements se tient tout seul, visite par visite.</p></div></li>
+        <li data-s="5"><div><img class="step-photo" src="img/cadre.webp" alt="Alvéoles pleines de miel" loading="lazy"><div class="when">Le soir</div><h3>Le bilan se fait tout seul</h3><p>Récoltes, ventes, dépenses et trésorerie se calculent au fil de l'eau. Vous voyez où en est la saison sans ouvrir un tableur.</p></div></li>
       </ol>
       <div class="phone-wrap">
         <div class="phone" aria-hidden="true">
@@ -452,7 +688,7 @@ footer .logo .wm{height:22px}
             </div>
             <div class="screen">
               <h4>Photos</h4><div class="s">Ruche 7 · 4 photos</div>
-              <div class="thumbs"><i></i><i></i><i class="up"></i><i></i><i class="add">+</i></div>
+              <div class="thumbs"><i class="ph" style="background-image:url(img/cadre2-p.webp)"></i><i class="ph" style="background-image:url(img/femme-p.webp)"></i><i class="ph up" style="background-image:url(img/cadre-p.webp)"></i><i class="ph" style="background-image:url(img/blanc-p.webp)"></i><i class="add">+</i></div>
               <div class="card" style="font-size:12px;color:var(--muted)">Photo réduite à 250 Ko au lieu de 11 Mo. Rattachée à la visite du 15 avril.</div>
             </div>
             <div class="screen">
@@ -479,6 +715,118 @@ footer .logo .wm{height:22px}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API, le compagnon -->
+<section class="sec api-sec" id="api">
+  <div class="wrap">
+    <div class="api-intro">
+      <div class="rv">
+        <h2>Vous travaillez au rucher. API veille sur le reste.</h2>
+        <p class="sub">API est né du logo : les deux alvéoles des « i » d'apiviz s'envolent et deviennent un petit compagnon. Il lit vos visites, vos pesées et la météo, puis vous dit l'essentiel au bon moment.</p>
+      </div>
+      <div class="envol rv" id="envol" role="img" aria-label="Les deux points du logo apiviz s'envolent et forment API, le compagnon">
+        <span class="deco" style="left:-50px;top:-40px;width:160px;height:139px"></span>
+        <span class="deco" style="right:-70px;bottom:-50px;width:200px;height:174px"></span>
+        <svg class="mini" viewBox="-20 -10 168 152" aria-hidden="true">
+          <g class="all">
+            <path class="ant" d="M46 34 L36 8"/><path class="ant" d="M82 34 L92 8"/>
+            <polygon class="tip" points="36,4 41,10 36,16 31,10"/><polygon class="tip" points="92,4 97,10 92,16 87,10"/>
+            <polygon class="body" points="32,30 96,30 128,82 96,132 32,132 0,82"/>
+            <g class="eye-l"><g class="lid"><polygon class="pup" points="-6,-10 6,-10 12,0 6,10 -6,10 -12,0"/><polygon class="glint" points="1,-7 4,-7 6,-4 4,-1 1,-1 -1,-4"/></g></g>
+            <g class="eye-r"><g class="lid"><polygon class="pup" points="-6,-10 6,-10 12,0 6,10 -6,10 -12,0"/><polygon class="glint" points="1,-7 4,-7 6,-4 4,-1 1,-1 -1,-4"/></g></g>
+            <path class="mouth" d="M54 104 Q64 112 74 104"/>
+          </g>
+        </svg>
+        <span class="wm" aria-hidden="true"><span>ap</span><span class="i">ı<i class="dot"></i></span><span>v</span><span class="i">ı<i class="dot"></i></span><span>z</span></span>
+      </div>
+    </div>
+
+    <div class="duo rv">
+      <div>
+        <h3><span class="you" aria-hidden="true"></span>Vous, l'apiculteur</h3>
+        <ul>
+          <li><div><b>Vous ouvrez les ruches</b> et notez ce que vous voyez, au doigt ou à la voix.</div></li>
+          <li><div><b>Vous pesez, traitez, récoltez</b> : chaque geste entre dans le journal de la colonie.</div></li>
+          <li><div><b>Vous déplacez vos colonies</b> au fil des miellées.</div></li>
+          <li><div><b>Vous vendez votre miel</b> et suivez vos dépenses.</div></li>
+        </ul>
+      </div>
+      <div class="api-col">
+        <h3><api-compagnon etat="repos" taille="44" fond="sombre" muet></api-compagnon>API, le compagnon</h3>
+        <ul>
+          <li><div><b>Il vous dit la priorité du jour</b>, ruche par ruche, d'après vos dernières visites.</div></li>
+          <li><div><b>Il cherche le bon créneau</b> pour ouvrir, d'après la météo de chaque rucher.</div></li>
+          <li><div><b>Il écoute vos visites dictées</b> et remplit les cases pour vous.</div></li>
+          <li><div><b>Il garde tout sans réseau</b> et confirme chaque saisie quand elle est enregistrée.</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="moods">
+      <div class="mood-tabs rv" role="tablist" aria-label="Les moments d'API" id="moodTabs"></div>
+      <div class="mood-stage rv" id="moodStage" role="tabpanel" aria-live="polite">
+        <api-compagnon id="bigApi" etat="bonjour" taille="170" fond="sombre"></api-compagnon>
+        <div class="bubble" id="moodBubble"></div>
+        <div class="extra" id="moodExtra"></div>
+        <p class="where" id="moodWhere"></p>
+      </div>
+    </div>
+    <p class="honest rv">Aujourd'hui, API lit vos propres données : il ne parle pas encore de lui-même. Bientôt, il répondra à vos questions et lira vos factures.</p>
+  </div>
+</section>
+<!-- Essayez apiviz -->
+<section class="sec try" id="essayer">
+  <div class="wrap">
+    <div class="rv">
+      <h2>Essayez apiviz, ici même</h2>
+      <p class="sub">Une version simplifiée de l'application, avec API et un petit rucher d'exemple. Rien n'est enregistré : manipulez librement.</p>
+    </div>
+    <div class="try-grid">
+      <div>
+        <ol class="missions" id="missions">
+          <li data-m="fiche"><span class="ck" aria-hidden="true"></span><div><b>Ouvrez la fiche de la Ruche 6</b><span>API la signale à l'accueil : la reine n'a pas été vue.</span></div></li>
+          <li data-m="visite"><span class="ck" aria-hidden="true"></span><div><b>Notez une visite</b><span>Touchez API au centre, puis « Noter une visite ». Reine vue : la ruche repasse au vert.</span></div></li>
+          <li data-m="photo"><span class="ck" aria-hidden="true"></span><div><b>Ajoutez une photo à la visite</b><span>Touchez le « + » avant d'enregistrer.</span></div></li>
+          <li data-m="voix"><span class="ck" aria-hidden="true"></span><div><b>Dictez une visite à API</b><span>« Dicter une visite » : API écoute et remplit les cases.</span></div></li>
+          <li data-m="recolte"><span class="ck" aria-hidden="true"></span><div><b>Saisissez une récolte</b><span>Onglet Miel : le stock se met à jour à l'accueil.</span></div></li>
+        </ol>
+        <p class="try-done" id="tryDone" aria-live="polite"></p>
+        <button class="try-reset" id="tryReset" type="button">Recommencer avec le rucher d'exemple</button>
+        <img class="try-photo" src="img/tenue.webp" alt="Apiculteur inspectant un cadre dans un verger" loading="lazy">
+      </div>
+      <div class="demo" role="region" aria-label="Application apiviz de démonstration">
+        <div class="demo-in">
+          <div class="d-splash" id="dSplash" aria-hidden="true">
+            <api-compagnon etat="reflexion" taille="84" fond="sombre" muet></api-compagnon>
+            <div class="cells"><span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span><span style="--i:3"></span><span style="--i:4"></span><span style="--i:5"></span></div>
+            <span style="font-size:13px">Mise à jour de tes 6 ruches</span>
+          </div>
+          <div class="demo-top"><span>9:41</span><span class="ok">Démo</span></div>
+          <div class="d-toast" id="dToast" role="status"></div>
+          <div class="d-burst" id="dBurst" aria-hidden="true"></div>
+          <div class="demo-scr" id="dScr"></div>
+          <div class="d-veil" id="dVeil"></div>
+          <div class="d-sheet" id="dSheet" role="dialog" aria-label="Que veux-tu faire ?">
+            <div class="t"><api-compagnon id="sheetApi" etat="bonjour" taille="46" muet></api-compagnon>Que veux-tu faire ?</div>
+            <div class="d-tiles">
+              <button type="button" data-sheet="visite">Noter une visite<small>Au doigt, une minute</small></button>
+              <button type="button" data-sheet="voix">Dicter une visite<small>API écoute pour toi</small></button>
+              <button type="button" data-sheet="recolte">Saisir une récolte<small>Le stock suit</small></button>
+              <button type="button" data-sheet="ruches">Chercher une ruche<small>Par rucher</small></button>
+            </div>
+          </div>
+          <nav class="demo-nav" aria-label="Navigation de la démo">
+            <button type="button" data-go="accueil" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
+            <button type="button" data-go="ruches"><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/></svg>Ruchers</button>
+            <button type="button" class="apib" id="apiBtn" aria-label="API : que veux-tu faire ?"><api-compagnon id="navApi" etat="repos" taille="46" muet></api-compagnon></button>
+            <button type="button" data-go="recolte"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 4H8z"/><path d="M6 8h12v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/></svg>Miel</button>
+            <button type="button" data-go="gestion"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Gestion</button>
+          </nav>
         </div>
       </div>
     </div>
@@ -547,18 +895,22 @@ footer .logo .wm{height:22px}
 <section class="sec" id="fonctions">
   <div class="wrap">
     <div class="rv">
-      <h2>De la colonie au pot vendu</h2>
-      <p class="sub">Tout le cycle de l'apiculteur dans une seule application.</p>
+      <h2>Tout ce que fait apiviz</h2>
+      <p class="sub">Du premier passage au rucher jusqu'à la déclaration de fin d'année. Certaines fonctions se testent dans la démo.</p>
     </div>
-    <div class="domains rv">
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M12 8l3.46 2v4L12 16l-3.46-2v-4z"/></svg><h3>Colonies et ruchers</h3><p>Une fiche par colonie : état, reine, historique, emplacement à n'importe quelle date.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M4 18c4-8 12-8 16-12"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="6" r="2"/></svg><h3>Transhumance</h3><p>Plusieurs colonies déplacées en une fois, historique des emplacements automatique.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><h3>Visites</h3><p>Observations, poids, varroa, intrants, photos. Le journal de chaque ruche se construit seul.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><h3>Agenda et tâches</h3><p>Nourrissements, traitements, contrôles, ruche par ruche, avec les priorités à l'accueil.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 4H8z"/><path d="M6 8h12v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/></svg><h3>Récoltes et stock</h3><p>Récoltes par ruche ou par rucher, lots, miel en stock en kilos et en pots.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M3 11h18"/><circle cx="16" cy="15" r="1.5"/></svg><h3>Ventes et dépenses</h3><p>Ventes, encaissements en attente, dépenses par fournisseur, trésorerie calculée.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>Pilotage</h3><p>Rendement par ruche, résultat de l'année, prévisions et budget.</p></div>
-      <div class="domain"><svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12z"/><path d="M9 21v-6h6v6"/></svg><h3>Matériel et intrants</h3><p>Ruches physiques, consommables et leur autonomie au rythme actuel.</p></div>
+    <div class="feat rv">
+      <article><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><h3>Visite à la voix</h3><p>Vous parlez, API remplit activité, reine, couvain, provisions et poids. Vous relisez, vous enregistrez.</p><button class="try-it" data-try="voix">Essayer</button></article>
+      <article><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><h3>Visites et photos</h3><p>Observations, varroa, intrants sortis du stock, jusqu'à dix photos. Le journal de chaque ruche se construit seul.</p><button class="try-it" data-try="visite">Essayer</button></article>
+      <article><svg viewBox="0 0 24 24"><path d="M4 19c3-6 6-9 8-9s3 3 5 3 3-2 3-2"/><circle cx="4" cy="19" r="2"/><circle cx="20" cy="11" r="2"/></svg><h3>Tournée en parcours</h3><p>Départ, saisie ruche après ruche, vérification, bilan. Rien n'est enregistré sans relecture.</p></article>
+      <article><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><h3>Météo et bon créneau</h3><p>La météo de chaque rucher et le meilleur moment pour ouvrir dans les jours qui viennent.</p></article>
+      <article><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18"/></svg><h3>Sans réseau</h3><p>Tout se saisit hors ligne. L'envoi part de lui-même au retour du réseau.</p></article>
+      <article><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M12 8l3.46 2v4L12 16l-3.46-2v-4z"/></svg><h3>Ruchers et transhumance</h3><p>Colonies rangées par rucher, déplacées en une fois, avec l'historique de leurs emplacements.</p></article>
+      <article><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 4H8z"/><path d="M6 8h12v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/></svg><h3>Récoltes, lots et étiquettes<span class="beta">bêta</span></h3><p>Miel en stock en kilos et en pots, fiches de lot, planche de 21 étiquettes à imprimer.</p><button class="try-it" data-try="recolte">Essayer</button></article>
+      <article><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M3 11h18"/><circle cx="16" cy="15" r="1.5"/></svg><h3>Ventes et factures</h3><p>Ventes avec reçu et relance, factures, dépenses par fournisseur, trésorerie calculée.</p></article>
+      <article><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg><h3>Registre d'élevage<span class="beta">bêta</span></h3><p>Les traitements notés en visite, rassemblés par année, en PDF et pour Excel. Rappel de la déclaration annuelle.</p></article>
+      <article><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><h3>Tâches et rappels<span class="beta">bêta</span></h3><p>Les tâches datées partent dans l'agenda du téléphone, et l'icône affiche ce qui est à surveiller.</p></article>
+      <article><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.6 4.5 4"/></svg><h3>À plusieurs</h3><p>Plusieurs exploitations, des membres invités par lien, chacun avec ses droits.</p></article>
+      <article><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>Pilotage et conseils</h3><p>Rendement par ruche, résultat de l'année, prévisions et budget, et les conseils du mois.</p></article>
     </div>
   </div>
 </section>
@@ -571,9 +923,9 @@ footer .logo .wm{height:22px}
       <p class="sub">apiviz avance par étapes, chaque version est testée sur le terrain avant sa mise en ligne.</p>
     </div>
     <ol class="timeline rv">
-      <li class="done"><div class="when">En service</div><h3>Le carnet de rucher</h3><p>Ruches, visites, récoltes, ventes, dépenses, tâches et tableaux de pilotage.</p></li>
-      <li class="done"><div class="when">En service</div><h3>Terrain et hors ligne</h3><p>Photos de visite, saisie sans réseau avec envoi différé, gestion des ruchers.</p></li>
-      <li class="now"><div class="when">En cours</div><h3>Transhumance et matériel</h3><p>Déplacements de colonies, historique des emplacements, ruches physiques.</p></li>
+      <li class="done"><div class="when">En service</div><h3>Le carnet de rucher</h3><p>Ruches, visites, photos, récoltes, ventes, dépenses, tâches et pilotage, même sans réseau.</p></li>
+      <li class="done"><div class="when">En service</div><h3>API et le terrain</h3><p>Priorité du jour, météo et bon créneau, visite à la voix, tournée, transhumance.</p></li>
+      <li class="now"><div class="when">En cours</div><h3>API répond</h3><p>Poser une question à API, lui faire lire une facture, recevoir ses conseils.</p></li>
       <li><div class="when">Ensuite</div><h3>Applications mobiles</h3><p>apiviz sur l'App Store et Google Play, à partir du même code que la version web.</p></li>
     </ol>
   </div>
@@ -584,11 +936,12 @@ footer .logo .wm{height:22px}
   <span class="floaty" style="right:8%;top:52%;width:80px;height:70px" data-par="-0.08"></span>
   <span class="floaty" style="left:18%;bottom:8%;width:56px;height:49px;background:#F3D27A" data-par="0.18"></span>
   <div class="wrap rv">
+    <div class="eye-follow" id="eyeFollow" role="img" aria-label="Le symbole d'apiviz vous regarde"><div class="look"><div class="pupil"><i></i></div></div></div>
     <h2>Votre prochaine visite, déjà notée.</h2>
-    <p class="sub">apiviz s'ouvre progressivement. Écrivez-nous à <a href="mailto:contact@apiviz.fr">contact@apiviz.fr</a> pour obtenir un accès et suivre le lancement.</p>
+    <p class="sub">Créez votre compte en une minute sur app.apiviz.fr, ajoutez vos ruches, et API s'occupe du reste. Une question ? <a href="mailto:contact@apiviz.fr">contact@apiviz.fr</a></p>
     <div class="cta">
-      <a class="btn honey" data-app href="#">Demander un accès</a>
-      <a class="btn dk" href="#journee">Revoir la tournée</a>
+      <a class="btn honey" data-app href="https://app.apiviz.fr/">Créer mon compte</a>
+      <a class="btn dk" href="https://app.apiviz.fr/">Se connecter</a>
     </div>
   </div>
 </section>
@@ -602,9 +955,10 @@ footer .logo .wm{height:22px}
   </div>
 </footer>
 
+<script src="api-compagnon.js"></script>
 <script>
-// Lien des boutons principaux. Le jour où l'application est ouverte au public, remplacer par son adresse (ex. https://app.apiviz.fr/).
-const APP_URL = "mailto:contact@apiviz.fr?subject=" + encodeURIComponent("Demande d'accès à apiviz");
+// Lien des boutons principaux : l'application apiviz.
+const APP_URL = "https://app.apiviz.fr/";
 document.querySelectorAll("[data-app]").forEach(a => a.href = APP_URL);
 document.getElementById("yr").textContent = new Date().getFullYear();
 const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -770,6 +1124,233 @@ document.querySelectorAll(".rv").forEach(el => rvObs.observe(el));
 // Parallaxe légère des alvéoles finales
 const floaty = [...document.querySelectorAll("[data-par]")];
 function onScrollPar(){ if (RM) return; floaty.forEach(f => { const r = f.parentElement.getBoundingClientRect(); f.style.transform = `translateY(${(r.top) * +f.dataset.par}px) rotate(${r.top * .02}deg)`; }); }
+
+// ---------- Démo interactive ----------
+const DEMO = (() => {
+  const PH = ["cadre2","femme","cadre","blanc","tenue"];
+  const fresh = () => ({
+    stock: 184, photoIdx: 0,
+    ruches: [
+      {id:1,nom:"Ruche 1",rucher:"Rucher du Bois",etat:"good",j:4,kg:31,journal:[{d:"Il y a 4 jours",t:"Activité forte, provisions bonnes, reine vue. Varroa 1 %.",ph:["cadre2"]}]},
+      {id:3,nom:"Ruche 3",rucher:"Rucher du Bois",etat:"watch",j:12,kg:18,journal:[{d:"Il y a 12 jours",t:"Activité faible, provisions faibles, reine vue. Varroa 3 %.",ph:[]}]},
+      {id:6,nom:"Ruche 6",rucher:"Rucher du Bois",etat:"crit",j:19,kg:12,journal:[{d:"Il y a 19 jours",t:"Activité faible, provisions faibles, reine absente. Varroa 6 %.",ph:["blanc"]}]},
+      {id:7,nom:"Ruche 7",rucher:"Rucher du Bois",etat:"good",j:2,kg:24,journal:[{d:"Il y a 2 jours",t:"Activité normale, provisions moyennes, reine vue. Varroa 1 %.",ph:[]}]},
+      {id:9,nom:"Ruche 9",rucher:"Colza, Saint-Jean",etat:"good",j:5,kg:33,journal:[{d:"Il y a 5 jours",t:"Activité forte, provisions bonnes, œufs vus. Varroa 0 %.",ph:["femme"]}]},
+      {id:11,nom:"Ruche 11",rucher:"Colza, Saint-Jean",etat:"watch",j:14,kg:19,journal:[{d:"Il y a 14 jours",t:"Activité normale, provisions faibles, reine vue. Varroa 2 %.",ph:[]}]}
+    ]
+  });
+  let S = fresh(), route = "accueil", cur = 6, form = null, rec = null, voice = null, vt = [];
+  const done = new Set(), MISSIONS = 5;
+  const $ = id => document.getElementById(id);
+  const scr = $("dScr"), toastEl = $("dToast"), sheet = $("dSheet"), veil = $("dVeil");
+  const L = {good:"Bonne", watch:"À surveiller", crit:"Critique"};
+  const byId = id => S.ruches.find(r => r.id === id);
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const when = j => j === 0 ? "aujourd'hui" : "il y a " + j + " j";
+  const api = (etat, t, extra = "") => `<api-compagnon etat="${etat}" taille="${t}" ${extra}></api-compagnon>`;
+  let tt;
+  const toast = m => { toastEl.textContent = m; toastEl.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => toastEl.classList.remove("on"), 2300); };
+  function burst(){
+    const b = $("dBurst"), C = ["#E3A008","#2F6B4F","#F6C453","#1E2B24","#E3A008","#2F6B4F"];
+    b.innerHTML = C.map((c, i) => `<i style="--a:${-75 + i * 30}deg;--c:${c}"></i>`).join("");
+    setTimeout(() => b.innerHTML = "", 1000);
+  }
+  function mission(m){
+    if (done.has(m)) return; done.add(m);
+    const li = document.querySelector(`#missions [data-m="${m}"]`);
+    if (li) { li.classList.add("done"); li.querySelector(".ck").textContent = "✓"; }
+    if (done.size === MISSIONS) $("tryDone").textContent = "Bravo, vous avez fait le tour. C'est exactement comme ça dans l'application.";
+  }
+  function openSheet(){ sheet.classList.add("on"); veil.classList.add("on"); const a = $("sheetApi"); a && a.jouer && a.jouer("bonjour", "repos"); }
+  function closeSheet(){ sheet.classList.remove("on"); veil.classList.remove("on"); }
+  function go(r, id){
+    closeSheet(); vt.forEach(clearTimeout); vt = [];
+    route = r; if (id) cur = id;
+    if (r === "visite") form = {id: id || cur, a:"Normale", p:"Moyennes", q:"Vue", v:1, ph:[]};
+    if (r === "recolte") rec = {id: id || cur, kg:10};
+    if (r === "voix") voice = {id: id || cur, step:0, f:{}};
+    const nav = {accueil:"accueil", ruches:"ruches", fiche:"ruches", recolte:"recolte", gestion:"gestion"}[r];
+    document.querySelectorAll(".demo-nav [data-go]").forEach(b => b.setAttribute("aria-current", b.dataset.go === nav ? "page" : "false"));
+    render(); scr.scrollTop = 0;
+    if (r === "voix") listen();
+  }
+  function priorite(){
+    const c = S.ruches.find(r => r.etat === "crit"), w = S.ruches.find(r => r.etat === "watch");
+    if (c) return ["attention", `Bon créneau vers 14 h au Rucher du Bois. ${c.nom} est en état critique : commence par elle.`, `D'après la dernière visite de ${c.nom}`, c.id];
+    if (w) return ["repos", `${w.nom} est à surveiller. Passe la voir à ta prochaine tournée.`, `D'après la dernière visite de ${w.nom}`, w.id];
+    return ["fait", "Tout va bien au rucher. Profite du beau temps !", "D'après tes dernières visites", null];
+  }
+  const row = r => `<button class="d-row" data-fiche="${r.id}"><span class="hx ${r.etat}"></span><span class="m">${esc(r.nom)}<small>Visite ${when(r.j)} · ${r.kg} kg récoltés</small></span><span class="tag ${r.etat}" style="font-size:11px">${L[r.etat]}</span></button>`;
+  const V = {
+    accueil(){
+      const w = S.ruches.filter(r => r.etat !== "good").length, [e, ph, src, id] = priorite();
+      return `<h4>Bonjour</h4><div class="s">${S.ruches.length} ruches · ${w} à surveiller</div>
+      <div class="d-api">${api(e, 46, 'fond="sombre" muet')}<div><b>${esc(ph)}</b><small>${esc(src)}</small>${id ? `<div><button class="d-btn honey" style="min-height:34px;margin-top:8px;font-size:13px" data-fiche="${id}">Voir la ruche</button></div>` : ""}</div></div>
+      <div class="d-kpis" style="margin-top:10px"><div class="d-card"><small>Miel en stock</small><b>${S.stock} kg</b></div><div class="d-card"><small>À surveiller</small><b style="color:${w ? "var(--watch)" : "var(--good)"}">${w}</b></div></div>
+      <div class="d-card"><h5>État des ruches</h5><div class="d-comb">${S.ruches.map(r => `<button class="${r.etat}" data-fiche="${r.id}" aria-label="${esc(r.nom)}, ${L[r.etat]}">${r.nom.replace("Ruche ", "R")}</button>`).join("")}</div></div>`;
+    },
+    ruches(){
+      const g = {}; S.ruches.forEach(r => (g[r.rucher] = g[r.rucher] || []).push(r));
+      return `<h4>Ruchers</h4><div class="s">${S.ruches.length} colonies dans 2 ruchers</div>` +
+        Object.keys(g).map(k => `<div class="d-card"><h5>${esc(k)}</h5>${g[k].map(row).join("")}</div>`).join("");
+    },
+    fiche(){
+      const r = byId(cur);
+      return `<button type="button" class="d-back" data-go="ruches">‹ Ruchers</button><h4>${esc(r.nom)}</h4><div class="s">${esc(r.rucher)} · visite ${when(r.j)}</div>
+      <div class="d-kpis"><div class="d-card"><small>État</small><b style="font-size:16px"><span class="tag ${r.etat}">${L[r.etat]}</span></b></div><div class="d-card"><small>Miel récolté</small><b>${r.kg} kg</b></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" class="d-btn honey" data-go="visite" data-id="${r.id}">Noter une visite</button><button type="button" class="d-btn" data-go="voix" data-id="${r.id}">Dicter à API</button></div>
+      <div class="d-card"><h5>Journal des visites</h5>${r.journal.map((e, i) => `<div class="d-journal ${i === 0 && e.neu ? "d-new" : ""}"><b>${e.d}${e.voix ? " · dictée" : ""}</b><p>${esc(e.t)}</p>${e.ph.length ? `<div class="d-photos" style="margin-top:6px">${e.ph.map(p => `<img src="img/${p}-p.webp" alt="Photo de visite">`).join("")}</div>` : ""}</div>`).join("")}</div>`;
+    },
+    visite(){
+      const f = form;
+      const seg = (k, t, o) => `<div class="d-q"><div class="t">${t}</div><div class="d-seg">${o.map(x => `<button type="button" data-f="${k}" data-v="${x}" aria-pressed="${f[k] === x}">${x}</button>`).join("")}</div></div>`;
+      return `<h4>Nouvelle visite</h4><div class="s">Au rucher, aujourd'hui</div>
+      <div class="d-q"><div class="t">Ruche visitée</div><div class="d-chips">${S.ruches.map(r => `<button type="button" data-pick="${r.id}" aria-pressed="${f.id === r.id}">${r.nom}</button>`).join("")}</div></div>
+      ${seg("a", "Activité", ["Faible", "Normale", "Forte"])}${seg("p", "Provisions", ["Faibles", "Moyennes", "Bonnes"])}${seg("q", "Reine", ["Vue", "Œufs vus", "Absente"])}
+      <div class="d-card d-step"><div><b>Varroa</b><div style="color:var(--muted);font-size:12px">pour 100 abeilles</div></div><div class="c"><button type="button" data-var="-1" aria-label="Moins">−</button>${f.v}<button type="button" data-var="1" aria-label="Plus">+</button></div></div>
+      <div class="d-q"><div class="t">Photos</div><div class="d-photos">${f.ph.map(p => `<img src="img/${p}-p.webp" alt="Photo ajoutée">`).join("")}${f.ph.length < 3 ? '<button type="button" data-photo aria-label="Ajouter une photo">+</button>' : ""}</div></div>
+      <button type="button" class="d-btn" data-save-visite>Enregistrer la visite</button>`;
+    },
+    voix(){
+      const v = voice, r = byId(v.id), F = [["a","Activité"],["q","Reine"],["c","Couvain"],["p","Provisions"],["k","Poids"]];
+      const lab = v.step >= 6 ? "J'ai tout noté. Relis, puis enregistre." : v.step > 0 ? "Je t'écoute…" : "Parle quand tu veux.";
+      return `<div class="d-voice"><h4>Visite dictée</h4><div class="s">${esc(r.nom)} · ${esc(r.rucher)}</div>
+      ${api(v.step >= 6 ? "repond" : "ecoute", 96, 'id="voiceApi" muet')}
+      <div style="font-weight:600;font-size:13px;margin-top:6px">${lab}</div>
+      <div class="txt" id="vTxt">${esc(v.txt || "")}</div>
+      <div class="d-fields">${F.map(([k, l]) => `<div class="${v.f[k] ? "ok" : ""}"><i></i><span>${l}<b>${v.f[k] || "…"}</b></span></div>`).join("")}</div>
+      ${v.step >= 6 ? '<button type="button" class="d-btn" data-save-voix>Enregistrer la visite</button>' : '<button type="button" class="d-btn" style="background:#C9CDC1;color:var(--ink)" disabled>API écoute…</button>'}</div>`;
+    },
+    recolte(){
+      const f = rec;
+      return `<h4>Miel</h4><div class="s">Saisir une récolte : le stock suit</div>
+      <div class="d-q"><div class="t">Ruche</div><div class="d-chips">${S.ruches.map(r => `<button type="button" data-rpick="${r.id}" aria-pressed="${f.id === r.id}">${r.nom}</button>`).join("")}</div></div>
+      <div class="d-card d-step"><div><b>Miel récolté</b><div style="color:var(--muted);font-size:12px">en kilos</div></div><div class="c"><button type="button" data-kg="-5" aria-label="Moins 5 kilos">−</button>${f.kg} kg<button type="button" data-kg="5" aria-label="Plus 5 kilos">+</button></div></div>
+      <div class="d-card" style="font-size:13px;color:var(--muted)">Soit ${f.kg * 2} pots de 500 g. En stock aujourd'hui : ${S.stock} kg.</div>
+      <button type="button" class="d-btn" data-save-recolte>Enregistrer la récolte</button>`;
+    },
+    gestion(){
+      const kg = S.ruches.reduce((s, r) => s + r.kg, 0);
+      return `<h4>Gestion</h4><div class="s">Saison en cours</div>
+      <div class="d-kpis"><div class="d-card"><small>Miel récolté</small><b>${kg} kg</b></div><div class="d-card"><small>Miel en stock</small><b>${S.stock} kg</b></div></div>
+      <div class="d-card"><h5>Dans l'application</h5>${["Ventes, reçus et relances","Dépenses et factures","Registre d'élevage","Étiquettes de pots","Prévisions et budget","Membres de l'exploitation"].map(x => `<div class="d-row" style="cursor:default"><span class="hx good" style="background:var(--honey)"></span><span class="m">${x}</span></div>`).join("")}</div>`;
+    }
+  };
+  function render(){ scr.innerHTML = V[route](); }
+  const PHRASE = [["Ruche 6.", {}], [" Activité normale,", {a:"Normale"}], [" reine vue,", {q:"Vue"}], [" couvain abondant,", {c:"Abondant"}], [" provisions bonnes.", {p:"Bonnes"}], [" Trente-deux kilos.", {k:"32 kg"}]];
+  function listen(){
+    voice.txt = ""; voice.f = {}; voice.step = 0;
+    const r = byId(voice.id); PHRASE[0][0] = r.nom + ".";
+    PHRASE.forEach((p, i) => vt.push(setTimeout(() => {
+      voice.txt += p[0]; Object.assign(voice.f, p[1]); voice.step = i + 1;
+      if (i === PHRASE.length - 1) voice.step = 6;
+      render();
+    }, 700 + i * 800)));
+  }
+  function saveVisit(r, o, isVoice){
+    r.etat = o.q === "Absente" ? "crit" : (o.p === "Faibles" || o.v >= 3 || o.a === "Faible") ? "watch" : "good";
+    r.j = 0;
+    r.journal.unshift({d:"Aujourd'hui", neu:true, voix:isVoice, t:o.t, ph:o.ph || []});
+    burst(); const n = $("navApi"); n && n.jouer && n.jouer("fait", "repos");
+  }
+  scr.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    if (b.dataset.fiche) { go("fiche", +b.dataset.fiche); if (+b.dataset.fiche === 6) mission("fiche"); return; }
+    if (b.dataset.go) { go(b.dataset.go, b.dataset.id ? +b.dataset.id : undefined); return; }
+    if (b.dataset.pick) { form.id = +b.dataset.pick; return render(); }
+    if (b.dataset.rpick) { rec.id = +b.dataset.rpick; return render(); }
+    if (b.dataset.f) { form[b.dataset.f] = b.dataset.v; return render(); }
+    if (b.dataset.var) { form.v = Math.max(0, Math.min(15, form.v + +b.dataset.var)); return render(); }
+    if (b.dataset.kg) { rec.kg = Math.max(5, Math.min(80, rec.kg + +b.dataset.kg)); return render(); }
+    if (b.hasAttribute("data-photo")) { form.ph.push(PH[S.photoIdx++ % PH.length]); return render(); }
+    if (b.hasAttribute("data-save-visite")) {
+      const r = byId(form.id), reine = form.q === "Œufs vus" ? "œufs vus" : "reine " + form.q.toLowerCase();
+      saveVisit(r, {q:form.q, p:form.p, v:form.v, a:form.a, ph:form.ph.slice(), t:`Activité ${form.a.toLowerCase()}, provisions ${form.p.toLowerCase()}, ${reine}. Varroa ${form.v} %.`});
+      mission("visite"); if (form.ph.length) mission("photo");
+      toast(form.ph.length ? `Visite et ${form.ph.length} photo${form.ph.length > 1 ? "s" : ""} enregistrées` : "Visite enregistrée");
+      go("fiche", r.id); return;
+    }
+    if (b.hasAttribute("data-save-voix")) {
+      const r = byId(voice.id);
+      saveVisit(r, {q:"Vue", p:"Bonnes", v:0, a:"Normale", t:"Activité normale, reine vue, couvain abondant, provisions bonnes. Poids 32 kg."}, true);
+      mission("voix"); toast("Visite dictée enregistrée"); go("fiche", r.id); return;
+    }
+    if (b.hasAttribute("data-save-recolte")) {
+      const r = byId(rec.id); r.kg += rec.kg; S.stock += rec.kg;
+      burst(); const n = $("navApi"); n && n.jouer && n.jouer("fait", "repos");
+      mission("recolte"); toast(`Récolte enregistrée : +${rec.kg} kg en stock`); go("accueil"); return;
+    }
+  });
+  document.querySelectorAll(".demo-nav [data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  $("apiBtn").onclick = () => sheet.classList.contains("on") ? closeSheet() : openSheet();
+  veil.onclick = closeSheet;
+  sheet.addEventListener("click", e => { const b = e.target.closest("[data-sheet]"); if (b) go(b.dataset.sheet); });
+  $("tryReset").onclick = () => {
+    S = fresh(); done.clear(); $("tryDone").textContent = "";
+    document.querySelectorAll("#missions li").forEach(li => { li.classList.remove("done"); li.querySelector(".ck").textContent = ""; });
+    go("accueil");
+  };
+  render();
+  // Écran de chargement : une alvéole par ruche, à la première apparition de la démo
+  const splash = $("dSplash");
+  new IntersectionObserver((es, o) => es.forEach(en => { if (en.isIntersecting) { setTimeout(() => splash.classList.add("gone"), RM ? 0 : 1900); o.disconnect(); } }), {threshold:.4}).observe(splash);
+  return { go };
+})();
+document.querySelectorAll("[data-try]").forEach(b => b.onclick = () => {
+  document.getElementById("essayer").scrollIntoView({behavior: RM ? "auto" : "smooth"});
+  setTimeout(() => { document.getElementById("dSplash").classList.add("gone"); DEMO.go(b.dataset.try); }, RM ? 0 : 600);
+});
+
+// ---------- API : les moments ----------
+(() => {
+  const M = [
+    ["bonjour","Le matin","Il vous accueille", "Bonjour ! Bon créneau vers 14 h au Rucher du Bois. Ruche 6 est en état critique : commence par elle.", "À l'accueil : la priorité du jour, d'après vos visites et la météo.", ""],
+    ["ecoute","Au rucher, mains prises","Il écoute", "Vas-y, je note : activité, reine, couvain, provisions, poids…", "Visite à la voix : vous parlez, les cases se remplissent, vous relisez.", "wave"],
+    ["reflexion","Avant de partir","Il cherche le bon moment", "Je regarde la météo de tes ruchers pour trouver quand ouvrir.", "Chaque rucher a sa météo et son meilleur créneau sur plusieurs jours.", "frise"],
+    ["fait","Après une saisie","Il confirme", "C'est noté ! Visite de la Ruche 3 enregistrée.", "Après une visite, une récolte ou une vente.", ""],
+    ["attention","Quand ça cloche","Il vous alerte", "Ruche 5 a perdu 2 kg depuis le 2 novembre. On la pèse ?", "Une colonie qui maigrit ou une reine absente remonte en tête de l'accueil.", ""],
+    ["horsligne","Sans réseau","Il garde tout", "Plus de réseau ici. Je garde tes visites et je les envoie dès que ça revient.", "Hors ligne, rien n'est perdu : la file d'envoi repart toute seule.", ""]
+  ];
+  const tabs = document.getElementById("moodTabs"), big = document.getElementById("bigApi");
+  tabs.innerHTML = M.map((m, i) => `<button role="tab" aria-selected="${i === 0}" data-i="${i}"><api-compagnon etat="${m[0] === "fait" || m[0] === "bonjour" ? "repos" : m[0]}" taille="40" fond="sombre" muet></api-compagnon><span><b>${m[2]}</b><small>${m[1]}</small></span></button>`).join("");
+  function show(i){
+    const m = M[i];
+    tabs.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-selected", i === j));
+    if (big.jouer) big.jouer(m[0], m[0] === "fait" || m[0] === "bonjour" ? "repos" : m[0]); else big.setAttribute("etat", m[0]);
+    document.getElementById("moodBubble").textContent = m[3];
+    document.getElementById("moodWhere").textContent = m[4];
+    document.getElementById("moodExtra").innerHTML = m[5] === "wave" ? `<div class="wave">${Array.from({length:12}, (_, k) => `<i style="--i:${k % 6}"></i>`).join("")}</div>`
+      : m[5] === "frise" ? `<div class="frise">${[["10",""],["11","ok"],["12","ok"],["13","ok"],["14","best"],["15","ok"],["16",""]].map(([h, c]) => `<span class="${c}">${h}h</span>`).join("")}</div>` : "";
+  }
+  tabs.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) { clearInterval(auto); show(+b.dataset.i); } });
+  show(0);
+  let k = 0, auto = RM ? null : setInterval(() => { const r = document.getElementById("moodStage").getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) show(k = (k + 1) % M.length); }, 5200);
+})();
+
+// ---------- Les points du logo s'envolent ----------
+(() => {
+  const s = document.getElementById("envol"); if (!s) return;
+  function aim(){
+    const a = s.querySelector("svg.mini").getBoundingClientRect(), cx = a.left + a.width / 2, cy = a.top + a.height * (92 / 152);
+    s.querySelectorAll(".dot").forEach(d => { d.style.animation = "none"; const r = d.getBoundingClientRect();
+      d.style.setProperty("--dx", (cx - (r.left + r.width / 2)) + "px"); d.style.setProperty("--dy", (cy - (r.top + r.height / 2)) + "px"); d.style.animation = ""; });
+  }
+  aim(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(aim);
+  let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(aim, 200); });
+  new IntersectionObserver(es => es.forEach(e => s.classList.toggle("off", !e.isIntersecting))).observe(s);
+})();
+
+// ---------- L'œil qui suit ----------
+(() => {
+  const z = document.querySelector(".end"), eye = document.getElementById("eyeFollow"); if (!eye) return;
+  const look = eye.querySelector(".look"); let idle;
+  z.addEventListener("pointermove", e => {
+    const r = eye.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const d = Math.hypot(dx, dy) || 1, k = Math.min(d / 4, 22) / d;
+    look.style.setProperty("--px", (dx * k).toFixed(1)); look.style.setProperty("--py", (dy * k * .8).toFixed(1));
+    clearTimeout(idle); idle = setTimeout(() => { look.style.setProperty("--px", 0); look.style.setProperty("--py", 0); }, 2200);
+  });
+})();
 
 let ticking = false;
 addEventListener("scroll", () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { onScrollHead(); onScrollManif(); onScrollPar(); ticking = false; }); }, {passive:true});
