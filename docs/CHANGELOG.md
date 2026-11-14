@@ -5,6 +5,37 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.39 · à publier en recette · supprimer son compte depuis l'app, sauvegarde prête à activer
+**Migration 022** (`022-suppression-compte.sql`) : additive, ne casse pas l'ancienne version. Appliquée par la mise en
+ligne (recette, puis production). Sans 022, l'écran garde l'ancien message.
+
+- **Supprimer mon compte** (Réglages › Mon profil) : l'écran dit ce qui part. Les exploitations dont on est la seule
+  personne inscrite sont effacées avec toutes leurs données et leurs photos ; on quitte celles qu'on partage, dont les
+  données restent (si on en était le dernier responsable, la personne inscrite depuis le plus longtemps le devient, un
+  membre avant un lecteur). Profil et compte de connexion effacés. Il faut écrire SUPPRIMER, et avoir du réseau. Les
+  photos sont effacées du stockage avant la base ; si cela échoue, rien d'autre n'est supprimé. L'appareil oublie
+  ensuite le prénom et les fiches récentes, puis se déconnecte. Exigé par le RGPD (droit à l'effacement) et par les
+  boutiques (App Store 5.1.1 (v), Google Play) pour une app où l'on crée son compte.
+- **Politique de confidentialité** : la rubrique « Vos droits » décrit la suppression depuis l'app (elle renvoyait vers
+  une adresse e-mail encore à compléter).
+- **Sauvegarde quotidienne chiffrée** de la base de production (action « Sauvegarde », décision D-03) : copie contrôlée,
+  chiffrée avec `age` (clé privée gardée hors ligne par le responsable), envoyée dans un seau Cloudflare R2, gardée
+  30 jours. **Inactive tant que la clé et le seau ne sont pas créés** : marche à suivre dans `docs/PROCESSUS.md` §
+  Sauvegardes.
+- Mémo `migrations/a-appliquer-en-production.txt` et tableau de `migrations/README.md` remis à jour (020 et 021 en place
+  partout depuis le 14 nov.).
+
+Technique : `compte_a_supprimer()`, `supprimer_mon_compte('SUPPRIMER')` (`security definer`, adresse vérifiée de la
+personne connectée seulement ; `postgres` peut effacer dans `auth.users`, vérifié sur apidoo-test). Tests : SQL
+`test_022` (22 vérifications), `test_appliquer` adapté ; bout en bout `etapes_sc` (nouveau).
+
+### À vérifier
+- En recette, avec un compte d'essai seul dans son exploitation : Mon profil › Supprimer mon compte. L'écran annonce
+  l'exploitation effacée ; sans « SUPPRIMER », rien ne se passe ; avec, retour à l'écran de connexion. Se reconnecter
+  avec la même adresse : aucune exploitation, l'inscription repart de zéro.
+- Avec un compte d'essai membre d'une exploitation partagée : après suppression, l'exploitation et ses données sont
+  toujours là pour l'autre membre, qui devient responsable s'il ne l'était pas.
+
 ## v5.38 · à publier en recette · écrans opérationnels : Matériel en tableau, inscription et profil, réglages sans listes
 Maquettes du 13 et 14 nov. 2026, validées par Pierre-Louis le 14 nov. 2026. **Migration 021** (profils, noms des membres,
 étiquettes des clients) : additive, **ne casse pas l'ancienne version** ; **pas encore appliquée sur `apidoo-test`**

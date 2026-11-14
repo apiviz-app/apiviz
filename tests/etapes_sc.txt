@@ -1,0 +1,33 @@
+    # Supprimer son compte depuis l'app (migration 022) : aperçu, mot SUPPRIMER, photos effacées avant la base,
+    # puis déconnexion et effacement de ce que l'appareil gardait.
+    appels = []
+    def rpc_apercu(route):
+        appels.append("apercu")
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+            body=json.dumps({"effacees": [{"id": "e1", "nom": "Rucher du test", "colonies": 3}], "quittees": [{"id": "e2", "nom": "GAEC des Chênes"}], "photos": ["e1/v1/p1.jpg", "e1/v1/p2.jpg"]}))
+    def rpc_suppr(route):
+        appels.append("supprimer:" + json.dumps(route.request.post_data_json))
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=json.dumps({"effacees": 1, "quittees": 1}))
+    def stockage(route):
+        if route.request.method == "DELETE": appels.append("photos:" + (route.request.post_data or ""))
+        return route.fallback()
+    page.route("**/rest/v1/rpc/compte_a_supprimer*", rpc_apercu)
+    page.route("**/rest/v1/rpc/supprimer_mon_compte*", rpc_suppr)
+    page.route("**/storage/v1/object/photos-visites*", stockage)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("localStorage.setItem('apiviz-prenom-' + S.session.user.email, 'Test'); localStorage.setItem('apiviz-ruches-recentes', '[]')")
+
+    page.evaluate("ACT.pfsupprimer()"); page.wait_for_selector("#sheet[open] [name=confirmation]", timeout=5000)
+    t = page.locator("#sheet").inner_text()
+    verif("« Rucher du test » sera effacée" in t and "3 colonies" in t and "Tu quitteras « GAEC des Chênes »" in t and "définitif" in t, "aperçu : exploitation effacée (3 colonies), exploitation quittée, c'est définitif")
+    page.fill("#sheet [name=confirmation]", "oui"); page.click("#sheet button.main"); page.wait_for_timeout(500)
+    verif(not any(a.startswith("supprimer") for a in appels) and page.locator("#sheet[open]").count() == 1, "sans le mot SUPPRIMER : rien n'est supprimé")
+    page.fill("#sheet [name=confirmation]", "supprimer"); page.click("#sheet button.main")
+    page.wait_for_function("() => !document.querySelector('#sheet[open]')", timeout=8000); page.wait_for_timeout(2500)
+    i_ph = next((i for i, a in enumerate(appels) if a.startswith("photos:")), -1); i_sp = next((i for i, a in enumerate(appels) if a.startswith("supprimer:")), -1)
+    verif(i_ph >= 0 and "p1.jpg" in appels[i_ph] and "p2.jpg" in appels[i_ph], "les 2 photos sont effacées du stockage : %s" % appels)
+    verif(i_sp > i_ph and '"SUPPRIMER"' in appels[i_sp], "puis la base, avec la confirmation SUPPRIMER")
+    restes = page.evaluate("Object.keys(localStorage).filter(k => k.startsWith('apiviz-prenom-') || k === 'apiviz-ruches-recentes')")
+    verif(restes == [], "l'appareil ne garde plus le prénom ni les fiches récentes : %s" % restes)
+    page.unroute("**/rest/v1/rpc/compte_a_supprimer*"); page.unroute("**/rest/v1/rpc/supprimer_mon_compte*"); page.unroute("**/storage/v1/object/photos-visites*")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

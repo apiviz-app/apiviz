@@ -26,17 +26,17 @@ const pareil = async (db, fichier) => {
     insert into public.ruches (id, nom, etat, annee_reine, exploitation_id) values ('10000001-0000-4000-8000-000000000000', 'Ruche 1', 'Bonne', 2024, '11111111-1111-4111-8111-111111111111');
     insert into public.articles (id, nom, type, unite, stock, exploitation_id) values ('10000002-0000-4000-8000-000000000000', 'Pot 250 g', 'Consommable', 'unité', 40, '11111111-1111-4111-8111-111111111111');`);
   const sim = await mettreAJour({ ...acces(db), liste, dire: muet, simuler: true });
-  verif(sim.version === "016-emplacements-contenants.sql" && sim.aAppliquer.join() === "017-associes.sql,018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql",
-    "simulation : la base est reconnue à 016, il reste 017 à 021");
+  verif(sim.version === "016-emplacements-contenants.sql" && sim.aAppliquer.join() === "017-associes.sql,018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql,022-suppression-compte.sql",
+    "simulation : la base est reconnue à 016, il reste 017 à 022");
   verif(await pareil(db, "016-emplacements-contenants.sql"), "simulation : rien n'est écrit");
   const journal = [];
   const r = await mettreAJour({ ...acces(db), liste, dire: (l) => journal.push(l) });
-  verif(r.appliquees.join() === "017-associes.sql,018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql" && r.version === derniere, "017 à 021 appliquées dans l'ordre");
+  verif(r.appliquees.join() === "017-associes.sql,018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql,022-suppression-compte.sql" && r.version === derniere, "017 à 022 appliquées dans l'ordre");
   verif(await pareil(db, derniere), "la base a exactement la structure des fichiers");
   const q = (await db.query("select annee_naissance, statut from public.reines")).rows;
   const m = (await db.query("select type, quantite::int q from public.mouvements_stock")).rows;
   verif(q.length === 1 && q[0].annee_naissance === 2024 && m.length === 1 && m[0].q === 40, "les reprises de données ont tourné (reine 2024, stock d'ouverture 40)");
-  verif(journal.some((l) => /en est à 016/.test(l)) && journal.filter((l) => /^Appliquée : /.test(l)).length === 5, "journal lisible : étape reconnue, une ligne par migration");
+  verif(journal.some((l) => /en est à 016/.test(l)) && journal.filter((l) => /^Appliquée : /.test(l)).length === 6, "journal lisible : étape reconnue, une ligne par migration");
   const r2 = await mettreAJour({ ...acces(db), liste, dire: muet });
   verif(r2.appliquees.length === 0 && (await db.query("select count(*)::int n from public.reines")).rows[0].n === 1, "relancé : base à jour, rien n'est rejoué");
 }
@@ -47,7 +47,7 @@ const pareil = async (db, fichier) => {
   const src = (await db.query("select pg_get_functiondef('public.rucher_cle(text)'::regprocedure) d")).rows[0].d;
   await db.exec(src.replace(/\n/g, "\n    "));
   const r = await mettreAJour({ ...acces(db), liste, dire: muet, simuler: true });
-  verif(r.version === "017-associes.sql" && r.aAppliquer.length === 4, "indentation différente d'une fonction : la base est reconnue à 017");
+  verif(r.version === "017-associes.sql" && r.aAppliquer.length === 5, "indentation différente d'une fonction : la base est reconnue à 017");
 }
 
 // 3. Base modifiée hors fichier : rien n'est appliqué, l'écart est nommé.
@@ -82,7 +82,7 @@ const pareil = async (db, fichier) => {
   // Une fois la donnée corrigée, la relance reprend à 018.
   await db.exec("update public.articles set nom = 'Pot 250 g' where nom = 'PIEGE'");
   const r = await mettreAJour({ ...acces(db), liste: piege, dire: muet });
-  verif(r.appliquees.join() === "018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql", "relance après correction : reprend à 018, puis 019 à 021");
+  verif(r.appliquees.join() === "018-stock-mouvements.sql,019-reines-liens.sql,020-visite-express-reglements.sql,021-profils-etiquettes.sql,022-suppression-compte.sql", "relance après correction : reprend à 018, puis 019 à 022");
   fs.rmSync(dossier, { recursive: true });
 }
 
