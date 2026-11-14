@@ -2,7 +2,7 @@
     # Les anciennes définitions window.view* ont été retirées : on vérifie qu'aucune n'existe plus.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     ids = page.evaluate("Noyau.ecrans()")
-    verif(len(ids) == 34 and len(set(ids)) == 34, "34 écrans enregistrés (dont Déplacer, IT-06, Mise en pots, v5.30, Visite express et Entre associés, v5.32), chacun une seule fois : %s" % len(ids))
+    verif(len(ids) == 37 and len(set(ids)) == 37, "37 écrans enregistrés (dont Déplacer, IT-06, Mise en pots, v5.30, Visite express et Entre associés, v5.32, Inventaire, Liste de courses et Mon profil, v5.38), chacun une seule fois : %s" % len(ids))
     # Un écran enregistré : render() l'utilise et aucune autre définition n'est appelée.
     restes = page.evaluate("""() => ["viewDash", "viewPlus", "viewRuches", "viewRuche", "viewVisite", "viewClients"].filter((v) => v in window)""")
     verif(restes == [], "anciennes définitions recouvertes supprimées : %s" % restes)
@@ -17,7 +17,8 @@
     page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.evaluate("ACT.newvente()")
     try: page.wait_for_selector("form[data-form=vente]", timeout=5000)
     except Exception: pass
-    verif(sorted(page.evaluate("appels")) == ["viewCompta", "viewMiel", "viewVente"], "chaque écran passe par sa seule définition : %s" % page.evaluate("appels"))
+    # v5.38 : Dépenses n'appelle plus viewCompta (journal de depenses-journal.js).
+    verif(sorted(page.evaluate("appels")) == ["viewMiel", "viewVente"], "chaque écran passe par sa seule définition : %s" % page.evaluate("appels"))
     verif(page.locator("form[data-form=vente]").count() == 1, "l'écran Nouvelle vente est affiché par le noyau : route %s, titre %s, feuille %s" % (page.evaluate("S.route"), page.evaluate("document.querySelector('.wrap h1')?.textContent"), page.evaluate("document.getElementById('sheet').open")))
     # AP-US-007 : la même action ouverte depuis l'accueil, la fiche ou le bouton API ouvre le même formulaire.
     formulaire = """() => { const f = document.querySelector('form[data-form=visite]'); return f && JSON.stringify([S.visite.ruche_id, S.visite.date_visite, S.visite.activite, S.visite.varroa_methode, f.querySelectorAll('input,select,textarea,button').length]); }"""

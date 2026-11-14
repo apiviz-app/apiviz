@@ -16,6 +16,8 @@ Pour toute question ou demande : [à compléter : adresse e-mail de contact].
 ## Ce que nous enregistrons
 
 - **Votre compte** : adresse e-mail et mot de passe (le mot de passe est conservé sous une forme protégée par notre hébergeur ; personne ne peut le lire, nous non plus).
+- **Votre profil** : prénom et nom (montrés aux membres de vos exploitations) et, si vous le voulez bien, quelques
+  réponses facultatives données à l'inscription (voir « Votre profil et les statistiques »).
 - **Les données de votre exploitation**, que vous saisissez : ruchers et leur position, colonies, visites, traitements,
   récoltes, lots, stock, clients, ventes et factures, dépenses, fournisseurs, tâches, photos de visite.
 - **Qui a fait quoi** : l'adresse e-mail de l'auteur d'une visite, d'une vente ou d'une photo, visible des autres membres
@@ -32,6 +34,21 @@ Il n'y a ni publicité, ni mesure d'audience, ni revente de données.
 Seuls les membres de votre exploitation, selon leur rôle : un responsable invite et retire des membres ; un membre voit
 et saisit tout ; un membre « lecture seule » consulte sans rien modifier. Ces règles sont appliquées par la base de
 données elle-même. Une exploitation ne voit jamais les données d'une autre.
+
+## Votre profil et les statistiques
+
+À l'inscription, Apiviz vous demande votre prénom et votre nom, une seule fois : ils suivent votre compte et vos
+associés vous voient sous ce nom. Il vous propose ensuite quelques questions, **toutes facultatives** : tranche d'âge,
+sexe, code postal (dont on déduit le département), depuis quand vous avez des abeilles, votre activité (loisir,
+pluriactif, professionnel), votre nombre de colonies, et comment vous avez connu Apiviz.
+
+Ces réponses servent uniquement à des **statistiques d'ensemble** sur les utilisateurs d'Apiviz (par exemple : combien
+viennent de chaque région, par quel canal), pour améliorer l'application. Elles ne sont ni vendues, ni montrées à vos
+associés ni aux responsables de votre exploitation : vous seul les voyez. Les statistiques ne montrent jamais un groupe de
+moins de cinq personnes. Inscription réservée aux personnes de 15 ans ou plus.
+
+Dans Réglages › Mon profil, vous pouvez à tout moment les modifier, les effacer, ne plus compter dans les statistiques,
+et choisir de recevoir ou non les nouveautés par e-mail (non par défaut).
 
 ## Où sont vos données
 
@@ -67,14 +84,15 @@ déconnexion. Vos préférences d'affichage y sont aussi gardées.
 | Donnée | Durée |
 |---|---|
 | Données de l'exploitation | Tant que l'exploitation existe |
+| Profil (nom, réponses facultatives) | Tant que le compte existe ; les réponses s'effacent à tout moment dans Mon profil |
 | Journal des suppressions et modifications | 1 an, puis effacement automatique |
 | Journal des erreurs techniques | 90 jours, puis effacement automatique |
 | Données sur votre appareil | Jusqu'à la déconnexion |
 
 ## Vos droits
 
-Vous pouvez à tout moment accéder à vos données, les corriger, les exporter (Réglages › Exports et sauvegarde : fichiers
-lisibles dans un tableur et sauvegarde complète), et demander leur effacement. La suppression du compte depuis
+Vous pouvez à tout moment accéder à vos données, les corriger, les exporter (Réglages, en bas de l’écran : fichier comptable,
+fichiers lisibles dans un tableur et sauvegarde complète ; Réglages › Mon profil : « Télécharger mes données »), et demander leur effacement. La suppression du compte depuis
 l'application est en préparation ; d'ici là, écrivez à [à compléter : adresse e-mail de contact].
 
 Vous pouvez aussi adresser une réclamation à la CNIL (www.cnil.fr).

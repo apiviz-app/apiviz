@@ -3,7 +3,7 @@
 // (visites, ventes, récoltes, dépenses, tâches), puis les envoie au retour du réseau.
 // S'appuie sur app.js (S, sb, loadAll, refresh, render, toast…) et photos.js (PH).
 const HL = (() => {
-  const INSERTS = { recoltes: "recoltes", depenses: "depenses", taches: "taches", reglements_associes: "reglements" }; // table -> clé de S.d
+  const INSERTS = { recoltes: "recoltes", depenses: "depenses", taches: "taches", reglements_associes: "reglements", mouvements_stock: "mouvements" }; // table -> clé de S.d
   const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID()
     : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
   const reseau = (e) => !!e && /fetch|network|load failed|internet|offline|connexion|timed? ?out/i.test(String(e.message || e));
@@ -119,7 +119,12 @@ const HL = (() => {
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
-        for (const l of it.lignes) if (!liste.some((x) => x.id === l.id)) (cle === "taches" ? liste.push : liste.unshift).call(liste, { ...l, _attente: true });
+        for (const l of it.lignes) {
+          if (liste.some((x) => x.id === l.id)) continue;
+          (cle === "taches" ? liste.push : liste.unshift).call(liste, { ...l, _attente: true });
+          // Stock au doigt et inventaire sans réseau (v5.38) : le stock affiché suit le mouvement, comme le déclencheur de 018.
+          if (cle === "mouvements") { const a = (d.articles || []).find((x) => x.id === l.article_id); if (a) a.stock = Math.round((Number(a.stock || 0) + Number(l.quantite || 0)) * 100) / 100; }
+        }
       }
     }
   }

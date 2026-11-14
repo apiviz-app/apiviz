@@ -1,0 +1,114 @@
+    # v5.38 — écrans opérationnels (maquettes du 13 nov. 2026 validées le 14) : inscription en deux étapes et profil
+    # (migration 021), membres avec leurs noms et personnes sans compte, inventaire, liste de courses, achat prérempli
+    # avec « Acheté par » / « Payé avec » en puces, clients en tableau et en liste. Avec CAPTURES=<dossier> : 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    F = str(uuid.uuid4()); DATA["fournisseurs"] = [{"id": F, "nom": "Coopérative"}]
+    P250 = str(uuid.uuid4())
+    DATA["articles"] = [{"id": A1, "nom": "Candy", "type": "Consommable", "famille": "alimentation", "unite": "kg", "stock": 4, "seuil": 10, "valeur": 2.1},
+                        {"id": P250, "nom": "Pot 250 g vide", "type": "Consommable", "famille": "emballage", "contenance_g": 250, "unite": "unité", "stock": 40, "seuil": 100, "valeur": 0.32, "fournisseur_id": F},
+                        {"id": str(uuid.uuid4()), "nom": "Hausse", "type": "Équipement", "famille": "equipement", "unite": "unité", "stock": 14, "seuil": 0}]
+    DATA["mouvements_stock"] = []
+    DATA["profils"] = []  # migration 021 en place, pas encore de profil : l'inscription s'ouvre
+    DATA["clients"][0]["etiquettes"] = ["Famille", "Marché"]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    stock = lambda i: float(next(a for a in DATA["articles"] if a["id"] == i)["stock"])
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ob", timeout=15000)
+
+    # 1. Inscription, étape 1 : le prénom et les 15 ans sont demandés
+    verif("Comment tu t’appelles" in page.locator(".ob h1").inner_text(), "inscription : « Bienvenue ! Comment tu t’appelles ? »")
+    shot("op-inscription-1")
+    page.click("[data-act=obsuite]")
+    verif("prénom" in page.locator(".ob-err").inner_text(), "prénom obligatoire")
+    page.fill("[name=prenom]", "Pierre-Louis"); page.fill("[name=nom]", "G."); page.click("[data-act=obsuite]")
+    verif("15 ans" in page.locator(".ob-err").inner_text(), "15 ans ou plus demandé")
+    page.check("[name=age15]"); page.click("[data-act=obsuite]"); page.wait_for_selector("text=Pour mieux te connaître")
+    p = DATA["profils"][0]
+    verif(p["prenom"] == "Pierre-Louis" and p["nom"] == "G." and p["plateforme"] == "web" and not p.get("inscription_finie"), "profil créé avec le nom, inscription pas finie")
+    verif(page.evaluate("localStorage.getItem('apiviz-prenom-test@apidoo.fr')") == "Pierre-Louis", "prénom recopié sur l'appareil (accueil, menu)")
+    # Étape 2 : tout facultatif
+    page.click("label:has(input[name=tranche_age][value='35-49'])"); page.click("label:has(input[name=sexe][value=homme])")
+    page.fill("[name=code_postal]", "3375"); page.click("[data-act=obfinir]")
+    verif("cinq chiffres" in page.locator(".ob-err").inner_text(), "code postal mal formé signalé")
+    page.fill("[name=code_postal]", "33750"); page.wait_for_timeout(100)
+    verif(page.locator(".ob-lieu").inner_text() == "Gironde", "département affiché à côté du code postal")
+    page.click("label:has(input[name=source][value=syndicat])"); page.click("label:has(input[name=activite][value=loisir])")
+    shot("op-inscription-2")
+    page.click("[data-act=obfinir]"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(p["tranche_age"] == "35-49" and p["sexe"] == "homme" and p["code_postal"] == "33750" and p["source"] == "syndicat" and p["activite"] == "loisir" and p["anciennete"] == "" and p["inscription_finie"], "réponses enregistrées, inscription finie : " + str({k: p[k] for k in ("tranche_age", "sexe", "code_postal", "source", "activite")}))
+    verif("Pierre-Louis" in page.locator(".wrap").inner_text(), "l'accueil dit bonjour avec le prénom")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.locator(".ob").count() == 0, "l'inscription ne revient pas")
+
+    # 2. Réglages › Mon profil
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l")
+    verif("Pierre-Louis G." in page.locator(".rg-l[data-v=profil]").inner_text(), "Réglages › Toi : le nom du compte")
+    page.click(".rg-l[data-v=profil]"); page.wait_for_selector(".pf")
+    t = page.locator(".pf").inner_text()
+    verif("35–49" in t and "Gironde" in t and "Syndicat ou GDS" in t, "Mon profil : les réponses")
+    page.click(".pf-sw[data-v=stats_ok]"); page.wait_for_timeout(300)
+    verif(p["stats_ok"] is False and page.locator(".pf-sw[data-v=stats_ok]").get_attribute("aria-checked") == "false", "statistiques : désactivées d'un geste")
+    shot("op-profil")
+    page.click("[data-act=pfeffacer]"); page.click("[data-act=pfeffacer]"); page.wait_for_timeout(300)
+    verif(p["tranche_age"] == "" and p["sexe"] == "" and p["code_postal"] == "" and p["prenom"] == "Pierre-Louis", "réponses effacées, le nom reste")
+    page.click("[data-act=pfnom]"); page.wait_for_selector(".ob [name=prenom]")
+    verif(page.locator(".ob [name=age15]").count() == 0, "modifier son nom : pas de nouvelle inscription")
+    page.fill("[name=prenom]", "Pierre"); page.click("[data-act=obsuite]"); page.wait_for_selector(".pf")
+    verif(p["prenom"] == "Pierre" and "Pierre G." in page.locator(".pf").inner_text(), "nom modifié, retour au profil")
+
+    # 3. Membres : noms et personnes sans compte
+    DATA["profils"].append({"email": "ami@apidoo.fr", "prenom": "Camille", "nom": "Martin"})
+    page.evaluate("setTimeout(() => { PF.etat().nomsDe = null; ACT.go('membres'); })"); page.wait_for_timeout(2500); print('DEBUG', erreurs, page.evaluate('S.route'), page.locator('.wrap').inner_text()[:300].replace(chr(10), ' / ')); page.wait_for_selector(".mb-sans-c")
+    page.wait_for_function("document.querySelector('.wrap').innerText.includes('Camille Martin')")
+    verif("ami@apidoo.fr" in page.locator(".wrap").inner_text(), "membre : prénom, nom et adresse")
+    page.click("[data-act=mbajouter]"); page.fill("#sheet [name=prenom]", "Jean"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+    verif(DATA["reglages"][0]["data"].get("associes") == ["Jean"], "personne sans compte ajoutée : " + str(DATA["reglages"][0]["data"].get("associes")))
+
+    # 4. Inventaire : un écart enregistré, les cases vides ignorées
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
+    page.click(".op-pied [data-v=inventaire]"); page.wait_for_selector(".inv-corps")
+    page.fill(f".inv-in[data-art='{A1}']", "4"); page.fill(f".inv-in[data-art='{P250}']", "35")
+    verif("−5" in page.locator(f".inv-l[data-art='{P250}'] .inv-ec").inner_text() and "comme prévu" in page.locator(f".inv-l[data-art='{A1}'] .inv-ec").inner_text(), "écart affiché en tapant")
+    verif(page.locator(".inv-ok").inner_text() == "Enregistrer 1 écart", "bouton : « Enregistrer 1 écart »")
+    shot("op-inventaire")
+    page.click(".inv-ok"); page.wait_for_function("S.route === 'materiel'")
+    mv = [m for m in DATA["mouvements_stock"] if m["type"] == "inventaire"]
+    verif(len(mv) == 1 and mv[0]["article_id"] == P250 and float(mv[0]["quantite"]) == -5 and stock(P250) == 35, "un seul mouvement inventaire (−5), stock 35")
+
+    # 5. Liste de courses, puis « C'est acheté » : l'achat s'ouvre rempli
+    page.click("[data-act=go][data-v=courses]"); page.wait_for_selector(".cs-four")
+    noms = page.locator(".cs-tete h2").all_inner_texts()
+    verif(noms == ["Coopérative", "Sans fournisseur"], "groupé par fournisseur : " + " | ".join(noms))
+    verif("170" in page.locator(".cs-four").first.inner_text(), "quantité proposée pour les pots : 170 (deux fois le seuil moins le stock, arrondi à la dizaine)")
+    page.click(f"[data-act=csqte][data-v='{P250}'][data-k='1']")
+    verif("180" in page.locator(".cs-four").first.inner_text(), "quantité ajustée : +10")
+    shot("op-courses")
+    page.click(".cs-four >> nth=0 >> [data-act=csachete]"); page.wait_for_selector("#sheet[open] .st-ligne")
+    verif(page.locator(".st-ligne").count() == 1 and page.input_value("#st_four") == F and page.input_value(".st-ligne [data-k=quantite]") == "180", "achat prérempli : fournisseur, ligne, quantité")
+    verif(page.locator("#sheet .op-radio").count() >= 3 and "Compte de l’exploitation" in page.locator("#sheet .op-choix").last.inner_text(), "« Acheté par » et « Payé avec » en puces")
+    page.click("#sheet label:has(input[name=achete_par][value=Jean])")
+    page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+    rpc = [b for n, b in recu["rpc"] if n == "enregistrer_achat"][-1]["p"]
+    verif(rpc["achete_par"] == "Jean" and rpc["paye_par"] == "Société" and rpc["lignes"][0]["quantite"] == 180 and stock(P250) == 215, "achat : par Jean, compte de l'exploitation, 180 pots, stock 215")
+
+    # 6. Clients en tableau, puis en liste
+    page.evaluate("ACT.go('clients'); ACT.uonglet('clients')"); page.wait_for_selector(".ck .op-table")
+    lignes = page.locator(".ck tbody tr").all_inner_texts()
+    verif(lignes[0].startswith("Paul (bureau)") and "28" in lignes[0], "client qui doit encore en tête, avec ce qu'il doit")
+    verif("Famille" in lignes[1] and "Marché" in lignes[1], "étiquettes du client")
+    page.click(".ck .op-puce[data-v=Marché]")
+    verif(page.locator(".ck tbody tr").count() == 1, "filtre par étiquette")
+    page.click(".ck .op-puce[data-v=tous]"); page.click(".ck .op-vues [data-v=liste]"); page.wait_for_selector(".ck .op-carte")
+    verif(page.locator(".ck .op-carte").count() == 2, "liste : deux clients")
+    shot("op-clients")
+    page.click(".ck .op-carte-t >> nth=1"); page.wait_for_selector("#sheet[open] [name=etiquettes]")
+    verif(page.input_value("#sheet [name=etiquettes]") == "Famille, Marché" and page.locator("#sheet [name=cercle]").count() == 0, "fiche client : étiquettes à la place du cercle")
+    page.click("#sheet [data-act=closesheet]")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

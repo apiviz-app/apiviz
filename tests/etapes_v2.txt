@@ -65,8 +65,10 @@
     page.click("#sheet [data-act=umsgmode][data-v=recu]")
     verif(page.input_value("#u_msg").startswith("Bonjour Paul (bureau), merci pour votre achat"), "bascule vers le reçu")
     page.click("#sheet [data-act=closesheet]")
-    page.click("[data-act=uonglet][data-v=clients]"); page.wait_for_selector(".u-client")
-    verif(page.locator(".u-client").count() == 2 and page.locator(".u-client a[href^='tel:']").count() == 1, "onglet clients")
+    # v5.38 : onglet Clients en tableau ou en liste (clients-tableau.js)
+    page.click("[data-act=uonglet][data-v=clients]"); page.wait_for_selector(".ck")
+    page.click(".ck .op-vues [data-v=liste]"); page.wait_for_selector(".ck .op-carte")
+    verif(page.locator(".ck .op-carte").count() == 2 and page.locator(".ck .op-carte a[href^='tel:']").count() == 1, "onglet clients")
     # Carte
     page.evaluate("ACT.go('plus')"); page.wait_for_selector(".n4-g[data-v=pilotage]", timeout=5000)
     verif(page.locator(".n4-g[data-v=pilotage]").count() == 1, "Bilan dans Gestion")

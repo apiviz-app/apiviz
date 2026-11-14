@@ -4,11 +4,13 @@ import { installer, ecranAssocies } from "./entre-associes.js";
 
 installer();
 import { actions as actionsAchat, remplace as remplaceAchat } from "./achat.js";
+import { ecran as journalDepenses, actions as actionsJournal } from "./depenses-journal.js";
 
 export default [
   // Dépenses : app.js, complétées par ergonomie.js (chiffres et filtre par poste).
   // « Ajouter une dépense » ouvre l'achat en plusieurs lignes (v5.30, achat.js), déclaré ici.
-  { id: "compta", titre: "Dépenses", rubrique: "plus", rendu: () => { viewCompta(); ER.completerDepenses(); }, actions: actionsAchat, remplace: remplaceAchat },
+  // v5.38 : journal en tableau (depenses-journal.js) à la place du tableau d'app.js et des chiffres d'ergonomie.js.
+  { id: "compta", titre: "Dépenses", rubrique: "plus", rendu: () => journalDepenses(), actions: { ...actionsAchat, ...actionsJournal }, remplace: remplaceAchat },
   // Bilan : app.js (la comparaison avec l'année précédente vient d'ux.js par pilotFin).
   { id: "pilotage", titre: "Bilan", rubrique: "plus", rendu: () => viewPilotage() },
   // Prévisions et budget : app.js, migré sans changement.

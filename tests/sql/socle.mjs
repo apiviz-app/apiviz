@@ -10,13 +10,13 @@ export const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
   "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql",
   "012-correctifs.sql", "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql", "021-profils-etiquettes.sql"];
 
 // Migrations relançables après 008 (000 à 009 ne le sont pas toutes : 008 ne se lance qu'une fois,
 // et 009 ne doit jamais être relancée en entier après 008).
 export const RELANCABLES = ["010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql",
   "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql", "021-profils-etiquettes.sql"];
 
 export const SUPABASE = `
 create role anon; create role authenticated; create role service_role;

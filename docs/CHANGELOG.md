@@ -5,6 +5,74 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.38 · à publier en recette · écrans opérationnels : Matériel en tableau, inscription et profil, réglages sans listes
+Maquettes du 13 et 14 nov. 2026, validées par Pierre-Louis le 14 nov. 2026. **Migration 021** (profils, noms des membres,
+étiquettes des clients) : additive, **ne casse pas l'ancienne version** ; **pas encore appliquée sur `apidoo-test`**
+(l'application directe depuis la session Claude a été refusée) : la mise en ligne en recette de la branche l'applique
+si le secret `BASE_RECETTE` existe, sinon à coller dans le SQL Editor. Sans 021, l'app marche comme avant pour le nom
+(prénom gardé sur l'appareil) et sans inscription ; tout le reste de la version fonctionne.
+
+Pour l'apiculteur :
+1. **Matériel en tableau ou en liste** (bascule gardée sur l'appareil) : article, stock, seuil, prix unitaire,
+   fournisseur ; recherche ; puces avec leur nombre (Tout, À commander, chaque famille) ; articles à commander en tête,
+   sur fond miel. **Stock au doigt** : − / + dans la case, le chiffre change tout de suite, « Annuler » juste après ;
+   l'écart part en une seule correction (mouvement « inventaire ») après une pause.
+2. **Plus d'Opex / Capex** à l'écran (Matériel, fiche article, achat), ni de durée d'amortissement ni de poste : la
+   nature et le poste se déduisent de la famille (une hausse, un extracteur sont des équipements ; reconnus aussi par
+   leur nom). Le fichier comptable garde la nature (« Équipement amorti », 5 ans par défaut).
+3. **Fiche article simplifiée** : stock et « Me prévenir sous » avec − / +, famille, nom, prix, unité, contenance d'un
+   pot vide, fournisseur habituel, ce qui a bougé.
+4. **Inventaire** (Matériel › Faire l'inventaire) : « Prévu / Compté » par famille, écart affiché en tapant, cases vides
+   ignorées, « Enregistrer N écarts ».
+5. **Liste de courses** (Matériel › Voir la liste de courses) : articles sous leur seuil par fournisseur, quantité
+   proposée (deux fois le seuil moins le stock, arrondie) à ajuster, montant estimé ; « Envoyer la liste » (partage ou
+   copie) ; « C'est acheté » ouvre l'achat déjà rempli.
+6. **Achat** : « Acheté par » et « Payé avec » en puces (Ma poche, Poche de…, Compte de l'exploitation) ; la famille et
+   « Stock +N » sous chaque ligne ; frais de port classés « Frais ».
+7. **Inscription, une seule fois** (migration 021) : « Bienvenue ! Comment tu t'appelles ? » (prénom, nom, 15 ans ou
+   plus), puis « Pour mieux te connaître », tout facultatif avec « Passer » : tranche d'âge, sexe, code postal
+   (département affiché), ancienneté, activité, nombre de colonies, comment tu as connu Apiviz, nouveautés par e-mail
+   (non par défaut). Une personne sans exploitation enchaîne sur les trois questions de création du rucher.
+8. **Mon profil** (Réglages › Toi) : nom, e-mail, lien pour changer le mot de passe ; réponses (modifier, effacer) ;
+   « Utiliser mes réponses dans les statistiques d'ensemble » ; nouveautés par e-mail ; télécharger ses données.
+9. **Membres et associés** : chaque membre avec son prénom et son nom ; « Ajouter une personne sans compte ». Les
+   associés proposés dans les achats et les ventes sont ces personnes : plus de liste de prénoms à taper.
+10. **Réglages en cinq groupes** en lignes : Toi · L'exploitation (exploitation, membres et associés, factures) · Sur le
+    terrain (météo, rappels, caisses numérotées) · Affichage · Tes données (**fichier comptable** de l'année, sauvegarde,
+    autres fichiers). Plus de « Listes » (postes de dépense, cercles de clients, modes de paiement) ni de blocs « Toi » et
+    « Associés ».
+11. **Clients en tableau ou en liste** (Miel › Clients) : étiquettes, dernier achat, total de l'année, reste à payer ;
+    recherche ; puces À encaisser et par étiquette ; ceux qui doivent en tête. La fiche client a des **étiquettes libres**
+    à la place du cercle.
+12. **Dépenses en journal** : total de l'année en titre, tuiles par catégorie, puces (catégorie, personne qui a acheté,
+    sans facture), tableau date · libellé · catégorie · par · montant ; « Fichier comptable » et « Ajouter un achat ».
+
+Correctif : l'écran Membres pouvait se redessiner sans fin quand un autre rendu arrivait pendant son chargement
+(`exploitations.js`, un seul chargement à la fois).
+
+Technique : règles pures `src/domaines/materiel/regles.js` (puces, groupes, liste de courses, inventaire, type et
+poste déduits de la famille), `src/domaines/compte/regles-profil.js`, `journalComptable()` (finances/regles.js),
+`lignesClients()`, `lignesDepenses()` ; écrans `materiel/catalogue.js` (refait), `materiel/inventaire.js`,
+`materiel/courses.js`, `compte/profil.js` (inscription, Mon profil, membres ; crochet « inscription » avant le rendu ;
+`window.PF`), `compte/donnees.js`, `ventes/clients-tableau.js`, `finances/depenses-journal.js` ; Réglages dans
+`essentiels.js`. Nouvelles routes `inventaire`, `courses`, `profil` (37 écrans). Style `52-operationnel.css`.
+Préférences sur l'appareil : `apiviz-materiel-affichage`, `apiviz-clients-affichage`. Actions de consultation, du profil
+et de l'inscription permises en lecture seule. Roadmap 05 §2 (décision notée), guide, astuce et politique de
+confidentialité (« Votre profil et les statistiques ») mis à jour. Tests : unitaires `operationnel.test.mjs`, SQL
+`test_021.mjs`, bout en bout `etapes_op` (nouveau), `etapes_st`, `etapes_eg`, `etapes_ct` adaptés.
+
+### À vérifier
+- Appliquer 021 sur `apidoo-test` (mise en ligne en recette de la branche, ou SQL Editor), puis se connecter avec un
+  compte de test : l'inscription s'ouvre une fois ; « Passer » à l'étape 2 ; reconnexion : elle ne revient pas.
+- Téléphone : Matériel › bascule tableau / liste ; faire défiler le tableau vers la droite (la colonne Article reste) ;
+  toucher + trois fois puis « Annuler » ; rouvrir l'app : le stock et l'affichage sont gardés.
+- Matériel › Faire l'inventaire : compter deux articles, « Enregistrer 1 écart ».
+- Matériel › Voir la liste de courses › « C'est acheté » : l'achat est rempli ; choisir « Acheté par » et enregistrer.
+- Réglages : cinq groupes, plus de « Listes » ; « Fichier comptable » s'ouvre dans un tableur.
+- Membres : les noms s'affichent ; ajouter puis retirer une personne sans compte ; elle apparaît dans « Acheté par ».
+- Miel › Clients : tableau, puis liste ; modifier un client : étiquettes séparées par des virgules.
+- Lecture seule : Matériel sans − / +, Mon profil modifiable.
+
 ## v5.37 · à publier en recette · Ruchers en tableau (maquettes « Affichage des ruches » du 13 nov. 2026)
 Aucune migration. Seulement un affichage : aucune donnée n'est modifiée, rien de nouveau n'est enregistré en base.
 

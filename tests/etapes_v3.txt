@@ -49,7 +49,7 @@
     verif(page.locator(".card.tbl [data-act=etiq]").first.is_visible(), "bouton Étiquettes visible sans faire défiler")
     page.wait_for_timeout(400); page.screenshot(path="v2/stocks.png", full_page=True)
     page.evaluate("ACT.go('compta')"); page.wait_for_timeout(300)
-    verif(page.locator(".card.tbl td[data-label='Montant']").count() >= 1, "dépenses en cartes")
+    verif(page.locator(".dj-table tbody tr").count() >= 1 and page.locator(".op-boite").first.evaluate("b => getComputedStyle(b).overflowX") == "auto", "dépenses : journal en tableau qui défile (v5.38)")
     # Comparaison de saison
     page.evaluate("ACT.go('pilotage')"); page.wait_for_selector(".u-cmp")
     t = page.locator(".u-cmp").first.inner_text()

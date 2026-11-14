@@ -1,6 +1,6 @@
 // Apiviz — achat en plusieurs lignes (v5.30, maquettes du 11 nov. 2026, migration 018).
 // Une facture = un achat : fournisseur, date, numéro de facture, puis une ligne par article choisi dans le catalogue
-// (ou un nouvel article, ou une ligne sans article comme des frais de port). Opex ou Capex vient de l'article ; le
+// (ou un nouvel article, ou une ligne sans article comme des frais de port). v5.38 : plus d'Opex / Capex à l'écran ; le
 // stock monte à l'enregistrement. Envoi par enregistrer_achat() en passant par la file d'envoi (offline.js) :
 // sans réseau, l'achat est gardé et montré tout de suite. Sans la migration 018, l'ancienne fiche « dépense ».
 // Globales d'app.js lues à l'appel : S, esc, n, eur, today, sheet, $sheet, $sheetForm, toast, refresh, render, cfg,
@@ -20,6 +20,8 @@ const etat = () => S.achat;
 export function ouvrir(prerempli = {}) {
   if (!stockSuivi()) return depenseForm(null, prerempli);
   S.achat = { id: nouvelId(), date: today(), fournisseur_id: prerempli.fournisseur_id || "", piece: "", lignes: [] };
+  // Liste de courses (v5.38) : plusieurs lignes déjà remplies.
+  for (const l of prerempli.lignes || []) S.achat.lignes.push({ id: nouvelId(), article_id: l.article_id, quantite: l.quantite ?? "", montant: l.montant ?? "" });
   if (prerempli.article_id) ajouterArticle(prerempli.article_id);
   else if (prerempli.libelle) S.achat.lignes.push({ id: nouvelId(), libelle: prerempli.libelle, quantite: "", montant: "", libre: true });
   sheet({
@@ -48,7 +50,6 @@ function lire() {
     if (z("libelle")) l.libelle = z("libelle").value;
     if (l.article) {
       if (z("nom")) l.article.nom = z("nom").value;
-      if (z("type")) l.article.type = z("type").value;
     }
   }
   return a;
@@ -77,7 +78,7 @@ function dessiner() {
     ${a.lignes.length ? `<section class="st-lignes" aria-label="Lignes de la facture">${a.lignes.map(ligne).join("")}</section>`
       : '<p class="small st-astuce">Touche un article pour l’ajouter : une ligne par article de la facture.</p>'}
     <datalist id="st_catalogue">${R.CATALOGUE.map((k) => `<option value="${e(k.nom)}">`).join("")}</datalist>
-    <p class="st-info">Opex ou Capex vient de l’article. Le stock monte dès que tu enregistres, et la facture reste liée à chaque mouvement.</p>
+    <p class="st-info">Le stock monte dès que tu enregistres, et la facture reste liée à chaque mouvement.</p>
     <p class="st-total"><span>Total</span><b>${e(eur(total))}</b></p>
     <p class="small st-erreur" role="alert"></p>`;
 }
@@ -102,7 +103,7 @@ function majChiffres() {
 function ligne(l) {
   const art = l.article_id ? (S.d.articles || []).find((x) => x.id === l.article_id) : null;
   const A = (k, extra = "") => `data-ligne="${e(l.id)}" data-k="${k}" name="l_${e(l.id)}_${k}" ${extra}`;
-  const nature = l.libre ? "Service" : R.nature(art || l.article);
+  const fam = l.libre ? "" : R.FAMILLES[art ? R.famille(art) : R.famille({ nom: l.article?.nom || "" })] || "";
   const unite = (art || l.article)?.unite || "unité";
   const q = Number(String(l.quantite).replace(",", ".")) || 0;
   const tete = art ? `<b>${e(art.nom)}</b>`
@@ -110,11 +111,9 @@ function ligne(l) {
       : `<input ${A("libelle")} value="${e(l.libelle || "")}" placeholder="Frais de port, livraison…" aria-label="Libellé" autocomplete="off">`;
   return `<div class="st-ligne">
     <div class="st-ligne-t">${tete}<button type="button" class="st-ote" data-act="stachote" data-v="${e(l.id)}" aria-label="Retirer cette ligne">×</button></div>
-    ${l.article ? `<div class="seg st-nature" role="group" aria-label="Opex ou Capex">${[["Consommable", "Opex"], ["Équipement", "Capex"]].map(([v, t]) =>
-      `<button type="button" class="${l.article.type === v ? "on" : ""}" aria-pressed="${l.article.type === v}" data-act="stachtype" data-v="${e(l.id)}" data-k="${v}">${t}</button>`).join("")}</div>` : ""}
     <div class="two">${l.libre ? "" : `<label>Quantité${unite !== "unité" ? ` (${e(unite)})` : ""}<input type="number" inputmode="decimal" step="0.01" min="0.01" ${A("quantite")} value="${e(l.quantite)}"></label>`}
       <label>Montant (€)<input type="number" inputmode="decimal" step="0.01" min="0" ${A("montant")} value="${e(l.montant)}"></label></div>
-    <div class="st-tags"><span class="u-chip ${nature === "Capex" ? "st-capex" : ""}">${nature}</span>${!l.libre && q > 0 ? `<span class="u-chip good">Stock +${e(n(q, 2))}</span>` : ""}</div>
+    <div class="st-tags">${l.libre ? '<span class="u-chip">Sans stock</span>' : fam ? `<span class="u-chip">${e(fam)}</span>` : ""}${!l.libre && q > 0 ? `<span class="u-chip good">Stock +${e(n(q, 2))}</span>` : ""}</div>
   </div>`;
 }
 
@@ -124,18 +123,19 @@ async function enregistrer() {
   const p = {
     id: a.id, date: a.date || today(), fournisseur_id: a.fournisseur_id || null, piece: a.piece.trim(),
     // Entre associés (v5.29) : qui a acheté, avec quel argent.
-    achete_par: $sheetForm.querySelector('[name="achete_par"]')?.value || "", paye_par: $sheetForm.querySelector('[name="paye_par"]')?.value || "",
+    achete_par: $sheetForm.querySelector('[name="achete_par"]:checked, select[name="achete_par"]')?.value || "", paye_par: $sheetForm.querySelector('[name="paye_par"]:checked, select[name="paye_par"]')?.value || "",
     lignes: a.lignes.map((l) => {
       const base = { id: l.id, montant: nombre(l.montant) };
       if (l.article_id) return { ...base, article_id: l.article_id, quantite: nombre(l.quantite), categorie: poste((S.d.articles || []).find((x) => x.id === l.article_id)) };
       if (l.article) {
         const k = R.CATALOGUE.find((c) => c.nom.toLowerCase() === l.article.nom.trim().toLowerCase());
-        const fam = k?.famille || R.famille({ nom: l.article.nom, type: l.article.type });
-        const article = { id: l.article.id, nom: l.article.nom.trim(), type: l.article.type, famille: fam, unite: k?.unite || "unité",
-          contenance_g: k?.contenance_g || R.contenance({ nom: l.article.nom }), duree_amort: l.article.type === "Équipement" ? 5 : null, poste: poste({ famille: fam }) };
+        const fam = k?.famille || R.famille({ nom: l.article.nom });
+        const type = R.typeDeFamille(fam);
+        const article = { id: l.article.id, nom: l.article.nom.trim(), type, famille: fam, unite: k?.unite || "unité",
+          contenance_g: k?.contenance_g || R.contenance({ nom: l.article.nom }), duree_amort: type === "Équipement" ? 5 : null, poste: poste({ famille: fam }) };
         return { ...base, article, quantite: nombre(l.quantite), categorie: article.poste };
       }
-      return { ...base, libelle: (l.libelle || "").trim(), categorie: cfg().postes.includes("Autre") ? "Autre" : cfg().postes[0] };
+      return { ...base, libelle: (l.libelle || "").trim(), categorie: /port|livraison|transport|exp[ée]dition/i.test(l.libelle || "") ? "Frais" : "Autre" };
     }),
   };
   const err = R.controleAchat(p);
@@ -153,19 +153,17 @@ async function enregistrer() {
   }
 }
 
-/** Poste de dépense d'un article : le sien, sinon celui de sa famille s'il existe dans les réglages. */
+/** Poste de dépense d'un article : le sien, sinon celui de sa famille (v5.38 : plus de liste de postes à tenir). */
 function poste(art) {
-  const postes = cfg().postes, p = art?.poste || R.POSTE_FAMILLE[R.famille(art || {})];
-  return postes.includes(p) ? p : art?.poste || postes[0];
+  return art?.poste || R.posteDeFamille(R.famille(art || {}));
 }
 
 /** Actions de la feuille d'achat ; « newdepense » ouvre l'achat (remplace l'ancienne fiche dépense d'app.js). */
 export const actions = {
-  newdepense: () => ouvrir(),
+  newdepense: (v) => ouvrir(v && typeof v === "object" ? v : {}),
   stachart: (id) => { lire(); ajouterArticle(id); dessiner(); },
-  stachnouveau: () => { lire(); etat().lignes.push({ id: nouvelId(), article: { id: nouvelId(), nom: "", type: "Consommable" }, quantite: "", montant: "" }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },
+  stachnouveau: () => { lire(); etat().lignes.push({ id: nouvelId(), article: { id: nouvelId(), nom: "" }, quantite: "", montant: "" }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },
   stachlibre: () => { lire(); etat().lignes.push({ id: nouvelId(), libelle: "", quantite: "", montant: "", libre: true }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },
   stachote: (id) => { lire(); etat().lignes = etat().lignes.filter((l) => l.id !== id); dessiner(); },
-  stachtype: (id, type) => { lire(); const l = etat().lignes.find((x) => x.id === id); if (l?.article) l.article.type = type; dessiner(); },
 };
 export const remplace = ["newdepense"];

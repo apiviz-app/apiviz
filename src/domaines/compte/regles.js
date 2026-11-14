@@ -21,15 +21,17 @@ export const peutEcrire = (role) => role === "responsable" || role === "membre";
 export const ACTIONS_LECTEUR = Object.freeze([
   // Navigation et consultation
   "go", "ruche", "cancel", "closesheet", "n4voisine", "uonglet", "utfiltre", "utout", "alrucher", "allent", "alclient",
-  "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer", "stfiltre",
+  "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer", "stfiltre", "mtvue", "mtfiltre", "invfiltre", "csqte",
   "eadetail", // écran « Entre associés » (v5.32) : consultation
   // Ruchers en tableau (v5.37) : affichage, filtres, tri, colonnes, fiche rapide, export (la sélection reste une saisie)
   "tbvue", "tbaff", "tbfeuille", "tbfermer", "tbfiltre", "tbseuil", "tbsugg", "tbeffacer", "tbcol", "tbcompact", "tbtri", "tbouvrir", "tbexport",
   // Impression et exports (rien n'est modifié)
-  "exp", "erimprimer", "rgprint", "etiq", "v3copierdecla",
+  "exp", "rgcomptable", "ckvue", "ckfiltre", "djfiltre", "csenvoyer", "cscopier", "erimprimer", "rgprint", "etiq", "v3copierdecla",
   // Compte, exploitation, affichage
   "authmode", "logout", "decoforcer", "decoenvoyer", "n4compte", "n4expl", "n4q", "n4soleil", "n4installer", "n4plustard",
   "v3soleil", "exouvrir", "exquitter", "excopier",
+  // Son propre profil et l'inscription (v5.38, migration 021) : chacun écrit sa ligne, même en lecture seule
+  "obsuite", "obretour", "obpasser", "obfinir", "obannuler", "pfnom", "pfreponses", "pfbascule", "pfeffacer", "pftelecharger", "pfmdp", "pfsupprimer",
   // Prise en main (mémorisée sur l'appareil seulement)
   "dmexemple", "dmconnexion", "dmastuce", "dmbravo", "dmmasquer", "dminstaller", "dmarrivee", "dmsortie",
   // File hors ligne : un lecteur peut abandonner une saisie bloquée

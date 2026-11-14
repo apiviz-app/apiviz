@@ -10,20 +10,29 @@
 // Globales lues à l'appel : S, cfg, esc, eur, sheet, $sheet, $sheetForm, saveCfg, render, ER, HL, shell, go, write, sb, today, EX.
 import { SOCIETE, estSociete, associesConnus, soldesAssocies, reglementEntreAssocies, aVerserALaSociete, mouvementsAssocies } from "./associes.js";
 
-const moi = () => { try { return String(localStorage.getItem(`apiviz-prenom-${S.session?.user?.email || ""}`) || "").trim(); } catch { return ""; } };
-const associes = () => associesConnus(S.d || {}, typeof cfg == "function" ? cfg() : {}, moi());
+// v5.38 : le prénom suit le compte (profil.js, migration 021) ; les associés sont les membres de l'exploitation et les
+// personnes sans compte. Sans 021 : prénom de l'appareil et liste des associés des réglages, comme avant.
+const moi = () => { if (typeof PF != "undefined" && PF.prenom()) return PF.prenom(); try { return String(localStorage.getItem(`apiviz-prenom-${S.session?.user?.email || ""}`) || "").trim(); } catch { return ""; } };
+const associes = () => {
+  const reglages = typeof cfg == "function" ? cfg() : {};
+  const liste = typeof PF != "undefined" && !PF.absent() ? PF.associes() : null;
+  return associesConnus(S.d || {}, liste && liste.length ? { ...reglages, associes: liste } : reglages, moi());
+};
 const option = (v, t, choisi) => `<option value="${esc(v)}" ${v === choisi ? "selected" : ""}>${esc(t)}</option>`;
-const sansAssocie = '<p class="small ea-aide">Note les associés dans Réglages › Associés pour dire qui a acheté ou vendu.</p>';
+const sansAssocie = '<p class="small ea-aide">Ajoute tes associés dans Réglages › Membres et associés pour dire qui a acheté ou vendu.</p>';
 
 // ---------- Achat ----------
 function champsAchat(depense) {
   const noms = associes();
   if (!noms.length) return sansAssocie;
   const qui = depense?.achete_par || moi() || noms[0];
-  const avec = depense ? (estSociete(depense.paye_par) ? SOCIETE : depense.paye_par || qui) : qui;
+  const avec = depense ? (estSociete(depense.paye_par) ? SOCIETE : depense.paye_par || qui) : SOCIETE;
   const autres = depense?.paye_par && !estSociete(depense.paye_par) && !noms.includes(depense.paye_par) ? [depense.paye_par] : [];
-  return `<label>Acheté par<select name="achete_par">${noms.map((x) => option(x, x, qui)).join("")}${depense && !depense.achete_par ? option("", "Non précisé", "") : ""}</select></label>
-    <label>Payé avec<select name="paye_par">${[...noms, ...autres].map((x) => option(x, `Fonds propres de ${x}`, avec)).join("")}${option(SOCIETE, "Trésorerie de la société", avec)}</select></label>`;
+  // v5.38 : des puces plutôt que des listes déroulantes (boutons radio, lus par le formulaire).
+  const puce = (nom, v, t, coche) => `<label class="op-radio"><input type="radio" name="${nom}" value="${esc(v)}" ${coche ? "checked" : ""}><span>${esc(t)}</span></label>`;
+  const m = moi();
+  return `<fieldset class="op-choix"><legend>Acheté par</legend><div>${noms.map((x) => puce("achete_par", x, x, x === qui)).join("")}</div></fieldset>
+    <fieldset class="op-choix"><legend>Payé avec</legend><div>${[...noms, ...autres].map((x) => puce("paye_par", x, x === m ? "Ma poche" : `Poche de ${x}`, x === avec)).join("")}${puce("paye_par", SOCIETE, "Compte de l’exploitation", avec === SOCIETE)}</div></fieldset>`;
 }
 
 // ---------- Vente ----------
@@ -170,4 +179,4 @@ export const champsAchatAssocies = champsAchat;
 export const completerGestion = carteGestion;
 export const completerReglages = blocReglages;
 // Rubrique de l'écran dans la barre du bas : « Menu », comme les autres écrans de Finances (navigation.js, v5.32).
-export const actions = { eadetail: () => go("associes"), eaassocies: feuilleAssocies, earegler: regler, eaverser: verser };
+export const actions = { eadetail: () => go("associes"), eaassocies: () => (typeof PF != "undefined" && !PF.absent() ? go("membres") : feuilleAssocies()), earegler: regler, eaverser: verser };

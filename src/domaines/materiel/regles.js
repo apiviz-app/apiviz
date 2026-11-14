@@ -59,7 +59,9 @@ export function famille(a) {
   if (/(pot|bocal|couvercle|capsule|[ée]tiquette|carton|bo[iî]te)/i.test(nom)) return "emballage";
   if (/(candy|candi|sirop|sucre|nourri|pollen|prot[ée]ine)/i.test(nom)) return "alimentation";
   if (/(varroa|lani[èe]re|acide|apivar|apistan|oxalique|formique|traitement|thymol)/i.test(nom)) return "traitement";
-  if (/cire/i.test(nom)) return "cire";
+  // v5.38 : sans Opex / Capex à choisir, un équipement se reconnaît à son nom.
+  if (/(hausse|corps de ruche|ruchette|extracteur|maturateur|enfumoir|combinaison|vareuse|balance|nourrisseur|l[èe]ve-cadres?|d[ée]sopercul|grille|plateau|toit|chasse-abeilles|support)/i.test(nom)) return "equipement";
+  if (/cire|cadre/i.test(nom)) return "cire";
   return "autre";
 }
 
@@ -291,4 +293,93 @@ function quantiteArticle(q, a) {
   const t = fmt(q, 2);
   if (!a) return t;
   return !a.unite || a.unite === "unité" ? `${t} ${a.nom.toLowerCase()}` : `${t} ${a.unite} de ${a.nom.toLowerCase()}`;
+}
+
+// ---------- Écran Matériel opérationnel (v5.38, maquettes du 13 nov. 2026 validées le 14 nov.) ----------
+// Plus d'Opex / Capex à l'écran : la nature reste déduite de la famille (Équipement → amorti) pour les exports.
+
+/** Type enregistré pour une famille : « Équipement » pour la famille équipement, sinon « Consommable ». */
+export const typeDeFamille = (fam) => (fam === "equipement" ? "Équipement" : "Consommable");
+
+/** Poste de dépense d'une famille (jamais demandé à l'écran). */
+export const posteDeFamille = (fam) => POSTE_FAMILLE[fam] || "Autre";
+
+/** Garde un article selon le filtre (« tout », « bas » ou une famille) et la recherche (nom, fournisseur). */
+export function garder(a, f = "tout", q = "", fournisseurs = []) {
+  const t = String(q || "").trim().toLowerCase();
+  if (t) {
+    const four = (fournisseurs.find((x) => x.id === a.fournisseur_id)?.nom || "").toLowerCase();
+    if (!String(a.nom || "").toLowerCase().includes(t) && !four.includes(t)) return false;
+  }
+  if (f === "tout" || !f) return true;
+  if (f === "bas") return aCommander(a);
+  return famille(a) === f;
+}
+
+/** Puces du filtre : Tout, À commander, puis les familles présentes, chacune avec son nombre d'articles. */
+export function puces(articles) {
+  const l = [{ k: "tout", t: "Tout", n: articles.length }, { k: "bas", t: "À commander", n: articles.filter(aCommander).length }];
+  for (const [k, t] of Object.entries(FAMILLES)) {
+    const nb = articles.filter((a) => famille(a) === k).length;
+    if (nb) l.push({ k, t, n: nb });
+  }
+  return l;
+}
+
+/** Groupes par famille de l'écran, articles à commander en tête puis par nom. */
+export function groupesEcran(articles, f = "tout", q = "", fournisseurs = []) {
+  const garde = articles.filter((a) => garder(a, f, q, fournisseurs));
+  return Object.keys(FAMILLES)
+    .map((fam) => ({ famille: fam, titre: FAMILLES[fam], articles: garde.filter((a) => famille(a) === fam)
+      .sort((x, y) => aCommander(y) - aCommander(x) || String(x.nom).localeCompare(String(y.nom), "fr", { numeric: true })) }))
+    .filter((g) => g.articles.length);
+}
+
+/** Quantité proposée pour racheter : de quoi revenir à deux fois le seuil, arrondie (à 5 au-delà de 20, à 10 au-delà de 100). */
+export function quantiteProposee(a) {
+  const seuil = Number(a.seuil) || 0, stock = Math.max(0, Number(a.stock) || 0);
+  let q = Math.max(seuil * 2 - stock, seuil, 1);
+  const pas = q > 100 ? 10 : q > 20 ? 5 : a.unite && a.unite !== "unité" ? 0.5 : 1;
+  q = Math.ceil(q / pas - 1e-9) * pas;
+  return Math.round(q * 100) / 100;
+}
+
+/**
+ * Liste de courses : les articles à commander, groupés par fournisseur habituel (« Sans fournisseur » à la fin),
+ * avec la quantité proposée (ou celle choisie dans `choix`, { article_id: quantité }) et le montant estimé.
+ */
+export function listeCourses(articles, fournisseurs = [], choix = {}) {
+  const groupes = new Map();
+  for (const a of articles.filter(aCommander)) {
+    const cle = a.fournisseur_id && fournisseurs.some((f) => f.id === a.fournisseur_id) ? a.fournisseur_id : "";
+    const q = choix[a.id] !== undefined ? Math.max(0, Number(choix[a.id]) || 0) : quantiteProposee(a);
+    const prix = Number(a.valeur) || 0;
+    const g = groupes.get(cle) || { fournisseur_id: cle || null, nom: cle ? fournisseurs.find((f) => f.id === cle).nom : "Sans fournisseur", lignes: [], total: 0, sansPrix: 0 };
+    g.lignes.push({ article: a, quantite: q, montant: Math.round(q * prix * 100) / 100, prix });
+    g.total = Math.round((g.total + q * prix) * 100) / 100;
+    if (!prix) g.sansPrix++;
+    groupes.set(cle, g);
+  }
+  const l = [...groupes.values()].sort((x, y) => (!x.fournisseur_id) - (!y.fournisseur_id) || x.nom.localeCompare(y.nom, "fr"));
+  l.forEach((g) => g.lignes.sort((x, y) => String(x.article.nom).localeCompare(String(y.article.nom), "fr", { numeric: true })));
+  return { groupes: l, total: Math.round(l.reduce((t, g) => t + g.total, 0) * 100) / 100, articles: l.reduce((t, g) => t + g.lignes.length, 0) };
+}
+
+/** Texte à envoyer au fournisseur (ou à copier) pour un groupe de la liste de courses. */
+export function texteCourses(groupe) {
+  return [`Commande${groupe.fournisseur_id ? " pour " + groupe.nom : ""} :`, ...groupe.lignes.map((l) => `- ${quantite(l.quantite, l.article.unite)} ${l.article.nom}`)].join("\n");
+}
+
+/** Inventaire : écarts entre le compté (`comptes`, { article_id: "12" }) et le stock prévu. Les cases vides sont ignorées. */
+export function ecartsInventaire(articles, comptes = {}) {
+  const l = [];
+  for (const a of articles) {
+    const v = comptes[a.id];
+    if (v === undefined || v === null || String(v).trim() === "") continue;
+    const compte = Number(String(v).replace(",", "."));
+    if (!Number.isFinite(compte) || compte < 0) continue;
+    const ecart = Math.round((compte - Number(a.stock || 0)) * 100) / 100;
+    l.push({ article: a, compte, ecart });
+  }
+  return { comptes: l.length, ecarts: l.filter((x) => x.ecart !== 0) };
 }

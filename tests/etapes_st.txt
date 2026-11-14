@@ -1,4 +1,4 @@
-    # v5.30 — Stock d'après les maquettes du 11 nov. 2026 (migration 018) : catalogue par famille avec Opex/Capex,
+    # v5.38 — Matériel en tableau ou liste, stock au doigt, fiche sans Opex/Capex. v5.30 — Stock d'après les maquettes du 11 nov. 2026 (migration 018) : catalogue par famille avec Opex/Capex,
     # achat en plusieurs lignes qui crée du stock (article existant, nouvel article, frais), mise en pots qui retire
     # pots vides, couvercles et étiquettes et crée le lot, histoire du lot. Avec CAPTURES=<dossier>, capture à 390 px.
     import pathlib as _pl, os
@@ -22,23 +22,45 @@
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
 
-    # Catalogue
-    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".st-famille")
-    titres = page.locator(".st-famille h2").all_inner_texts()
+    # Matériel en tableau (v5.38) : familles, à commander, puces avec nombre, plus d'Opex / Capex
+    page.evaluate("try{localStorage.removeItem('apiviz-materiel-affichage')}catch(e){}; S.mt=null; ACT.go('materiel')"); page.wait_for_selector(".ma-corps .op-groupe")
+    titres = page.locator(".ma-corps .op-gt").evaluate_all("l => l.map(x => x.textContent)")
     verif(titres[0].startswith("Emballage") and any(t.startswith("Équipement") for t in titres), "articles groupés par famille : " + " | ".join(titres))
-    verif("Opex" in titres[0] and "Capex" in [t for t in titres if t.startswith("Équipement")][0], "Opex et Capex dits par famille")
+    corps = page.locator(".wrap").inner_text()
+    verif("Opex" not in corps and "Capex" not in corps, "plus d'Opex ni de Capex à l'écran")
     verif(page.locator(".head h1").inner_text() == "2 articles sont à recommander.", "phrase : " + page.locator(".head h1").inner_text())
-    verif(page.locator(".st-bas").count() == 2, "candy et pots 250 g signalés à commander")
-    page.click(".st-filtre [data-v=capex]"); page.wait_for_timeout(200)
-    verif(page.locator(".st-famille").count() == 1 and "Extracteur" in page.locator(".st-famille").inner_text(), "filtre Capex : l'équipement seul")
-    page.click(".st-filtre [data-v=tous]"); page.wait_for_timeout(200)
-    verif(page.locator(".st-sugg [data-act=preset]").count() > 5, "suggestions du catalogue")
+    verif(page.locator(".ma-table tr.op-bas").count() == 2, "candy et pots 250 g signalés à commander")
+    verif(page.locator(".op-puce[data-v=bas]").inner_text().replace("\n", " ").strip() == "À commander 2", "puce À commander avec son nombre")
+    page.click(".op-puce[data-v=bas]"); page.wait_for_timeout(150)
+    verif(page.locator(".ma-table tbody tr").count() == 2, "filtre À commander : deux lignes")
+    page.click(".op-puce[data-v=equipement]"); page.wait_for_timeout(150)
+    verif(page.locator(".ma-corps .op-groupe").count() == 1 and "Extracteur" in page.locator(".ma-corps").inner_text(), "filtre Équipement : l'extracteur seul")
+    page.click(".op-puce[data-v=tout]"); page.wait_for_timeout(150)
+    page.fill(".op-q", "couv"); page.wait_for_timeout(150)
+    verif(page.locator(".ma-table tbody tr").count() == 1, "recherche « couv » : une ligne")
+    page.fill(".op-q", ""); page.wait_for_timeout(150)
+    # Stock au doigt : deux + puis un −, un seul mouvement « inventaire » de +1, et « Annuler »
+    page.click(f".ma-corps [data-act=mtplus][data-v='{A1}']"); page.click(f".ma-corps [data-act=mtplus][data-v='{A1}']")
+    page.click(f".ma-corps [data-act=mtmoins][data-v='{A1}']")
+    verif(page.locator(f".ma-corps [data-act=mtplus][data-v='{A1}']").locator("xpath=..").inner_text().replace("\n", "").strip() == "−2 kg+", "le chiffre change tout de suite")
+    verif(page.locator(".op-annuler").count() == 1, "bandeau Annuler après un geste")
+    page.wait_for_timeout(1900)
+    mv = [m for m in DATA["mouvements_stock"] if m["article_id"] == A1]
+    verif(len(mv) == 1 and float(mv[0]["quantite"]) == 1 and mv[0]["type"] == "inventaire", "un seul mouvement inventaire de +1 : " + str(mv))
+    verif(stock(A1) == 2, "stock de candy en base : 1 → 2")
+    page.click(f".ma-corps [data-act=mtplus][data-v='{A1}']"); page.click(".op-annuler [data-act=mtannuler]"); page.wait_for_timeout(1900)
+    verif(len([m for m in DATA["mouvements_stock"] if m["article_id"] == A1]) == 1 and stock(A1) == 2, "Annuler : rien de plus n'est envoyé")
+    # Bascule liste, gardée sur l'appareil
+    page.click(".op-vues [data-v=liste]"); page.wait_for_selector(".ma-corps .op-carte")
+    verif(page.evaluate("localStorage.getItem('apiviz-materiel-affichage')") == "liste", "affichage en liste gardé sur l'appareil")
+    shot("stock-liste")
+    page.click(".op-vues [data-v=tableau]"); page.wait_for_selector(".ma-table")
     shot("stock-catalogue")
-    page.click(".st-sugg [data-v='Étiquette 250 g']"); page.wait_for_selector("#sheet[open] [name=famille]")
-    verif(page.input_value("#sheet [name=famille]") == "emballage" and page.input_value("#sheet [name=type]") == "Consommable", "suggestion : famille et Opex préremplis")
-    page.fill("#sheet [name=stock]", "75"); page.fill("#sheet [name=seuil]", "50"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+    page.click("summary:has-text('Ajouter vite')"); page.click(".st-sugg [data-v='Étiquette 250 g']"); page.wait_for_selector("#sheet[open] [name=famille]")
+    verif(page.input_value("#sheet [name=famille]") == "emballage" and page.locator("#sheet [name=type]").count() == 0 and page.locator("#sheet [name=duree_amort]").count() == 0, "fiche : famille préremplie, ni Opex/Capex ni amortissement")
+    page.fill("#sheet [name=stock]", "74"); page.click("#sheet .ma-pm[data-k='1'] >> nth=0"); page.fill("#sheet [name=seuil]", "50"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     ETI = next(a for a in DATA["articles"] if a["nom"] == "Étiquette 250 g")["id"]
-    verif(stock(ETI) == 75, "étiquettes ajoutées au catalogue avec 75 en stock")
+    verif(stock(ETI) == 75 and next(a for a in DATA["articles"] if a["id"] == ETI)["type"] == "Consommable", "étiquettes ajoutées (74 puis +) : 75 en stock, type déduit de la famille")
 
     # Achat en plusieurs lignes
     page.click(".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .st-achat-corps")
@@ -50,25 +72,24 @@
     verif("Stock +150" in page.locator(".st-ligne").first.inner_text(), "la ligne dit ce qui entre en stock")
     page.click("[data-act=stachnouveau]"); page.wait_for_timeout(100)
     page.fill(".st-ligne:last-child [data-k=nom]", "Maturateur 50 kg")
-    page.click(".st-ligne:last-child [data-act=stachtype][data-k='Équipement']"); page.wait_for_timeout(100)
     page.fill(".st-ligne:last-child [data-k=quantite]", "1"); page.fill(".st-ligne:last-child [data-k=montant]", "180")
     page.click("[data-act=stachlibre]"); page.wait_for_timeout(100)
     page.fill(".st-ligne:last-child [data-k=libelle]", "Frais de port"); page.fill(".st-ligne:last-child [data-k=montant]", "9.90")
     verif(page.locator(".st-total b").inner_text().replace(" ", " ").replace("\xa0", " ") == "270,9 €", "total des lignes : " + page.locator(".st-total b").inner_text())
-    verif("Capex" in page.locator(".st-ligne").nth(2).inner_text(), "nouvel article choisi en Capex")
+    verif("Capex" not in page.locator("#sheet").inner_text() and "Opex" not in page.locator("#sheet").inner_text(), "achat : plus d'Opex ni de Capex")
     shot("stock-achat")
     page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     rpc = [b for n, b in recu["rpc"] if n == "enregistrer_achat"]
     verif(len(rpc) == 1 and len(rpc[0]["p"]["lignes"]) == 4 and rpc[0]["p"]["piece"] == "F-2026-118", "un seul appel enregistrer_achat, 4 lignes, n° de facture")
     verif(stock(P250) == 150 and stock(COU) == 350, "stock monté : pots 250 g 0 → 150, couvercles 200 → 350")
     mat = next((a for a in DATA["articles"] if a["nom"] == "Maturateur 50 kg"), None)
-    verif(mat and mat["type"] == "Équipement" and mat["stock"] == 1, "nouvel article créé en Capex, 1 en stock")
+    verif(mat and mat["type"] == "Équipement" and mat["stock"] == 1, "nouvel article « Maturateur » reconnu comme équipement (famille), 1 en stock")
     natures = {d["libelle"]: d["nature"] for d in DATA["depenses"] if d.get("achat_id")}
     verif(natures.get("Maturateur 50 kg") == "Immobilisation" and natures.get("Pot 250 g vide") == "Consommable" and natures.get("Frais de port") == "Service", "Opex, Capex, service : " + str(natures))
 
     # Historique d'un article
-    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".st-famille")
-    page.click(f".st-art[data-v='{P250}']"); page.wait_for_selector("#sheet[open] .st-histo")
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
+    page.click(f".ma-corps [data-act=editarticle][data-v='{P250}']"); page.wait_for_selector("#sheet[open] .st-histo")
     verif("Achat" in page.locator(".st-histo").inner_text() and "+150" in page.locator(".st-histo").inner_text(), "fiche article : l'achat apparaît dans ce qui a bougé")
     page.click("#sheet [data-act=closesheet]")
 
