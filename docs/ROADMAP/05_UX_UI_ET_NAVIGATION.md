@@ -20,7 +20,7 @@ Inspiration Linear, Stripe, Qonto, Pennylane : peu d'éléments, hiérarchie net
 Accueil
  ├─ Priorité du jour · Ce mois-ci · Mes ruchers (alvéoles, météo) · À faire · Activité
 Ruchers
- ├─ Liste (par rucher ou en tableau) / Carte / Santé
+ ├─ Liste (liste, alvéoles ou tableau) / Carte / Santé
  ├─ Fiche rucher : colonies · météo 5 j · tâches · historique · infos (accès, propriétaire)
  └─ Fiche colonie : en-tête (état, reine, force, dernière visite)
        onglets Journal · Santé · Reine & lignée · Production · Photos
@@ -47,6 +47,14 @@ facultatives) s'affiche une seule fois avant le reste ; une personne sans exploi
 de création du rucher. Matériel, Clients (Miel › Clients) et Dépenses passent en tableau (bascule tableau / liste pour
 Matériel et Clients, gardée sur l'appareil). Réglages en cinq groupes ; plus de « Listes » (postes, cercles, modes de
 paiement) ni d'Opex / Capex à l'écran. Décision de Pierre-Louis (14 nov. 2026, maquettes du 13 et 14 nov. validées).
+
+**v5.40 (14 nov. 2026)** : l'écran Ruches (Ruchers › Liste) passe à **une seule barre** et trois présentations,
+**Liste** (par défaut sur téléphone), **Alvéoles** et **Tableau** (par défaut sur ordinateur). La liste et les alvéoles
+sont rangées par rucher : l'en-tête du rucher reprend sa fiche, la tournée et la météo (une ligne). La bascule « Par
+rucher / Tableau » disparaît ; l'affichage par rucher en grandes cartes ne reste que pour un compte sans colonie. Sur
+téléphone, le titre et ses boutons passent dans un menu ⋯ de la rangée des onglets ; sélection par appui long. Même
+route (`ruches`), pas de nouvelle rubrique. Décision de Pierre-Louis (14 nov. 2026, maquettes « Réagencement
+mobile », pistes B et C) après le constat : 3 colonies visibles en tableau, 0 par rucher, sur un téléphone de 844 px.
 
 **v5.37 (13 nov. 2026)** : l’écran Ruches (Ruchers › Liste) gagne une bascule **« Par rucher / Tableau »** : même
 écran, même route (`ruches`), deux affichages ; pas de nouvelle rubrique ni de nouvel onglet. L'affichage Tableau liste

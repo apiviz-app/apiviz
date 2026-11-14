@@ -18,11 +18,12 @@
         page.set_viewport_size({"width": 390, "height": 844})
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    page.evaluate("ACT.go('ruches')"); page.wait_for_selector("[data-act=rcnouveau]", timeout=10000)
-    verif(page.locator("section.card[data-k='Verger'] .n4-ruche").count() == 8, "écran Ruchers : Verger et ses 8 colonies")
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-gr", timeout=10000)
+    verif(page.locator(".tb-gr[data-k='Verger'] .n4-ruche").count() == 8, "écran Ruchers : Verger et ses 8 colonies")
 
     # A. Nouveau rucher : nom nettoyé, identifiant fourni par l'application, fiche ouverte même sans colonie.
-    page.click("[data-act=rcnouveau]"); page.fill("#sheet input[name=nom]", "  Bois   du Roi "); page.click("#sheet .btn.main")
+    # v5.39 : sur téléphone, « Nouveau rucher » est dans le menu ⋯ des onglets.
+    page.locator(".tb-plus:visible").first.click() if page.locator(".tb-plus:visible").count() else None; page.locator("[data-act=rcnouveau]:visible").first.click(); page.fill("#sheet input[name=nom]", "  Bois   du Roi "); page.click("#sheet .btn.main")
     page.wait_for_selector(".toast >> text=Rucher créé", timeout=10000)
     cr = [b["p"] for n, b in recu["rpc"] if n == "creer_rucher"]
     verif(len(cr) == 1 and cr[0]["nom"] == "Bois du Roi" and len(cr[0]["id"]) == 36, "creer_rucher : nom nettoyé, identifiant fourni")
@@ -34,7 +35,7 @@
     page.click("#sheet [data-act=closesheet]")
 
     # B. Doublon refusé, sans tenir compte de la casse ni des espaces.
-    page.evaluate("ACT.go('ruches')"); page.click("[data-act=rcnouveau]"); page.fill("#sheet input[name=nom]", " verger ")
+    page.evaluate("ACT.go('ruches')"); page.locator(".tb-plus:visible").first.click() if page.locator(".tb-plus:visible").count() else None; page.locator("[data-act=rcnouveau]:visible").first.click(); page.fill("#sheet input[name=nom]", " verger ")
     page.click("#sheet .btn.main"); page.wait_for_selector(".toast.err >> text=Ce rucher existe déjà", timeout=5000)
     verif(len([1 for n, b in recu["rpc"] if n == "creer_rucher"]) == 1, "doublon « verger » refusé avant tout envoi")
     page.click("#sheet [data-act=closesheet]")
@@ -71,7 +72,7 @@
     verif(any(t == "ruchers" and c.get("archive_le") for t, c in patchs), "archivage enregistré (pas de suppression)")
     verif(page.locator("[data-act=rcrouvrir]").count() == 1, "rucher archivé : « Rouvrir ce rucher »")
     page.evaluate("ACT.go('ruches')"); page.wait_for_selector("text=Ruchers archivés · 1", timeout=5000)
-    verif(page.locator("section.card[data-k='Bois du Roi']").count() == 0, "rucher archivé retiré de la liste active")
+    verif(page.locator(".tb-gr[data-k='Bois du Roi']").count() == 0, "rucher archivé retiré de la liste active")
     verif("Bois du Roi" not in page.evaluate("ruchers()"), "rucher archivé absent du choix d'un rucher")
     captures("liste")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

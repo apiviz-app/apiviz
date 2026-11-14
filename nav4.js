@@ -156,6 +156,13 @@ const N4 = (() => {
         <div class="n4-ruches">${lignes}</div>
         <div class="u-deux">${action}${lieu}</div></section>`;
     }).join("");
+    const nbR = ls.filter((l) => l.cle).length;
+    shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(nbR, "rucher")}`, entete, blocs + basRuchers());
+  }
+
+  // Bas de l'écran Ruchers : ruches sorties et ruchers archivés (aussi sous la liste et les alvéoles, v5.40).
+  function basRuchers() {
+    const d = S.d, archives = (d.ruchers || []).filter((r) => r.archive_le);
     // Ruches sorties, filtrées par statut (IT-06, AP-TECH-109) : mortes, vendues, réunies, perdues.
     const tousSortis = d.ruchesSorties || [], C = Regles.colonies;
     const presents = Object.keys(C.STATUTS).filter((k) => tousSortis.some((r) => C.statut(r) === k));
@@ -168,8 +175,7 @@ const N4 = (() => {
     // Ruchers archivés (AP-TECH-096) : gardés pour l'historique, rouvrables depuis leur fiche.
     const arch = archives.length ? `<details class="card u-pli"><summary><h2>Ruchers archivés · ${archives.length}</h2><span class="u-chev" aria-hidden="true">›</span></summary>
       ${archives.map((r) => `<button type="button" class="u-todo" data-act="alrucher" data-v="${esc(r.nom)}"><span class="u-dot" aria-hidden="true"></span><span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">archivé le ${esc(dfr(String(r.archive_le).slice(0, 10)))}</span></span><span class="u-chev" aria-hidden="true">›</span></button>`).join("")}</details>` : "";
-    const nbR = ls.filter((l) => l.cle).length;
-    shell("Ruchers", `${U.pluriel(d.ruches.length, "colonie")} · ${U.pluriel(nbR, "rucher")}`, entete, blocs + sorties + arch);
+    return sorties + arch;
   }
 
   // ---------- Fiche ruche : passer d'une ruche à l'autre ----------
@@ -277,5 +283,5 @@ const N4 = (() => {
   ACT.delvente = delVente;
   ACT.uvsuppr = delVente;
 
-  return { prochaine, navRuche, plusTard, ecranRuchers, completerMiel, support };
+  return { prochaine, navRuche, plusTard, ecranRuchers, basRuchers, completerMiel, support };
 })();

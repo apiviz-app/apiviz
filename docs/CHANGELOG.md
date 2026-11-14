@@ -5,6 +5,49 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.40 · à publier en recette · Ruchers sur téléphone : liste dense et alvéoles, une seule barre
+Aucune migration. Maquettes « Réagencement mobile » du 14 nov. 2026, pistes B et C retenues par Pierre-Louis.
+Constat : sur un téléphone de 844 px, 7 bandes empilées laissaient 3 colonies visibles en tableau, et aucune dans
+l'affichage par rucher. Maintenant (15 colonies, 2 ruchers) : 8 en liste, 15 en alvéoles, 8 en tableau.
+
+Pour l'apiculteur :
+1. **Une seule barre** sous les onglets : « Filtrer et trier », des raccourcis avec leur nombre (Toutes, À voir,
+   Varroa, Sans reine…), et le choix **Liste / Alvéoles / Tableau**, gardé sur l'appareil.
+2. **Liste** (par défaut sur téléphone) : une ligne par colonie (54 px), rangée par rucher. La ligne dit ce qui demande
+   de l'attention, ou la force, la reine et le dernier poids ; à droite le varroa et les jours depuis la visite.
+   Toucher ouvre la fiche, comme avant.
+3. **En-tête de rucher** fin : nom (vers la fiche du rucher), nombre de colonies et « à voir », **Tournée** (ou
+   Visiter, ou Ajouter des ruches ici), météo en une ligne (ou « Placer sur la carte »).
+4. **Alvéoles** : une tuile par colonie, 4 par ligne sur téléphone ; rouge si urgent, miel si à voir, avec la raison en
+   clair (Orpheline, Varroa 5 %, 40 j sans visite…).
+5. **Filtrer et trier** : une seule feuille pour le tri, le rucher, l'état, les seuils d'alerte, l'année de la reine
+   (repliée), « Grouper par rucher » et, en tableau, les colonnes ; « Voir N colonies » reste en bas.
+6. **Appui long** sur une colonie (ou ⋯ › Sélectionner) : la barre devient « N sélectionnées · Déplacer · Visite
+   groupée ». Plus de colonne de cases sur téléphone (le tableau garde ses cases).
+7. **Téléphone** : plus de titre au-dessus des onglets ; Nouveau rucher, Ajouter des ruches, Déplacer, Sélectionner et
+   Exporter dans le bouton **⋯** des onglets. La recherche se fait avec la loupe du haut (nom ou code).
+8. **Ordinateur** : inchangé pour l'essentiel (titre et boutons, filtres à gauche, tableau par défaut) ; la liste et les
+   alvéoles y sont aussi.
+9. La bascule « Par rucher / Tableau » (v5.37) disparaît. Les ruches sorties et les ruchers archivés restent en bas de
+   la liste et des alvéoles.
+
+Technique : `src/domaines/ruchers/vue-tableau.js` (trois présentations, barre, feuille, menu ⋯, appui long),
+`src/domaines/colonies/tableau.js` (raisons typées, `court`, `grouper`, tests), `nav4.js` (`basRuchers`, bas de liste
+partagé), `meteo.js` (`MT.ligne`, météo en une ligne), `styles/51-ruches-tableau.css`. Préférence sur l'appareil :
+`localStorage["apiviz-ruches-presentation"]` (l'ancienne clé ne sert plus qu'aux colonnes). Action `tbgrouper` permise
+en lecture seule ; `tbvue` retirée. Scénarios adaptés : `etapes_tb` (réécrit), `n4`, `ru`, `rc`, `ct`. Guide, roadmap 05
+§2 (décision notée) et astuce mis à jour.
+
+### À vérifier
+- Téléphone : Ruchers › Liste s'ouvre en Liste ; combien de colonies se voient sans faire défiler ; la météo s'affiche
+  en une ligne dans l'en-tête de chaque rucher (touche-la : heure par heure).
+- Raccourci « À voir » puis second toucher ; « Filtrer et trier » : trier par varroa, décocher « Grouper par rucher ».
+- Alvéoles : tout un rucher sur l'écran, les urgentes en rouge.
+- Appui long sur une ruche, puis toucher une deuxième : « Visite groupée » ouvre la visite pour les deux.
+- Bouton ⋯ : Nouveau rucher, Ajouter des ruches, Exporter.
+- Ordinateur : tableau comme avant, liste et alvéoles disponibles.
+- Lecture seule : présentations et filtres marchent ; ni appui long, ni « Tournée », ni « Nouveau rucher ».
+
 ## v5.39 · à publier en recette · supprimer son compte depuis l'app, sauvegarde prête à activer
 **Migration 022** (`022-suppression-compte.sql`) : additive, ne casse pas l'ancienne version. Appliquée par la mise en
 ligne (recette, puis production). Sans 022, l'écran garde l'ancien message.

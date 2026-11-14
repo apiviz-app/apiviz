@@ -16,8 +16,8 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Mortes et vendue ne comptent plus ; leur historique reste consultable, filtrable par statut.
-    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".head", timeout=5000)
-    verif("3 colonies" in page.locator(".head").inner_text(), "Ruchers : 3 colonies actives comptées sur 6")
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-barre", timeout=5000)
+    verif(page.locator(".tb-puce[data-act=tbeffacer] span").inner_text() == "3" and page.locator(".n4-ruche").count() == 3, "Ruchers : 3 colonies actives comptées sur 6")
     page.locator("details.u-pli:has-text('Ruches sorties')").evaluate("d => d.open = true")
     page.click("[data-act=clfsortie][data-v=morte]"); page.wait_for_timeout(200)
     t = page.locator("details.u-pli:has-text('Ruches sorties')").inner_text()
