@@ -30,9 +30,9 @@ personnes sans compte, inventaire, liste de courses, achat prérempli avec « Ac
 tableau et en liste). `etapes_st` couvre Matériel en tableau ou liste et le stock au doigt ; `etapes_eg` le journal des
 dépenses, les réglages en cinq groupes et le fichier comptable. Avec `CAPTURES=<dossier>` : captures à 390 px.
 
-Scénario v5.37 : `etapes_tb` (Ruchers en tableau : bascule gardée sur l'appareil, recherche, filtres et puces, tri,
-colonnes, colonne Colonie fixe au défilement, synthèse en bas, sélection et visite groupée, fiche rapide, cartes, version
-ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+Scénario v5.37, revu en v5.40 : `etapes_tb` (Ruchers : liste rangée par rucher par défaut sur téléphone, menu ⋯,
+raccourcis et feuille « Filtrer et trier », regroupement, appui long et visite groupée, alvéoles, tableau avec colonne
+fixe et synthèse en bas, version ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
 
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).

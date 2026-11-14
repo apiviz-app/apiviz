@@ -7,12 +7,12 @@ export default [
   // Liste des ruchers : nav4.js (un bloc par rucher de la table, y compris sans colonie, IT-05), complétée par
   // Alvéoles (météo et poids sur chaque bloc).
   // Filtre des ruches sorties par statut (IT-06, AP-TECH-109), déclaré ici.
-  // Affichage « Tableau » (v5.37) : vue-tableau.js, choisi par la bascule « Par rucher / Tableau » posée en haut des deux
-  // affichages ; le choix est gardé sur l'appareil.
+  // Liste, alvéoles ou tableau (v5.40) : vue-tableau.js, présentation choisie dans la barre et gardée sur l'appareil.
+  // Sans rucher ni colonie : l'accueil « Crée ton premier rucher » de nav4.js.
   { id: "ruches", titre: "Ruchers", rubrique: "ruches",
     rendu: () => {
-      if (Tableau.vueTableau() && S.d?.ruches?.length) return Tableau.ecran();
-      N4.ecranRuchers(); AL.completerRuchers(); Tableau.poserBascule();
+      if (S.d?.ruches?.length || UX.lieux().some((l) => l.cle)) return Tableau.ecran();
+      N4.ecranRuchers(); AL.completerRuchers();
     },
     actions: { clfsortie: (v) => { S.filtreSortie = v; render(); }, ...Tableau.actions } },
   // Carte des ruchers : ux.js (UX.carte), un repère par rucher à la position du rucher (IT-05).

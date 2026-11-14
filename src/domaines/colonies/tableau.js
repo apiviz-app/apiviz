@@ -51,14 +51,14 @@ export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
     const annee = reine?.annee_naissance ? Number(reine.annee_naissance) : null;
     const jours = der ? days(der.date_visite, aujourdhui) : null;
     const raisons = [];
-    const ajoute = (niveau, texte) => raisons.push({ niveau, texte });
-    if (orpheline) ajoute("urg", "Orpheline");
-    if (r.etat === "Critique") ajoute("urg", "État critique");
-    if (taux !== null && taux >= seuil) ajoute("urg", `Varroa ${n(taux, 1)} % (seuil ${n(seuil, 1)} %)`);
-    else if (taux !== null && taux >= seuil * 0.66) ajoute("watch", `Varroa ${n(taux, 1)} % : proche du seuil`);
-    if (r.etat === "À surveiller") ajoute("watch", "État à surveiller");
-    if (der?.provisions === "Faibles") ajoute("watch", "Provisions faibles");
-    if (jours !== null && jours > JOURS_SANS_VISITE) ajoute("watch", `Pas visitée depuis ${jours} jours`);
+    const ajoute = (niveau, type, texte) => raisons.push({ niveau, type, texte });
+    if (orpheline) ajoute("urg", "orpheline", "Orpheline");
+    if (r.etat === "Critique") ajoute("urg", "critique", "État critique");
+    if (taux !== null && taux >= seuil) ajoute("urg", "varroa", `Varroa ${n(taux, 1)} % (seuil ${n(seuil, 1)} %)`);
+    else if (taux !== null && taux >= seuil * 0.66) ajoute("watch", "varroa", `Varroa ${n(taux, 1)} % : proche du seuil`);
+    if (r.etat === "À surveiller") ajoute("watch", "surveiller", "État à surveiller");
+    if (der?.provisions === "Faibles") ajoute("watch", "provisions", "Provisions faibles");
+    if (jours !== null && jours > JOURS_SANS_VISITE) ajoute("watch", "visite", `Pas visitée depuis ${jours} jours`);
     const niveau = raisons.reduce((m, x) => pire(m, x.niveau), "ok");
     raisons.sort((a, b) => NIVEAUX[a.niveau].rang - NIVEAUX[b.niveau].rang);
     return {
@@ -167,4 +167,32 @@ export function exporter(ls) {
   const lignesCsv = ls.map((l) => [l.nom, l.code, l.rucher, NIVEAUX[l.niveau].libelle, l.force || "", l.orpheline ? "Absente" : l.reine || "",
     l.varroa !== null ? n(l.varroa, 1) : l.varroaBrut !== null ? `${l.varroaBrut} varroas` : "", l.provisions || "", l.derniere || "", l.raisons.map((x) => x.texte).join(" · ")]);
   return { entetes, lignes: lignesCsv };
+}
+
+/**
+ * Texte très court d'une colonie pour une tuile (alvéoles, v5.40) : la première raison, sinon le varroa et les jours
+ * depuis la dernière visite.
+ */
+export function court(l) {
+  const r = l.raisons[0];
+  if (r) return { orpheline: "Orpheline", critique: "Critique", varroa: `Varroa ${l.varroa !== null ? n(l.varroa, 1) + " %" : ""}`.trim(),
+    surveiller: "À surveiller", provisions: "Provisions", visite: `${l.jours} j sans visite` }[r.type] || r.texte;
+  if (l.jours === null) return "Jamais vue";
+  return l.varroa !== null ? `${n(l.varroa, 1)} % · ${l.jours} j` : `${l.jours} j`;
+}
+
+/**
+ * Lignes rangées par rucher, dans l'ordre des ruchers donné (v5.40). `ruchers` : [{ cle, nom, ids }] (ids : toutes les
+ * colonies du rucher). Chaque groupe garde l'ordre des lignes reçues (déjà triées). Une colonie d'aucun rucher connu
+ * va dans un groupe « Sans rucher » en fin de liste. `garderVides` : garder les ruchers sans ligne.
+ */
+export function grouper(ls, ruchers, { garderVides = false } = {}) {
+  const ou = new Map();
+  ruchers.forEach((g, i) => g.ids.forEach((id) => ou.set(id, i)));
+  const groupes = ruchers.map((g) => ({ ...g, lignes: [] }));
+  const reste = [];
+  for (const l of ls) (ou.has(l.id) ? groupes[ou.get(l.id)].lignes : reste).push(l);
+  const out = groupes.filter((g) => garderVides || g.lignes.length);
+  if (reste.length) out.push({ cle: "", nom: "Sans rucher", ids: reste.map((l) => l.id), lignes: reste });
+  return out;
 }

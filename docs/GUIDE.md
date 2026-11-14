@@ -35,16 +35,24 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Ruchers
 
-- Les ruches par rucher. Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un
-  raccourci vers le registre d'élevage et la déclaration annuelle, qui sont rangés dans Administration).
-- **Par rucher / Tableau** *(v5.37)* : en haut de la liste, la bascule « Tableau » montre toutes les colonies en lignes :
-  état, force, reine, varroa, provisions, dernière visite (et, au choix, rucher et « À faire »). Cherche par nom ou par
-  code ; **Filtres** par rucher, état, année de la reine et seuils d'alerte (varroa au-dessus du seuil, provisions
-  faibles, pas visitée depuis 30 jours) ; les filtres actifs s'affichent en puces, retirables d'un toucher. Touche un
-  en-tête pour trier (deux fois pour inverser). La colonne Colonie et la ligne **Synthèse** restent en place quand le
-  tableau défile. Coche des colonies pour une **visite groupée** ou un **déplacement** ; touche un nom pour sa fiche
-  rapide. Le bouton à deux icônes passe en cartes, avec les mêmes filtres. Sur ordinateur : filtres à gauche,
-  « Colonnes », « Compact » et « Exporter » (fichier pour tableur). Le choix « Tableau » est gardé sur l'appareil.
+- **Liste, Alvéoles ou Tableau** *(v5.40)* : une seule barre sous les onglets. À gauche, **Filtrer et trier** (tri,
+  rucher, état, seuils d'alerte : varroa au-dessus du seuil, provisions faibles, pas visitée depuis 30 jours ; année de
+  la reine ; « Grouper par rucher ») ; au milieu, des raccourcis avec leur nombre (Toutes, À voir, Varroa…) qui se
+  retirent d'un second toucher ; à droite, la présentation, gardée sur l'appareil.
+  - **Liste** (par défaut sur téléphone) : une ligne par colonie, rangée par rucher. La ligne dit ce qui demande ton
+    attention (orpheline, varroa, provisions…) ou sa force et sa reine, avec le varroa et les jours depuis la visite à
+    droite. L'en-tête du rucher ouvre sa fiche, lance la **Tournée** et montre la météo en une ligne (touche-la pour
+    l'heure par heure ; sans position : « Placer sur la carte »).
+  - **Alvéoles** : une tuile par colonie, rouge si urgent, miel si à voir ; tout un rucher d'un coup d'œil.
+  - **Tableau** : les colonnes (au choix dans Filtrer et trier), le tri en touchant un en-tête, la colonne Colonie et
+    la **Synthèse** qui restent en place, la fiche rapide.
+  - **Appui long** sur une colonie (ou ⋯ › Sélectionner) : coche d'autres colonies, puis **Déplacer** ou **Visite
+    groupée**.
+  - Sur téléphone, **⋯** à côté des onglets : Nouveau rucher, Ajouter des ruches, Déplacer, Sélectionner, Exporter.
+    La recherche d'une colonie se fait avec la loupe du haut (nom ou code). Sur ordinateur : titre et boutons en haut,
+    champ de recherche dans la barre, filtres à gauche, Exporter (fichier pour tableur).
+- Onglets **Carte** (placer un rucher, itinéraire) et **Santé** (suivi varroa, avec un raccourci vers le registre
+  d'élevage et la déclaration annuelle, qui sont rangés dans Administration).
 - **Une ruche** : flèches ‹ › ou glisser pour passer à la voisine ; sous le nom, le statut, la reine (âge, couleur) et la
   dernière visite ; onglets Journal (visites et événements dans l'ordre des dates), Santé (comptages varroa,
   traitements), Reine & lignée (nouvelle reine sans perdre l'ancienne, « Issue de … », colonies qui en sont issues),
