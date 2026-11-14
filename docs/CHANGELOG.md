@@ -5,6 +5,14 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.40 · outils · santé de la production chaque matin
+Aucun changement dans l'application, aucune migration.
+
+- **Action « Santé »** : chaque matin, vérifie que l'application, la recette et la landing page répondent, et compte les
+  erreurs nouvelles remontées par l'application depuis 24 h (`journal_erreurs`). Échoue en cas de problème, ce qui
+  déclenche un e-mail de GitHub. Lecture seule ; le journal public ne montre ni le texte des erreurs ni aucune donnée.
+  Mode d'emploi : `docs/PROCESSUS.md` § Santé de la production.
+
 ## v5.39 · à publier en recette · supprimer son compte depuis l'app, sauvegarde prête à activer
 **Migration 022** (`022-suppression-compte.sql`) : additive, ne casse pas l'ancienne version. Appliquée par la mise en
 ligne (recette, puis production). Sans 022, l'écran garde l'ancien message.
