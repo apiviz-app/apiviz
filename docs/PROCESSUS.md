@@ -76,6 +76,17 @@ Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations q
 - **Ton** (AP-FEAT-112) : tutoiement dans l'application, vouvoiement dans les documents émis
   (`docs/CHARTE_DE_TON.md`). « Vérifier » échoue sur un nouveau « vous » non justifié.
 
+## Santé de la production
+
+Action « Santé » (`.github/workflows/sante.yml`), chaque matin à 6 h 13 UTC et à la demande. Elle vérifie que
+app.apiviz.fr, recette.apiviz.fr et apiviz.fr répondent, et compte les erreurs **nouvelles** (jamais vues avant) que
+l'application a envoyées à `journal_erreurs` depuis 24 h. Un site muet ou une nouvelle erreur la fait échouer : GitHub
+envoie alors un e-mail (réglage GitHub › Settings › Notifications › Actions : « Only notify for failed workflows »). Le
+journal de l'action ne montre que l'écran, la version, le nombre de fois et le début de l'empreinte (dépôt public).
+
+Lire le texte des erreurs : Supabase (projet Apiviz) › SQL Editor :
+`select ecran, version, compteur, message, premiere_fois from journal_erreurs where premiere_fois > now() - interval '7 days' order by compteur desc;`
+
 ## Sauvegardes
 
 Action « Sauvegarde » (`.github/workflows/sauvegarde.yml`), chaque nuit à 2 h 43 UTC et à la demande : copie de la base

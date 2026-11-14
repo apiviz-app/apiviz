@@ -1,0 +1,47 @@
+# Santé de la production, chaque matin : les sites répondent-ils, et l'application a-t-elle rencontré de nouvelles
+# erreurs depuis la veille (table journal_erreurs, IT-03) ? En cas de problème, l'action échoue : GitHub prévient alors
+# par e-mail la personne qui suit le dépôt. Rien n'est corrigé ni écrit ici, c'est une lecture.
+#
+# Le dépôt est public : le journal de l'action ne montre que des compteurs, l'écran et la version, jamais le texte des
+# erreurs. Pour le lire : Supabase › SQL Editor, requête donnée dans docs/PROCESSUS.md § Santé de la production.
+name: Santé
+
+on:
+  schedule:
+    - cron: "13 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  controler:
+    runs-on: ubuntu-24.04
+    env:
+      BASE: ${{ secrets.BASE_PRODUCTION }}
+    steps:
+      - name: Les sites répondent
+        run: |
+          probleme=0
+          for url in https://app.apiviz.fr/ https://recette.apiviz.fr/ https://apiviz.fr/; do
+            code=$(curl -s -o /tmp/page -w '%{http_code}' --max-time 20 "$url" || echo 000)
+            if [ "$code" = 200 ] && grep -qi apiviz /tmp/page; then echo "OK  $url"; else echo "::error::$url répond $code"; probleme=1; fi
+          done
+          printf '### Sites\n\n%s\n' "$([ $probleme = 0 ] && echo 'Les trois sites répondent.' || echo 'Au moins un site ne répond pas : voir le journal.')" >> "$GITHUB_STEP_SUMMARY"
+          exit $probleme
+
+      - name: Nouvelles erreurs depuis 24 h
+        if: always()
+        run: |
+          if [ -z "$BASE" ]; then echo "::notice::Secret BASE_PRODUCTION absent : erreurs non contrôlées."; exit 0; fi
+          q() { psql "$BASE" -X -A -t -v ON_ERROR_STOP=1 -c "$1"; }
+          nouvelles=$(q "select count(*) from public.journal_erreurs where premiere_fois > now() - interval '24 hours'")
+          recentes=$(q "select coalesce(sum(compteur), 0) from public.journal_erreurs where derniere_fois > now() - interval '24 hours'")
+          liste=$(q "select '| ' || coalesce(nullif(ecran, ''), '?') || ' | ' || coalesce(nullif(version, ''), '?') || ' | ' || compteur || ' | ' || left(empreinte, 8) || ' |'
+                     from public.journal_erreurs where premiere_fois > now() - interval '24 hours' order by compteur desc limit 10")
+          {
+            printf '### Erreurs de l application (24 h)\n\n'
+            printf -- '- Nouvelles erreurs (jamais vues avant) : **%s**\n- Occurrences, anciennes comprises : %s\n\n' "$nouvelles" "$recentes"
+            if [ "$nouvelles" -gt 0 ]; then printf '| Écran | Version | Fois | Empreinte |\n|---|---|---|---|\n%s\n' "$liste"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Nouvelles erreurs : $nouvelles ; occurrences sur 24 h : $recentes"
+          if [ "$nouvelles" -gt 0 ]; then echo "::error::$nouvelles nouvelle(s) erreur(s) dans l'application depuis 24 h"; exit 1; fi
