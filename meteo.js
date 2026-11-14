@@ -54,6 +54,19 @@ const MT = (() => {
       ${friseCourte(cle, rs)}<p class="al-creneau">${phraseCreneau(a)}</p>${lienHeures}`;
   }
 
+  // Météo d'un rucher sur une ligne (en-tête de rucher de la liste des colonies, v5.40) : température, verdict court
+  // et prochain créneau. Sans position : lien pour placer le rucher. Mise à jour avec .al-wx quand la prévision arrive.
+  function ligne(cle, rs) {
+    const l = lieu(rs, cle);
+    if (!l) return `<button type="button" class="link" data-act="rcplacer" data-v="${esc(cle)}">Placer sur la carte</button>`;
+    const e = cache.get(cle);
+    if (!e?.data || e.lat !== l.lat || e.lng !== l.lng) { charger(cle, l); return '<span class="small">Météo…</span>'; }
+    if (Date.now() - e.at > DUREE) charger(cle, l);
+    const a = analyse(e.data);
+    const cr = !a.creneau ? "pas de créneau sur 3 jours" : `${a.creneau.n === 2 ? "ouvrir" : "visite rapide"} ${quand(a.creneau, a.auj)}`;
+    return `<button type="button" class="mt-ligne-b" data-act="ermeteo" data-v="${esc(cle)}" aria-label="Météo heure par heure">${icone(a.code)}<b>${a.temp}°</b><span>${esc(cr)}</span></button>`;
+  }
+
   // Frise courte d'aujourd'hui (heures de recherche du créneau) : une case par heure, verte si l'on peut ouvrir,
   // miel pour une visite rapide, grise sinon, hachurée une fois passée. Lisible d'un coup d'œil sur la carte du rucher.
   function friseCourte(cle, rs) {
@@ -117,6 +130,7 @@ const MT = (() => {
       .then((data) => {
         cache.set(cle, { data, at: Date.now(), lat: l.lat, lng: l.lng });
         document.querySelectorAll(".al-wx").forEach((el) => { if (el.dataset.k === cle) el.innerHTML = html(cle, AL.ruchesDe(cle), Number(el.dataset.jours ?? 3)); });
+        document.querySelectorAll(".mt-ligne").forEach((el) => { if (el.dataset.k === cle) el.innerHTML = ligne(cle, AL.ruchesDe(cle)); });
         AL.meteoPrete?.();
       })
       .catch(() => cache.set(cle, { ...cache.get(cle), enCours: false }));
@@ -136,5 +150,5 @@ const MT = (() => {
     return l && e?.data && e.lat === l.lat && e.lng === l.lng ? analyse(e.data).creneau : null;
   }
 
-  return { creneauConnu, friseCourte, SEUILS, niveau, analyse, html, lieu, creneauDuJour, parHeure, icone, nomJour };
+  return { creneauConnu, friseCourte, SEUILS, niveau, analyse, html, ligne, lieu, creneauDuJour, parHeure, icone, nomJour };
 })();

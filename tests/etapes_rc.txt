@@ -56,7 +56,7 @@
 
     # Écran Ruchers : « Placer sur la carte » ouvre la carte en mode placement.
     DATA["ruchers"].append({"id": str(uuid.uuid4()), "nom": "Lande", "lat": None, "lng": None, **vide})
-    page.evaluate("refresh()"); page.evaluate("ACT.go('ruches')"); page.wait_for_selector("section.card[data-k='Lande']", timeout=5000)
-    page.click("section.card[data-k='Lande'] [data-act=rcplacer]"); page.wait_for_selector("#uCarte.u-visee", timeout=10000)
+    page.evaluate("refresh()"); page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-gr[data-k='Lande']", timeout=5000)
+    page.click(".tb-gr[data-k='Lande'] [data-act=rcplacer]"); page.wait_for_selector("#uCarte.u-visee", timeout=10000)
     verif("Placer « Lande »" in page.locator("#uPanneau").inner_text(), "carte ouverte en mode « placer Lande »")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

@@ -111,3 +111,26 @@ test("export : mêmes valeurs qu'à l'écran", () => {
   assert.deepEqual(lignes[1].slice(0, 6), ["Bruyère", "C-02", "Les Chênes", "Urgent", "Faible", "Absente"]);
   assert.equal(lignes[3][6], "12 varroas");
 });
+
+test("raisons typées, texte court des tuiles", () => {
+  const [a, b, c, d, e] = T.lignes(donnees(), { seuil: 3, aujourdhui: AUJ });
+  assert.deepEqual(b.raisons.map((x) => x.type), ["orpheline", "provisions"]);
+  assert.equal(T.court(b), "Orpheline");
+  assert.equal(T.court(c), "Varroa 5 %");
+  assert.equal(T.court(d), "73 j sans visite");
+  assert.equal(T.court(e), "Critique");
+  assert.equal(T.court(a), "1 % · 6 j", "sans raison : varroa et jours");
+  const jamais = { ...a, raisons: [], jours: null };
+  assert.equal(T.court(jamais), "Jamais vue");
+});
+
+test("grouper par rucher : ordre des ruchers, lignes triées gardées, vides et sans rucher", () => {
+  const ls = T.trier(T.lignes(donnees(), { seuil: 3, aujourdhui: AUJ }), "nom");
+  const ruchers = [{ cle: "Bord du Lot", nom: "Bord du Lot", ids: ["c", "e"] }, { cle: "Vide", nom: "Vide", ids: [] }, { cle: "Les Chênes", nom: "Les Chênes", ids: ["a", "b"] }];
+  const g = T.grouper(ls, ruchers);
+  assert.deepEqual(g.map((x) => x.nom), ["Bord du Lot", "Les Chênes", "Sans rucher"]);
+  assert.deepEqual(g[0].lignes.map((l) => l.id), ["c", "e"]);
+  assert.deepEqual(g[2].lignes.map((l) => l.id), ["d"], "colonie d'aucun rucher connu");
+  assert.deepEqual(T.grouper(ls, ruchers, { garderVides: true }).map((x) => x.nom), ["Bord du Lot", "Vide", "Les Chênes", "Sans rucher"]);
+  assert.deepEqual(T.grouper(T.filtrer(ls, { ...T.filtresVides(), niveaux: ["urg"] }), ruchers).map((x) => x.nom), ["Bord du Lot", "Les Chênes"], "filtré : ruchers sans colonie retenue cachés");
+});
