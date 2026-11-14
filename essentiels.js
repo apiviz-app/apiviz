@@ -226,18 +226,40 @@ const ES = (() => {
       retour("errgblocs", "", "Réglages");
       return;
     }
-    const c = cfg(), rempli = [c.nom, c.napi, c.siret, c.adresse].filter(Boolean).length, s = MT.SEUILS;
-    const b = ER.bloc, manque = [!c.napi && "NAPI", !c.siret && "SIRET", !c.adresse && "adresse"].filter(Boolean);
+    // v5.38 (maquettes du 13 nov. 2026, validées le 14) : cinq groupes en lignes, plus de « Listes » ni de bloc
+    // « Toi » / « Associés » (le nom suit le compte : Mon profil ; les associés sont les membres).
+    const c = cfg(), s = MT.SEUILS, manque = [!c.napi && "NAPI", !c.siret && "SIRET", !c.adresse && "adresse"].filter(Boolean);
     const num = `F-${new Date().getFullYear()}-${String(S.d.ventes.filter((v) => v.facture_num).length + 1).padStart(4, "0")}`;
-    shell("Réglages", c.nom, "", `<div class="n4-grille g-blocs">
-      ${b("", "Mon exploitation", rempli === 4 ? "Complète" : "À compléter", manque.length ? `${manque.join(", ")} à renseigner`.replace(/^./, (x) => x.toUpperCase()) : "NAPI, SIRET et adresse renseignés", `${ER.jauge(rempli / 4 * 100)}<span class="small">Sert aux factures, étiquettes et au registre</span>`, "", "errgexpl")}
-      ${b("", "Factures", num, "Prochain numéro", `<span class="small">${esc(c.mention_tva ? "Mention de TVA renseignée" : "Mention de TVA à renseigner")}, paiement à ${esc(c.delai_paiement || "réception")}</span>`, "", "errgfact")}
-      ${b("", "Météo", `${s.ouvrir} °C`, "Seuil pour ouvrir une ruche", `<span class="small">Vent ${s.vent} km/h, pluie ${s.pluie} %, de ${s.debut} h à ${s.fin} h</span>`, "", "errgmeteo")}
-      ${b("", "Apparence", BANDEAUX[bandeau()][0], "Couleur du bandeau sur cet appareil", `<span class="er-pastilles" aria-hidden="true">${Object.entries(BANDEAUX).map(([k, [, v]]) => `<i class="${k === bandeau() ? "on" : ""}" style="background:${v["--bandeau"] || "#FBEFC9"}"></i>`).join("")}</span>`, "", "errgcouleur")}
-      ${b("", "Ruches physiques", c.contenants ? "Suivies" : "Non suivies", "Niveau Professionnel : caisses numérotées", `<span class="small">${c.contenants ? "Section dans Matériel, transferts depuis la fiche de la ruche" : "Pour suivre tes caisses et les transferts de colonies"}</span>`, "", "errgcontenants")}
-      ${b("rappels", "Rappels", nouveaux().length ? U.pluriel(nouveaux().length, "rappel") : "À jour", "Notifications et sujets suivis")}
-      ${b("", "Listes, exports et sauvegarde", "Mes données", "Postes, cercles, modes de paiement", '<span class="small">Fichiers pour le comptable, sauvegarde complète</span>', "", "errgform")}
+    const ic = (d) => `<span class="rg-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg></span>`;
+    const fl = '<svg class="rg-fl" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    const ligne = (act, v, icone, titre, sous, droite) => `<button type="button" class="rg-l" data-act="${act}" data-v="${esc(v)}">${icone}<span class="rg-t"><b>${esc(titre)}</b><span>${esc(sous)}</span></span>${droite || fl}</button>`;
+    const P = typeof PF != "undefined" ? PF.moi() : null, nomMoi = P?.prenom ? [P.prenom, P.nom].filter(Boolean).join(" ") : (typeof PF != "undefined" && PF.prenom()) || "Ton prénom";
+    const membres = typeof PF != "undefined" ? PF.nbPersonnes() : 0;
+    const av = `<span class="rg-av" aria-hidden="true">${esc(((typeof PF != "undefined" && PF.prenom()) || S.session?.user?.email || "?")[0].toUpperCase())}</span>`;
+    const nbR = nouveaux().length;
+    shell("Réglages", "", "", `<div class="rg-groupes">
+      <h2 class="rg-g">Toi</h2><div class="rg-bloc">${ligne("go", "profil", av, nomMoi, "Mon profil · nom, e-mail, tes réponses")}</div>
+      <h2 class="rg-g">L’exploitation</h2><div class="rg-bloc">
+        ${ligne("errgexpl", "", ic("M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"), "Mon exploitation", `${c.nom}${manque.length ? "" : " · NAPI, SIRET, adresse"}`, manque.length ? `<span class="rg-manque">${esc(manque.join(", "))} à remplir</span>` : "")}
+        ${ligne("go", "membres", ic("M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M17 12a2.5 2.5 0 1 0 0-5M17 14.5c2.3.2 3.9 1.9 4.5 4.5"), "Membres et associés", "Qui saisit, qui achète, qui vend", membres ? `<span class="rg-v">${membres}</span>` : "")}
+        ${ligne("errgfact", "", ic("M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"), "Factures", `Prochaine : ${num}${c.mention_tva ? "" : " · mention de TVA à remplir"}`)}
+      </div>
+      <h2 class="rg-g">Sur le terrain</h2><div class="rg-bloc">
+        ${ligne("errgmeteo", "", ic("M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"), "Météo de visite", `Ouvrir dès ${s.ouvrir} °C, vent < ${s.vent} km/h`)}
+        ${ligne("go", "rappels", ic("M6 16v-5a6 6 0 1 1 12 0v5l2 2H4zM10 21h4"), "Rappels", "Notifications et sujets suivis", `<span class="rg-v">${nbR ? U.pluriel(nbR, "rappel") : "À jour"}</span>`)}
+        ${ligne("errgcontenants", "", ic("M4 5h16v15H4zM4 10h16M4 15h16"), "Caisses numérotées", "Suivre quelle colonie est dans quelle caisse", `<span class="rg-v">${c.contenants ? "Oui" : "Non"}</span>`)}
+      </div>
+      <h2 class="rg-g">Affichage</h2><div class="rg-bloc">
+        ${ligne("errgcouleur", "", `<span class="rg-ic" aria-hidden="true"><i class="rg-pt" style="background:${esc(BANDEAUX[bandeau()][1]["--bandeau"] || "#FBEFC9")}"></i></span>`, "Couleur du bandeau", "Sur cet appareil", `<span class="rg-v">${esc(BANDEAUX[bandeau()][0])}</span>`)}
+      </div>
+      <h2 class="rg-g">Tes données</h2><div class="rg-bloc rg-donnees">
+        <div class="rg-deux"><button type="button" class="btn" data-act="rgcomptable">Fichier comptable</button><button type="button" class="btn" data-act="exp" data-v="json">Sauvegarde</button></div>
+        <p class="small">Le fichier comptable regroupe les ventes et les achats de ${esc(S.annee || new Date().getFullYear())}, prêt à envoyer. La sauvegarde garde tout.</p>
+        <details class="rg-autres"><summary>Autres fichiers</summary><div class="chips"><button type="button" data-act="exp" data-v="visites">Visites</button><button type="button" data-act="exp" data-v="ventes">Ventes</button><button type="button" data-act="exp" data-v="depenses">Dépenses</button><button type="button" data-act="exp" data-v="clients">Clients</button></div></details>
+      </div>
+      <div class="rg-fin"><button type="button" class="link" data-act="logout">Se déconnecter</button></div>
     </div>`);
+    document.querySelector(".wrap")?.classList.add("rg-ecran");
   }
   ACT.errgblocs = () => { S.rgForm = false; render(); };
   ACT.errgform = () => { S.rgForm = true; render(); window.scrollTo(0, 0); };

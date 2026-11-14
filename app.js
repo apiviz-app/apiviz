@@ -1712,12 +1712,12 @@ function clientForm(client) {
     title: client ? "Modifier le client" : "Ajouter un client",
     fields: [
       { name: "nom", label: "Nom", required: !0, value: client?.nom },
+      // v5.38 (migration 021) : étiquettes libres à la place du cercle choisi dans une liste des réglages.
       {
-        name: "cercle",
-        label: "Cercle",
-        type: "select",
-        options: cfg().cercles,
-        value: client?.cercle || cfg().cercles[0],
+        name: "etiquettes",
+        label: "Étiquettes (séparées par des virgules)",
+        value: (Array.isArray(client?.etiquettes) && client.etiquettes.length ? client.etiquettes : client?.cercle ? [client.cercle] : []).join(", "),
+        list: [...new Set([...S.d.clients.flatMap((c) => (Array.isArray(c.etiquettes) ? c.etiquettes : [c.cercle])), ...cfg().cercles].filter(Boolean))],
       },
       { name: "telephone", label: "T\xE9l\xE9phone", type: "tel", value: client?.telephone },
       { name: "email", label: "E-mail", type: "email", value: client?.email },
@@ -1729,6 +1729,11 @@ function clientForm(client) {
       { name: "notes", label: "Notes", type: "textarea", value: client?.notes },
     ],
     submit: async (saisie) => {
+      // Étiquettes : une liste ; le cercle garde la première pour l'ancienne version. Sans 021, seul le cercle part.
+      const etiquettes = [...new Set(String(saisie.etiquettes || "").split(",").map((x) => x.trim()).filter(Boolean))].slice(0, 8);
+      saisie.cercle = etiquettes[0] || "Autre";
+      if (typeof PF != "undefined" && !PF.absent() && PF.etat().charge) saisie.etiquettes = etiquettes;
+      else delete saisie.etiquettes;
       // Sans la migration 012, la base ne connaît pas ces colonnes : on enregistre le reste et on prévient.
       const sansCoordonnees = (erreur) =>
         erreur?.code === "PGRST204" && /adresse|code_postal|ville|siret/.test(erreur.message || "")

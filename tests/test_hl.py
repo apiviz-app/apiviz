@@ -55,6 +55,9 @@ def supabase(route):
             if not inv: return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Ce lien d'invitation n'est plus valable : demandez-en un nouveau."}))
             EXPL["miennes"].append(inv); return route.fulfill(status=200, headers=hdr, body=json.dumps(inv["id"]))
         if nom == "photos_espace": return route.fulfill(status=200, headers=hdr, body="0")
+        if nom == "noms_membres":  # migration 021 : prénom et nom des membres de l'exploitation courante
+            pr = {x["email"]: x for x in DATA.get("profils", [])}
+            return route.fulfill(status=200, headers=hdr, body=json.dumps([{"email": m["email"], "prenom": pr.get(m["email"], {}).get("prenom", ""), "nom": pr.get(m["email"], {}).get("nom", ""), "role": m["role"]} for m in EXPL["membres"]]))
         if nom == "restaurer":  # comme la migration 014 : la visite revient, la ligne du journal est marquée
             a = next(x for x in DATA.get("journal_audit", []) if x["id"] == body["p_id"])
             DATA[a["table_nom"]].append(a["avant"]); a["restaure_le"] = "2026-11-06T12:00:00Z"
@@ -120,7 +123,7 @@ def supabase(route):
     m = re.match(r"/rest/v1/(\w+)", path)
     if m:
         t = m.group(1)
-        if t not in ("membres", "invitations", "exploitations"):
+        if t not in ("membres", "invitations", "exploitations", "profils"):  # profils : propre au compte (021), lu avant le choix de l'exploitation
             entetes["x-exploitation"].add(req.headers.get("x-exploitation", ""))
         if t == "membres" and req.method == "GET": return route.fulfill(status=200, headers=hdr, body=json.dumps(EXPL["membres"]))
         if t == "membres" and req.method == "POST":
@@ -140,6 +143,24 @@ def supabase(route):
         if req.method == "GET" and t in ("reines", "colonie_liens") and DATA.get("sans_019"):
             # Base sans la migration 019 : tables inconnues (l'app lit alors la reine dans les colonnes de la ruche).
             return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": f"Could not find the table 'public.{t}'"}))
+        if t == "profils":
+            # Migration 021 : sans DATA["profils"], la table est inconnue (l'app garde alors le prénom de l'appareil).
+            if "profils" not in DATA:
+                return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.profils'"}))
+            moi = "test@apidoo.fr"
+            if req.method == "GET":
+                return route.fulfill(status=200, headers=hdr, body=json.dumps([x for x in DATA["profils"] if x["email"] == moi]))
+            if req.method == "POST":
+                r = req.post_data_json; r = r[0] if isinstance(r, list) else r
+                recu["upsert"].append((t, req.url, [r]))
+                ligne = next((x for x in DATA["profils"] if x["email"] == r["email"]), None)
+                if ligne is None:
+                    ligne = {"email": r["email"], "prenom": "", "nom": "", "tranche_age": "", "sexe": "", "code_postal": "", "departement": "", "anciennete": "",
+                             "source": "", "activite": "", "colonies": "", "stats_ok": True, "newsletter": False, "plateforme": "", "inscription_finie": None}
+                    DATA["profils"].append(ligne)
+                ligne.update(r)
+                cp = ligne.get("code_postal") or ""; ligne["departement"] = cp[:3] if cp.startswith("97") else cp[:2]
+                return route.fulfill(status=201, headers=hdr, body=json.dumps([ligne]))
         if req.method == "GET" and t == "mouvements_stock" and t not in DATA:
             # Base sans la migration 018 : table inconnue, comme Supabase (l'app garde alors les anciens écrans).
             return route.fulfill(status=404, headers=hdr, body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.mouvements_stock'"}))

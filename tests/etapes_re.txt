@@ -13,18 +13,21 @@
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
 
-    # Prénom
-    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#rgToi")
-    verif("Ton prénom" in page.locator("#rgToi").inner_text(), "bloc Toi en tête, prénom à donner")
-    verif(page.evaluate("[...document.querySelectorAll('.g-blocs > *')][0].id") == "rgToi", "Toi en premier")
-    page.click("#rgToi"); page.wait_for_selector("#sheet[open] input[name=prenom]")
+    # Prénom (v5.38 : Réglages › Toi ouvre Mon profil ; base sans 021, le prénom reste sur l'appareil)
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l[data-v=profil]")
+    verif("Ton prénom" in page.locator(".rg-l[data-v=profil]").inner_text(), "Toi en tête, prénom à donner")
+    verif(page.locator(".rg-g").first.inner_text().lower() == "toi", "Toi en premier")
+    page.click(".rg-l[data-v=profil]"); page.wait_for_selector(".pf")
+    page.click(".pf [data-act=rgprenom]"); page.wait_for_selector("#sheet[open] input[name=prenom]")
     page.fill("#sheet input[name=prenom]", "Pierre-Louis"); page.click("#sheet .btn.main"); page.wait_for_timeout(300)
-    verif("Pierre-Louis" in page.locator("#rgToi").inner_text(), "prénom enregistré dans le bloc")
+    verif("Pierre-Louis" in page.locator(".pf").inner_text(), "prénom enregistré, affiché dans Mon profil")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l[data-v=profil]")
+    verif("Pierre-Louis" in page.locator(".rg-l[data-v=profil]").inner_text(), "et dans Réglages › Toi")
     page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-hero")
     verif(page.locator(".ac-hero h1").inner_text().endswith("Pierre-Louis"), "le bonjour de l'accueil reprend le prénom")
 
     # Couleur du bandeau : aperçu, annulation, enregistrement
-    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#rgToi")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l")
     avant = fond()
     page.click("[data-act=errgcouleur]"); page.wait_for_selector("#sheet[open] .rg-pastille")
     verif(page.locator(".rg-pastille").count() == 4 and page.locator(".rg-pastille.on").get_attribute("data-v") == "miel", "quatre couleurs en alvéoles, miel doux choisi")

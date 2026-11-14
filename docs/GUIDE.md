@@ -65,7 +65,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 ## Miel
 
 - Un pot par format, rempli selon le stock ; le toucher ouvre une vente.
-- Ventes (à encaisser, à livrer), clients, lots et récoltes. **Fiche d'un lot** : récolte, ruches, ventes, clients,
+- Ventes (à encaisser, à livrer), clients, lots et récoltes. **Clients** *(v5.38)* : en tableau (étiquettes, dernier
+  achat, total de l'année, reste à payer) ou en liste, avec recherche et puces (À encaisser, chaque étiquette) ; ceux qui
+  doivent encore passent en tête. Un client a des étiquettes libres (Marché, Famille, Pro…) à la place du cercle. **Fiche d'un lot** : récolte, ruches, ventes, clients,
   contrôle de l'étiquette, et « D'où vient ce pot » : récolte, achat des pots (avec la facture), mise en pots, ventes
   *(v5.30)*.
 - **Mise en pots** *(v5.30)* : « Nouveau lot » ou « Mettre en pots ». Choisis le format, le nombre de pots ; le pot
@@ -81,12 +83,19 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Administration** : Matériel, Fournisseurs, Registre d'élevage, Déclaration.
 - L'ancien écran en blocs (Bilan, Dépenses, Budget, Stock matériel, Fournisseurs, Registre, Équipe) n'est plus dans les
   menus.
-- **Matériel** *(v5.30)* : tes articles par famille (emballage, alimentation, traitements, cire, équipement), chacun
-  Opex (consommable) ou Capex (équipement amorti), avec son stock et « À commander » sous le seuil. « Ajouter vite »
-  propose les articles courants. La fiche d'un article montre ce qui a bougé (achats, visites, mises en pots,
-  corrections) ; un stock recompté y devient une correction notée.
+- **Matériel** *(v5.30, refait en v5.38)* : en **tableau** (article, stock, seuil, prix, fournisseur) ou en **liste**,
+  au choix ; le choix reste sur l'appareil. Recherche, puces avec leur nombre (Tout, À commander, chaque famille), articles
+  à commander en tête. Le stock se change au doigt avec − / + (« Annuler » juste après) ; il part en une seule correction
+  notée. « Ajouter vite » propose les articles courants. La fiche d'un article : stock et seuil (− / +), famille, prix,
+  fournisseur, et ce qui a bougé. Plus d'Opex / Capex à choisir : l'app sait qu'une hausse est un équipement.
+- **Inventaire** *(v5.38)* : depuis Matériel, « Faire l'inventaire » : on tape ce qu'on compte, l'écart s'affiche ; les
+  cases vides sont ignorées et rien ne change avant « Enregistrer ».
+- **Liste de courses** *(v5.38)* : depuis Matériel, ce qui est sous le seuil, par fournisseur, avec une quantité proposée
+  à ajuster ; « Envoyer la liste » ; « C'est acheté » ouvre l'achat déjà rempli.
 - **Ajouter un achat** *(v5.30)* : une facture, une ligne par article touché (ou un nouvel article, ou des frais). Le
-  stock monte dès l'enregistrement ; Opex ou Capex vient de l'article.
+  stock monte dès l'enregistrement. « Acheté par » et « Payé avec » se choisissent en puces *(v5.38)*.
+- **Dépenses** *(v5.38)* : un journal en tableau, des totaux par catégorie, des filtres (catégorie, personne, sans
+  facture) et le fichier comptable à portée de main. La catégorie vient de l'article acheté.
 - **Registre d'élevage** : onglets Traitements, Mouvements, Interventions, Exploitation. « Déplacer des ruches » et
   « Noter une intervention » s'y trouvent ; les mouvements s'exportent pour Excel. La **déclaration annuelle**
   est rangée dans Administration, juste à côté.
@@ -97,8 +106,17 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   versement » mettent le solde à jour ; « Associés », en tête, ouvre la liste des associés.
 - **Équipe** : créer un lien d'invitation et l'envoyer. La personne ouvre le lien, crée son compte ou se connecte,
   et rejoint l'exploitation ; le nom de l'exploitation s'affiche sur le lien. Un responsable peut retirer un membre.
-- **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) : exploitation (NAPI, SIRET, adresse), seuils météo, couleur du bandeau, listes,
-  exports CSV et sauvegarde complète. À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
+  Chaque membre apparaît avec son prénom et son nom *(v5.38)* ; « Ajouter une personne sans compte » pour quelqu'un qui
+  aide sans utiliser Apiviz. Les associés proposés dans les achats et les ventes sont ces personnes : rien à retaper.
+- **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) *(v5.38)* : cinq groupes. **Toi** (Mon profil),
+  **L'exploitation** (NAPI, SIRET, adresse ; membres et associés ; factures), **Sur le terrain** (météo, rappels, caisses
+  numérotées), **Affichage** (couleur du bandeau), **Tes données** (fichier comptable de l'année, sauvegarde, autres
+  fichiers). Plus de « Listes » : la catégorie d'une dépense vient de l'article, les clients ont des étiquettes libres.
+  À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
+- **Inscription et Mon profil** *(v5.38)* : à la première connexion, ton prénom et ton nom (une seule fois, ils suivent
+  ton compte), puis quelques questions facultatives (âge, sexe, code postal, ancienneté, comment tu as connu Apiviz) pour
+  des statistiques d'ensemble. Tout se change ou s'efface dans Réglages › Mon profil, qui permet aussi de ne pas compter
+  dans les statistiques et de télécharger ses données.
 - **Rappels** : la cloche sur téléphone, « Rappels » dans le menu sur ordinateur ; sujets à couper, « Tout marquer comme vu ».
 
 ## Ton de l'application

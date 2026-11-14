@@ -25,6 +25,11 @@ Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 
+Scénario v5.38 : `etapes_op` (inscription en deux étapes et Mon profil avec la migration 021, membres avec leurs noms et
+personnes sans compte, inventaire, liste de courses, achat prérempli avec « Acheté par » / « Payé avec » en puces, clients en
+tableau et en liste). `etapes_st` couvre Matériel en tableau ou liste et le stock au doigt ; `etapes_eg` le journal des
+dépenses, les réglages en cinq groupes et le fichier comptable. Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.37 : `etapes_tb` (Ruchers en tableau : bascule gardée sur l'appareil, recherche, filtres et puces, tri,
 colonnes, colonne Colonie fixe au défilement, synthèse en bas, sélection et visite groupée, fiche rapide, cartes, version
 ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.

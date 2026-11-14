@@ -52,12 +52,13 @@
     if cap: page.wait_for_timeout(400); page.screenshot(path=f"{cap}/associes-egalite.png", full_page=True)
 
     # Achat : acheté par, payé avec.
-    page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] select[name=achete_par]")
-    verif(page.locator("#sheet select[name=achete_par]").input_value() == "Pierre-Louis", "acheté par : moi par défaut")
-    opts = page.locator("#sheet select[name=paye_par] option").all_inner_texts()
-    verif(opts == ["Fonds propres de Pierre-Louis", "Fonds propres de Johan", "Trésorerie de la société"], "payé avec : " + ", ".join(opts))
+    # v5.38 : « Acheté par » et « Payé avec » en puces ; « Payé avec » part du compte de l'exploitation.
+    page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] input[name=achete_par]")
+    verif(page.locator("#sheet input[name=achete_par]:checked").input_value() == "Pierre-Louis", "acheté par : moi par défaut")
+    opts = page.locator("#sheet fieldset:has(input[name=paye_par]) label").all_inner_texts()
+    verif(opts == ["Ma poche", "Poche de Johan", "Compte de l’exploitation"], "payé avec : " + ", ".join(opts))
     page.fill("#sheet [name=libelle]", "Sirop"); page.fill("#sheet [name=montant]", "20")
-    page.select_option("#sheet select[name=achete_par]", "Johan"); page.select_option("#sheet select[name=paye_par]", "Société")
+    page.click("#sheet label:has(input[name=achete_par][value=Johan])"); page.click("#sheet label:has(input[name=paye_par][value=Société])")
     page.click("#sheet .btn.main"); page.wait_for_timeout(800)
     d = next((x for x in DATA["depenses"] if x["libelle"] == "Sirop"), {})
     verif(d.get("achete_par") == "Johan" and d.get("paye_par") == "Société", "achat enregistré : Johan, trésorerie de la société (%s)" % {k: d.get(k) for k in ("achete_par", "paye_par")})
@@ -78,9 +79,10 @@
     p = next((b["p"] for n, b in recu["rpc"] if n == "creer_vente"), {})
     verif(p.get("vendu_par") == "Johan" and p.get("encaisse_par") == "Société", "vente envoyée : vendu par Johan, argent à la société (%s)" % {k: p.get(k) for k in ("vendu_par", "encaisse_par")})
 
-    # Réglages : la liste des associés.
-    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("#eaAssocies")
-    verif("Pierre-Louis, Johan" in page.locator("#eaAssocies").inner_text(), "bloc Associés")
-    page.click("#eaAssocies"); page.wait_for_selector("#sheet[open] textarea[name=associes]")
+    # Liste des associés (v5.38 : plus de bloc dans les Réglages ; base sans 021, « Associés » d'Entre associés ouvre
+    # encore la liste ; avec 021, il mène à Membres et associés).
+    page.evaluate("ACT.go('associes')"); page.wait_for_selector("[data-act=eaassocies]")
+    page.click("[data-act=eaassocies]"); page.wait_for_selector("#sheet[open] textarea[name=associes]")
+    verif(page.input_value("#sheet textarea[name=associes]") == "Pierre-Louis\nJohan", "liste des associés")
     page.fill("#sheet textarea[name=associes]", "Pierre-Louis\nJohan\nCaisse commune\nMarie"); page.click("#sheet .btn.main"); page.wait_for_timeout(800)
     verif(page.evaluate("JSON.stringify(cfg().associes)") == '["Pierre-Louis","Johan","Marie"]', "associés enregistrés, la caisse n'est pas un associé : " + page.evaluate("JSON.stringify(cfg().associes)"))

@@ -48,8 +48,8 @@
         page.set_viewport_size({"width": 390, "height": 844})
 
     # Activer le suivi des ruches physiques (Réglages), créer les caisses 12 et 13 dans Matériel.
-    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".g-bloc[data-act=errgcontenants]")
-    page.click(".g-bloc[data-act=errgcontenants]"); page.wait_for_selector("#sheet[open]")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l[data-act=errgcontenants]")
+    page.click(".rg-l[data-act=errgcontenants]"); page.wait_for_selector("#sheet[open]")
     page.select_option("#sheet [name=contenants]", "1"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
     verif(page.evaluate("cfg().contenants") is True, "réglage « Suivre mes ruches physiques » enregistré")
     page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ct-liste", timeout=5000)

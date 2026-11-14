@@ -68,3 +68,25 @@ export function rythme(d, maintenant = new Date()) {
   const pots = stock(d).pots;
   return { mois: potsParMois, moisRestants: potsParMois > 0 ? pots / potsParMois : null };
 }
+
+/**
+ * Fichier comptable de l'année (v5.38, Réglages › Tes données) : une ligne par vente et par dépense, dans l'ordre des
+ * dates, avec la nature de la dépense (consommable, immobilisation amortie, service) déduite de l'article.
+ * Colonnes : Date, Type, Libellé, Tiers, Catégorie, Nature, Amortissement (ans), Recette, Dépense, Pièce, Payée.
+ */
+export function journalComptable(d, annee) {
+  const an = String(annee);
+  const nom = (liste, id) => (liste || []).find((x) => x.id === id)?.nom || "";
+  const ventes = (d.ventes || []).filter((v) => String(v.date_vente || "").slice(0, 4) === an).map((v) => ({
+    date: v.date_vente, type: "Vente", libelle: v.facture_num ? `Facture ${v.facture_num}` : "Vente de miel", tiers: nom(d.clients, v.client_id),
+    categorie: "Ventes de miel", nature: "", amort: "", recette: Math.round(venteTotal(d, v) * 100) / 100, depense: "", piece: v.facture_num || "",
+    payee: v.paye ? "Oui" : "Non",
+  }));
+  const depenses = (d.depenses || []).filter((x) => String(x.date_depense || "").slice(0, 4) === an).map((x) => ({
+    date: x.date_depense, type: "Dépense", libelle: x.libelle || "", tiers: nom(d.fournisseurs, x.fournisseur_id), categorie: x.categorie || "",
+    nature: x.nature === "Immobilisation" ? "Équipement amorti" : x.nature === "Service" ? "Service" : "Consommable",
+    amort: x.nature === "Immobilisation" ? x.duree_amort || 5 : "", recette: "", depense: Math.round(Number(x.montant || 0) * 100) / 100,
+    piece: x.piece || "", payee: "Oui",
+  }));
+  return [...ventes, ...depenses].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}

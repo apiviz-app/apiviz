@@ -30,14 +30,23 @@ Miel
 Finances
  └─ Bilan · Dépenses & achats · Budget & prévisions · Entre associés
 Administration
- └─ Matériel · Fournisseurs · Registre d'élevage · Déclaration · Opérations (traitements, nourrissements) · Élevage*
+ └─ Matériel (tableau ou liste ; Inventaire · Liste de courses) · Fournisseurs · Registre d'élevage · Déclaration · Opérations (traitements, nourrissements) · Élevage*
 Équipe et compte
- └─ Équipe (exploitation & membres) · Réglages
+ └─ Équipe (exploitation & membres, personnes sans compte) · Réglages (Toi › Mon profil · L'exploitation · Sur le terrain · Affichage · Tes données)
+Inscription (une fois, avant tout le reste) : ton nom · pour mieux te connaître (facultatif) · puis création du rucher s'il n'y en a pas
 Au quotidien (avec l'Accueil) : Agenda & tâches · Rappels
 API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche, opération) · demander à API
 Compte (avatar) : exploitations · installer · plein soleil · aide · se déconnecter
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.38 (14 nov. 2026)** : écrans « opérationnels ». Pas de nouvelle rubrique. Nouveaux écrans rangés dans des
+rubriques existantes : **Inventaire** et **Liste de courses** sous Administration › Matériel (ouverts depuis Matériel),
+**Mon profil** sous Équipe et compte › Réglages (ligne « Toi »). Une **inscription** en deux étapes (nom, puis réponses
+facultatives) s'affiche une seule fois avant le reste ; une personne sans exploitation enchaîne sur les trois questions
+de création du rucher. Matériel, Clients (Miel › Clients) et Dépenses passent en tableau (bascule tableau / liste pour
+Matériel et Clients, gardée sur l'appareil). Réglages en cinq groupes ; plus de « Listes » (postes, cercles, modes de
+paiement) ni d'Opex / Capex à l'écran. Décision de Pierre-Louis (14 nov. 2026, maquettes du 13 et 14 nov. validées).
 
 **v5.37 (13 nov. 2026)** : l’écran Ruches (Ruchers › Liste) gagne une bascule **« Par rucher / Tableau »** : même
 écran, même route (`ruches`), deux affichages ; pas de nouvelle rubrique ni de nouvel onglet. L'affichage Tableau liste
