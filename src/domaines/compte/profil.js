@@ -255,7 +255,43 @@ export const actions = {
     const r = await sb.auth.resetPasswordForEmail(S.session.user.email, { redirectTo: location.origin + location.pathname });
     toast(r.error ? "Patiente un peu avant de redemander un lien" : "Lien envoyé par e-mail", !!r.error);
   },
-  pfsupprimer: () => sheet({ title: "Supprimer mon compte", intro: "La suppression depuis l’application est en préparation. D’ici là, écris à l’adresse indiquée dans la politique de confidentialité : ton compte, ton profil et, si tu es seul responsable, ton exploitation seront effacés. Pense à télécharger tes données avant.", fields: [], label: "J’ai compris", submit: async () => {} }),
+  // Suppression du compte depuis l'app (migration 022) : aperçu de ce qui part, mot SUPPRIMER, photos effacées du
+  // stockage, puis la base. Sans 022 (ancienne base), on garde l'ancien message.
+  pfsupprimer: async () => {
+    if (navigator.onLine === false) return toast("Il faut du réseau pour supprimer ton compte", !0);
+    const ap = await sb.rpc("compte_a_supprimer");
+    if (ap.error) return sheet({ title: "Supprimer mon compte", intro: "La suppression depuis l’application arrive avec la prochaine mise à jour de la base. D’ici là, écris à l’adresse indiquée dans la politique de confidentialité. Pense à télécharger tes données avant.", fields: [], label: "J’ai compris", submit: async () => {} });
+    const { effacees = [], quittees = [], photos = [] } = ap.data || {};
+    const pl = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+    const lignes = [
+      ...effacees.map((x) => `« ${x.nom} » sera effacée avec toutes ses données (${pl(x.colonies, "colonie")}, visites, ventes, photos).`),
+      ...quittees.map((x) => `Tu quitteras « ${x.nom} » : ses données restent aux autres membres.`),
+      "Ton profil et ton compte de connexion seront effacés. C’est définitif.",
+    ];
+    sheet({
+      title: "Supprimer mon compte",
+      intro: lignes.join(" ") + " Pense à télécharger tes données avant (bouton juste au-dessus).",
+      fields: [{ name: "confirmation", label: "Pour confirmer, écris SUPPRIMER", required: !0 }],
+      label: "Supprimer définitivement",
+      submit: async (v) => {
+        if (String(v.confirmation || "").trim().toUpperCase() !== "SUPPRIMER") throw new Error("Écris SUPPRIMER pour confirmer");
+        // 1. Les fichiers des photos des exploitations effacées (le stockage ne s'efface pas depuis la base).
+        for (let i = 0; i < photos.length; i += 100) {
+          const r = await sb.storage.from("photos-visites").remove(photos.slice(i, i + 100));
+          if (r.error) throw new Error("Les photos n’ont pas pu être effacées : réessaie dans un instant. Rien d’autre n’a été supprimé.");
+        }
+        // 2. La base : exploitations, adhésions, profil, compte.
+        const r = await sb.rpc("supprimer_mon_compte", { p_confirmation: "SUPPRIMER" });
+        if (r.error) throw r.error;
+        // 3. Ce que l'appareil gardait de cette personne, puis déconnexion (qui purge le reste).
+        const moiEmail = email();
+        try { Object.keys(localStorage).filter((k) => k.startsWith("apiviz-") && (k.includes(moiEmail) || k === "apiviz-ruches-recentes")).forEach((k) => localStorage.removeItem(k)); } catch {}
+        toast("Ton compte est supprimé. Merci d’avoir utilisé apiviz.");
+        setTimeout(() => (typeof deconnecter == "function" ? deconnecter() : location.replace(location.pathname)), 1200);
+      },
+    });
+    $sheetForm.querySelector(".btn.main")?.classList.add("danger");
+  },
   mbajouter: () => sheet({ title: "Personne sans compte", intro: "Elle sera proposée dans « Acheté par » et « Vendu par », pour toute l’exploitation.", fields: [{ name: "prenom", label: "Prénom", required: !0 }],
     submit: (v) => { const nom = String(v.prenom || "").trim().slice(0, 40); if (!nom) throw new Error("Écris un prénom"); return saveCfg({ associes: [...new Set([...R.sansCompte(cfg()), nom])].slice(0, 12) }, `${nom} ajouté`); } }),
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),

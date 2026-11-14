@@ -92,7 +92,6 @@ déconnexion. Vos préférences d'affichage y sont aussi gardées.
 ## Vos droits
 
 Vous pouvez à tout moment accéder à vos données, les corriger, les exporter (Réglages, en bas de l’écran : fichier comptable,
-fichiers lisibles dans un tableur et sauvegarde complète ; Réglages › Mon profil : « Télécharger mes données »), et demander leur effacement. La suppression du compte depuis
-l'application est en préparation ; d'ici là, écrivez à [à compléter : adresse e-mail de contact].
+fichiers lisibles dans un tableur et sauvegarde complète ; Réglages › Mon profil : « Télécharger mes données »), et demander leur effacement. Vous pouvez supprimer votre compte vous-même : Réglages › Mon profil › « Supprimer mon compte ». Les exploitations sans autre membre que vous sont effacées avec toutes leurs données et leurs photos ; vous quittez celles que vous partagez, dont les données restent aux autres membres (si vous en étiez le dernier responsable, la personne inscrite depuis le plus longtemps le devient). Votre profil et votre compte de connexion sont effacés.
 
 Vous pouvez aussi adresser une réclamation à la CNIL (www.cnil.fr).

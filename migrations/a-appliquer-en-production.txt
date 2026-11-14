@@ -2,6 +2,6 @@
 # La mise en ligne en production compare la structure de la base apidoo aux fichiers (scripts/controler-structure.mjs),
 # dit où en est la base, et applique elle-même les migrations manquantes quand le secret BASE_PRODUCTION existe
 # (scripts/appliquer-migrations.mjs, docs/PROCESSUS.md).
-# État au 12 nov. 2026 : apidoo en est à 019 (017, 018 et 019 appliquées ce jour avec l'accord de Pierre-Louis).
-020-visite-express-reglements.sql
-021-profils-etiquettes.sql (pas encore appliquée sur apidoo-test au 14 nov. 2026)
+# État au 14 nov. 2026 : apidoo et apidoo-test en sont à 021 (021 appliquée par la mise en ligne du 14 nov. : recette à
+# 10 h 58, production à 11 h 05 ; 020 l'était déjà). Aucune migration en attente pour la production.
+# 022-suppression-compte.sql (PR claude/suite) : sera appliquée par la mise en ligne en recette, puis en production.

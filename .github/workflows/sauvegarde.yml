@@ -1,0 +1,90 @@
+# Sauvegarde quotidienne chiffrée de la base de production (décision D-03, docs/PROCESSUS.md § Sauvegardes).
+#
+# Inactive tant que les réglages ne sont pas créés : sans eux, elle le dit et s'arrête sans erreur.
+#   - secret BASE_PRODUCTION (existe déjà pour la mise en ligne) : connexion à la base apidoo ;
+#   - variable SAUVEGARDE_CLE_PUBLIQUE : clé publique « age » (age1…). La clé privée reste chez le responsable, hors
+#     ligne : personne d'autre, ni GitHub ni Cloudflare, ne peut relire une sauvegarde ;
+#   - secrets R2_ID, R2_SECRET, R2_COMPTE et variable R2_SEAU : seau Cloudflare R2 privé qui reçoit les fichiers.
+# Le dépôt est public : rien n'est écrit en clair, ni dans le dépôt ni dans les artefacts ou le journal de l'action.
+name: Sauvegarde
+
+on:
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: sauvegarde
+  cancel-in-progress: false
+
+jobs:
+  sauvegarder:
+    runs-on: ubuntu-24.04
+    env:
+      BASE: ${{ secrets.BASE_PRODUCTION }}
+      CLE: ${{ vars.SAUVEGARDE_CLE_PUBLIQUE }}
+      SEAU: ${{ vars.R2_SEAU }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET }}
+      R2_COMPTE: ${{ secrets.R2_COMPTE }}
+      AWS_DEFAULT_REGION: auto
+      RETENTION_JOURS: 30
+    steps:
+      - name: Réglages présents ?
+        id: pret
+        run: |
+          manque=""
+          for v in BASE CLE SEAU AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_COMPTE; do [ -n "${!v}" ] || manque="$manque $v"; done
+          if [ -n "$manque" ]; then
+            echo "::notice::Sauvegarde inactive : réglages manquants ($manque). Voir docs/PROCESSUS.md § Sauvegardes."
+            printf '### Sauvegarde inactive\n\nRéglages manquants :%s. Voir `docs/PROCESSUS.md`, rubrique Sauvegardes.\n' "$manque" >> "$GITHUB_STEP_SUMMARY"
+            echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          case "$CLE" in age1*) ;; *) echo "::error::SAUVEGARDE_CLE_PUBLIQUE doit commencer par age1"; exit 1;; esac
+          echo "ok=1" >> "$GITHUB_OUTPUT"
+
+      - name: Outils (pg_dump 17, age)
+        if: steps.pret.outputs.ok == '1'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17 age > /dev/null
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Copie de la base, contrôlée puis chiffrée
+        if: steps.pret.outputs.ok == '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          jour=$(date -u +%F)
+          # Données de l'application (schéma public, dont visite_photos, l'index des photos). Les comptes de connexion
+          # (auth) n'y sont pas : l'accès aux exploitations se fait par l'adresse e-mail (membres), une personne retrouve
+          # tout en se reconnectant avec la même adresse. Les fichiers des photos sont à part (voir PROCESSUS.md).
+          /usr/lib/postgresql/17/bin/pg_dump "$BASE" --format=custom --no-owner --no-privileges \
+            --schema=public --file=/tmp/apidoo.dump
+          # Contrôle : le fichier se relit et contient bien les tables de l'application.
+          n=$(/usr/lib/postgresql/17/bin/pg_restore --list /tmp/apidoo.dump | grep -c " TABLE DATA public " || true)
+          [ "$n" -ge 20 ] || { echo "::error::Copie incomplète : $n tables de données (au moins 20 attendues)"; exit 1; }
+          age -r "$CLE" -o "/tmp/apidoo-$jour.dump.age" /tmp/apidoo.dump
+          shred -u /tmp/apidoo.dump
+          taille=$(stat -c %s "/tmp/apidoo-$jour.dump.age")
+          echo "JOUR=$jour" >> "$GITHUB_ENV"
+          printf '### Sauvegarde du %s\n\n%s tables de données, fichier chiffré de %s Ko.\n' "$jour" "$n" "$((taille / 1024))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Envoi vers Cloudflare R2 et ménage
+        if: steps.pret.outputs.ok == '1'
+        run: |
+          set -euo pipefail
+          r2="https://$R2_COMPTE.r2.cloudflarestorage.com"
+          aws s3 cp --only-show-errors "/tmp/apidoo-$JOUR.dump.age" "s3://$SEAU/base/apidoo-$JOUR.dump.age" --endpoint-url "$r2"
+          rm -f "/tmp/apidoo-$JOUR.dump.age"
+          # Garde les RETENTION_JOURS derniers jours.
+          limite=$(date -u -d "-$RETENTION_JOURS days" +%F)
+          aws s3 ls "s3://$SEAU/base/" --endpoint-url "$r2" | awk '{print $4}' | while read -r f; do
+            d=$(echo "$f" | sed -n 's/^apidoo-\([0-9-]\{10\}\)\.dump\.age$/\1/p')
+            if [ -n "$d" ] && [ "$d" \< "$limite" ]; then aws s3 rm --only-show-errors "s3://$SEAU/base/$f" --endpoint-url "$r2"; fi
+          done
+          echo "Sauvegarde envoyée : base/apidoo-$JOUR.dump.age"

@@ -32,7 +32,7 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
    automatique des bases »), lancer la mise en ligne en production applique d'abord les migrations en attente sur `apidoo`,
    puis publie : **choisir la cible `production` vaut accord pour mettre à jour la base**. Sans le secret, Claude les
    applique par l'accès Supabase une fois l'accord donné dans la conversation, avec un relevé de structure dans
-   `migrations/releves/`. Pas de sauvegarde automatique pour le moment (D-03).
+   `migrations/releves/`. Sauvegarde quotidienne chiffrée prête à activer : voir « Sauvegardes » (D-03).
 7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`. Elle publie **la version en recette,
    telle quelle** (repère `recette`), même si `main` a avancé depuis (documentation, réglage de GitHub, autre fusion) :
    ces changements partiront à la prochaine recette. Seule condition : la version en recette doit être fusionnée sur
@@ -61,7 +61,7 @@ Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations q
   `BASE_RECETTE` pour `apidoo-test`, `BASE_PRODUCTION` pour `apidoo`. Valeur : la chaîne de connexion donnée par
   Supabase (projet › Connect › Session pooler), avec le mot de passe de la base à la place de `[YOUR-PASSWORD]`.
   Ne jamais l'écrire dans le dépôt ni dans une conversation. Sans secret, rien n'est appliqué automatiquement.
-- **Limites** : pas de sauvegarde avant migration (D-03) ; la connexion est chiffrée mais le certificat du serveur
+- **Limites** : sauvegarde quotidienne seulement une fois activée, pas encore juste avant chaque migration (D-03) ; la connexion est chiffrée mais le certificat du serveur
   n'est pas vérifié ; une migration qui casse l'ancienne version est signalée dans le journal, pas bloquée.
 - **Annonce dès la recette** : chaque mise en ligne en recette dit, dans son résumé, ce que la production demandera
   (« apidoo en est à 016 ; à appliquer : 017, 018, 019 ») et si le secret `BASE_PRODUCTION` est là pour le faire.
@@ -75,6 +75,29 @@ Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations q
   (décision notée), puis `docs/GUIDE.md` et les astuces de l'app sont mis à jour dans la même pull request.
 - **Ton** (AP-FEAT-112) : tutoiement dans l'application, vouvoiement dans les documents émis
   (`docs/CHARTE_DE_TON.md`). « Vérifier » échoue sur un nouveau « vous » non justifié.
+
+## Sauvegardes
+
+Action « Sauvegarde » (`.github/workflows/sauvegarde.yml`), chaque nuit à 2 h 43 UTC et à la demande : copie de la base
+`apidoo` (schéma `public`), contrôlée (le fichier se relit et contient au moins 20 tables), chiffrée avec `age`, envoyée
+dans un seau Cloudflare R2 privé, gardée 30 jours. **Inactive tant que les réglages ci-dessous n'existent pas** : elle
+le dit dans son résumé et s'arrête sans erreur (décision D-03, 14 nov. 2026 : prête à activer).
+
+Activer (une fois, environ 10 minutes) :
+1. Sur ton ordinateur : `age-keygen -o apiviz-sauvegarde.key`. Garde ce fichier **hors ligne** (clé USB, gestionnaire de
+   mots de passe) : sans lui, aucune sauvegarde ne se relit. Recopie la ligne « public key: age1… ».
+2. Cloudflare (compte Apiviz) › R2 : créer un seau privé, par exemple `apiviz-sauvegardes`, puis un jeton d'API R2 limité
+   à ce seau, en lecture et écriture. Noter l'identifiant du compte, l'Access Key ID et le Secret Access Key.
+3. GitHub › Settings › Secrets and variables › Actions :
+   - variables : `SAUVEGARDE_CLE_PUBLIQUE` (age1…) et `R2_SEAU` (nom du seau) ;
+   - secrets : `R2_COMPTE` (identifiant du compte Cloudflare), `R2_ID`, `R2_SECRET`. `BASE_PRODUCTION` existe déjà.
+4. Actions › Sauvegarde › Run workflow : le résumé doit afficher la taille du fichier envoyé.
+
+Restaurer (sur un projet Supabase vide d'abord, jamais directement sur la production) :
+`age -d -i apiviz-sauvegarde.key apidoo-AAAA-MM-JJ.dump.age > apidoo.dump`, puis
+`pg_restore --no-owner --no-privileges --dbname "$BASE_CIBLE" apidoo.dump`. Les comptes de connexion ne sont pas dans la
+copie : chacun se reconnecte avec son adresse e-mail et retrouve ses exploitations (membres). Les fichiers des photos ne
+sont pas sauvegardés par cette action (à prévoir : copie hebdomadaire du stockage, 10_STRATEGIE_DEPLOIEMENT.md § 4).
 
 ## Retour arrière
 
