@@ -65,8 +65,29 @@ export function ouvrir(rucherId) {
   go("deplacer");
 }
 
-async function valider(_v, _k, bouton) {
-  const f = lire();
+/** Feuille « Déplacer N colonies » (v5.44, rationalisation) : après une sélection (appui long dans Ruchers), on choisit
+ *  seulement la destination, la date et le motif, sans changer d'écran. L'écran complet reste pour choisir les colonies. */
+export function feuille(ids) {
+  S.dp = null;
+  const f = etat();
+  f.sel = [...ids];
+  const dests = (S.d.ruchers || []).filter((r) => !r.archive_le);
+  sheet({
+    title: `Déplacer ${UX.pluriel(ids.length, "colonie")}`,
+    intro: "Transhumance, hivernage… en une seule fois, noté au registre.",
+    fields: [
+      { name: "dest", label: "Vers", type: "select", required: true, options: [["", "Choisir…"], ...dests.map((r) => [r.id, r.nom])] },
+      { name: "date", label: "Date", type: "date", required: true, value: today() },
+      { name: "motif", label: "Motif", type: "select", options: MOTIFS, value: MOTIFS[0] },
+      { name: "notes", label: "Note (facultatif)", value: "" },
+    ],
+    label: "Déplacer",
+    submit: async (o) => { Object.assign(f, { dest: o.dest, date: o.date, motif: o.motif || MOTIFS[0], notes: o.notes || "" }); await envoyer(f); },
+  });
+}
+
+async function valider(_v, _k, bouton) { return envoyer(lire(), bouton); }
+async function envoyer(f, bouton) {
   const p = { id: f.id || (f.id = crypto.randomUUID()), date: f.date, rucher_id: f.dest, colonies: [...f.sel], motif: f.motif === "Autre" ? "" : f.motif.toLowerCase(), notes: f.notes.trim() };
   const err = C.controleDeplacement(S.d, p, today());
   if (err) throw new Error(err);
@@ -100,4 +121,5 @@ export const actions = {
   dpannuler: () => { const depuis = S.dp?.depuis; S.dp = null; if (depuis) { S.rucher = (S.d.ruchers || []).find((r) => r.id === depuis)?.nom; go("rucher"); } else go("ruches"); },
   // Depuis la fiche d'un rucher, l'écran Ruchers ou le registre.
   dpouvrir: (rid) => ouvrir(rid),
+  dpfeuille: (ids) => feuille(String(ids || "").split(",").filter(Boolean)),
 };

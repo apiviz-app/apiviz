@@ -13,15 +13,32 @@
 export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "deplacer", "inventaire"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
-export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "rappels", "pilotage", "compta",
-  "previsions", "associes", "materiel", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus"]);
+export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta",
+  "previsions", "associes", "materiel", "courses", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus"]);
 
 /** Parent d'un écran de 2e niveau quand l'écran ne le donne pas lui-même : [route, libellé]. */
 export const PARENTS = {
   ruche: ["ruches", "Ruchers"], rucher: ["ruches", "Ruchers"], meteo: ["ruches", "Ruchers"],
-  lot: ["miel", "Miel"], facture: ["clients", "Ventes"], courses: ["materiel", "Matériel"], inventaire: ["materiel", "Matériel"],
+  lot: ["miel", "Miel"], facture: ["clients", "Miel"], inventaire: ["materiel", "Matériel"],
   saison: ["agenda", "Agenda"], activite: ["dash", "Accueil"], recherche: ["dash", "Accueil"], profil: ["reglages", "Réglages"],
+  rappels: ["reglages", "Réglages"],
 };
+
+/**
+ * Écrans-sujets (v5.44, rationalisation du 15 nov. 2026) : plusieurs adresses, un seul écran pour l'apiculteur, avec
+ * des onglets. Le titre est celui du sujet ; l'onglet allumé dit où l'on est.
+ */
+export const SUJETS = {
+  finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["previsions", "Budget"], ["associes", "Associés"]] },
+  materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
+  registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },
+  reglages: { titre: "Réglages", onglets: [["reglages", "Réglages"], ["membres", "Équipe"]] },
+};
+/** Le sujet d'une adresse, ou null. */
+export function sujetDe(route) {
+  for (const [cle, s] of Object.entries(SUJETS)) if (s.onglets.some(([r]) => r === route)) return { cle, titre: s.titre, onglets: s.onglets, actif: route };
+  return null;
+}
 
 const UNITE = /\d[\d\s,.]*\s?(€|kg|pots?|ruches?|rappels?|colonies?|articles?)(?=$|[\s.,;:!?])/i;
 
@@ -132,6 +149,18 @@ export function appliquer() {
       if (sous) sous.textContent = t.resume;
       else h1.insertAdjacentHTML("afterend", `<p class="sub">${echap(t.resume)}</p>`);
     }
+  }
+
+  // 1 bis. Écran-sujet : titre du sujet, onglets sous l'en-tête.
+  const sujet = sujetDe(route);
+  if (sujet && h1 && !head.dataset.gs) {
+    head.dataset.gs = "1";
+    h1.textContent = sujet.titre;
+    wrap.querySelectorAll(":scope > .subtabs.g-onglets").forEach((x) => x.remove());
+    // Les onglets propres à l'écran (Financier / Opérationnel…) deviennent un choix de vue (segment) : un seul rang d'onglets.
+    wrap.querySelectorAll(".subtabs:not(.g-onglets)").forEach((x) => x.classList.add("g-segment"));
+    head.insertAdjacentHTML("afterend", `<div class="subtabs g-onglets" role="tablist" aria-label="${echap(sujet.titre)}">${sujet.onglets.map(([r, t]) =>
+      `<button type="button" role="tab" class="${r === route ? "on" : ""}" aria-selected="${r === route}" data-act="go" data-v="${r}">${echap(t)}</button>`).join("")}</div>`);
   }
 
   // 2. Retour : un seul, en tête, « ‹ Parent ».

@@ -1,0 +1,71 @@
+    # v5.44 — Rationalisation des écrans (15 nov. 2026) : menu à 5 entrées, écrans-sujets à onglets (Finances, Matériel,
+    # Registre et déclaration, Réglages), Rappels dans la cloche, visite Express / Complète, Déplacer en feuille.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.set_viewport_size({"width": 390, "height": 844})
+    DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R1, "date_visite": "2026-11-01", "activite": "Normale", "provisions": "Bonnes",
+                        "reine": "Vue", "couvain": "Normal", "poids_kg": 30, "varroa": None, "note": "", "auteur": "test"}]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    # Menu du téléphone : une recherche et 5 entrées
+    page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] .nl-entree")
+    entrees = page.locator("#nlVolet .nl-entree b").all_inner_texts()
+    verif(entrees == ["Agenda", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "volet : 5 entrées (%s)" % entrees)
+    verif(page.locator("#nlVolet .nl-chercher").count() == 1, "volet : la recherche en tête")
+    page.wait_for_timeout(500)
+    if cap: page.screenshot(path=cap + "/ra-menu-390.png")
+    page.click("#nlVolet .nl-entree[data-v=pilotage]"); page.wait_for_function("S.route === 'pilotage'")
+    # Finances : un écran, quatre onglets
+    page.wait_for_selector(".g-onglets")
+    verif(page.locator(".wrap > .head h1").inner_text() == "Finances", "Finances : titre du sujet")
+    verif(page.locator(".g-onglets button").all_inner_texts() == ["Bilan", "Dépenses", "Budget", "Associés"], "Finances : Bilan, Dépenses, Budget, Associés")
+    verif(page.locator(".g-onglets button.on").inner_text() == "Bilan" and page.locator(".wrap .g-retour").count() == 0, "Finances : Bilan allumé, pas de retour")
+    page.wait_for_timeout(500)
+    if cap: page.screenshot(path=cap + "/ra-finances-390.png")
+    page.click(".g-onglets [data-v=compta]"); page.wait_for_function("S.route === 'compta'")
+    verif(page.locator(".wrap > .head h1").inner_text() == "Finances" and page.locator(".g-onglets button.on").inner_text() == "Dépenses", "onglet Dépenses : même titre, onglet allumé")
+    verif(page.locator(".bottom button.on[data-v=menu]").count() == 1, "Finances rangé derrière Menu")
+    # Matériel : Stock, Courses, Fournisseurs ; la liste de courses n'a plus de retour
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".g-onglets")
+    verif(page.locator(".g-onglets button").all_inner_texts() == ["Stock", "Courses", "Fournisseurs"], "Matériel : Stock, Courses, Fournisseurs")
+    page.click(".g-onglets [data-v=courses]"); page.wait_for_function("S.route === 'courses'")
+    verif(page.locator(".wrap .g-retour").count() == 0 and page.locator(".wrap > .head h1").inner_text() == "Matériel", "Courses : onglet de Matériel, sans retour")
+    page.wait_for_timeout(500)
+    if cap: page.screenshot(path=cap + "/ra-courses-390.png")
+    # Registre et déclaration ; Réglages et Équipe
+    page.evaluate("ACT.go('declaration')"); page.wait_for_selector(".g-onglets")
+    verif(page.locator(".wrap > .head h1").inner_text() == "Registre et déclaration" and page.locator(".g-onglets button.on").inner_text() == "Déclaration", "Registre et déclaration réunis")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".g-onglets")
+    verif(page.locator(".g-onglets button").all_inner_texts() == ["Réglages", "Équipe"], "Réglages : Réglages, Équipe")
+    # Rappels : la cloche ouvre une feuille
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".topbar .er-cloche")
+    page.click(".topbar .er-cloche"); page.wait_for_selector("#sheet[open] .er-fliste")
+    verif(page.evaluate("S.route") == "dash" and page.locator("#sheet h2").inner_text().startswith("Rappels"), "cloche : feuille Rappels, on reste sur l'accueil")
+    page.wait_for_timeout(400)
+    if cap: page.screenshot(path=cap + "/ra-rappels-390.png")
+    page.click("#sheet [data-act=errgrappels]"); page.wait_for_function("S.route === 'rappels'")
+    verif(page.locator(".wrap .g-retour").inner_text() == "Réglages", "réglages des rappels : retour « ‹ Réglages »")
+    # Visite : une bascule Express / Complète, pour la même ruche
+    page.evaluate(f"ACT.ruche('{R1}')"); page.wait_for_selector(".n4-rbarre [data-act=veruche]")
+    page.click(".n4-rbarre [data-act=veruche]"); page.wait_for_selector(".ve-mode")
+    verif(page.locator(".ve-mode [aria-selected=true]").inner_text() == "Express", "visite express : bascule, Express allumé")
+    page.locator(".ve-mode button", has_text="Complète").click(); page.wait_for_selector("form[data-form=visite]")
+    verif(page.locator(".ve-mode [aria-selected=true]").inner_text() == "Complète" and page.evaluate("S.visite.ruche_id") == R1, "bascule → visite complète de la même ruche")
+    if cap: page.wait_for_timeout(400); page.screenshot(path=cap + "/ra-visite-390.png")
+    page.locator(".ve-mode button", has_text="Express").click(); page.wait_for_selector(".ve-liste")
+    verif(page.evaluate("S.route") == "visiteexpress", "bascule → retour à la visite express")
+    page.evaluate("S.ve = null; ACT.go('ruches')"); page.wait_for_timeout(300)
+    # Déplacer des colonies sélectionnées : une feuille
+    page.evaluate(f"ACT.dpfeuille('{R1}')"); page.wait_for_selector("#sheet[open] select[name=dest]")
+    verif(page.locator("#sheet h2").inner_text() == "Déplacer 1 colonie" and page.locator("#sheet input[name=date]").count() == 1, "Déplacer : feuille (vers, date, motif)")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=cap + "/ra-deplacer-390.png")
+    page.click("#sheet [data-act=closesheet]")
+    # Ordinateur : 8 entrées
+    page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.go('dash')"); page.wait_for_timeout(300)
+    side = page.locator(".side .nav[data-v]").all_inner_texts()
+    verif([x.strip() for x in side if x.strip() != "API"] == ["Accueil", "Agenda", "Ruchers", "Miel", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "ordinateur : 8 entrées (%s)" % side)
+    if cap: page.screenshot(path=cap + "/ra-menu-1280.png")
+    page.evaluate("ACT.go('pilotage')"); page.wait_for_selector(".g-onglets")
+    page.wait_for_timeout(500)
+    if cap: page.screenshot(path=cap + "/ra-finances-1280.png")
+    page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

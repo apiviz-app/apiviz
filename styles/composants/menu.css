@@ -1,0 +1,34 @@
+/* Apiviz — volet Menu du téléphone (v5.44, rationalisation du 15 nov. 2026) : une recherche et 5 entrées. */
+.nl-corps{gap:8px}
+.nl-chercher{display:flex;align-items:center;gap:8px;min-height:var(--cible);padding:0 14px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card);font:inherit;font-size:var(--t-m);color:var(--muted);text-align:left;cursor:pointer}
+.nl-chercher svg{flex:none;width:18px;height:18px}
+.nl-liste{display:flex;flex-direction:column}
+.nl-entree{display:flex;align-items:center;gap:14px;min-height:60px;padding:6px 4px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.nl-entree:last-child{border-bottom:0}
+.nl-ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--honeysoft);display:inline-flex;align-items:center;justify-content:center}
+.nl-ic svg{width:20px;height:20px}
+.nl-txt{display:flex;flex-direction:column;min-width:0}
+.nl-txt b{font-size:16px}
+.nl-txt span{font-size:var(--t-xs);color:var(--muted);line-height:1.35}
+.nl-entree.on .nl-ic{background:var(--pine);color:#fff}
+.nl-note{margin:6px 4px 0;font-size:var(--t-xs);color:var(--muted)}
+
+/* Onglets d'un écran-sujet (Finances, Matériel, Registre et déclaration, Réglages) : juste sous l'en-tête. */
+.g-onglets{margin:2px 0 14px;overflow-x:auto;scrollbar-width:none}
+.g-onglets::-webkit-scrollbar{display:none}
+.g-onglets button{white-space:nowrap}
+
+/* Feuille « Rappels » (cloche, v5.44). */
+.er-fliste{display:flex;flex-direction:column;gap:2px;max-height:55vh;overflow-y:auto}
+/* Dans un écran-sujet, les onglets propres à l'écran prennent le style d'un choix de vue (segment). */
+.subtabs.g-segment{display:flex;gap:0;width:max-content;max-width:100%;padding:2px;margin-bottom:12px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card)}
+.subtabs.g-segment button{min-height:34px;padding:0 14px;border:0;border-radius:var(--r-pill);font-size:var(--t-s);font-weight:600;color:var(--muted)}
+.subtabs.g-segment button.on{background:var(--pine);color:#fff;border-bottom:0}
+
+/* Bascule Express / Complète en tête des formulaires de visite (v5.44). */
+.cp-bascule.ve-mode{display:flex;width:max-content;max-width:100%;margin:0 0 12px}
+.cp-bascule.ve-mode button{min-height:36px;padding:0 18px}
+
+/* Ordinateur : la cloche à droite du bandeau de recherche (v5.44). */
+.nl-entete{display:flex;align-items:center;gap:12px}
+.nl-entete .er-cloche{margin-left:auto;flex:none}

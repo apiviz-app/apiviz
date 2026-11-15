@@ -17,21 +17,34 @@ const NL = (() => {
     registre: "M6 3h9l3 3v15H6zM9 10h6M9 14h6M9 18h3",
     declaration: "M9 11l3 3 8-8M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11",
     membres: "M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-4 3-6 7-6s7 2 7 6",
+    recherche: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.3-4.3",
   });
 
   // Catégories : [titre, [[route, libellé, libellé court pour le volet]]]
+  // v5.44 (rationalisation, 15 nov. 2026) : un écran par sujet, avec des onglets. 18 entrées → 8 sur ordinateur, 5 dans
+  // le volet du téléphone (Accueil, Ruchers et Miel sont déjà dans la barre du bas).
   const CATEGORIES = [
-    ["Au quotidien", [["dash", "Accueil"], ["agenda", "Agenda"], ["rappels", "Rappels"]]],
-    ["Ruchers", [["ruches", "Ruches"], ["carte", "Carte"], ["varroa", "Santé et varroa", "Santé"]]],
-    ["Miel et ventes", [["miel", "Stock et lots", "Stock"], ["clients", "Clients et ventes", "Clients"]]],
-    ["Finances", [["pilotage", "Bilan"], ["compta", "Dépenses et achats", "Dépenses"], ["previsions", "Budget et prévisions", "Budget"], ["associes", "Entre associés", "Associés"]]],
-    ["Administration", [["materiel", "Matériel"], ["fournisseurs", "Fournisseurs"], ["registre", "Registre d’élevage", "Registre"], ["declaration", "Déclaration"]]],
-    ["Équipe et compte", [["membres", "Équipe"], ["reglages", "Réglages"]]],
+    ["Au quotidien", [["dash", "Accueil"], ["agenda", "Agenda"]]],
+    ["Ruchers et miel", [["ruches", "Ruchers"], ["clients", "Miel"]]],
+    ["Gestion", [["pilotage", "Finances"], ["materiel", "Matériel"], ["registre", "Registre et déclaration"]]],
+    ["Compte", [["reglages", "Réglages"]]],
+  ];
+  // Volet du téléphone : les entrées qui ne sont pas dans la barre du bas, avec ce qu'elles contiennent.
+  const VOLET = [
+    ["agenda", "Agenda", "Tâches, visites prévues, idées de saison"],
+    ["pilotage", "Finances", "Bilan, dépenses, budget, entre associés"],
+    ["materiel", "Matériel", "Stock, liste de courses, fournisseurs"],
+    ["registre", "Registre et déclaration", "Traitements, ordonnances, déclaration annuelle"],
+    ["reglages", "Réglages", "Toi, exploitation et équipe, rappels, appli"],
   ];
   // Écrans de détail : l'entrée du menu qui reste allumée.
   const PARENT = { ruche: "ruches", rucher: "ruches", visite: "ruches", deplacer: "ruches", tournee: "ruches", meteo: "ruches",
-    recolte: "miel", lot: "miel", miseenpots: "miel", ventes: "clients", vente: "clients", facture: "clients",
-    plus: "pilotage", activite: "dash", saison: "agenda", recherche: "dash" };
+    carte: "ruches", varroa: "ruches", visiteexpress: "ruches",
+    miel: "clients", recolte: "clients", lot: "clients", miseenpots: "clients", ventes: "clients", vente: "clients", facture: "clients",
+    compta: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
+    courses: "materiel", inventaire: "materiel", fournisseurs: "materiel", declaration: "registre",
+    membres: "reglages", profil: "reglages", rappels: "reglages",
+    activite: "dash", saison: "agenda", recherche: "dash" };
   const actif = (route) => PARENT[route] || route;
   const categorieDe = (route) => CATEGORIES.find(([, l]) => l.some(([r]) => r === actif(route)))?.[0] || "";
 
@@ -42,7 +55,7 @@ const NL = (() => {
   const i = BOTTOM.findIndex(([k]) => k === "plus");
   if (i >= 0) BOTTOM[i] = ["menu", "Menu"];
   // Écrans rangés derrière « Menu » dans la barre du bas.
-  ["pilotage", "compta", "previsions", "associes", "materiel", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus", "rappels"]
+  ["pilotage", "compta", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "agenda", "saison"]
     .forEach((r) => (GROUP[r] = "menu"));
 
   const goAvant = ACT.go;
@@ -71,11 +84,11 @@ const NL = (() => {
     d.innerHTML = `<div class="nl-tete"><span class="avatar">${esc((prenom || mail || "?")[0].toUpperCase())}</span>
         <span class="nl-qui"><b>${esc(prenom || mail)}</b>${nom ? `<span>${esc(nom)}</span>` : ""}</span>
         <button type="button" class="nl-fermer" data-act="nlfermer" aria-label="Fermer le menu">${icon("menu").replace(/d="[^"]*"/, 'd="M6 6l12 12M18 6L6 18"')}</button></div>
-      <div class="nl-corps">${CATEGORIES.map(([titre, l]) => `<section><h2>${esc(titre)}</h2><div class="nl-tuiles">${l
-        .map(([r, t, court]) => `<button type="button" class="${a === r ? "on" : ""}" data-act="go" data-v="${r}"${a === r ? ' aria-current="page"' : ""}>${icon(r)}<span>${esc(court || t)}</span></button>`)
-        .join("")}</div></section>`).join("")}</div>`;
+      <div class="nl-corps"><button type="button" class="nl-chercher" data-act="go" data-v="recherche">${icon("recherche")}<span>Rechercher une ruche, un client…</span></button>
+        <div class="nl-liste">${VOLET.map(([r, t, sous]) => `<button type="button" class="nl-entree${a === r ? " on" : ""}" data-act="go" data-v="${r}"${a === r ? ' aria-current="page"' : ""}><span class="nl-ic">${icon(r)}</span><span class="nl-txt"><b>${esc(t)}</b><span>${esc(sous)}</span></span></button>`).join("")}</div>
+        <p class="nl-note">Accueil, Ruchers et Miel sont dans la barre du bas.</p></div>`;
     if (!d.open) d.showModal();
-    d.querySelector("button.on, .nl-tuiles button")?.focus({ preventScroll: true });
+    d.querySelector("button.on, .nl-liste button")?.focus({ preventScroll: true });
   }
   function fermer() { const d = document.getElementById("nlVolet"); if (d?.open) d.close(); }
   // Passage du téléphone à l'ordinateur (rotation d'une tablette) : le volet n'a plus lieu d'être.
@@ -93,6 +106,9 @@ const NL = (() => {
         h.textContent = CATEGORIES[n]?.[0] || "";
         s.replaceWith(h);
       });
+      // « Miel » (route clients) : l'icône du pot, pas celle des clients (v5.44).
+      const pot = side.querySelector('.nav[data-v="clients"] svg');
+      if (pot && typeof ICON != "undefined" && ICON.miel) pot.outerHTML = icon("miel");
       // Entrée allumée : celle de l'écran, ou de son parent.
       const a = actif(S.route);
       side.querySelectorAll(".nav[data-v]").forEach((b) => {
@@ -100,16 +116,17 @@ const NL = (() => {
         b.classList.toggle("on", on);
         on ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current");
       });
-      // Pas de cloche dans le menu (Rappels a son entrée) ; la recherche passe dans le bandeau du contenu.
-      side.querySelector(".er-cloche")?.remove();
+      // La recherche et la cloche (v5.44 : elle ouvre la feuille Rappels) passent dans le bandeau du contenu.
+      const cloche = side.querySelector(".er-cloche");
       const barre = side.querySelector(".er-barre"), main = document.querySelector(".shell > main");
       if (main && !main.querySelector(".nl-entete")) {
         main.insertAdjacentHTML("afterbegin", '<div class="nl-entete"></div>');
         if (barre) main.querySelector(".nl-entete").append(barre);
       }
+      if (cloche) { const ent = main?.querySelector(".nl-entete"); ent ? ent.append(cloche) : cloche.remove(); }
     }
     // Fil d'Ariane : retiré en v5.43 (gabarit commun, src/noyau/gabarit.js) ; un écran du Menu n'a pas de retour.
   });
 
-  return { CATEGORIES, ouvrir, fermer, categorieDe };
+  return { CATEGORIES, VOLET, ouvrir, fermer, categorieDe };
 })();

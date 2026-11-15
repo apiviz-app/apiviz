@@ -5,6 +5,40 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.44 · à publier en recette · rationalisation des écrans : un écran par sujet, menu à 5 entrées
+Aucune migration. Audit du 14 nov. 2026, étape 3 ; maquettes « Rationalisation » du 15 nov. 2026 (s'appuie sur la v5.43).
+
+Un sujet = un écran, avec des onglets ; le reste devient une feuille du bas ou un onglet. Aucune fonction supprimée,
+aucune adresse cassée (les anciennes routes ouvrent le bon onglet).
+1. **Menu** : 18 entrées → **8 sur ordinateur** (Accueil, Agenda, Ruchers, Miel, Finances, Matériel, Registre et
+   déclaration, Réglages) et **5 dans le volet du téléphone**, avec la recherche en tête et ce que contient chaque
+   entrée.
+2. **Finances** : un écran, quatre onglets (Bilan, Dépenses, Budget, Associés). **Matériel** : Stock, Courses,
+   Fournisseurs (la liste de courses n'est plus un détail avec retour). **Registre et déclaration** : un écran, deux
+   onglets. **Réglages** : Réglages, Équipe. Les onglets propres à un écran (Financier / Opérationnel) prennent le style
+   d'un choix de vue : un seul rang d'onglets.
+3. **Rappels** : la cloche ouvre une feuille (ouvrir un rappel, tout marquer comme vu) ; l'écran Rappels garde les
+   réglages et se trouve sous Réglages.
+4. **Visite** : une bascule **Express / Complète** en tête des deux formulaires, pour la même ruche.
+5. **Déplacer** des colonies sélectionnées (appui long dans Ruchers) : une feuille (vers, date, motif) au lieu d'un
+   écran ; l'écran complet reste pour choisir les colonies une à une.
+6. **Miel** : l'onglet « Stock et lots » devient « Stock et récoltes » ; titre « Miel » partout ; icône du pot dans le
+   menu de l'ordinateur.
+
+Arborescence : `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §2 (décision notée) ; `docs/GUIDE.md` mis à jour.
+Technique : `navigation.js` (catégories, volet), `src/noyau/gabarit.js` (`SUJETS`, `sujetDe()`, onglets sous
+l'en-tête), `essentiels.js` (feuille Rappels), `visites/express.js` (bascule), `ruchers/deplacer.js` (`feuille()`),
+`styles/composants/menu.css`. Tests : unitaires `gabarit.test.mjs` (5) ; bout en bout `etapes_ra` (nouveau,
+15 vérifications) ; scénarios adaptés au nouveau menu.
+
+### À vérifier
+- Téléphone, Menu : la recherche et 5 entrées ; Finances s'ouvre sur Bilan, les onglets passent à Dépenses, Budget,
+  Associés sans changer de titre.
+- Matériel › Courses ; Registre et déclaration › Déclaration ; Réglages › Équipe.
+- Cloche : la feuille Rappels ; toucher un rappel ouvre la ruche, la tâche ou la vente.
+- Visite d'une ruche déjà visitée : passer d'Express à Complète et retour.
+- Ruchers, appui long sur 2 colonies › Déplacer : la feuille, puis la fiche du rucher de destination.
+
 ## v5.43 · à publier en recette · gabarit d'écran commun
 Aucune migration. Audit « ergonomie et uniformisation » du 14 nov. 2026, étape 2 (s'appuie sur la v5.42).
 
