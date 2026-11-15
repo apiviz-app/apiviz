@@ -130,8 +130,8 @@
     # 7. Ordinateur : visite express et accueil à 1 280 px.
     if cap:
         page.set_viewport_size({"width": 1280, "height": 900})
-        page.evaluate("S.tn = null; S.tournee = null; go('dash')"); page.wait_for_selector(".es-carte", timeout=10000); page.wait_for_timeout(400)
-        page.screenshot(path=f"{cap}/vq-accueil-1280.png", full_page=True)
+        page.evaluate("S.tn = null; S.tournee = null; go('dash')"); page.wait_for_selector(".es-carte", timeout=10000); page.wait_for_timeout(2000)
+        page.screenshot(path=f"{cap}/vq-accueil-1280.png")
         page.evaluate(f"ACT.veruche('{R[0]}')"); page.wait_for_selector(".ve-liste"); page.wait_for_timeout(300)
         page.screenshot(path=f"{cap}/vq-express-1280.png", full_page=True)
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

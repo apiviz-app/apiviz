@@ -514,7 +514,7 @@ const TN = (() => {
     if (!S.tn || (!T() && S.tn.etape !== "bilan")) { S.route = "dash"; return render(); }
     const e = S.tn.etape, x = E[e](), cotes = !x.plein && T();
     const fermer = e === "bilan" ? "" : `<button type="button" class="tn-x" data-act="tnquitter" aria-label="Quitter la tournée">${CROIX}</button>`;
-    $app.innerHTML = `<div class="tn-app tn-e-${e}">
+    $app.innerHTML = `<div class="tn-app tn-e-${e}${modele() === MODELES.hiver ? " tn-m-hiver" : ""}">
       <header class="tn-haut ${x.sombre ? "sombre" : ""}"><img class="tn-logo" src="logo-apiviz.svg" alt="Apiviz" height="28"><h1>${x.titre}</h1>${x.droite ? `<span class="small">${x.droite}</span>` : ""}${fermer}</header>
       <div class="tn-grille ${cotes ? "" : "seule"}">
         ${cotes ? `<aside class="tn-cote">${colonneGauche()}</aside>` : ""}

@@ -69,3 +69,9 @@
 .tn-facultatifs>summary::-webkit-details-marker{display:none}
 .tn-facultatifs>summary small{font-weight:400;color:var(--muted);text-align:right}
 .tn-facultatifs[open]{padding-bottom:12px}
+/* Hiver : deux lignes seulement, elles ne s'étirent pas sur tout l'écran. */
+.tn-m-hiver.tn-e-manuel .tn-rang,.tn-m-hiver.tn-e-manuel .tn-pas{flex:0 0 auto;min-height:64px}
+.tn-m-hiver.tn-e-manuel .tn-outils{flex:0 0 auto;min-height:64px;margin-top:8px}
+/* Accueil : mêmes cartes que les autres blocs (39-accueil.css retire le fond des .card sous .wrap.ac). */
+body[data-route=dash] .wrap .es-carte,body[data-route=dash] .wrap .bv-carte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:none;margin:0}
+body[data-route=dash] .wrap .bv-carte{border:2px solid var(--honey)}
