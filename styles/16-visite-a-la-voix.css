@@ -19,12 +19,12 @@
 .vx-c.on{color:var(--ink);font-weight:600}
 .vx-c.on .vx-hex::after{scale:1}
 .vx-pied{flex:none;padding:10px 20px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
-.vx-pause{min-height:68px;border:0;border-radius:18px;background:var(--pine);color:#fff;font:inherit;font-size:17px;font-weight:600;transition:background var(--duree) ease}
+.vx-pause{min-height:68px;border:0;border-radius:var(--r-m);background:var(--pine);color:#fff;font:inherit;font-size:17px;font-weight:600;transition:background var(--duree) ease}
 .vx-pause.pause{background:var(--honey);color:var(--ink)}
 .vx-aide{margin:0;text-align:center;font-size:14px;color:var(--muted)}
 .vx-relire{flex:1;min-height:0;overflow-y:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:14px}
 .vx-relire h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;line-height:1.14;letter-spacing:-.018em}
-.vx-relire .vx-t{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.vx-relire .vx-t{border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
 .vx-l{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:46px;padding:6px 12px;border-bottom:1px solid var(--line)}
 .vx-l:last-child{border-bottom:0}
 .vx-l.alerte{background:var(--honeysoft)}

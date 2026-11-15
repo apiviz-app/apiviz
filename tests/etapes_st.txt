@@ -28,7 +28,7 @@
     verif(titres[0].startswith("Emballage") and any(t.startswith("Équipement") for t in titres), "articles groupés par famille : " + " | ".join(titres))
     corps = page.locator(".wrap").inner_text()
     verif("Opex" not in corps and "Capex" not in corps, "plus d'Opex ni de Capex à l'écran")
-    verif(page.locator(".head h1").inner_text() == "2 articles sont à recommander.", "phrase : " + page.locator(".head h1").inner_text())
+    verif(page.locator(".head h1").inner_text() == "Matériel" and "2 articles sont à recommander" in entete(page), "titre « Matériel », phrase en résumé (v5.43) : " + entete(page))
     verif(page.locator(".ma-table tr.op-bas").count() == 2, "candy et pots 250 g signalés à commander")
     verif(page.locator(".op-puce[data-v=bas]").inner_text().replace("\n", " ").strip() == "À commander 2", "puce À commander avec son nombre")
     page.click(".op-puce[data-v=bas]"); page.wait_for_timeout(150)
@@ -63,7 +63,7 @@
     verif(stock(ETI) == 75 and next(a for a in DATA["articles"] if a["id"] == ETI)["type"] == "Consommable", "étiquettes ajoutées (74 puis +) : 75 en stock, type déduit de la famille")
 
     # Achat en plusieurs lignes
-    page.click(".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .st-achat-corps")
+    cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .st-achat-corps")
     page.select_option("#st_four", F); page.fill("#st_piece", "F-2026-118")
     page.click(f".st-puces [data-v='{P250}']"); page.click(f".st-puces [data-v='{COU}']")
     verif(page.locator(".st-ligne").count() == 2, "deux lignes, une par article touché")

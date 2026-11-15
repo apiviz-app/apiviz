@@ -90,18 +90,19 @@ async function enregistrer(mode, _k, bouton) {
   } finally { S.busy = false; if (bouton?.isConnected) bouton.disabled = false; }
 }
 
-/** Bouton « Visite express » sur la fiche d'une ruche active qui a déjà une visite. */
+/** Fiche d'une ruche active déjà visitée : « Visite express » devient le bouton principal ; « Visite complète »
+ *  rejoint les autres actions du bouton + (gabarit commun v5.43 : un seul bouton principal). */
 export function completerFiche() {
   const r = S.ruche && byId(S.d.ruches, S.ruche);
   if (!r || r.sortie || !lastVisit(r.id)) return;
   const barre = document.querySelector(".n4-rbarre");
-  if (barre && !barre.querySelector('[data-act="veruche"]')) {
-    barre.insertAdjacentHTML("afterbegin", `<button class="btn main" data-act="veruche" data-v="${e(r.id)}">Visite express</button>`);
-    // « ghost » est fait pour un fond sapin : sur la barre claire, le texte blanc devenait invisible (audit du 14 nov.).
-    barre.querySelector('[data-act="newvisite"]')?.classList.remove("honey", "ghost");
-    const v = barre.querySelector('[data-act="newvisite"]');
-    if (v) v.textContent = "Visite complète";
-  }
+  if (!barre || barre.querySelector('[data-act="veruche"]')) return;
+  const v = barre.querySelector(':scope > [data-act="newvisite"]');
+  if (!v) return;
+  v.insertAdjacentHTML("beforebegin", `<button class="btn main" data-act="veruche" data-v="${e(r.id)}">Visite express</button>`);
+  v.classList.remove("main", "honey", "ghost");
+  v.textContent = "Visite complète";
+  barre.querySelector(".g-autres")?.prepend(v);
 }
 
 if (typeof GROUP != "undefined") GROUP.visiteexpress = "ruches";

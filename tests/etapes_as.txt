@@ -81,8 +81,8 @@
 
     # Liste des associés (v5.38 : plus de bloc dans les Réglages ; base sans 021, « Associés » d'Entre associés ouvre
     # encore la liste ; avec 021, il mène à Membres et associés).
-    page.evaluate("ACT.go('associes')"); page.wait_for_selector("[data-act=eaassocies]")
-    page.click("[data-act=eaassocies]"); page.wait_for_selector("#sheet[open] textarea[name=associes]")
+    page.evaluate("ACT.go('associes')"); page.wait_for_selector(".wrap > .head .g-plus")
+    cliquer(page, "[data-act=eaassocies]"); page.wait_for_selector("#sheet[open] textarea[name=associes]")
     verif(page.input_value("#sheet textarea[name=associes]") == "Pierre-Louis\nJohan", "liste des associés")
     page.fill("#sheet textarea[name=associes]", "Pierre-Louis\nJohan\nCaisse commune\nMarie"); page.click("#sheet .btn.main"); page.wait_for_timeout(800)
     verif(page.evaluate("JSON.stringify(cfg().associes)") == '["Pierre-Louis","Johan","Marie"]', "associés enregistrés, la caisse n'est pas un associé : " + page.evaluate("JSON.stringify(cfg().associes)"))

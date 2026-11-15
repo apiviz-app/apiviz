@@ -1,0 +1,51 @@
+/* Apiviz — gabarit d'écran commun (v5.43, audit du 14 nov. 2026). Chargé en dernier.
+   Règles : un retour « ‹ Parent », un titre court, ⋯ pour les actions rares, un seul bouton principal (en bas sur
+   téléphone, dans l'en-tête sur ordinateur), feuilles du bas « Actions » et « Année », cibles de 44 px, textes ≥ 12 px.
+   Code : src/noyau/gabarit.js. */
+/* Jetons (rayons, tailles, cible) : styles/jetons.css. */
+
+/* ---------- En-tête ---------- */
+.g-retour{display:flex;align-items:center;gap:2px;min-height:var(--cible);width:max-content;padding:0 10px 0 2px;margin:-6px 0 0 -8px;border:0;background:none;font:inherit;font-size:var(--t-m);font-weight:600;color:var(--pine);border-radius:var(--r-s);cursor:pointer;text-decoration:none}
+.g-retour:hover{background:rgba(30,43,36,.06)}
+.g-retour svg{flex:none}
+.wrap>.head .actions{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.wrap>.head .actions .btn{min-height:var(--cible)}
+.g-plus{flex:none;width:var(--cible);height:var(--cible);min-height:var(--cible);display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line2);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;font-size:20px;line-height:1}
+.g-plus:hover{border-color:var(--ink)}
+
+/* ---------- Bouton principal en bas ---------- */
+.g-barre{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:6;display:flex;gap:8px;margin:16px -16px 0;padding:10px 16px;background:linear-gradient(rgba(244,246,240,0),var(--ground) 30%);box-shadow:none;border:0;border-radius:0}
+.g-barre>.btn{flex:1;min-height:52px;font-size:16px;border-radius:var(--r-m)}
+.n4-rbarre.g-barre{display:flex;grid-template-columns:none}
+@media (max-width:800px){
+  .g-ordi{display:none!important}
+}
+@media (min-width:801px){
+  .g-tel{display:none!important}
+}
+
+/* ---------- Feuilles du bas : Actions, Année ---------- */
+.g-ftete{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#sheet .g-ftete h2{padding-right:0}
+.g-fermer{flex:none;width:var(--cible);height:var(--cible);display:inline-flex;align-items:center;justify-content:center;margin-right:-8px;padding:0;border:0;border-radius:var(--r-s);background:none;color:var(--ink);cursor:pointer}
+.g-actions{display:flex;flex-direction:column}
+.g-action{min-height:52px;padding:0 4px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;font-size:16px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
+.g-action:last-child{border-bottom:0}
+.g-action.crit{color:var(--crit)}
+.g-action:disabled{color:var(--muted);cursor:default}
+.g-puces{display:flex;flex-wrap:wrap;gap:8px}
+.g-puce{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card);font:inherit;font-size:var(--t-s);font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap}
+.g-puce.on{background:var(--pine);border-color:var(--pine);color:#fff}
+#sheet .g-puces .g-puce{min-height:var(--cible);padding:0 16px;font-size:var(--t-m)}
+.g-cache{display:none!important}
+
+/* ---------- Choix de vue : un seul style de segment ---------- */
+.cp-bascule{display:inline-flex;gap:0;padding:2px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card)}
+.cp-bascule button{min-height:32px;padding:0 14px;border:0;border-radius:var(--r-pill);background:none;font:inherit;font-size:var(--t-s);font-weight:600;color:var(--muted);cursor:pointer}
+.cp-bascule button[aria-selected=true]{background:var(--pine);color:#fff}
+
+/* ---------- Barre d'outils de l'agenda : Filtrer · vue ---------- */
+.ag-outils{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ag-outils .g-puce .g-n{min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--pine);color:#fff;font-size:var(--t-xs);display:inline-flex;align-items:center;justify-content:center}
+.g-barre>.g-plus-bas{flex:none;width:52px;min-width:52px;padding:0;font-size:24px;font-weight:500;background:var(--card);color:var(--ink);border:1.5px solid var(--ink)}
+.g-autres[hidden]{display:none!important}

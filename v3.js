@@ -183,10 +183,10 @@ const V3 = (() => {
         <span class="v3-droite">${der ? `<b class="${ton}">${t !== null ? n(t, 1) + " %" : der.varroa + " varroas"}</b>` : ""}<button type="button" class="btn sm" data-act="v3compter" data-v="${r.id}">Compter</button></span></div>${courbe}</section>`;
     }).join("");
     const haut = S.d.ruches.filter((r) => { const t = U.tauxVarroa(mesures(r.id)[0]); return t !== null && t >= seuil; }).length;
-    shell("Suivi varroa", haut ? `${U.pluriel(haut, "ruche")} au-dessus du seuil` : "Taux pour 100 abeilles", "",
-      `<section class="card"><form data-form="v3seuil"><label for="v3seuil">Seuil d’alerte (varroas pour 100 abeilles)</label><div class="v3-rang"><input id="v3seuil" name="s" type="number" step="0.1" min="0.1" inputmode="decimal" value="${esc(seuil)}"><button class="btn">Enregistrer</button></div></form>
-        <p class="small">Réglable selon les conseils de ton GDSA ou de ton technicien sanitaire. Taux = varroas comptés ÷ abeilles prélevées × 100 (sucre glace ou lavage, environ 300 abeilles).</p></section>
-      ${lignes || '<p class="small">Aucune ruche active.</p>'}`);
+    // v5.43 (gabarit commun) : le seuil est un réglage, il passe dans ⋯ (feuille de saisie courte) ; la liste vient tout de suite.
+    shell("Santé", [`Seuil d’alerte ${n(seuil, 1)} %`, haut ? `${U.pluriel(haut, "ruche")} au-dessus` : ""].filter(Boolean).join(" · "),
+      `<button type="button" class="btn" data-act="v3seuilfeuille">Seuil d’alerte varroa</button>`,
+      `${lignes || '<p class="small">Aucune ruche active.</p>'}`);
   }
   const todosAvant = window.todos;
   window.todos = function () {
@@ -615,6 +615,10 @@ const V3 = (() => {
   document.body.classList.toggle("soleil", soleil());
   const boutonSoleil = () => `<button data-act="v3soleil" aria-pressed="${soleil()}">${icon("soleil")}<span>Mode plein soleil : ${soleil() ? "activé" : "désactivé"}</span></button>`;
   ACT.v3soleil = () => { memo("apidoo-soleil", soleil() ? "0" : "1"); document.body.classList.toggle("soleil", soleil()); render(); };
+
+  ACT.v3seuilfeuille = () => sheet({ title: "Seuil d’alerte varroa", intro: "Varroas pour 100 abeilles. Réglable selon les conseils de ton GDSA ou de ton technicien sanitaire. Taux = varroas comptés ÷ abeilles prélevées × 100 (sucre glace ou lavage, environ 300 abeilles).",
+    fields: [{ name: "s", label: "Seuil (%)", type: "number", step: "0.1", min: "0.1", required: true, value: U.seuilVarroa() }],
+    submit: async (o) => { const v = Number(String(o.s).replace(",", ".")); if (!(v > 0)) throw new Error("Seuil invalide"); await saveCfg({ varroaSeuil: v }, "Seuil enregistré"); } });
 
   // ---------- Formulaires ----------
   document.addEventListener("submit", async (e) => {

@@ -183,23 +183,15 @@ const ER = (() => {
     ["Aucune récolte", "Saisir une récolte", "newrecolte"], ["Aucune vente", "Enregistrer une vente", "newvente"], ["Aucune visite", "Nouvelle visite", "newvisite"],
     ["Aucun consommable", "Ajouter un article", "newarticle"], ["Aucun équipement", "Ajouter un article", "newarticle"], ["Aucune tâche", "Ajouter une tâche", "newtache"]];
   function videsUtiles() {
+    // Un seul bouton principal par écran (gabarit commun v5.43) : pas de second « Ajouter » si l'écran en a déjà un.
+    if (document.querySelector(".wrap .op-pied, .wrap .n4-rbarre, .wrap > .head .actions .main, .wrap > .head .actions .honey")) return;
     document.querySelectorAll(".wrap p.empty, .wrap p.small").forEach((p) => {
       const v = VIDES.find(([t]) => p.textContent.startsWith(t));
       if (v && ACT[v[2]]) p.insertAdjacentHTML("afterend", `<button type="button" class="btn er-vide" data-act="${v[2]}">${v[1]}</button>`);
     });
   }
 
-  // ---------- Fil d'Ariane ----------
-  function ariane() {
-    const lien = document.querySelector(".wrap > .u-retour"), titre = document.querySelector(".wrap .head h1")?.textContent;
-    if (!lien || !titre) return;
-    lien.textContent = lien.textContent.replace(/^‹\s*/, "");
-    const nav = document.createElement("nav");
-    nav.className = "er-ariane"; nav.setAttribute("aria-label", "Fil d’Ariane");
-    lien.before(nav);
-    nav.append(lien);
-    nav.insertAdjacentHTML("beforeend", `<span aria-hidden="true">›</span><span>${esc(titre)}</span>`);
-  }
+  // Fil d'Ariane : retiré en v5.43, le retour « ‹ Parent » est posé par le gabarit commun (src/noyau/gabarit.js).
 
   // ---------- Barre de recherche ----------
   const LOUPE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>';
@@ -275,7 +267,6 @@ const ER = (() => {
   // Crochet du noyau (IT-03).
   Noyau.crochets.sur("apresCoquille", "ergonomie", () => {
     poser();
-    ariane();
     videsUtiles();
   });
 

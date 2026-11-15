@@ -7,9 +7,9 @@
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif(page.evaluate("window.__badge") == 1, "pastille : 1 point à surveiller (tâche en retard)")
     page.evaluate("ACT.go('agenda')"); page.wait_for_selector("h1 >> text=Agenda")
-    verif(page.locator("[data-act=rpics]").count() == 1, "bouton « Mettre dans mon agenda »")
+    verif(existe(page, "[data-act=rpics]"), "bouton « Mettre dans mon agenda »")
     with page.expect_download() as dl:
-        page.click("[data-act=rpics]")
+        cliquer(page, "[data-act=rpics]")
     brut = open(dl.value.path(), "rb").read()
     txt = brut.decode("utf-8")
     lignes = txt.split("\r\n")

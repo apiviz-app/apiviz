@@ -32,8 +32,8 @@ const N4 = (() => {
       wrap.querySelector(".head")?.insertAdjacentHTML("afterend", subtabs([["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]], S.route, "go"));
     }
     if (S.route === "miel") wrap?.querySelector(".subtabs")?.replaceWith(...gabarit(U.enteteMiel("stock")));
-    if (S.route === "materiel") { wrap?.querySelector(".subtabs")?.remove(); retour(wrap); }
-    if (["agenda", "registre", "declaration", "activite", "pilotage", "compta", "previsions", "fournisseurs", "reglages", "membres"].includes(S.route)) retour(wrap);
+    if (S.route === "materiel") wrap?.querySelector(".subtabs")?.remove();
+    // Retour « ‹ Gestion » retiré en v5.43 : ces écrans sont au 1er niveau du Menu (gabarit commun).
     const d = S.d;
     if (d) {
       const nb = d.ventes.filter((v) => !v.paye || v.livre === false).length;
@@ -42,7 +42,6 @@ const N4 = (() => {
     document.querySelectorAll('.topbar .avatar, .side .me .avatar').forEach((a) => { a.dataset.act = "n4compte"; a.removeAttribute("data-v"); a.setAttribute("aria-label", "Mon compte"); });
   });
   const gabarit = (html) => { const t = document.createElement("template"); t.innerHTML = html; return [...t.content.childNodes]; };
-  const retour = (wrap) => wrap?.insertAdjacentHTML("afterbegin", '<button type="button" class="link u-retour" data-act="go" data-v="plus">‹ Gestion</button>');
 
   // ---------- Bouton + : saisir en un geste ----------
   const SVG = (d) => `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;

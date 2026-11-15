@@ -47,19 +47,7 @@ const CP = (() => {
       sortir.innerHTML = ic(P.sortir);
       side.querySelector(".me").append(sortir);
     }
-    // Sélecteur d'année : flèches ‹ › de part et d'autre de la liste, pour passer d'une année à l'autre en un clic.
-    document.querySelectorAll("label.yr select:not([data-cp-annee])").forEach((sel) => {
-      sel.dataset.cpAnnee = "1";
-      const autour = document.createElement("span");
-      autour.className = "cp-annee";
-      sel.before(autour);
-      const bouton = (pas, lib, d) => `<button type="button" class="cp-icone" data-cp="annee" data-v="${pas}" aria-label="${lib}">${ic(d, 16)}</button>`;
-      autour.innerHTML = bouton(-1, "Année précédente", "M15 6l-6 6 6 6");
-      autour.append(sel);
-      autour.insertAdjacentHTML("beforeend", bouton(1, "Année suivante", "M9 6l6 6-6 6"));
-      const maj = () => autour.querySelectorAll("[data-cp=annee]").forEach((b) => { b.disabled = ![...sel.options].some((o) => Number(o.value) === Number(sel.value) + Number(b.dataset.v)); });
-      maj();
-    });
+    // Sélecteur d'année : remplacé en v5.43 par la puce « 2026 ▾ » du gabarit commun (src/noyau/gabarit.js).
     // Même position qu'avant le clic ; l'entrée allumée reste en vue (petits écrans).
     side.scrollTop = defilement;
     const on = side.querySelector(".nav.on");
@@ -171,10 +159,6 @@ const CP = (() => {
     if (a === "mtiroir") tiroir();
     else if (a === "tjour") { etat.jour = v; tiroir(); }
     else if (a === "tfermer") document.getElementById("cpTiroir")?.close();
-    else if (a === "annee") {
-      const sel = b.parentElement.querySelector("select"), cible = String(Number(sel.value) + Number(v));
-      if ([...sel.options].some((o) => o.value === cible)) { sel.value = cible; sel.dispatchEvent(new Event("change", { bubbles: true })); }
-    }
   });
   return { tiroir, ic };
 })();

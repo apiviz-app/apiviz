@@ -28,9 +28,9 @@
     cr = [b["p"] for n, b in recu["rpc"] if n == "creer_rucher"]
     verif(len(cr) == 1 and cr[0]["nom"] == "Bois du Roi" and len(cr[0]["id"]) == 36, "creer_rucher : nom nettoyé, identifiant fourni")
     page.wait_for_selector("h1 >> text=Bois du Roi", timeout=5000)
-    verif(page.locator("[data-act=rcajouter]").count() == 1 and page.locator("text=Aucune colonie pour l’instant").count() >= 1,
+    verif(existe(page, "[data-act=rcajouter]") and page.locator("text=Aucune colonie pour l’instant").count() >= 1,
           "fiche d'un rucher vide : « Ajouter des ruches ici »")
-    page.click("[data-act=rcajouter]"); page.wait_for_selector("#sheet[open] input[name=rucher]")
+    cliquer(page, "[data-act=rcajouter]"); page.wait_for_selector("#sheet[open] input[name=rucher]")
     verif(page.locator("#sheet input[name=rucher]").input_value() == "Bois du Roi", "ajout de ruches : rucher déjà choisi")
     page.click("#sheet [data-act=closesheet]")
 
@@ -59,8 +59,8 @@
     rv = next(x for x in DATA["ruchers"] if x["id"] == RV)
     verif(rv["acces"] == "Portail vert, refermer derrière soi" and rv["capacite"] == 10 and rv["proprietaire_tel"] == "06 12 34 56 78", "infos enregistrées")
     verif("Accès : Portail vert" in page.locator("#rcInfos summary").inner_text(), "accès lisible sans ouvrir la section")
-    verif(page.locator("a[href='tel:0612345678']").count() >= 1, "bouton d'appel du propriétaire")
-    verif(page.locator("a.u-lienbtn[href*='destination=47.32,5.04']").count() >= 1, "itinéraire vers le rucher")
+    verif(existe(page, "a[href='tel:0612345678']"), "bouton d'appel du propriétaire (à l'écran ou dans ⋯, v5.43)")
+    verif(existe(page, "a.u-lienbtn[href*='destination=47.32,5.04']"), "itinéraire vers le rucher (à l'écran ou dans ⋯, v5.43)")
     captures("fiche")
 
     # E. Archiver : refusé avec des colonies, accepté pour un rucher vide ; il reste consultable.

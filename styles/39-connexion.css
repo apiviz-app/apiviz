@@ -27,23 +27,23 @@
 @keyframes cx-monte{from{transform:translateY(62px)}to{transform:none}}
 
 /* Feuille */
-.auth.cx form{position:relative;z-index:1;box-sizing:border-box;width:auto;display:flex;flex-direction:column;gap:0;padding:28px 20px calc(16px + env(safe-area-inset-bottom));background:var(--card);border-radius:26px 26px 0 0;box-shadow:none}
+.auth.cx form{position:relative;z-index:1;box-sizing:border-box;width:auto;display:flex;flex-direction:column;gap:0;padding:28px 20px calc(16px + env(safe-area-inset-bottom));background:var(--card);border-radius:var(--r-l) var(--r-l) 0 0;box-shadow:none}
 .cx form label{gap:6px;margin-top:14px;font-size:13px;font-weight:600}
 .cx form label:first-of-type{margin-top:0}
-.cx form input{min-height:50px;padding:0 14px;border-radius:13px;font-weight:400}
+.cx form input{min-height:50px;padding:0 14px;border-radius:var(--r-m);font-weight:400}
 .cx form input::placeholder{color:var(--muted);opacity:1}
 .cx-mdp{position:relative;display:block}
 .cx-mdp input{padding-right:100px}
-.cx-voir{position:absolute;right:4px;top:3px;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--good);font-size:14px;font-weight:600}
+.cx-voir{position:absolute;right:4px;top:3px;min-height:44px;padding:0 12px;border:0;border-radius:var(--r-s);background:none;color:var(--good);font-size:14px;font-weight:600}
 .cx .cx-aide{margin:8px 0 0}
 .cx .cx-oubli{align-self:flex-end;min-height:44px;padding:0;font-size:14px;color:var(--good)}
-.cx form .btn.main{min-height:52px;margin-top:18px;border-radius:13px;font-size:16px}
+.cx form .btn.main{min-height:52px;margin-top:18px;border-radius:var(--r-m);font-size:16px}
 .cx form .cx-oubli + .btn.main{margin-top:0}
-.cx form .btn.block:not(.main){min-height:48px;border-radius:13px}
+.cx form .btn.block:not(.main){min-height:48px;border-radius:var(--r-m)}
 .cx-ou{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:13px;color:var(--muted)}
 .cx-ou::before,.cx-ou::after{content:"";flex:1;height:1px;background:var(--line)}
 .cx .cx-lien{align-self:center;min-height:44px;margin-top:4px;padding:0;color:var(--good);text-align:center}
-.cx .notice{margin:0 0 14px;border-radius:14px;font-size:14px}
+.cx .notice{margin:0 0 14px;border-radius:var(--r-m);font-size:14px}
 .cx .cx-info{display:flex;align-items:center;gap:12px}
 .cx .cx-info::before{content:"";flex:none;width:23px;height:20px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 .cx form .btn.main + .cx-info{margin:16px 0 0}
@@ -69,7 +69,7 @@
   .cx-tete .cx-confid{position:relative;align-self:flex-start;justify-content:flex-start;min-height:44px;margin-top:auto;padding-top:16px}
   .cx-corps{flex:1 1 50%;min-width:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:40px clamp(24px,4vw,48px)}
   .cx-carte{width:100%;max-width:440px;margin-top:58px}
-  .auth.cx form{padding:36px;border:1px solid var(--line);border-radius:18px}
+  .auth.cx form{padding:36px;border:1px solid var(--line);border-radius:var(--r-m)}
   .cx form .cx-phrase{margin-bottom:24px}
   .cx form .sub{color:var(--muted)}
 }

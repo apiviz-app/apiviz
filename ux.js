@@ -222,7 +222,7 @@ const UX = (() => {
        ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
          : ongletRuche.v === "sante" || ongletRuche.v === "reine" ? `<div class="cl-onglet" data-o="${ongletRuche.v}"></div>` // rempli par src/domaines/colonies/lignee.js (IT-07)
          : `<h2 class="u-titre">Journal</h2>${vis.length ? "" : '<p class="small">Aucune visite enregistrée.</p>'}${journalRuche(r)}`}
-       ${!r.sortie && typeof N4 != "undefined" ? `<div class="n4-rbarre"><button class="btn honey" data-act="newvisite" data-v="${r.id}">Visiter cette ruche</button><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button></div>` : ""}`);
+       ${!r.sortie && typeof N4 != "undefined" ? `<div class="n4-rbarre"><button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button type="button" class="btn g-plus-bas" data-act="gactions" aria-label="Autres actions pour ${esc(r.nom)}">+</button><div class="g-autres" hidden><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button></div></div>` : ""}`);
     document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", typeof N4 != "undefined" ? N4.navRuche(r)
       : `<button type="button" class="link u-retour" data-act="go" data-v="ruches">‹ Ruches${r.rucher ? " · " + esc(r.rucher) : ""}</button>`);
   }

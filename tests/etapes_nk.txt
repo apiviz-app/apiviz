@@ -26,7 +26,10 @@
     page.locator("[data-act=newvisite]").first.click(); page.wait_for_selector("form[data-form=visite]")
     depuis_accueil = page.evaluate(formulaire)
     page.evaluate("ACT.ruche(S.d.ruches[0].id)"); page.wait_for_timeout(150)
-    page.locator(".wrap [data-act=newvisite]").first.click(); page.wait_for_selector("form[data-form=visite]")
+    # v5.43 : un seul bouton principal en bas ; « Visite complète » est dans le + quand la visite express est proposée
+    if page.locator(".n4-rbarre > [data-act=newvisite]").count(): page.click(".n4-rbarre > [data-act=newvisite]")
+    else: page.click(".n4-rbarre .g-plus-bas"); page.locator("#sheet .g-action", has_text="Visite complète").click()
+    page.wait_for_selector("form[data-form=visite]")
     depuis_fiche = page.evaluate(formulaire)
     page.evaluate("go('dash')"); page.wait_for_timeout(150)
     page.evaluate("ACT.go('saisir')"); page.wait_for_selector("#sheet[open] [data-act=n4q][data-v=newvisite]")

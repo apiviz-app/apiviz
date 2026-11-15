@@ -108,7 +108,31 @@ Contraintes : cibles ≥ 48 px, contraste AA en plein soleil, aucune saisie clav
 
 ## 5. Composants communs (un seul exemplaire chacun)
 
-`Coquille` (barres, bandeaux hors ligne et recette) · `Feuille` (fenêtre du bas, brouillon, Échap, clic à côté) · `Segments` · `Pas à pas` (− / +) · `Alvéole` et `Carte d'alvéoles` · `Carte de liste` · `Tableau` (ordinateur) · `Chiffre clé` · `Graphique` (barres, courbe, avec table « Voir les chiffres ») · `État vide` · `Toast` avec « Annuler » · `Puce d'état` · `Sélecteur de colonies` (par rucher, tout cocher) · `Sélecteur de date relative` (Aujourd'hui, Hier…) · `Bloc` (Gestion).
+**Gabarit d'écran commun (v5.43, audit « ergonomie et uniformisation » du 14 nov. 2026)** : chaque écran suit le même
+squelette, posé par un seul module (`src/noyau/gabarit.js`, styles `styles/composants/gabarit.css`, jetons
+`styles/jetons.css`). Un écran ne fabrique ni son retour, ni sa barre du bas, ni son menu ⋯ : il les déclare (boutons de
+`shell()`, barre `.op-pied` ou `.n4-rbarre`) et le gabarit les range.
+
+1. **Coquille fixe** : barre du haut, barre du bas à 5 touches ; rien d'autre n'est fixe, sauf la barre du bouton principal.
+2. **En-tête** : « ‹ Parent » seulement sous le 1er niveau (plus de fil d'Ariane) ; titre = un nom court (une phrase
+   passe en résumé dessous) ; ⋯ à droite pour les actions rares.
+3. **Une seule barre d'outils** : Filtrer (avec le nombre), 2 ou 3 raccourcis, choix de vue.
+4. **Filtres, tri, période** : dans une feuille du bas (« Filtrer et trier », « Filtrer » de l'agenda, puce « 2026 ▾ »).
+5. **Un seul bouton principal** (classe `main` ou `honey`) : en bas sur téléphone (52 px), à droite de l'en-tête sur
+   ordinateur. Un bouton « + » à côté seulement s'il y a d'autres créations (fiche ruche).
+6. **Trois feuilles du bas** : Filtrer et trier, Actions (⋯ et +), Saisie courte (`sheet()`).
+7. **Onglets** : soulignés (`subtabs`) ; le segment (`cp-bascule`, `seg`) seulement pour un choix de vue.
+8. **Lignes de liste** de 54-56 px, appui long pour sélectionner.
+9. **Jetons** : rayons `--r-s` 10, `--r-m` 14, `--r-l` 20, `--r-pill` ; textes de 12 px minimum (`--t-*`) ; couleurs par
+   variables ; cibles de 44 px (`--cible`).
+10. **Ordinateur** : même squelette ; la feuille devient un panneau, le bouton principal monte dans l'en-tête.
+
+Les écrans de saisie pas à pas (« flux » : visite, visite express, tournée, vente, récolte, mise en pots, déplacer,
+inventaire) gardent leur propre en-tête (Annuler, étapes). **Règle de développement** : pas de nouveau script qui
+retouche la coquille après coup ; une nouvelle fonction passe par ces règles et sa PR joint une capture téléphone et
+ordinateur (`docs/PROCESSUS.md`, « Avant d'ouvrir une PR d'écran »).
+
+`Coquille` (barres, bandeaux hors ligne et recette) · `Feuille` (fenêtre du bas, brouillon, Échap, clic à côté) · `Segments` · `Pas à pas` (− / +) · `Alvéole` et `Carte d'alvéoles` · `Carte de liste` · `Tableau` (ordinateur) · `Chiffre clé` · `Graphique` (barres, courbe, avec table « Voir les chiffres ») · `État vide` · `Toast` avec « Annuler » · `Puce d'état` · `Sélecteur de colonies` (par rucher, tout cocher) · `Sélecteur de date relative` (Aujourd'hui, Hier…) · `Bloc` (Gestion) · `Gabarit` (en-tête, retour, ⋯, bouton principal, feuille Actions, puce d'année).
 
 ## 6. Responsive
 

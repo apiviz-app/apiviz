@@ -44,7 +44,7 @@
     verif("rapide" in hero.get_attribute("class") and "Visite rapide seulement" in hero.inner_text(), "maintenant (11 h, 14°) : visite rapide")
     verif("Un peu frais : visite courte" in hero.inner_text(), "le verdict dit pourquoi")
     verif("aujourd’hui de 12 h à 14 h" in hero.inner_text(), "prochain créneau favorable : la plage d’aujourd’hui, comme le bouton")
-    verif("Tu peux ouvrir" in page.locator(".head h1").inner_text() and "entre 12 h et 14 h" in page.locator(".head h1").inner_text(), "phrase du jour : la plage bonne, pas tout de 11 h à 15 h")
+    verif("Tu peux ouvrir" in entete(page) and "entre 12 h et 14 h" in entete(page), "phrase du jour : la plage bonne, pas tout de 11 h à 15 h")
 
     js = page.locator(".mt-jour")
     verif(js.count() == 5 and "2 h pour ouvrir" in js.nth(0).inner_text() and "Pas de créneau" in js.nth(1).inner_text() and "6 h pour ouvrir" in js.nth(2).inner_text(), "jours : heures favorables comptées")
