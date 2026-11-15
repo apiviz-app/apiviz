@@ -54,6 +54,8 @@ export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
     const ajoute = (niveau, type, texte) => raisons.push({ niveau, type, texte });
     if (orpheline) ajoute("urg", "orpheline", "Orpheline");
     if (r.etat === "Critique") ajoute("urg", "critique", "État critique");
+    // v5.43 (migration 023) : cellules royales operculées à la dernière visite, repère d'essaimage.
+    if (der?.cellules_royales === "Operculées") ajoute("urg", "essaimage", "Essaimage : cellules royales operculées");
     if (taux !== null && taux >= seuil) ajoute("urg", "varroa", `Varroa ${n(taux, 1)} % (seuil ${n(seuil, 1)} %)`);
     else if (taux !== null && taux >= seuil * 0.66) ajoute("watch", "varroa", `Varroa ${n(taux, 1)} % : proche du seuil`);
     if (r.etat === "À surveiller") ajoute("watch", "surveiller", "État à surveiller");
