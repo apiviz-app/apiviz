@@ -5,6 +5,22 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.42 · à publier en recette · correctifs bloquants de l'audit du 14 nov. 2026
+Aucune migration. Audit « ergonomie et uniformisation » (canvas du 14 nov. 2026), étape 1.
+
+1. **Rucher d'exemple débloqué** : « Voir un rucher d'exemple » restait sur « Bienvenue ! Comment tu t'appelles ? » ;
+   « Continuer » répondait « rien n'est enregistré » sans avancer (l'écriture du profil est refusée en démo). La démo
+   saute maintenant l'inscription (prénom d'exemple) et ouvre directement l'accueil.
+2. **Fiche ruche** : le bouton « Visite complète » était invisible (texte blanc sur la barre claire, style fait pour
+   un fond sapin). Il reprend le style d'un bouton normal.
+
+Technique : `profil.js` (`exemple()`, appelé par `demarrage.js` au lancement de la démo), `visites/express.js`.
+Test : bout en bout `etapes_dx` (nouveau, 4 vérifications).
+
+### À vérifier
+- Déconnecté, « Voir un rucher d'exemple » : l'accueil s'ouvre tout de suite, bandeau « Rucher d'exemple ».
+- Fiche d'une ruche déjà visitée : « Visite express » et « Visite complète » se lisent tous les deux.
+
 ## v5.41 · à publier en recette · listes de choix : puces, liste sous le champ, feuille de choix
 Aucune migration. Maquettes du 15 nov. 2026, « mélange recommandé » validé par Pierre-Louis.
 

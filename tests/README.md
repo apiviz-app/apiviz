@@ -34,6 +34,9 @@ Scénario v5.37, revu en v5.40 : `etapes_tb` (Ruchers : liste rangée par rucher
 raccourcis et feuille « Filtrer et trier », regroupement, appui long et visite groupée, alvéoles, tableau avec colonne
 fixe et synthèse en bas, version ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
 
+Scénario v5.42 : `etapes_dx` (rucher d'exemple sans inscription, « Visite complète » lisible sur la fiche ruche).
+Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 

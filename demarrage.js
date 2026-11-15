@@ -225,6 +225,7 @@ const DM = (() => {
     sb.rpc = async () => ({ data: null, error: REFUS });
     S.session = S.session || { user: { id: "exemple", email: "exemple@apidoo.fr" } };
     S.member = true; S.route = "dash";
+    window.PF?.exemple?.(); // pas d'inscription en mode exemple (v5.42)
     await window.loadAll(); render();
     document.body.insertAdjacentHTML("afterbegin", '<div class="dm-exemple"><span>Rucher d’exemple, rien n’est enregistré</span><button type="button" data-act="dmsortie">Créer le mien</button></div>');
     document.addEventListener("submit", (e) => { e.preventDefault(); e.stopImmediatePropagation(); toast(REFUS.message); document.getElementById("sheet")?.close?.(); }, true);
