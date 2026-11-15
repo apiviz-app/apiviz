@@ -43,7 +43,7 @@ const AL = (() => {
     document.querySelectorAll('.side .brand img').forEach((i) => { i.src = "logo-apiviz.svg"; });
     const r = RETOURS[S.route], lien = document.querySelector(".u-retour");
     if (r && lien) { lien.dataset.v = r[0]; lien.textContent = "‹ " + r[1]; }
-    if (S.route === "varroa") lienSante();
+    // Liens Registre / Déclaration retirés de Santé en v5.43 : ils sont dans le Menu (Administration).
   });
   function lienSante() {
     const an = new Date().getFullYear();

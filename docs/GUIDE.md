@@ -1,6 +1,6 @@
 # Guide d'utilisation (v5)
 
-Mis à jour le 6 nov. 2026 pour la v5.17 (IT-03). Les points marqués *(v5.16)* ou *(v5.17)* arrivent avec ces versions ;
+Mis à jour le 15 nov. 2026 pour la v5.44 (gabarit commun et rationalisation des écrans) ; avant : 6 nov. 2026, v5.17 (IT-03). Les points marqués *(v5.16)* ou *(v5.17)* arrivent avec ces versions ;
 la production publie la v5.14 tant qu'elles ne sont pas validées en recette.
 
 L'organisation ci-dessous est **gelée** (doc `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §2) : une rubrique ne change de
@@ -8,11 +8,16 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Se repérer
 
-- **Six catégories** *(v5.32)* : Au quotidien, Ruchers, Miel et ventes, Finances, Administration, Équipe et compte.
-  Sur ordinateur, elles sont toujours visibles dans le menu de gauche, avec **Nouvelle visite** et **API** en tête
-  *(v5.35)* ; le menu garde sa position quand on change d'écran. Sur téléphone, la barre
-  du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet par la droite avec
-  toutes les catégories. Dans un écran, le nom de la catégorie au-dessus du titre rouvre ce volet.
+- **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Miel, Agenda, Finances, Matériel, Registre et déclaration,
+  Réglages. Sur ordinateur, ces 8 entrées sont toujours visibles à gauche, avec **Nouvelle visite** et **API** en tête.
+  Sur téléphone, la barre du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet
+  avec la recherche et les 5 autres entrées. Un sujet qui a plusieurs parties les range en **onglets** sous le titre
+  (Finances : Bilan, Dépenses, Budget, Associés ; Matériel : Stock, Courses, Fournisseurs ; Registre et déclaration ;
+  Réglages : Réglages, Équipe).
+- **Chaque écran se lit de la même façon** *(v5.43)* : en haut à gauche « ‹ » pour revenir (seulement dans un détail :
+  une ruche, un lot, la météo…), le titre et une phrase de résumé ; en haut à droite **⋯** pour les actions moins
+  courantes (exporter, fichier comptable, seuils…). Le bouton de l'action principale est en bas, juste au-dessus du menu
+  (à droite du titre sur ordinateur). Les filtres et l'année s'ouvrent dans une fenêtre qui monte du bas.
 - **API**, le compagnon : il ouvre la saisie et la recherche. Il saute quand une saisie est enregistrée et s'endort
   quand le réseau part. Il n'est pas encore relié à une intelligence artificielle.
 - **Recherche** : la loupe sur téléphone, le bandeau en haut de l'écran sur ordinateur, ou Ctrl K. Elle trouve ruches, clients, ventes, matériel, dépenses et
@@ -84,11 +89,12 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Facture** : ouvrir une vente, « Créer la facture ». Le numéro (`F-année-0001`) est donné une fois et ne change
   plus ; Imprimer ou PDF. Adresse, code postal, ville et SIRET du client figurent sur la facture *(v5.16)*.
 
-## Finances et Administration *(v5.32, anciennement Gestion)*
+## Finances, Matériel, Registre et déclaration *(v5.44, anciennement Gestion, puis Finances et Administration)*
 
-- **Finances** : Bilan, Dépenses et achats, Budget et prévisions, **Entre associés** (qui a avancé quoi, et qui doit
-  combien à qui pour être à égalité ; un écran à part depuis la v5.32).
-- **Administration** : Matériel, Fournisseurs, Registre d'élevage, Déclaration.
+- **Finances** *(v5.44 : un écran, quatre onglets)* : Bilan, Dépenses, Budget, **Associés** (qui a avancé quoi, et qui
+  doit combien à qui pour être à égalité).
+- **Matériel** *(v5.44)* : onglets Stock, Courses (liste de courses), Fournisseurs ; l'inventaire est dans ⋯.
+- **Registre et déclaration** *(v5.44)* : onglets Registre et Déclaration.
 - L'ancien écran en blocs (Bilan, Dépenses, Budget, Stock matériel, Fournisseurs, Registre, Équipe) n'est plus dans les
   menus.
 - **Matériel** *(v5.30, refait en v5.38)* : en **tableau** (article, stock, seuil, prix, fournisseur) ou en **liste**,
@@ -125,7 +131,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   ton compte), puis quelques questions facultatives (âge, sexe, code postal, ancienneté, comment tu as connu Apiviz) pour
   des statistiques d'ensemble. Tout se change ou s'efface dans Réglages › Mon profil, qui permet aussi de ne pas compter
   dans les statistiques et de télécharger ses données.
-- **Rappels** : la cloche sur téléphone, « Rappels » dans le menu sur ordinateur ; sujets à couper, « Tout marquer comme vu ».
+- **Rappels** *(v5.44)* : la cloche ouvre une fenêtre avec ce qui demande ton attention (« Tout marquer comme vu ») ;
+  « Réglages des rappels » (ou Réglages › Rappels) pour les notifications et les sujets à couper.
 
 ## Ton de l'application
 

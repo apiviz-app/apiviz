@@ -24,6 +24,10 @@
   --ressort:cubic-bezier(.34,1.56,.64,1);
   --shadow:0 1px 2px rgba(30,43,36,.05),0 10px 28px -20px rgba(30,43,36,.28);
   --radius:14px;
+  /* v5.43 (gabarit commun) : 4 rayons, 6 tailles de texte (jamais moins de 12 px), cible touchable de 44 px. */
+  --r-s:10px; --r-m:14px; --r-l:20px; --r-pill:999px;
+  --t-xs:12px; --t-s:13px; --t-m:15px; --t-l:17px; --t-xl:24px; --t-xxl:30px;
+  --cible:44px;
   --goodbg:#DFEDE4;
   --watchbg:#FBEFC9;
   --critbg:#F8E3E0;

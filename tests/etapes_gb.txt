@@ -1,0 +1,69 @@
+    # v5.43 — Gabarit d'écran commun (audit du 14 nov. 2026) : titre-nom, retour unique, un bouton principal en bas,
+    # ⋯ et feuille « Actions », puce d'année, seuil varroa en feuille, filtres de l'agenda en feuille, textes ≥ 12 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    def ecran(route):
+        page.evaluate(f"ACT.go('{route}')"); page.wait_for_timeout(350)
+        return page.evaluate("""() => { const v = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+          const h = document.querySelector('.wrap > .head h1');
+          return { titre: h ? h.textContent.trim() : '', retour: [...document.querySelectorAll('.wrap .g-retour')].filter(v).map((b) => b.textContent.trim()),
+            anciens: document.querySelectorAll('.wrap .er-ariane, .wrap .nl-categorie').length,
+            principaux: [...document.querySelectorAll('.wrap .btn.main, .wrap .btn.honey')].filter(v).map((b) => b.textContent.trim()),
+            barre: [...document.querySelectorAll('.wrap .g-barre > .btn')].filter(v).map((b) => b.textContent.trim()),
+            plus: !!document.querySelector('.wrap > .head .g-plus'),
+            petits: [...document.querySelectorAll('.shell main *')].filter((el) => v(el) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(el).fontSize) < 12).map((el) => el.textContent.trim().slice(0, 20)).slice(0, 5) }; }""")
+    # Dépenses : titre-nom, un seul « Ajouter une dépense », fichier comptable dans ⋯, puce d'année
+    e = ecran("compta")
+    verif(e["titre"] in ("Dépenses", "Finances") and not e["retour"] and e["anciens"] == 0, "Dépenses : titre court (Finances depuis la v5.44), pas de fil d'Ariane ni de retour (" + str(e) + ")")
+    verif(e["barre"] == ["Ajouter une dépense"] and e["principaux"] == ["Ajouter une dépense"], "Dépenses : un seul bouton principal, en bas (" + str(e["principaux"]) + ")")
+    verif(page.locator(".wrap .g-annee").count() == 1 and not page.locator("label.yr").first.is_visible(), "Dépenses : puce d'année à la place de la liste")
+    if cap: page.screenshot(path=cap + "/gb-depenses-390.png")
+    page.locator(".wrap .g-annee").click(); page.wait_for_selector("#sheet[open] .g-puces .g-puce")
+    verif(page.locator("#sheet .g-puce.on").count() == 1, "feuille Année : l'année choisie est allumée")
+    page.locator("#sheet [data-act=closesheet]").first.click()
+    page.locator(".wrap > .head .g-plus").click(); page.wait_for_selector("#sheet[open] .g-action")
+    verif("Fichier comptable" in page.locator("#sheet .g-actions").inner_text(), "Dépenses : « Fichier comptable » dans ⋯")
+    page.locator("#sheet [data-act=closesheet]").first.click()
+    verif(not e["petits"], "Dépenses : aucun texte sous 12 px " + str(e["petits"]))
+    # Santé : le seuil n'est plus dans l'écran, il s'ouvre par ⋯
+    e = ecran("varroa")
+    verif(e["titre"] == "Santé" and page.locator("form[data-form=v3seuil]").count() == 0, "Santé : titre « Santé », plus de formulaire de seuil dans l'écran")
+    page.locator(".wrap > .head .g-plus").click(); page.wait_for_selector("#sheet[open] .g-action")
+    page.locator("#sheet .g-action", has_text="Seuil d’alerte varroa").click()
+    page.wait_for_selector("#sheet[open] input[name=s]")
+    verif(page.locator("#sheet h2").inner_text() == "Seuil d’alerte varroa", "Santé : ⋯ › Seuil d'alerte ouvre la feuille de saisie")
+    page.locator("#sheet [data-act=closesheet]").first.click()
+    if cap: page.screenshot(path=cap + "/gb-sante-390.png")
+    # Fiche ruche : un bouton principal et un bouton +
+    page.evaluate("S.ruche = S.d.ruches[0].id; ACT.go('ruche')"); page.wait_for_selector(".n4-rbarre")
+    bs = page.evaluate("[...document.querySelectorAll('.n4-rbarre > button')].map((b) => b.textContent.trim())")
+    verif(len(bs) == 2 and bs[1] == "+", "fiche ruche : bouton principal + bouton « + » (" + str(bs) + ")")
+    verif(page.locator(".wrap .g-retour").count() == 1, "fiche ruche : un seul retour")
+    page.locator(".n4-rbarre .g-plus-bas").click(); page.wait_for_selector("#sheet[open] .g-action")
+    verif("Tâche" in page.locator("#sheet .g-actions").inner_text(), "fiche ruche : + › Tâche")
+    page.locator("#sheet [data-act=closesheet]").first.click()
+    if cap: page.screenshot(path=cap + "/gb-ruche-390.png")
+    # Agenda : filtres dans une feuille, plus de rangée qui déborde
+    page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-case")
+    verif(page.locator(".ag-filtres").count() == 0 and page.locator("[data-cp=agfeuille]").count() == 1, "Agenda : bouton Filtrer, plus de rangée de puces")
+    page.locator("[data-cp=agfeuille]").click(); page.wait_for_selector("#sheet[open] .ag-filtre")
+    page.locator("#sheet .ag-filtre").first.click(); page.wait_for_timeout(150)
+    verif(page.locator("[data-cp=agfeuille] .g-n").count() == 1, "Agenda : un filtre masqué se voit sur le bouton")
+    page.locator("#sheet .ag-filtre").first.click(); page.locator("#sheet .btn.main").click()
+    if cap: page.screenshot(path=cap + "/gb-agenda-390.png")
+    # Matériel : une phrase devient résumé, le titre reste « Matériel »
+    e = ecran("materiel")
+    verif(e["titre"] == "Matériel" and len(e["principaux"]) <= 1, "Matériel : titre « Matériel », un seul bouton principal (" + str(e) + ")")
+    if cap: page.screenshot(path=cap + "/gb-materiel-390.png")
+    # Écran de 2e niveau : « ‹ Parent »
+    e = ecran("activite")
+    verif(e["retour"] == ["Accueil"], "Activité récente (2e niveau) : retour « ‹ Accueil » (" + str(e["retour"]) + ")")
+    # Ordinateur : bouton principal dans l'en-tête, pas de barre du bas
+    page.set_viewport_size({"width": 1280, "height": 900})
+    e = ecran("compta")
+    verif(not e["barre"] and e["principaux"] == ["Ajouter une dépense"], "ordinateur : bouton principal en haut, pas de barre en double (" + str(e) + ")")
+    if cap: page.screenshot(path=cap + "/gb-depenses-1280.png")
+    page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

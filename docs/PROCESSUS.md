@@ -68,6 +68,16 @@ Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations q
 - **Essai sans rien écrire** : `BASE="…" node scripts/appliquer-migrations.mjs --simuler`.
 - Tests : `tests/sql/test_appliquer.mjs`.
 
+## Avant d'ouvrir une PR d'écran (gabarit commun, v5.43)
+
+À cocher dans la description de la PR quand elle touche un écran :
+1. Le squelette est celui du gabarit (`docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §5) : titre = un nom, retour seulement
+   sous le 1er niveau, ⋯ pour les actions rares.
+2. Filtres, tri et période passent par une feuille du bas, pas par des rangées de boutons dans l'écran.
+3. Un seul bouton principal (`main` ou `honey`) ; pas de second « Ajouter » ailleurs dans l'écran.
+4. Textes de 12 px minimum, cibles de 44 px, couleurs et rayons par les jetons (`styles/jetons.css`).
+5. Captures jointes : téléphone (390 px) et ordinateur (1 280 px).
+
 ## Règles de contenu
 
 - **Arborescence gelée** (AP-FEAT-113) : la place des rubriques et des écrans est celle de
