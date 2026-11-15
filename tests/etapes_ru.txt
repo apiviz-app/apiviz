@@ -59,8 +59,8 @@
     rv = next(x for x in DATA["ruchers"] if x["id"] == RV)
     verif(rv["acces"] == "Portail vert, refermer derrière soi" and rv["capacite"] == 10 and rv["proprietaire_tel"] == "06 12 34 56 78", "infos enregistrées")
     verif("Accès : Portail vert" in page.locator("#rcInfos summary").inner_text(), "accès lisible sans ouvrir la section")
-    verif(page.locator("a[href='tel:0612345678']").count() >= 1, "bouton d'appel du propriétaire")
-    verif(page.locator("a.u-lienbtn[href*='destination=47.32,5.04']").count() >= 1, "itinéraire vers le rucher")
+    verif(existe(page, "a[href='tel:0612345678']"), "bouton d'appel du propriétaire (à l'écran ou dans ⋯, v5.43)")
+    verif(existe(page, "a.u-lienbtn[href*='destination=47.32,5.04']"), "itinéraire vers le rucher (à l'écran ou dans ⋯, v5.43)")
     captures("fiche")
 
     # E. Archiver : refusé avec des colonies, accepté pour un rucher vide ; il reste consultable.
