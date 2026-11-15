@@ -6,139 +6,128 @@ const ES = (() => {
   const VUES = {};
   Object.assign(GROUP, { meteo: "ruches", rappels: "dash", lot: "miel", facture: "clients", saison: "dash" });
   const jourLong = (t) => new Date(t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long" });
-  const jourCourt = (t) => new Date(t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
   const retour = (act, v, texte) => document.querySelector(".wrap")?.insertAdjacentHTML("afterbegin", `<button type="button" class="link u-retour" data-act="${act}" data-v="${esc(v)}">${esc(texte)}</button>`);
   const phrase = (texte) => { const h = document.querySelector(".wrap .head h1"); if (h) { h.textContent = texte; h.closest(".head").classList.add("g-tete"); } };
 
-  // ---------- 1. Météo heure par heure ----------
+  // ---------- 1. Météo du rucher (v5.45, piste A du 15 nov. 2026) ----------
+  // Un seul écran : maintenant, les 5 jours (mini-frise de la plage de visite), le verdict du jour choisi, ses heures en
+  // lignes (la valeur qui empêche d'ouvrir est signalée), un bouton principal en bas. Toucher un jour ou une heure ne
+  // met à jour que la zone du jour et le bouton : la page ne bouge pas (avant : tout l'écran était redessiné).
   ACT.ermeteo = (k) => { S.meteoRucher = k; S.meteoJour = null; S.meteoHeure = null; go("meteo"); };
-  ACT.ermjour = (t) => { S.meteoJour = t; S.meteoHeure = null; render(); };
-  const ETAT = { 2: ["ok", "", "Oui"], 1: ["court", "w", "Rapide"], 0: ["", "non", "Non"] };
-  const etatHtml = (n) => (n == null ? "–" : `<span class="eh-etat"><i class="ab-mini ${ETAT[n][1]}"></i>${ETAT[n][2]}</span>`);
-  // Phrase du jour : la première plage d'heures bonnes à venir, sinon la première plage rapide.
-  function phraseJour(j) {
-    const nom = jourLong(j.t), bon = j.plages.find((p) => p.n === 2), vite = j.plages.find((p) => p.n === 1);
-    if (bon) return `Tu peux ouvrir ${nom} entre ${bon.debut} h et ${bon.fin} h.`;
-    if (vite) return `Visite rapide possible ${nom} entre ${vite.debut} h et ${vite.fin} h.`;
-    return `Pas de créneau pour ouvrir ${nom}.`;
-  }
   const TON = { 2: "bon", 1: "rapide", 0: "non" };
-  const libelleNiveau = (n) => (n === 2 ? "On peut ouvrir" : n === 1 ? "Visite rapide" : "Mieux vaut attendre");
+  const PUCE = { 2: "Ouvrir", 1: "Rapide", 0: "Attendre" };
+  const donnees = () => {
+    const k = S.meteoRucher, rs = U.ruchers().find(([x]) => x === k)?.[1] || [];
+    return { k, rs, nom: U.nomRucher(k), m: MT.parHeure(k, rs) };
+  };
+  const quandDit = (t, auj) => {
+    const demain = new Date(auj + "T12:00:00"); demain.setDate(demain.getDate() + 1);
+    return t === auj ? "aujourd’hui" : t === demain.toISOString().slice(0, 10) ? "demain" : jourLong(t);
+  };
+  const nomPastille = (t, auj) => (t === auj ? "Auj." : MT.nomJour(t).replace(/^./, (x) => x.toUpperCase()));
 
-  // Détail d'une heure : ce que l'apiculteur lit en touchant une case de la frise.
-  function detailHeure(x) {
-    if (!x) return "";
-    const n = x.n, ton = n == null ? "hors" : TON[n];
-    const titre = n == null ? "Hors des heures de visite" : libelleNiveau(n);
-    const pourquoi = n == null ? `On cherche un créneau entre ${MT.SEUILS.debut} h et ${MT.SEUILS.fin} h.` : x.raison || "Chaud, sec et calme : les butineuses sont dehors.";
-    const val = (t, v) => `<span><small>${t}</small><b>${v}</b></span>`;
-    return `<div class="mt-detail ${ton}" aria-live="polite">
-      <div class="mt-detail-h">${MT.icone(x.code)}<b>${x.h} h</b><strong>${esc(titre)}</strong></div>
-      <p>${esc(pourquoi)}</p>
-      <div class="mt-detail-v">${val("Température", `${x.temp}°`)}${val("Pluie", `${x.risque} %${x.pluie > 0 ? ` · ${String(x.pluie).replace(".", ",")} mm` : ""}`)}${val("Vent", `${x.vent} km/h`)}${x.rafales != null ? val("Rafales", `${x.rafales} km/h`) : ""}${x.hum != null ? val("Humidité", `${x.hum} %`) : ""}</div>
-      ${n > 0 && !(x.passee && !x.maintenant) ? `<button type="button" class="btn mt-prevoir" data-act="ervisite" data-v="${S.meteoJour}|${x.h}">Prévoir une visite à ${x.h} h</button>` : ""}
-    </div>`;
+  // Une pastille de jour : nom, ciel, maximum, une case par heure de la plage de visite, nombre d'heures bonnes.
+  function pastille(x, m) {
+    const hs = x.heures.filter((h) => h.n != null), b = x.bonnes, r = x.rapides;
+    const lib = b ? `${b} h` : r ? "rapide" : "non";
+    const dit = b ? `${b} h pour ouvrir` : r ? `${r} h de visite rapide` : "pas de créneau";
+    return `<button type="button" class="mj-jour ${b ? "bon" : r ? "rapide" : "non"}${x.t === S.meteoJour ? " on" : ""}" data-act="ermjour" data-v="${x.t}" aria-pressed="${x.t === S.meteoJour}" aria-label="${esc(`${quandDit(x.t, m.auj)}, ${x.max}°, ${dit}`)}">
+      <span class="mj-jour-nom">${esc(nomPastille(x.t, m.auj))}</span>${MT.icone(x.code)}<b>${x.max}°</b>
+      <span class="mj-mini" aria-hidden="true" style="--n:${hs.length || 1}">${hs.map((h) => `<i class="n${h.n}${h.passee && !h.maintenant ? " passee" : ""}"></i>`).join("")}</span>
+      <small>${lib}</small></button>`;
   }
 
-  // Frise de la journée, 8 h à 20 h : bande de couleur par heure, courbe de température, barres de pluie, vent.
-  function frise(j) {
-    const hs = j.heures, n = hs.length;
-    if (!n) return "";
-    const temps = hs.map((x) => x.temp), tmin = Math.min(...temps) - 2, tmax = Math.max(...temps) + 2;
-    const y = (t) => 52 - ((t - tmin) / Math.max(1, tmax - tmin)) * 32; // 20 à 52 px : l'étiquette tient au-dessus
-    const pts = hs.map((x, i) => `${(i + 0.5) * 10},${y(x.temp).toFixed(1)}`).join(" ");
-    const sel = S.meteoHeure;
-    const cases = hs.map((x, i) => {
-      const ton = x.n == null ? "hors" : TON[x.n];
-      const lib = `${x.h} h, ${x.temp}°, pluie ${x.risque} %, vent ${x.vent} km/h : ${x.n == null ? "hors des heures de visite" : libelleNiveau(x.n).toLowerCase()}${x.raison ? `, ${x.raison.toLowerCase()}` : ""}`;
-      return `<button type="button" class="mt-h ${ton}${x.passee && !x.maintenant ? " passee" : ""}${x.maintenant ? " now" : ""}${x.h === sel ? " on" : ""}" style="--i:${i};--y:${y(x.temp).toFixed(1)}" data-act="ermheure" data-v="${x.h}" aria-pressed="${x.h === sel}" aria-label="${esc(lib)}">
-        <span class="mt-t">${x.temp}°</span><span class="mt-bande"></span>
-        <span class="mt-pluie" style="--p:${x.risque}"><i></i></span><span class="mt-vent${x.vent >= MT.SEUILS.vent ? " fort" : ""}">${x.vent}</span><span class="mt-heure">${x.h}<span class="mt-hu"> h</span></span></button>`;
-    }).join("");
-    return `<section class="mt-frise" aria-label="La journée heure par heure">
-      <div class="mt-legende" aria-hidden="true"><span class="bon">Ouvrir</span><span class="rapide">Rapide</span><span class="non">Attendre</span><span class="hors">Hors visite</span></div>
-      <div class="mt-grille" style="--n:${n}">
-        <svg class="mt-courbe" viewBox="0 0 ${n * 10} 56" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>
-        ${cases}
-      </div>
-      <div class="mt-axe" aria-hidden="true"><span><i class="mt-axe-pluie"></i>Risque de pluie</span><span>Vent en km/h</span><span>Heures</span></div>
-    </section>`;
+  // Une heure : ciel, température, risque de pluie, vent ; la valeur qui empêche d'ouvrir est en couleur (« un peu
+  // frais » seulement quand c'est lui qui limite à une visite rapide, pas sous la pluie).
+  function ligneHeure(x, choisie) {
+    const s = MT.SEUILS, c = Regles.meteo.causes(s, x.temp, x.risque, x.vent, x.pluie);
+    const passee = x.passee && !x.maintenant, hors = x.n == null, ouvrable = !hors && !passee && x.n > 0;
+    const puce = passee ? "Passée" : hors ? "Hors visite" : PUCE[x.n];
+    const cl = hors ? "hors" : passee ? "passee" : TON[x.n];
+    const signale = !hors && !passee;
+    const rafales = signale && c.vent && x.rafales != null ? `<small>raf. ${x.rafales}</small>` : "";
+    const lib = `${x.h} h${x.maintenant ? " (maintenant)" : ""}, ${x.temp}°, pluie ${x.risque} %, vent ${x.vent} km/h${x.rafales != null ? `, rafales ${x.rafales} km/h` : ""}${x.hum != null ? `, humidité ${x.hum} %` : ""} : ${puce.toLowerCase()}${signale && x.raison ? `, ${x.raison.toLowerCase()}` : ""}`;
+    const contenu = `<span class="mj-h">${x.h} h${x.maintenant ? "<em>maint.</em>" : ""}</span>${MT.icone(x.code)}
+      <span class="mj-t${signale && (c.temp === 2 || (c.temp === 1 && x.n === 1)) ? ` c${c.temp}` : ""}">${x.temp}°</span>
+      <span class="mj-p${signale && c.pluie ? " fort" : ""}">${x.risque} %</span>
+      <span class="mj-v${signale && c.vent ? " fort" : ""}">${x.vent} km/h${rafales}</span>
+      <span class="mj-puce ${cl}">${puce}</span>`;
+    return ouvrable
+      ? `<button type="button" class="mj-ligne ${cl}${x.maintenant ? " now" : ""}${choisie ? " on" : ""}" data-act="ermheure" data-v="${x.h}" aria-pressed="${choisie}" aria-label="${esc(lib)}">${contenu}</button>`
+      : `<div class="mj-ligne ${cl}${x.maintenant ? " now" : ""}" role="listitem" aria-label="${esc(lib)}">${contenu}</div>`;
   }
+
+  // Zone du jour choisi : verdict, heures, bouton « Voir de 8 h à 20 h ». Seule partie redessinée au toucher.
+  function zoneJour(m) {
+    const s = MT.SEUILS, j = m.jours.find((x) => x.t === S.meteoJour) || m.jours[0];
+    const r = Regles.meteo.resumeJour(s, m.jours, j.t, m.auj);
+    const ouvrables = j.heures.filter((x) => x.n > 0 && !(x.passee && !x.maintenant));
+    if (!ouvrables.some((x) => x.h === S.meteoHeure)) S.meteoHeure = r.heure;
+    const hs = S.meteoTout ? j.heures : j.heures.filter((x) => x.n != null);
+    const sous = r.sous + (r.autre && r.ton < 2 ? ` Meilleur jour : ${quandDit(r.autre.t, m.auj)}.` : "");
+    return `<section class="mj-verdict ${TON[r.ton]}" aria-live="polite">
+        <span class="mj-quand">${esc(quandDit(j.t, m.auj))}</span><strong>${esc(r.titre)}</strong><span>${esc(sous)}</span></section>
+      <section class="mj-heures" aria-label="Heures de ${esc(quandDit(j.t, m.auj))}">
+        <div class="mj-entete" aria-hidden="true"><span>Heure</span><span></span><span>Temp.</span><span>Pluie</span><span>Vent</span><span>Ouvrir ?</span></div>
+        <div role="list">${hs.map((x) => ligneHeure(x, x.h === S.meteoHeure)).join("")}</div>
+      </section>
+      <div class="mj-pied"><span>Recherche entre ${s.debut} h et ${s.fin} h</span>
+        <button type="button" class="link" data-act="ermtout">${S.meteoTout ? `Seulement ${s.debut} h – ${s.fin} h` : "Voir de 8 h à 20 h"}</button></div>`;
+  }
+
+  // Bouton principal, toujours présent : prévoir à l'heure choisie, sinon aller au meilleur jour.
+  function boutonJour(m) {
+    const j = m.jours.find((x) => x.t === S.meteoJour) || m.jours[0];
+    const r = Regles.meteo.resumeJour(MT.SEUILS, m.jours, j.t, m.auj);
+    const h = j.heures.find((x) => x.h === S.meteoHeure);
+    if (h) return `<button type="button" class="btn main" data-act="ervisite" data-v="${j.t}|${h.h}">Prévoir une visite${h.n === 1 ? " rapide" : ""} ${esc(quandDit(j.t, m.auj))} à ${h.h} h</button>`;
+    const autre = r.autre || m.jours.find((x) => x.t !== j.t && x.rapides > 0);
+    if (autre) return `<button type="button" class="btn" data-act="ermjour" data-v="${autre.t}">Voir ${esc(quandDit(autre.t, m.auj))} : ${autre.bonnes ? `${autre.bonnes} h pour ouvrir` : "visite rapide possible"}</button>`;
+    return `<button type="button" class="btn" disabled>Aucun créneau ces ${m.jours.length} jours</button>`;
+  }
+
+  // Met à jour les pastilles, la zone du jour et le bouton, sans redessiner l'écran.
+  function majJour() {
+    const { m } = donnees(), z = document.getElementById("mjJour"), b = document.getElementById("mjBouton");
+    if (!m?.jours || !z || !b) return render();
+    document.querySelectorAll(".mj-jour").forEach((x) => { const on = x.dataset.v === S.meteoJour; x.classList.toggle("on", on); x.setAttribute("aria-pressed", on); });
+    z.innerHTML = zoneJour(m);
+    b.innerHTML = boutonJour(m);
+  }
+  ACT.ermjour = (t) => { S.meteoJour = t; S.meteoHeure = null; majJour(); };
+  ACT.ermheure = (h) => { S.meteoHeure = Number(h); majJour(); };
+  ACT.ermtout = () => { S.meteoTout = !S.meteoTout; majJour(); };
 
   VUES.meteo = function () {
-    const k = S.meteoRucher, rs = U.ruchers().find(([x]) => x === k)?.[1] || [], nom = U.nomRucher(k), m = MT.parHeure(k, rs);
+    const { k, nom, m } = donnees();
     const fin = () => retour("alrucher", k, nom);
     if (!m || m.sansLieu) {
-      shell("Météo", nom, "", m ? '<p class="small">Place ce rucher sur la carte pour voir sa météo.</p><button type="button" class="btn" data-act="go" data-v="carte">Ouvrir la carte</button>'
+      shell("Météo", `Rucher ${nom}`, "", m ? '<p class="small">Place ce rucher sur la carte pour voir sa météo.</p><button type="button" class="btn" data-act="go" data-v="carte">Ouvrir la carte</button>'
         : '<div class="mt-attente" aria-busy="true"><i></i><i></i><i></i><p class="small">Météo en cours de chargement…</p></div>');
       return fin();
     }
     if (!m.jours.some((j) => j.t === S.meteoJour)) S.meteoJour = m.creneau?.jour || m.auj;
-    const j = m.jours.find((x) => x.t === S.meteoJour) || m.jours[0];
-    const avenir = j.heures.filter((x) => !x.passee || x.maintenant);
-    const meilleur = avenir.find((x) => x.n === 2) || avenir.find((x) => x.n === 1);
-    if (!j.heures.some((x) => x.h === S.meteoHeure)) S.meteoHeure = (meilleur || avenir[0] || j.heures[0])?.h;
-    const action = meilleur ? `<button type="button" class="btn main" data-act="ervisite" data-v="${j.t}|${meilleur.h}">Prévoir une visite ${esc(jourLong(j.t))} à ${meilleur.h} h</button>` : "";
-
-    // 1. Maintenant : un verdict franc, et pourquoi.
     const now = m.maintenant, nNow = now?.n;
     const tonNow = nNow == null ? (m.verdict.startsWith("Bon") ? "bon" : m.verdict.startsWith("Visite") ? "rapide" : "non") : TON[nNow];
-    const pourquoi = now?.raison || (nNow === 2 ? "Chaud, sec et calme." : "");
-    // Prochaine plage, sur les 3 jours (comme le créneau de l'accueil) : d'abord une bonne, sinon une rapide.
-    const trois = m.jours.slice(0, 3), cherche = (n) => trois.map((x) => ({ x, p: x.plages.find((q) => q.n === n) })).find((o) => o.p);
-    const pro = cherche(2) || cherche(1);
-    const prochaine = pro ? `Prochain créneau ${pro.p.n === 2 ? "favorable" : "pour une visite rapide"} : <b>${pro.x.t === m.auj ? "aujourd’hui" : esc(jourLong(pro.x.t))} de ${pro.p.debut} h à ${pro.p.fin} h</b>` : "Aucun créneau pour ouvrir ces 3 jours.";
-    const hero = `<section class="mt-hero ${tonNow}">
-      <div class="mt-hero-ciel">${MT.icone(m.code)}<b>${m.temp}°</b></div>
-      <div class="mt-hero-txt"><small>Maintenant au rucher</small><strong>${esc(m.verdict)}</strong>
-        <span>${pourquoi ? `${esc(pourquoi)} · ` : ""}Vent ${m.vent} km/h${now ? ` · pluie ${now.risque} %` : ""}</span></div>
-      <p class="mt-hero-suite">${prochaine}</p></section>`;
-
-    // 2. Les jours : combien d'heures favorables, en un coup d'œil.
-    const jours = `<div class="mt-jours" role="group" aria-label="Choisir un jour">${m.jours.map((x, i) => {
-      const tot = x.heures.filter((h) => h.n != null).length || 1, b = x.bonnes, r = x.rapides;
-      const lib = b ? `${b} h pour ouvrir` : r ? `${r} h rapide${r > 1 ? "s" : ""}` : "Pas de créneau";
-      return `<button type="button" class="mt-jour${x.t === j.t ? " on" : ""}${b ? " bon" : r ? " rapide" : ""}" style="--i:${i}" aria-pressed="${x.t === j.t}" data-act="ermjour" data-v="${x.t}">
-        <span class="mt-jour-nom">${i === 0 && x.t === m.auj ? "Auj." : esc(jourCourt(x.t))}</span>${MT.icone(x.code)}<b>${x.max}°</b>
-        <span class="mt-jauge" aria-hidden="true"><i style="width:${(b / tot) * 100}%"></i><i class="r" style="width:${(r / tot) * 100}%"></i></span><small>${lib}</small></button>`;
-    }).join("")}</div>`;
-
-    // 3. Les plages du jour choisi, chacune avec son bouton.
-    const plages = j.plages.length ? `<section class="mt-plages"><h2>Créneaux ${j.t === m.auj ? "d’aujourd’hui" : esc(jourLong(j.t))}</h2>${j.plages.map((p) => {
-      const hs = j.heures.filter((x) => x.h >= p.debut && x.h < p.fin), tm = Math.max(...hs.map((x) => x.temp)), vm = Math.max(...hs.map((x) => x.vent));
-      return `<div class="mt-plage ${TON[p.n]}"><span class="mt-plage-h"><b>${p.debut} h – ${p.fin} h</b><small>${p.n === 2 ? "Bonnes conditions" : "Visite courte"} · jusqu’à ${tm}° · vent ${vm} km/h</small></span>
-        <button type="button" class="btn" data-act="ervisite" data-v="${j.t}|${p.debut}">Prévoir</button></div>`;
-    }).join("")}</section>` : `<p class="mt-rien">Pas de créneau ${j.t === m.auj ? "aujourd’hui" : esc(jourLong(j.t))}. ${m.jours.find((x) => x.bonnes && x.t !== j.t) ? `Regarde <button type="button" class="link" data-act="ermjour" data-v="${m.jours.find((x) => x.bonnes && x.t !== j.t).t}">${esc(jourLong(m.jours.find((x) => x.bonnes && x.t !== j.t).t))}</button>.` : ""}</p>`;
-
-    // 4. Le tableau complet reste disponible, replié.
-    const ligne = (titre, f, cl = "") => `<tr><th scope="row">${titre}</th>${j.heures.map((h) => `<td class="${cl} ${h.n === 2 ? "ok" : h.n === 1 ? "court" : ""}">${f(h)}</td>`).join("")}</tr>`;
-    const tete = `<tr><th scope="col">Heure</th>${j.heures.map((h) => `<th scope="col">${h.h} h</th>`).join("")}</tr>`;
-    const ligneSi = (titre, cle, u) => (j.heures.some((h) => h[cle] != null) ? ligne(titre, (h) => (h[cle] == null ? "–" : `${h[cle]}${u}`)) : "");
-    const table = `<details class="mt-tout"><summary>Tout le détail heure par heure</summary><section class="eh-table"><table><thead>${tete}</thead><tbody>
-      ${ligne("Ciel", (h) => MT.icone(h.code))}${ligne("Température", (h) => `${h.temp}°`, "fort")}${ligne("Risque de pluie", (h) => `${h.risque} %`)}${ligne("Vent", (h) => h.vent)}${ligneSi("Rafales", "rafales", "")}${ligneSi("Humidité", "hum", " %")}${ligne("Ouvrir ?", (h) => etatHtml(h.n))}</tbody></table></section></details>`;
+    const pourquoi = now?.raison || (nNow === 2 ? "Chaud, sec et calme" : "");
+    const maintenant = `<section class="mj-now ${tonNow}" aria-label="Maintenant au rucher">${MT.icone(m.code)}<b>${m.temp}°</b>
+      <span><small>Maintenant</small><strong>${esc(m.verdict)}</strong><span>${pourquoi ? `${esc(pourquoi)} · ` : ""}vent ${m.vent} km/h${now ? ` · pluie ${now.risque} %` : ""}</span></span></section>`;
+    const jours = `<div class="mj-jours" role="group" aria-label="Choisir un jour" style="--n:${m.jours.length}">${m.jours.map((x) => pastille(x, m)).join("")}</div>`;
     const s = MT.SEUILS;
-    shell("Météo", `${nom}, ${new Date(j.t + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}`, action,
-      `<div class="mt">${hero}${jours}${frise(j)}<div id="mtDetail">${detailHeure(j.heures.find((x) => x.h === S.meteoHeure))}</div>${plages}${table}
-      <p class="small mt-seuils">On peut ouvrir à partir de ${s.ouvrir} °C (visite rapide dès ${s.rapide} °C), sans pluie, avec moins de ${s.vent} km/h de vent et moins de ${s.pluie} % de risque de pluie, entre ${s.debut} h et ${s.fin} h. <button type="button" class="link" data-act="errgmeteo">Régler ces seuils</button></p></div>`);
+    shell("Météo", "", "",
+      `<div class="mj">${maintenant}${jours}<div id="mjJour" class="mj-zone">${zoneJour(m)}</div>
+      <p class="small mj-seuils">On peut ouvrir à partir de ${s.ouvrir} °C (visite rapide dès ${s.rapide} °C), sans pluie, avec moins de ${s.vent} km/h de vent et moins de ${s.pluie} % de risque de pluie. <button type="button" class="link" data-act="errgmeteo">Régler ces seuils</button></p>
+      <div id="mjBouton" class="mj-barre">${boutonJour(m)}</div></div>`);
     fin();
-    phrase(phraseJour(j));
-  };
-  // Toucher une heure met à jour le détail sans tout redessiner (la frise ne rejoue pas son entrée).
-  ACT.ermheure = (h) => {
-    S.meteoHeure = Number(h);
-    const m = MT.parHeure(S.meteoRucher, U.ruchers().find(([x]) => x === S.meteoRucher)?.[1] || []);
-    const j = m?.jours?.find((x) => x.t === S.meteoJour);
-    document.querySelectorAll(".mt-h").forEach((b) => { const on = Number(b.dataset.v) === S.meteoHeure; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
-    const d = document.getElementById("mtDetail");
-    if (d && j) d.innerHTML = detailHeure(j.heures.find((x) => x.h === S.meteoHeure));
   };
   ACT.ervisite = (v) => {
     const [t, h] = String(v).includes("|") ? String(v).split("|") : [S.meteoJour, v];
     S.erPrefill = { titre: `Visite du rucher ${U.nomRucher(S.meteoRucher)} à ${h} h`, echeance: t };
     tacheForm(null, "");
   };
+  // Prévision arrivée : premier affichage seulement ; une mise à jour pendant la lecture ne redessine que le jour.
   const pret = AL.meteoPrete;
-  AL.meteoPrete = function () { pret?.(); if (S.route === "meteo") render(); };
+  AL.meteoPrete = function () { pret?.(); if (S.route === "meteo") (document.getElementById("mjJour") ? majJour() : render()); };
 
   // ---------- 2. Rappels et notifications ----------
   const CATS = [["meteo", "Créneau favorable"], ["soins", "Traitements et échéances"], ["ventes", "Paiements en attente, après 7 jours"], ["stock", "Stock bas et DDM proche"]];

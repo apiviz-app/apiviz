@@ -57,7 +57,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   dernière visite ; onglets Journal (visites et événements dans l'ordre des dates), Santé (comptages varroa,
   traitements), Reine & lignée (nouvelle reine sans perdre l'ancienne, « Issue de … », colonies qui en sont issues),
   Colonie (statut, emplacements, hausses, équipement, division, essaimage, réunion, sortie), Photos ; courbe de poids.
-- **Météo** : depuis un rucher, « Voir heure par heure » : ce qu'il en est maintenant et pourquoi, les heures pour ouvrir de chaque jour, la frise de la journée (touche une heure pour son détail), les créneaux avec « Prévoir ».
+- **Météo** *(v5.45)* : depuis un rucher, « Voir heure par heure » : maintenant, les 5 jours (une case par heure de visite), le verdict du jour choisi et pourquoi, ses heures en lignes (la valeur qui empêche d'ouvrir est en rouge ; touche une heure bonne pour la choisir), « Voir de 8 h à 20 h », et en bas « Prévoir une visite » (ou « Voir mardi » quand le jour n'a pas de créneau).
 
 ## Saisir (API)
 

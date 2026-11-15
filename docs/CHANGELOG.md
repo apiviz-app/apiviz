@@ -5,6 +5,38 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.45 · à publier en recette · Météo du rucher en un écran, sans saut
+Aucune migration. Maquettes du 15 nov. 2026, piste A validée par Pierre-Louis.
+
+**Saut d'écran corrigé** : toucher un jour redessinait tout l'écran ; l'en-tête changeait de hauteur (phrase sur 1 ou 2
+lignes, bouton « Prévoir » présent ou non), le ruban des jours revenait au début et les animations rejouaient (mesuré :
+la page remontait de 163 px en deux touchers). Désormais, toucher un jour ou une heure ne met à jour que la zone du jour
+et le bouton du bas ; l'en-tête, le verdict et le bouton gardent leur hauteur. Une prévision rafraîchie pendant la
+lecture ne redessine plus l'écran non plus.
+
+**Présentation** :
+- Titre stable « Météo » ; « Maintenant » sur une ligne (température, verdict, pourquoi).
+- Les 5 jours tiennent dans la largeur, sans défilement, chacun avec une case par heure de visite (10 h – 16 h) et le
+  nombre d'heures bonnes.
+- Verdict du jour choisi en une phrase : « Ouvrir de 12 h à 14 h », « Visite rapide de 10 h à 16 h » ou « Pas de
+  créneau » avec la raison (« Pluie toute la journée (jusqu'à 85 %) ») et le meilleur autre jour.
+- Heures en lignes de 48 px : ciel, température, pluie, vent, puce Ouvrir / Rapide / Attendre ; la valeur qui empêche
+  d'ouvrir est en couleur (rafales affichées quand le vent est trop fort). Toucher une heure bonne la choisit.
+  « Voir de 8 h à 20 h » sur demande.
+- Bouton principal toujours en bas : « Prévoir une visite aujourd'hui à 12 h », ou « Voir mardi : 6 h pour ouvrir ».
+- Retirés : phrase-titre, bandeau « prochain créneau », frise à 13 colonnes, détail d'une heure, liste des créneaux,
+  tableau replié (tout est dans les lignes). La frise courte de la carte du rucher ne change pas.
+
+Technique : `essentiels.js` (`VUES.meteo`, `majJour`), `styles/54-meteo-jour.css`, règles pures `causes()` et
+`resumeJour()` dans `src/domaines/meteo/regles.js` (tests unitaires). Tests : `etapes_mt` réécrit (dont « la page ne
+bouge pas » au toucher d'un jour), `etapes_ab` et `etapes_ac` adaptés.
+
+### À vérifier
+- Un rucher placé sur la carte › « Voir heure par heure » : les 5 jours se voient sans faire défiler de côté.
+- Faire défiler un peu, toucher plusieurs jours : rien ne bouge, seuls le verdict, les heures et le bouton changent.
+- Un jour de pluie ou de vent : la valeur en cause est en rouge ; le bouton propose le meilleur jour.
+- Toucher une heure verte : le bouton du bas passe à cette heure ; « Prévoir » prépare la tâche au bon jour.
+
 ## v5.42 · à publier en recette · correctifs bloquants de l'audit du 14 nov. 2026
 Aucune migration. Audit « ergonomie et uniformisation » (canvas du 14 nov. 2026), étape 1.
 

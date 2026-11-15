@@ -1,5 +1,4 @@
-    # v5.22 — Météo lisible : verdict « maintenant » et pourquoi, jauge des jours, frise de la journée, détail d'une heure,
-    # créneaux du jour avec « Prévoir », tableau complet replié, frise courte sur la carte du rucher.
+    # v5.22 puis v5.45 — Météo : frise courte sur la carte du rucher ; écran Météo en un seul écran (voir plus bas).
     # Avec CAPTURES=<dossier>, enregistre l'écran à 390 et 1 280 px.
     import os, datetime
     cap = os.environ.get("CAPTURES")
@@ -38,55 +37,80 @@
     verif(c.locator("i").count() == 6 and c.locator("i.n2").count() == 2 and c.locator("i.passee").count() == 1, "carte du rucher : frise courte de 10 h à 16 h, 2 h bonnes, 10 h passée")
     verif("12 h, on peut ouvrir" in c.get_attribute("aria-label") and "14 h, trop de vent (31 km/h)" in c.get_attribute("aria-label"), "frise courte décrite pour les lecteurs d'écran")
 
-    page.evaluate("ACT.ermeteo('Verger')"); page.wait_for_selector(".mt-hero", timeout=8000)
-    page.wait_for_timeout(900)
-    hero = page.locator(".mt-hero")
-    verif("rapide" in hero.get_attribute("class") and "Visite rapide seulement" in hero.inner_text(), "maintenant (11 h, 14°) : visite rapide")
-    verif("Un peu frais : visite courte" in hero.inner_text(), "le verdict dit pourquoi")
-    verif("aujourd’hui de 12 h à 14 h" in hero.inner_text(), "prochain créneau favorable : la plage d’aujourd’hui, comme le bouton")
-    verif("Tu peux ouvrir" in page.locator(".head h1").inner_text() and "entre 12 h et 14 h" in page.locator(".head h1").inner_text(), "phrase du jour : la plage bonne, pas tout de 11 h à 15 h")
+    # v5.45 — Météo en un écran (piste A du 15 nov. 2026) : maintenant, 5 jours, verdict du jour, heures en lignes,
+    # bouton principal en bas ; toucher un jour ou une heure ne redessine que la zone du jour (la page ne bouge pas).
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.evaluate("ACT.ermeteo('Verger')"); page.wait_for_selector(".mj-now", timeout=8000)
+    page.wait_for_timeout(500)
+    now = page.locator(".mj-now")
+    verif("rapide" in now.get_attribute("class") and "Visite rapide seulement" in now.inner_text(), "maintenant (11 h, 14°) : visite rapide")
+    verif("Un peu frais : visite courte" in now.inner_text(), "le verdict dit pourquoi")
+    verif(page.locator(".head h1").count() == 0 or "Météo" in page.locator(".head h1").inner_text(), "titre stable : Météo, plus de phrase qui change avec le jour")
 
-    js = page.locator(".mt-jour")
-    verif(js.count() == 5 and "2 h pour ouvrir" in js.nth(0).inner_text() and "Pas de créneau" in js.nth(1).inner_text() and "6 h pour ouvrir" in js.nth(2).inner_text(), "jours : heures favorables comptées")
-    verif("6 h rapides" in js.nth(3).inner_text(), "jour frais : heures rapides")
+    js = page.locator(".mj-jour")
+    verif(js.count() == 5, "les 5 jours")
+    verif(page.evaluate("[...document.querySelectorAll('.mj-jour')].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })"), "les 5 jours tiennent dans la largeur, sans défilement")
+    verif("2 h" in js.nth(0).inner_text() and "non" in js.nth(1).inner_text() and "6 h" in js.nth(2).inner_text() and "rapide" in js.nth(3).inner_text(), "jours : heures favorables comptées")
+    verif(js.nth(0).locator(".mj-mini i").count() == 6 and js.nth(0).locator(".mj-mini i.n2").count() == 2 and js.nth(0).locator(".mj-mini i.passee").count() == 1, "mini-frise du jour : 10 h à 16 h, 2 h bonnes, 10 h passée")
+    verif("pas de créneau" in js.nth(1).get_attribute("aria-label"), "jour décrit pour les lecteurs d'écran")
 
-    f = page.locator(".mt-h")
-    verif(f.count() == 13, "frise de 8 h à 20 h")
-    verif(page.locator(".mt-h.now").count() == 1 and page.locator(".mt-h.now .mt-heure").inner_text().startswith("11"), "repère de l'heure actuelle")
-    verif(page.locator(".mt-h.bon").count() == 2 and page.locator(".mt-h.hors").count() == 7, "frise : 2 h bonnes, heures hors visite hachurées")
-    verif(page.locator(".mt-vent.fort").count() >= 1, "vent fort signalé")
-    verif("12 h" in page.locator(".mt-detail").inner_text() and "On peut ouvrir" in page.locator(".mt-detail").inner_text(), "détail ouvert sur la meilleure heure")
-
-    page.click(".mt-h[data-v='14']"); page.wait_for_timeout(200)
-    d = page.locator(".mt-detail").inner_text()
-    verif("Mieux vaut attendre" in d and "Trop de vent (31 km/h)" in d and "Rafales" in d and "43 km/h" in d, "toucher 14 h : pourquoi attendre, avec les rafales")
-    verif(page.locator(".mt-detail .mt-prevoir").count() == 0, "pas de « Prévoir » sur une heure défavorable")
-    verif(page.locator(".mt-h[data-v='14']").get_attribute("aria-pressed") == "true", "heure choisie signalée")
-
-    p = page.locator(".mt-plage")
-    verif(p.count() == 2 and "11 h – 12 h" in p.nth(0).inner_text() and "12 h – 14 h" in p.nth(1).inner_text(), "créneaux du jour : 11-12 h rapide, 12-14 h bon")
-    verif(page.locator("details.mt-tout").count() == 1 and not page.locator("details.mt-tout").evaluate("d => d.open"), "tableau complet replié")
+    v = page.locator(".mj-verdict")
+    verif("bon" in v.get_attribute("class") and "Ouvrir de 12 h à 14 h" in v.inner_text(), "verdict d'aujourd'hui : la plage bonne")
+    verif("Visite rapide aussi possible de 11 h à 12 h" in v.inner_text(), "l'autre plage du jour est citée")
+    L = page.locator(".mj-ligne")
+    verif(L.count() == 6, "heures de la plage de visite seulement (10 h à 15 h)")
+    verif("passee" in L.nth(0).get_attribute("class") and "Passée" in L.nth(0).inner_text(), "10 h passée")
+    verif("now" in L.nth(1).get_attribute("class") and "maint." in L.nth(1).inner_text().lower(), "repère de l'heure actuelle")
+    verif(L.nth(4).locator(".mj-v.fort").count() == 1 and "raf. 43" in L.nth(4).inner_text(), "14 h : vent signalé dans la ligne, avec les rafales")
+    verif(L.nth(5).locator(".mj-p.fort").count() == 1, "15 h : risque de pluie signalé")
+    verif(L.nth(1).locator(".mj-t.c1").count() == 1, "11 h : un peu frais signalé")
+    verif("trop de vent (31 km/h)" in L.nth(4).get_attribute("aria-label") and "humidité 55 %" in L.nth(4).get_attribute("aria-label"), "ligne décrite en entier pour les lecteurs d'écran")
+    b = page.locator("#mjBouton .btn")
+    verif(b.inner_text() == "Prévoir une visite aujourd’hui à 12 h", "bouton principal : la première heure bonne")
 
     if cap:
         os.makedirs(cap, exist_ok=True)
-        page.click(".mt-h[data-v='12']"); page.wait_for_timeout(300)
         page.screenshot(path=f"{cap}/meteo-390.png", full_page=True)
-        page.locator(".mt-frise").scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, 120)"); page.wait_for_timeout(300)
-        page.screenshot(path=f"{cap}/meteo-390-frise.png")
 
-    # Après-demain : bon toute la plage ; « Prévoir » préremplit la tâche avec le bon jour.
-    page.click(f".mt-jour[data-v='{jours[2]}']"); page.wait_for_selector(".mt-hero")
-    verif(page.locator(".mt-plage").count() == 1 and "10 h – 16 h" in page.locator(".mt-plage").inner_text(), "après-demain : une plage de 10 h à 16 h")
-    page.click(".mt-plage [data-act=ervisite]"); page.wait_for_selector("#sheet[open]", timeout=5000)
+    # Toucher une heure : le bouton suit, rien d'autre ne bouge.
+    page.click(".mj-ligne[data-v='13']"); page.wait_for_timeout(100)
+    verif(page.locator("#mjBouton .btn").inner_text() == "Prévoir une visite aujourd’hui à 13 h" and page.locator(".mj-ligne[data-v='13']").get_attribute("aria-pressed") == "true", "toucher 13 h : bouton à 13 h")
+    verif(page.locator("div.mj-ligne").count() >= 3, "heures défavorables ou passées : pas de bouton")
+
+    # Toucher un jour ne fait pas bouger la page (avant v5.45 : +163 px, ruban revenu au début, en-tête plus court).
+    page.evaluate("window.scrollTo(0, 140)"); page.wait_for_timeout(200)
+    avant = page.evaluate("({y: scrollY, top: document.querySelector('.mj-jours').getBoundingClientRect().top, v: document.querySelector('.mj-verdict').getBoundingClientRect().top})")
+    page.click(f".mj-jour[data-v='{jours[1]}']"); page.wait_for_timeout(150)
+    apres = page.evaluate("({y: scrollY, top: document.querySelector('.mj-jours').getBoundingClientRect().top, v: document.querySelector('.mj-verdict').getBoundingClientRect().top})")
+    verif(abs(apres["y"] - avant["y"]) < 1 and abs(apres["top"] - avant["top"]) < 1 and abs(apres["v"] - avant["v"]) < 1, f"toucher un jour : la page ne bouge pas ({avant} → {apres})")
+    verif(page.locator(f".mj-jour[data-v='{jours[1]}']").get_attribute("aria-pressed") == "true" and page.locator(".mj-jour.on").count() == 1, "jour choisi signalé")
+    verif("Pas de créneau" in page.locator(".mj-verdict").inner_text() and "Pluie toute la journée (jusqu’à 85 %)" in page.locator(".mj-verdict").inner_text(), "jour de pluie : pourquoi, en une phrase")
+    verif("Meilleur jour :" in page.locator(".mj-verdict").inner_text(), "jour de pluie : jour conseillé")
+    b = page.locator("#mjBouton .btn")
+    verif(b.inner_text().startswith("Voir ") and "6 h pour ouvrir" in b.inner_text(), "bouton : aller au meilleur jour")
+    if cap:
+        page.screenshot(path=f"{cap}/meteo-390-pluie.png")
+    b.click(); page.wait_for_timeout(150)
+    verif(page.locator(f".mj-jour[data-v='{jours[2]}']").get_attribute("aria-pressed") == "true" and "Ouvrir de 10 h à 16 h" in page.locator(".mj-verdict").inner_text(), "« Voir … » ouvre le meilleur jour")
+
+    # « Prévoir » préremplit la tâche avec le bon jour et la bonne heure.
+    page.click("#mjBouton [data-act=ervisite]"); page.wait_for_selector("#sheet[open]", timeout=5000)
     verif(page.locator("#sheetForm [name=titre]").input_value() == "Visite du rucher Verger à 10 h" and page.locator("#sheetForm [name=echeance]").input_value() == jours[2], "« Prévoir » : tâche préremplie au bon jour et à la bonne heure")
-    page.keyboard.press("Escape")
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
 
-    # Demain : pas de créneau, Apiviz propose le jour favorable suivant.
-    page.evaluate(f"ACT.ermjour('{jours[1]}')"); page.wait_for_selector(".mt-rien")
-    verif("Regarde" in page.locator(".mt-rien").inner_text(), "jour de pluie : renvoi vers un jour favorable")
+    # Jour frais : visite rapide ; jour de vent : pas de créneau, vent signalé.
+    page.evaluate(f"ACT.ermjour('{jours[3]}')")
+    verif("Visite rapide de 10 h à 16 h" in page.locator(".mj-verdict").inner_text() and "Prévoir une visite rapide" in page.locator("#mjBouton").inner_text(), "jour frais : visite rapide")
+    page.evaluate(f"ACT.ermjour('{jours[4]}')")
+    verif("Vent trop fort toute la journée (jusqu’à 36 km/h)" in page.locator(".mj-verdict").inner_text() and page.locator(".mj-v.fort").count() == 6, "jour de vent : pourquoi, vent signalé à chaque heure")
+
+    # De 8 h à 20 h, sur demande.
+    page.click("[data-act=ermtout]"); page.wait_for_timeout(100)
+    verif(page.locator(".mj-ligne").count() == 13 and page.locator(".mj-ligne.hors").count() == 7, "« Voir de 8 h à 20 h » : 13 heures, hors visite marquées")
+    page.click("[data-act=ermtout]")
 
     if cap:
-        page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.ermeteo('Verger')"); page.wait_for_selector(".mt-hero"); page.wait_for_timeout(900)
+        page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.ermeteo('Verger')"); page.wait_for_selector(".mj-now"); page.wait_for_timeout(900)
         page.screenshot(path=f"{cap}/meteo-1280.png", full_page=True)
         page.evaluate("ACT.go('dash')"); page.wait_for_selector(".mt-frise-c"); page.wait_for_timeout(600)
         page.screenshot(path=f"{cap}/accueil-1280.png")

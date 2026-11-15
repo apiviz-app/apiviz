@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { tauxVarroa, seuilVarroa } from "../../src/domaines/sante/regles.js";
-import { niveau, analyse } from "../../src/domaines/meteo/regles.js";
+import { niveau, analyse, causes, resumeJour } from "../../src/domaines/meteo/regles.js";
 
 test("taux de varroa pour 100 abeilles", () => {
   assert.equal(tauxVarroa({ varroa: 12, varroa_abeilles: 300, varroa_methode: "Sucre glace" }), 4);
@@ -83,4 +83,54 @@ test("plages d'heures favorables", async () => {
   assert.deepEqual(plages(h([1, 2, 2, 1])), [{ debut: 10, fin: 11, n: 1 }, { debut: 11, fin: 13, n: 2 }, { debut: 13, fin: 14, n: 1 }], "une heure rapide coupe une plage bonne");
   assert.deepEqual(plages(h([0, null, 0])), []);
   assert.deepEqual(plages([{ h: 10, n: 2 }, { h: 12, n: 2 }]), [{ debut: 10, fin: 11, n: 2 }, { debut: 12, fin: 13, n: 2 }], "un trou coupe la plage");
+});
+
+test("causes d'une heure, valeur par valeur (v5.45)", () => {
+  assert.deepEqual(causes(S, 18, 0, 5), { pluie: false, vent: false, temp: 0 });
+  assert.deepEqual(causes(S, 14, 0, 5), { pluie: false, vent: false, temp: 1 });
+  assert.deepEqual(causes(S, 11, 40, 30), { pluie: true, vent: true, temp: 2 });
+  assert.equal(causes(S, 18, 5, 5, 0.2).pluie, true, "il pleut, même avec un faible risque");
+});
+
+// Jour au format de MT.parHeure : heures de 8 h à 20 h, n null hors de la plage de visite.
+const jour = (t, f, opts = {}) => {
+  const heures = [];
+  for (let h = 8; h <= 20; h++) {
+    const [temp, risque, vent, pluie = 0] = f(h), dedans = h >= S.debut && h < S.fin;
+    heures.push({ h, temp, risque, vent, pluie, n: dedans ? niveau(S, temp, risque, vent, pluie) : null, passee: h < (opts.maintenant ?? 0), maintenant: h === opts.maintenant });
+  }
+  const avenir = heures.filter((x) => !x.passee || x.maintenant);
+  return { t, heures, bonnes: avenir.filter((x) => x.n === 2).length, rapides: avenir.filter((x) => x.n === 1).length };
+};
+
+test("verdict d'un jour (v5.45)", () => {
+  const auj = jour("2026-11-15", (h) => ({ 10: [12, 5, 8], 11: [14, 5, 8], 12: [17, 5, 10], 13: [19, 10, 12], 14: [19, 10, 31], 15: [18, 60, 14] })[h] || [11, 10, 8], { maintenant: 11 });
+  const pluie = jour("2026-11-16", () => [13, 85, 15, 0.6]);
+  const beau = jour("2026-11-17", () => [21, 5, 9]);
+  const frais = jour("2026-11-18", () => [14, 5, 9]);
+  const vent = jour("2026-11-19", (h) => [18, 5, h < 13 ? 36 : 30]);
+  const J = [auj, pluie, beau, frais, vent];
+
+  const a = resumeJour(S, J, auj.t, auj.t);
+  assert.equal(a.ton, 2);
+  assert.equal(a.titre, "Ouvrir de 12 h à 14 h");
+  assert.equal(a.sous, "Visite rapide aussi possible de 11 h à 12 h.", "l'autre plage à venir, pas 10 h (passée)");
+  assert.equal(a.heure, 12);
+  assert.equal(a.autre, null);
+
+  const p = resumeJour(S, J, pluie.t, auj.t);
+  assert.deepEqual([p.ton, p.titre, p.sous, p.heure, p.autre.t], [0, "Pas de créneau", "Pluie toute la journée (jusqu’à 85 %).", null, beau.t]);
+
+  assert.equal(resumeJour(S, J, beau.t, auj.t).sous, "Bonnes conditions, jusqu’à 21°.");
+  const f = resumeJour(S, J, frais.t, auj.t);
+  assert.deepEqual([f.ton, f.titre, f.sous, f.heure, f.autre.t], [1, "Visite rapide de 10 h à 16 h", "Un peu frais : visite courte (14° au mieux).", 10, beau.t], "meilleur jour : le plus d'heures bonnes");
+  assert.equal(resumeJour(S, J, vent.t, auj.t).sous, "Vent trop fort toute la journée (jusqu’à 36 km/h).");
+
+  const melange = jour("2026-11-20", (h) => (h < 13 ? [16, 70, 5] : [16, 5, 40]));
+  assert.equal(resumeJour(S, [melange], melange.t, auj.t).sous, "Pluie, puis vent trop fort.");
+
+  const tard = jour("2026-11-15", () => [18, 5, 5], { maintenant: 17 });
+  const t = resumeJour(S, [tard, beau], tard.t, tard.t);
+  assert.deepEqual([t.titre, t.sous, t.autre.t], ["Plus de créneau aujourd’hui", "La plage de visite (10 h – 16 h) est passée.", beau.t]);
+  assert.equal(resumeJour(S, J, "2027-01-01", auj.t), null);
 });
