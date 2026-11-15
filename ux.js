@@ -161,21 +161,29 @@ const UX = (() => {
     if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");
     return chip(`Varroa ${n(t, 1)} %`, t >= seuilVarroa() ? "crit" : t >= seuilVarroa() * 0.66 ? "watch" : "good");
   }
-  // Visite express (v5.32, migration 020) : ce qui a été repris de la précédente, pas observé ce jour-là.
-  const NOMS_REPRIS = { activite: "activité", provisions: "provisions", couvain: "couvain", poids_kg: "poids", etat: "état" };
+  // Visite express (v5.32, migration 020) : les valeurs reprises de la précédente, pas observées ce jour-là, sont en
+  // retrait avec la mention « reprise » (v5.43, AP-US-041) ; la ligne dit la durée et ce qui a été vu.
   function repris(v) {
-    if (!Array.isArray(v.observes)) return "";
-    const l = Regles.visites.champsRepris(v).map((k) => NOMS_REPRIS[k]);
-    return `<p class="small ve-journal">Visite express${l.length ? " · repris de la précédente : " + esc(l.join(", ")) : ""}</p>`;
+    const duree = v.duree_s != null ? Regles.visites.dureeTexte(v.duree_s) : "";
+    if (!Array.isArray(v.observes)) return duree ? `<p class="small ve-journal">Saisie en ${esc(duree)}</p>` : "";
+    const r = Regles.visites.champsRepris(v).length, o = v.observes.filter((k) => k !== "note").length;
+    const parts = ["Visite express", duree, o ? `${pluriel(o, "point")} observé${o > 1 ? "s" : ""}` : "rien de nouveau", r ? `${r} repris` : ""].filter(Boolean);
+    return `<p class="small ve-journal">${esc(parts.join(" · "))}</p>`;
   }
+  const TON_CELLULES = { Aucune: "good", Ouvertes: "watch", "Operculées": "crit" };
   function carteVisite(v) {
     const d = S.d;
+    const rep = new Set(Regles.visites.champsRepris(v));
+    const c = (k, txt, ton) => (rep.has(k) ? chip(txt + " · reprise", "u-repris") : chip(txt, ton));
     const chips = [
-      chip("Activité " + v.activite.toLowerCase(), TON.activite[v.activite]),
-      chip("Provisions " + v.provisions.toLowerCase(), TON.provisions[v.provisions]),
+      v.cellules_royales ? chip("Cellules royales " + v.cellules_royales.toLowerCase(), TON_CELLULES[v.cellules_royales]) : "",
+      c("activite", "Activité " + v.activite.toLowerCase(), TON.activite[v.activite]),
+      c("provisions", "Provisions " + v.provisions.toLowerCase(), TON.provisions[v.provisions]),
       v.reine !== "Non cherchée" ? chip("Reine " + v.reine.toLowerCase(), TON.reine[v.reine]) : "",
-      v.couvain ? chip("Couvain " + v.couvain.toLowerCase(), TON.couvain[v.couvain]) : "",
-      v.poids_kg ? chip(n(v.poids_kg) + " kg") : "",
+      v.couvain ? c("couvain", "Couvain " + v.couvain.toLowerCase(), TON.couvain[v.couvain]) : "",
+      v.force != null ? c("force", `Force ${v.force}/5`, v.force >= 4 ? "good" : v.force <= 2 ? "watch" : "") : "",
+      v.oeufs_vus === true ? chip("Œufs vus", "good") : v.oeufs_vus === false ? chip("Pas d’œufs vus", "watch") : "",
+      v.poids_kg ? c("poids_kg", n(v.poids_kg) + " kg") : "",
       v.varroa !== null && v.varroa !== undefined ? chipVarroa(v) : "",
       v.traitement ? chip("Traitement · " + v.traitement) : "",
     ].join("");
@@ -258,6 +266,11 @@ const UX = (() => {
     o[el.dataset.sec] = el.open; ouverts.set(S.visite, o);
   }, true);
 
+  // Force, œufs et cellules royales (v5.43, migration 023) : résumé de la section repliable.
+  function resumeColonie(e) {
+    return [e.force ? `force ${e.force}/5` : "", e.oeufs_vus === "Oui" ? "œufs vus" : e.oeufs_vus === "Non" ? "pas d’œufs" : "",
+      e.cellules_royales ? `cellules ${e.cellules_royales.toLowerCase()}` : ""].filter(Boolean).join(" · ");
+  }
   function viewVisite() {
     const e = S.visite, d = S.d, o = ouverts.get(e) || {};
     const seg = (lab, k, opts, ton) => `<div class="u-ligne"><span class="u-lab">${lab}</span><div class="seg" style="grid-template-columns:repeat(${opts.length},minmax(0,1fr))">${opts.map((x) => {
@@ -294,6 +307,10 @@ const UX = (() => {
       </section>
       <section class="card u-secs">
         ${sec("couvain", "Couvain", e.couvain || "Non vu", e.couvain && e.couvain !== "Non vu", seg("Couvain", "couvain", ["Non vu", "Réduit", "Normal", "Abondant"]))}
+        ${sec("colonie", "Force, œufs, cellules royales", resumeColonie(e) || "Ajouter", !!resumeColonie(e), `<div class="u-colonie">${seg("Force", "force", ["1", "2", "3", "4", "5"])}
+          ${seg("Œufs vus", "oeufs_vus", ["Oui", "Non"])}${seg("Cellules royales", "cellules_royales", Regles.visites.CHOIX_CELLULES)}
+          ${e.cellules_royales === "Operculées" ? '<p class="small ve-essaimage" style="padding:0">Cellules operculées : l’essaimage peut être proche. Je te proposerai une tâche à l’enregistrement.</p>' : ""}
+          <p class="small">Un second toucher efface le choix (pas regardé).</p></div>`)}
         ${sec("poids", "Poids et varroa", pv || "Ajouter", !!pv, `<div class="two"><label>Poids (kg)<input type="number" step="0.1" min="0" inputmode="decimal" id="v_poids" value="${esc(e.poids_kg)}"></label>
           <label>Varroas comptés<input type="number" step="1" min="0" inputmode="numeric" id="v_varroa" value="${esc(e.varroa)}"></label></div>
           ${seg("Méthode", "varroa_methode", ["Sucre glace", "Lavage", "Lange"])}

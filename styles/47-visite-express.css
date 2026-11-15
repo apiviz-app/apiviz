@@ -26,3 +26,46 @@
 .ve-ok{min-height:56px;font-size:17px}
 .ve-seul{align-self:center;min-height:44px}
 .ve-journal{margin:0;color:var(--muted)}
+
+/* ---------- Visite rapide (v5.43, IT-08 réduite, maquette du 15 nov. 2026) ---------- */
+.ve-val{display:flex;flex-direction:column;gap:1px}
+.ve-comme{font-size:12px;font-weight:400;color:var(--muted)}
+.ve-bas{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ve-chrono{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--pine);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ve-chrono svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.seg button.on.ve-alerte{background:var(--honey);border-color:var(--honey);color:var(--ink)}
+.ve-essaimage{margin:0;padding:0 14px 14px;font-size:14px;color:var(--watch)}
+.ve-etat.ve-non-vu{color:var(--pine);font-weight:600;border:1px dashed #9AA197;border-radius:999px;padding:3px 8px}
+/* Journal : valeurs reprises d'une visite express, en retrait (AP-US-041). */
+.u-chip.u-repris{background:var(--ground);color:var(--muted);font-weight:400}
+.u-colonie .seg{margin-top:4px}
+/* Accueil : visite à reprendre et alerte essaimage. */
+.bv-carte{border:2px solid var(--honey);display:flex;flex-direction:column;gap:10px}
+.bv-tete{display:flex;gap:10px;align-items:flex-start}
+.bv-tete b{font-size:17px}
+.bv-tete p{margin:2px 0 0}
+.bv-hex{flex:none;width:28px;height:24px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.bv-deux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.es-carte h2{margin:0 0 6px}
+.es-ligne{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;width:100%;padding:6px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left}
+.es-ligne:first-of-type{border-top:0}
+.es-ligne span{display:flex;flex-direction:column}
+.es-puce{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--critbg);color:var(--crit)}
+/* Tournée : modèle de visite, « comme le », chrono par ruche (v5.43). */
+.tn-modeles{display:flex;flex-direction:column;gap:8px}
+.tn-modele{display:flex;align-items:center;min-height:60px;padding:9px 14px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--ink);font:inherit;cursor:pointer}
+.tn-modele.on{outline:2px solid var(--pine);outline-offset:-2px;background:var(--honeysoft)}
+.tn-modele>span{flex:1;min-width:0;display:flex;flex-direction:column}
+.tn-modele b{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
+.tn-modele small{font-size:13px;color:var(--muted)}
+.tn-lab{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.tn-comme{font-size:13px;font-weight:400;color:var(--muted)}
+.tn-rang button.on.tn-alerte-c{background:var(--honey);border-color:var(--honey);color:var(--ink)}
+.tn-repris{margin-top:-2px}
+.tn-essaim,.tn-ecart{color:var(--watch);font-weight:600}
+.tn-haut .tn-chrono{color:var(--pine)}
+.tn-facultatifs{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 12px}
+.tn-facultatifs>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;cursor:pointer;font-weight:600;list-style:none}
+.tn-facultatifs>summary::-webkit-details-marker{display:none}
+.tn-facultatifs>summary small{font-weight:400;color:var(--muted);text-align:right}
+.tn-facultatifs[open]{padding-bottom:12px}
