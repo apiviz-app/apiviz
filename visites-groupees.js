@@ -57,9 +57,11 @@ const VR = (() => {
     S.busy = true;
     const appel = typeof HL != "undefined" ? HL.rpc : (x, y) => sb.rpc(x, y);
     const faites = [], charges = []; let local = false;
+    const R = Regles.visites, duree_s = R.dureeDepuis(s.debut); // v5.43 : durée de la saisie, nouveaux champs
     for (const id of cibles) {
-      const { multi, ruches, q, ...reste } = s;
-      const p = { ...reste, ruche_id: id, couvain: s.couvain === "Non vu" ? "" : s.couvain, intrants };
+      const { multi, ruches, q, debut, ...reste } = s;
+      const p = { ...reste, ruche_id: id, couvain: s.couvain === "Non vu" ? "" : s.couvain, intrants,
+        force: R.forceVersBase(s.force), oeufs_vus: R.oeufsVersBase(s.oeufs_vus), cellules_royales: s.cellules_royales || "", duree_s };
       const { data, error, local: hl } = await appel("creer_visite", { p });
       if (error) {
         if (!faites.length) throw error;
@@ -74,6 +76,9 @@ const VR = (() => {
     await apresVisites(charges, local); // IT-03 : sans relire toutes les tables quand tout est parti
     const nb = faites.length;
     if (nb === cibles.length) toast(nb > 1 ? `${nb} visites ${local ? "gardées sur le téléphone" : "enregistrées"}` : local ? "Visite gardée sur le téléphone" : "Visite enregistrée");
+    // v5.43 : brouillon oublié, tâche proposée si des cellules royales operculées ont été notées.
+    if (typeof VB != "undefined") { VB.oublier(s.ruche_id); faites.forEach((f) => VB.oublier(f.ruche)); }
+    if (s.cellules_royales === "Operculées" && typeof VB != "undefined") VB.essaimage(faites[0].ruche);
   }
 
   return { pick, enregistrer };

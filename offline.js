@@ -444,6 +444,7 @@ const HL = (() => {
   const garderDonnees = () => kvMettre({ k: "donnees:" + (typeof EX != "undefined" ? EX.courante() : ""), d: S.d, at: Date.now() }).catch(() => {});
   return {
     reseau, rpc, write, sessionLocale, membre, envoyer, bandeau, section, garderDonnees,
+    kv: { lire: kvLire, mettre: kvMettre }, // brouillons de visite (v5.43, src/domaines/visites/brouillon.js)
     horsLigne: () => st.hors,
     nb: () => st.file.length, // toutes les saisies pas encore enregistrées, y compris celles à corriger
     nbCorriger: () => aCorriger().length,

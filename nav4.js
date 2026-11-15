@@ -91,7 +91,13 @@ const N4 = (() => {
     VR.enregistrer = async () => { const v = S.visite; await enregAvant(); enregistree.add(v); if (brouillon === v) brouillon = null; };
   }
   const annulerAvant = ACT.cancel;
-  ACT.cancel = () => { if (S.route === "visite") { enregistree.add(S.visite); if (brouillon === S.visite) brouillon = null; } annulerAvant(); };
+  ACT.cancel = () => {
+    if (S.route === "visite") {
+      enregistree.add(S.visite); if (brouillon === S.visite) brouillon = null;
+      if (typeof VB != "undefined") VB.oublier(S.visite?.ruche_id); // brouillon persistant (v5.43) : « Annuler » l'oublie
+    }
+    annulerAvant();
+  };
   ACT.n4reprendre = () => { $sheet.close(); S.visite = brouillon; brouillon = null; go("visite"); };
 
   // ---------- Chargement : cartes grisées ----------
