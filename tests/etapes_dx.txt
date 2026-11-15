@@ -1,0 +1,20 @@
+    # v5.42 — Correctifs de l'audit du 14 nov. 2026 : rucher d'exemple sans inscription, « Visite complète » lisible.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.goto(url); page.wait_for_selector(".auth.cx form[data-form=auth]", timeout=15000)
+    page.get_by_role("button", name="Voir un rucher d’exemple").click()
+    page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    t = page.locator("#app").inner_text()
+    verif("Comment tu t’appelles" not in t, "rucher d'exemple : pas d'écran d'inscription")
+    verif("Ruche 5" in t and page.locator(".dm-exemple").count() == 1, "rucher d'exemple : accueil et bandeau « rien n'est enregistré »")
+    if cap: page.screenshot(path=cap + "/dx-exemple-390.png")
+    page.evaluate("S.ruche = 'ex-r5'; go('ruche')"); page.wait_for_selector(".n4-rbarre [data-act=veruche]")
+    lisible = page.evaluate("""() => { const b = document.querySelector('.n4-rbarre [data-act=newvisite]');
+      const cs = getComputedStyle(b); return b.textContent.trim() + '|' + cs.color + '|' + cs.backgroundColor; }""")
+    nom, couleur, fond = lisible.split("|")
+    verif(nom == "Visite complète" and not (couleur == "rgb(255, 255, 255)" and fond.startswith("rgba(255, 255, 255")),
+          "fiche ruche : « Visite complète » lisible (" + couleur + " sur " + fond + ")")
+    if cap: page.screenshot(path=cap + "/dx-fiche-390.png")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

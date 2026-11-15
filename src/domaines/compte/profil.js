@@ -57,6 +57,12 @@ export function inscriptionDue() {
   return true;
 }
 
+/** Rucher d'exemple (demarrage.js) : rien ne s'enregistre, donc pas d'inscription à faire ; un prénom d'exemple suffit.
+ *  Sans cela, « Continuer » échouait (écriture refusée) et la démo restait bloquée sur « Comment tu t'appelles ? ». */
+export function exemple(prenom = "Camille") {
+  Object.assign(st, { email: email(), charge: true, chargement: false, absent: false, ligne: { prenom, nom: "", inscription_finie: true }, pas: 1, brouillon: null, retour: null });
+}
+
 // ---------- Inscription ----------
 const coche = (nom, v, t, val) => `<label class="op-radio"><input type="radio" name="${nom}" value="${e(v)}" ${val === v ? "checked" : ""}><span>${e(t)}</span></label>`;
 const groupe = (nom, titre, options, val) => `<fieldset class="op-choix"><legend>${e(titre)}</legend><div>${options.map(([v, t]) => coche(nom, v, t, val)).join("")}</div></fieldset>`;
@@ -297,5 +303,5 @@ export const actions = {
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),
 };
 
-if (typeof window != "undefined") window.PF = { charger, inscriptionDue, associes, moi, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
+if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, associes, moi, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
 export { ecranProfil, completerMembres };

@@ -97,7 +97,8 @@ export function completerFiche() {
   const barre = document.querySelector(".n4-rbarre");
   if (barre && !barre.querySelector('[data-act="veruche"]')) {
     barre.insertAdjacentHTML("afterbegin", `<button class="btn main" data-act="veruche" data-v="${e(r.id)}">Visite express</button>`);
-    barre.querySelector('[data-act="newvisite"]')?.classList.replace("honey", "ghost");
+    // « ghost » est fait pour un fond sapin : sur la barre claire, le texte blanc devenait invisible (audit du 14 nov.).
+    barre.querySelector('[data-act="newvisite"]')?.classList.remove("honey", "ghost");
     const v = barre.querySelector('[data-act="newvisite"]');
     if (v) v.textContent = "Visite complète";
   }
