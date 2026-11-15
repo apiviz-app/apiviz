@@ -61,8 +61,8 @@
         page.locator(".ac-creneau").scroll_into_view_if_needed(); page.evaluate("window.scrollBy(0, 200)"); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/accueil-3.png")
         page.locator(".ac-dernieres").scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/accueil-4.png")
 
-    page.click(".ac-jour.on"); page.wait_for_selector(".mt-hero", timeout=5000)
-    verif(page.evaluate("S.route") == "meteo" and page.locator(".mt-jour.on").get_attribute("data-v") == jours[1], "toucher un jour ouvre la météo de ce jour")
+    page.click(".ac-jour.on"); page.wait_for_selector(".mj-now", timeout=5000)
+    verif(page.evaluate("S.route") == "meteo" and page.locator(".mj-jour.on").get_attribute("data-v") == jours[1], "toucher un jour ouvre la météo de ce jour")
     page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-chiffre")
     page.click(".ac-chiffre >> nth=0"); page.wait_for_timeout(300)
     verif(page.evaluate("S.route") == "miel", "chiffre Miel → écran Miel")

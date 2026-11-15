@@ -1,0 +1,84 @@
+/* ---------- Météo du rucher en un écran (v5.45, piste A du 15 nov. 2026) ----------
+   Maintenant · 5 jours sans défilement · verdict du jour · heures en lignes · bouton principal en bas.
+   Hauteurs fixes (verdict, bouton) et aucune animation au changement de jour : toucher un jour ne fait rien bouger. */
+.mj{display:flex;flex-direction:column;gap:12px;font-variant-numeric:tabular-nums}
+.mj svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+
+/* Maintenant, sur une ligne */
+.mj-now{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius);background:#EEF0EA;color:var(--ink)}
+.mj-now.bon{background:var(--goodbg)}
+.mj-now.rapide{background:var(--honeysoft)}
+.mj-now svg{width:32px;height:32px;flex:none;stroke-width:1.7}
+.mj-now.bon svg{color:var(--good)}
+.mj-now.rapide svg{color:var(--watch)}
+.mj-now>b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:28px;font-weight:700;line-height:1}
+.mj-now>span{display:flex;flex-direction:column;min-width:0}
+.mj-now small{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.mj-now strong{font-size:15px}
+.mj-now.bon strong{color:#1F5239}
+.mj-now.rapide strong{color:var(--watch)}
+.mj-now>span>span{font-size:13px;color:#3F4A44}
+
+/* Jours : tous visibles, une case par heure de la plage de visite */
+.mj-jours{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:6px}
+.mj-jour{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:112px;padding:8px 5px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);font:inherit;color:var(--ink);cursor:pointer}
+.mj-jour svg{width:22px;height:22px;stroke-width:1.8}
+.mj-jour-nom{font-size:13px;font-weight:600}
+.mj-jour b{font-size:16px;font-weight:700}
+.mj-jour small{font-size:12px;font-weight:600;color:var(--muted)}
+.mj-jour.bon small{color:#1F5239}
+.mj-jour.rapide small{color:var(--watch)}
+.mj-jour.on{border-color:var(--pine);background:var(--pine);color:#fff}
+.mj-jour.on small{color:#fff}
+.mj-jour:focus-visible{outline:2px solid var(--pine);outline-offset:2px}
+.mj-mini{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:2px;width:100%;max-width:56px}
+.mj-mini i{display:block;height:6px;border-radius:2px;background:var(--line2)}
+.mj-mini i.n2{background:var(--good)}
+.mj-mini i.n1{background:var(--honey)}
+.mj-mini i.passee{opacity:.35}
+.mj-jour.on .mj-mini i.n0{background:#7D847B}
+.mj-jour.on .mj-mini i.n2{background:#7FC29E}
+
+/* Verdict du jour : hauteur fixe pour que la liste ne saute pas d'un jour à l'autre */
+.mj-zone{display:flex;flex-direction:column;gap:12px}
+.mj-verdict{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:76px}
+.mj-quand{font-size:13px;font-weight:600;color:var(--muted)}
+.mj-quand::first-letter{text-transform:uppercase}
+.mj-verdict strong{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;line-height:1.15}
+.mj-verdict.bon strong{color:#1F5239}
+.mj-verdict.rapide strong{color:var(--watch)}
+.mj-verdict>span:last-child{font-size:14px;color:#3F4A44}
+
+/* Heures en lignes */
+.mj-heures{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.mj-entete,.mj-ligne{display:grid;grid-template-columns:48px 24px 44px 50px minmax(56px,1fr) auto;gap:6px;align-items:center;padding:0 12px}
+.mj-entete{height:30px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.mj-entete span:last-child{text-align:right}
+.mj-ligne{width:100%;min-height:48px;border:0;border-top:1px solid #EEF0EA;background:none;font:inherit;font-size:14px;color:var(--ink);text-align:left;box-sizing:border-box}
+.mj-ligne:first-child{border-top:0}
+button.mj-ligne{cursor:pointer}
+button.mj-ligne:focus-visible{outline:2px solid var(--pine);outline-offset:-2px}
+.mj-ligne svg{width:22px;height:22px;stroke-width:1.8}
+.mj-ligne.passee,.mj-ligne.hors{color:#6B746E}
+.mj-ligne.now{background:var(--ground);box-shadow:inset 3px 0 0 var(--pine)}
+.mj-ligne.on{background:var(--goodbg);box-shadow:inset 3px 0 0 var(--good)}
+.mj-ligne.rapide.on{background:var(--honeysoft);box-shadow:inset 3px 0 0 var(--honey)}
+.mj-h{font-weight:600;line-height:1.1}
+.mj-h em{display:block;font-size:11px;font-style:normal;font-weight:700;letter-spacing:.02em;color:var(--pine);text-transform:uppercase}
+.mj-t.c1{color:var(--watch);font-weight:700}
+.mj-t.c2,.mj-p.fort,.mj-v.fort{color:var(--crit);font-weight:700}
+.mj-v small{display:block;font-size:12px;font-weight:600}
+.mj-puce{justify-self:end;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;background:#EEF0EA;color:#3F4A44}
+.mj-puce.bon{background:var(--good);color:#fff}
+.mj-puce.rapide{background:var(--honeysoft);color:var(--watch)}
+.mj-puce.passee,.mj-puce.hors{background:none;color:#6B746E;padding-right:0}
+
+.mj-pied{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+.mj-pied .link{min-height:44px;font-weight:600}
+.mj-seuils{margin:0}
+
+/* Bouton principal, toujours à la même place, au-dessus de la barre du bas */
+.mj-barre{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:5;margin:0 -16px;padding:10px 16px;background:var(--ground);border-top:1px solid var(--line)}
+.mj-barre .btn{width:100%;min-height:50px;font-size:16px}
+@media (min-width:801px){.mj{max-width:640px}.mj-barre{bottom:0;margin:0;border:1px solid var(--line);border-radius:var(--radius)}}
+@media (max-width:360px){.mj-entete,.mj-ligne{grid-template-columns:40px 22px 38px 44px minmax(50px,1fr) auto;gap:4px;padding:0 8px}}
