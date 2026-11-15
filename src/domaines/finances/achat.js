@@ -8,6 +8,7 @@
 import * as R from "../materiel/regles.js";
 import { stockSuivi } from "../materiel/catalogue.js";
 import { champsAchatAssocies } from "./entre-associes.js";
+import { MAX_PUCES, plat } from "../../noyau/choisir.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
@@ -33,6 +34,7 @@ export function ouvrir(prerempli = {}) {
   $sheetForm.querySelector(".actions")?.insertAdjacentHTML("beforebegin", `<div class="st-achat-corps"></div><div class="st-associes">${champsAchatAssocies(null)}</div>`);
   const corps = $sheetForm.querySelector(".st-achat-corps");
   corps?.addEventListener("input", majChiffres);
+  corps?.addEventListener("change", (ev) => rattacherSiExistant(ev.target));
   // S.achat reste après fermeture : le brouillon d'ergonomie.js (clic à côté, Échap) peut reprendre la saisie.
   $sheet.addEventListener("close", () => corps?.removeEventListener("input", majChiffres), { once: true });
   dessiner();
@@ -55,6 +57,96 @@ function lire() {
   return a;
 }
 
+/** Suggestions du nom d'un nouvel article (composant Choisir, forme B) : tes articles d'abord, avec leur stock, pour
+ *  éviter un doublon ; puis le catalogue de départ. */
+function suggestionsArticles() {
+  const arts = S.d.articles || [], vus = new Set(arts.map((a) => plat(a.nom)));
+  return [
+    ...arts.map((a) => ({ valeur: a.nom, detail: `${R.FAMILLES[R.famille(a)] || "Article"} · ${R.quantite(a.stock, a.unite)} en stock` })),
+    ...R.CATALOGUE.filter((k) => !vus.has(plat(k.nom))).map((k) => ({ valeur: k.nom, detail: `${R.FAMILLES[k.famille] || "Article"} · catalogue` })),
+  ];
+}
+
+/** Nouvel article dont le nom est celui d'un article existant : la ligne passe sur l'article existant (pas de doublon). */
+function rattacherSiExistant(cible) {
+  if (cible?.dataset?.k !== "nom") return;
+  const a = lire(), l = a?.lignes.find((x) => x.id === cible.dataset.ligne);
+  const art = l?.article && (S.d.articles || []).find((x) => plat(x.nom) === plat(cible.value));
+  if (!art) return;
+  if (a.lignes.some((x) => x.article_id === art.id)) a.lignes = a.lignes.filter((x) => x !== l);
+  else { delete l.article; l.article_id = art.id; }
+  dessiner();
+  toast(`« ${art.nom} » est déjà dans ton stock : la ligne y est rattachée`);
+}
+
+// ---------- Feuille de choix des articles (forme C, au-delà de 8 articles) ----------
+function feuilleArticles() {
+  lire();
+  const a = etat();
+  const arts = (S.d.articles || []).slice().sort((x, y) => String(x.nom).localeCompare(String(y.nom), "fr", { numeric: true }));
+  const choix = new Set(a.lignes.map((l) => l.article_id).filter(Boolean));
+  const familles = [...new Set(arts.map((x) => R.famille(x)))].sort((x, y) => Object.keys(R.FAMILLES).indexOf(x) - Object.keys(R.FAMILLES).indexOf(y));
+  let filtre = "", texte = "";
+  const el = document.createElement("div");
+  el.className = "ch-feuille";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-label", "Choisir des articles");
+  const ligneArt = (x) => {
+    const bas = R.aCommander(x);
+    return `<label class="ch-ligne"><input type="checkbox" data-ch-art="${e(x.id)}" ${choix.has(x.id) ? "checked" : ""}><span class="t"><b>${e(x.nom)}</b><span class="small">${e(R.FAMILLES[R.famille(x)] || "")}${x.unite && x.unite !== "unité" ? " · au " + e(x.unite) : ""}</span></span><span class="ch-stock${bas ? " bas" : ""}">${e(R.quantite(x.stock, x.unite))}${bas ? " · à racheter" : ""}</span></label>`;
+  };
+  const corps = () => {
+    const t = plat(texte);
+    const vis = arts.filter((x) => (!filtre || R.famille(x) === filtre) && (!t || plat(x.nom).includes(t)));
+    if (!vis.length) return `<p class="ch-vide">Aucun article ne correspond. « + Nouvel article » pour le créer.</p>`;
+    const aRacheter = !t && !filtre ? vis.filter(R.aCommander) : [];
+    const groupes = familles.map((f) => [f, vis.filter((x) => R.famille(x) === f)]).filter(([, l]) => l.length);
+    return (aRacheter.length ? `<p class="ch-groupe">À racheter</p>${aRacheter.map(ligneArt).join("")}` : "")
+      + groupes.map(([f, l]) => `<p class="ch-groupe">${e(R.FAMILLES[f] || "Autres articles")}</p>${l.filter((x) => !aRacheter.includes(x)).map(ligneArt).join("")}`).join("");
+  };
+  const pied = () => `${choix.size ? `Valider · ${choix.size} article${choix.size > 1 ? "s" : ""}` : "Valider"}`;
+  el.innerHTML = `<div class="ch-feuille-tete">
+      <div class="ch-feuille-titre"><button type="button" class="ch-fermer" data-ch-fermer="1" aria-label="Fermer sans changer">×</button><h3>Choisir des articles</h3><span style="width:44px"></span></div>
+      <input type="search" class="ch-recherche" placeholder="Rechercher un article" aria-label="Rechercher un article" autocomplete="off">
+      <div class="ch-familles" role="group" aria-label="Familles"><button type="button" class="on" data-ch-fam="">Tout</button>${familles.map((f) => `<button type="button" data-ch-fam="${e(f)}">${e(R.FAMILLES[f] || f)}</button>`).join("")}</div>
+    </div>
+    <div class="ch-feuille-corps">${corps()}</div>
+    <div class="ch-feuille-pied"><button type="button" class="btn" data-ch-nouveau="1">+ Nouvel article</button><button type="button" class="btn main" data-ch-valider="1">${pied()}</button></div>`;
+  const fermer = () => el.remove();
+  const rafraichir = () => { el.querySelector(".ch-feuille-corps").innerHTML = corps(); };
+  el.addEventListener("input", (ev) => {
+    if (ev.target.matches(".ch-recherche")) { texte = ev.target.value; rafraichir(); }
+  });
+  el.addEventListener("change", (ev) => {
+    const id = ev.target.dataset?.chArt;
+    if (!id) return;
+    if (ev.target.checked) choix.add(id); else choix.delete(id);
+    el.querySelector("[data-ch-valider]").textContent = pied();
+  });
+  el.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.dataset.chFermer) return fermer();
+    if (b.dataset.chFam !== undefined) {
+      filtre = b.dataset.chFam;
+      el.querySelectorAll("[data-ch-fam]").forEach((x) => x.classList.toggle("on", x === b));
+      return rafraichir();
+    }
+    if (b.dataset.chNouveau) { fermer(); return actions.stachnouveau(); }
+    if (b.dataset.chValider) {
+      const avant = new Set(etat().lignes.map((l) => l.article_id).filter(Boolean));
+      for (const id of choix) if (!avant.has(id)) ajouterArticle(id);
+      for (const id of avant) if (!choix.has(id)) ajouterArticle(id); // ajouterArticle retire une ligne déjà là
+      fermer();
+      dessiner();
+    }
+  });
+  el.addEventListener("keydown", (ev) => { if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); fermer(); } });
+  ($sheet.open ? $sheet : document.body).append(el);
+  setTimeout(() => el.querySelector(".ch-fermer")?.focus(), 30);
+}
+
 function ajouterArticle(id) {
   const a = etat();
   if (a.lignes.some((l) => l.article_id === id)) { a.lignes = a.lignes.filter((l) => l.article_id !== id); return; }
@@ -72,12 +164,15 @@ function dessiner() {
       <label>Date<input type="date" id="st_date" name="st_date" value="${e(a.date)}" max="${e(today())}" required></label></div>
     <label>Numéro de la facture (facultatif)<input id="st_piece" name="st_piece" value="${e(a.piece)}" autocomplete="off" placeholder="F-2026-123"></label>
     <div class="st-choix"><span class="small">Choisis dans tes articles</span>
-      <div class="st-puces" role="group" aria-label="Articles">${arts.map((x) => `<button type="button" class="${pris.has(x.id) ? "on" : ""}" aria-pressed="${pris.has(x.id)}" data-act="stachart" data-v="${e(x.id)}">${e(x.nom)}</button>`).join("")}
+      ${arts.length > MAX_PUCES
+        ? `<button type="button" class="st-choisir" data-act="stachfeuille">Choisir dans tes articles <span>${pris.size ? `${pris.size} choisi${pris.size > 1 ? "s" : ""} ›` : `${arts.length} articles ›`}</span></button>`
+        : ""}
+      <div class="st-puces" role="group" aria-label="Articles">${arts.length > MAX_PUCES ? "" : arts.map((x) => `<button type="button" class="${pris.has(x.id) ? "on" : ""}" aria-pressed="${pris.has(x.id)}" data-act="stachart" data-v="${e(x.id)}">${e(x.nom)}</button>`).join("")}
         <button type="button" class="st-tiret" data-act="stachnouveau">+ Nouvel article</button>
         <button type="button" class="st-tiret" data-act="stachlibre">+ Frais, service</button></div></div>
     ${a.lignes.length ? `<section class="st-lignes" aria-label="Lignes de la facture">${a.lignes.map(ligne).join("")}</section>`
       : '<p class="small st-astuce">Touche un article pour l’ajouter : une ligne par article de la facture.</p>'}
-    <datalist id="st_catalogue">${R.CATALOGUE.map((k) => `<option value="${e(k.nom)}">`).join("")}</datalist>
+    <datalist id="st_catalogue">${suggestionsArticles().map((o) => `<option value="${e(o.valeur)}" label="${e(o.detail)}">`).join("")}</datalist>
     <p class="st-info">Le stock monte dès que tu enregistres, et la facture reste liée à chaque mouvement.</p>
     <p class="st-total"><span>Total</span><b>${e(eur(total))}</b></p>
     <p class="small st-erreur" role="alert"></p>`;
@@ -162,6 +257,7 @@ function poste(art) {
 export const actions = {
   newdepense: (v) => ouvrir(v && typeof v === "object" ? v : {}),
   stachart: (id) => { lire(); ajouterArticle(id); dessiner(); },
+  stachfeuille: () => feuilleArticles(),
   stachnouveau: () => { lire(); etat().lignes.push({ id: nouvelId(), article: { id: nouvelId(), nom: "" }, quantite: "", montant: "" }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },
   stachlibre: () => { lire(); etat().lignes.push({ id: nouvelId(), libelle: "", quantite: "", montant: "", libre: true }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },
   stachote: (id) => { lire(); etat().lignes = etat().lignes.filter((l) => l.id !== id); dessiner(); },

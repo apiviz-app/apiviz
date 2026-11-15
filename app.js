@@ -1428,7 +1428,7 @@ function sheet({
 }) {
   (($sheetForm.innerHTML = `<h2>${esc(titre)}</h2>${intro ? `<p class="small">${esc(intro)}</p>` : ""}${champs
     .map((champ) => {
-      const attributs = `name="${champ.name}" ${champ.required ? "required" : ""} ${champ.step ? `step="${champ.step}"` : ""} ${champ.min !== void 0 ? `min="${champ.min}"` : ""} ${champ.list ? `list="dl_${champ.name}"` : ""}`;
+      const attributs = `name="${champ.name}" ${champ.required ? "required" : ""} ${champ.step ? `step="${champ.step}"` : ""} ${champ.min !== void 0 ? `min="${champ.min}"` : ""} ${champ.list ? `list="dl_${champ.name}"` : ""} ${champ.multiple ? 'data-multiple="1"' : ""}`;
       let controle;
       champ.type === "select"
         ? (controle = `<select ${attributs}>${champ.options
@@ -1715,7 +1715,8 @@ function clientForm(client) {
       // v5.38 (migration 021) : étiquettes libres à la place du cercle choisi dans une liste des réglages.
       {
         name: "etiquettes",
-        label: "Étiquettes (séparées par des virgules)",
+        label: "Étiquettes",
+        multiple: true, // puces à cocher (composant Choisir) ; la valeur reste « a, b » comme avant
         value: (Array.isArray(client?.etiquettes) && client.etiquettes.length ? client.etiquettes : client?.cercle ? [client.cercle] : []).join(", "),
         list: [...new Set([...S.d.clients.flatMap((c) => (Array.isArray(c.etiquettes) ? c.etiquettes : [c.cercle])), ...cfg().cercles].filter(Boolean))],
       },

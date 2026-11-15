@@ -1,0 +1,85 @@
+    # v5.41 — composant « Choisir » (maquettes du 15 nov. 2026) : plus de liste native (<input list>) ; puces sous le
+    # champ (8 choix ou moins, choix multiple), liste sous le champ (au-delà), feuille de choix des articles dans l'achat.
+    # Avec CAPTURES=<dossier>, capture à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    F = str(uuid.uuid4()); DATA["fournisseurs"] = [{"id": F, "nom": "Verrerie du Val"}]
+    def art(nom, famille, stock, seuil=0, unite="unité"):
+        i = str(uuid.uuid4()); DATA.setdefault("articles", []).append({"id": i, "nom": nom, "type": "Équipement" if famille == "equipement" else "Consommable", "famille": famille, "unite": unite, "stock": stock, "seuil": seuil}); return i
+    DATA["articles"] = []
+    P250 = art("Pot 250 g vide", "emballage", 120, 20); P500 = art("Pot 500 g vide", "emballage", 48, 20)
+    art("Couvercle", "emballage", 200); art("Étiquette 250 g", "emballage", 75)
+    CANDY = art("Candy", "alimentation", 2, 5, "kg"); art("Sirop", "alimentation", 10, 0, "L")
+    art("Lanières anti-varroa", "traitement", 12); art("Cire gaufrée", "cire", 40, 0, "feuille"); art("Enfumoir", "equipement", 1)
+    DATA["clients"] = [{"id": str(uuid.uuid4()), "nom": "Mme Martin", "cercle": "Famille", "etiquettes": ["Famille"]},
+                       {"id": str(uuid.uuid4()), "nom": "AMAP du Lot", "cercle": "AMAP", "etiquettes": ["AMAP", "Marché"]}]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # A · puces : ajouter des ruches (type de ruche, 4 choix)
+    page.evaluate("ACT.newruches()"); page.wait_for_selector("#sheet[open] [name=type_ruche]")
+    verif(page.locator("#sheet input[list]").count() == 0, "formulaire : plus aucune liste native")
+    verif(page.locator("#sheet [name=type_ruche]").get_attribute("data-choisir") == "A" and page.locator("#sheet .ch-puce").filter(has_text="Langstroth").count() == 1, "type de ruche : puces (4 choix)")
+    page.locator("#sheet .ch-puce").filter(has_text="Dadant 12 cadres").click()
+    verif(page.input_value("#sheet [name=type_ruche]") == "Dadant 12 cadres" and page.locator("#sheet .ch-puce.on").filter(has_text="Dadant 12 cadres").count() == 1, "un toucher remplit le champ et allume la puce")
+    page.locator("#sheet .ch-puce").filter(has_text="Dadant 12 cadres").click()
+    verif(page.input_value("#sheet [name=type_ruche]") == "", "second toucher : le champ facultatif se vide")
+    page.locator("#sheet [name=type_ruche] + .ch-puces .ch-autre").click(); page.keyboard.type("Ruchette 6 cadres"); page.keyboard.press("Tab")
+    verif(page.input_value("#sheet [name=type_ruche]") == "Ruchette 6 cadres" and "Ruchette 6 cadres" in page.locator("#sheet [name=type_ruche] + .ch-puces .ch-autre").inner_text() and "ch-replie" in (page.locator("#sheet [name=type_ruche]").get_attribute("class") or ""), "« Autre… » : saisie libre, montrée ensuite dans la puce allumée (champ replié)")
+    shot("choisir-a-ruches")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
+
+    # A · choix multiple : étiquettes d'un client
+    page.evaluate("ACT.newclient()"); page.wait_for_selector("#sheet[open] [name=etiquettes]")
+    verif(page.locator("#sheet [name=etiquettes]").get_attribute("data-choisir") == "A", "étiquettes : puces à cocher")
+    page.locator("#sheet .ch-puce").filter(has_text="AMAP").click(); page.locator("#sheet .ch-puce").filter(has_text="Marché").click()
+    verif(page.input_value("#sheet [name=etiquettes]") == "AMAP, Marché", "deux étiquettes cochées : « AMAP, Marché » : " + page.input_value("#sheet [name=etiquettes]"))
+    page.locator("#sheet .ch-puce").filter(has_text="AMAP").click()
+    verif(page.input_value("#sheet [name=etiquettes]") == "Marché", "décocher retire l'étiquette")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
+
+    # C · feuille de choix des articles (9 articles) puis B · nom d'un nouvel article
+    page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] .st-achat-corps")
+    verif(page.locator("#sheet .st-choisir").count() == 1 and page.locator("#sheet .st-puces [data-act=stachart]").count() == 0, "9 articles : un bouton « Choisir dans tes articles » au lieu de 9 puces")
+    page.click("#sheet .st-choisir"); page.wait_for_selector(".ch-feuille")
+    t = page.locator(".ch-feuille").inner_text().lower()
+    verif("à racheter" in t and "candy" in t and "emballage" in t, "feuille : groupe « À racheter » (Candy), familles")
+    verif("120" in page.locator(".ch-ligne").filter(has_text="Pot 250 g vide").inner_text(), "chaque article montre son stock")
+    page.fill(".ch-recherche", "pot")
+    verif(page.locator(".ch-ligne").count() == 2, "recherche « pot » : 2 articles")
+    page.locator(".ch-ligne").filter(has_text="Pot 250 g vide").locator("input").check(); page.locator(".ch-ligne").filter(has_text="Pot 500 g vide").locator("input").check()
+    page.fill(".ch-recherche", ""); page.click(".ch-familles [data-ch-fam=alimentation]")
+    verif(page.locator(".ch-ligne").count() == 2 and "Sirop" in page.locator(".ch-feuille-corps").inner_text(), "famille Alimentation : Candy et Sirop")
+    page.locator(".ch-ligne").filter(has_text="Candy").locator("input").check()
+    verif("3 articles" in page.locator("[data-ch-valider]").inner_text(), "pied : « Valider · 3 articles »")
+    shot("choisir-c-feuille")
+    page.click("[data-ch-valider]"); page.wait_for_timeout(200)
+    verif(page.locator(".ch-feuille").count() == 0 and page.locator(".st-ligne").count() == 3, "valider : 3 lignes dans l'achat")
+    verif("3 choisis" in page.locator("#sheet .st-choisir").inner_text(), "le bouton dit « 3 choisis »")
+    page.click("#sheet .st-choisir"); page.wait_for_selector(".ch-feuille")
+    page.locator(".ch-ligne").filter(has_text="Candy").locator("input").uncheck(); page.keyboard.press("Escape"); page.wait_for_timeout(150)
+    verif(page.locator(".ch-feuille").count() == 0 and page.locator("#sheet[open]").count() == 1 and page.locator(".st-ligne").count() == 3, "Échap ferme la feuille sans rien changer ni fermer l'achat")
+
+    page.click("[data-act=stachnouveau]"); page.wait_for_timeout(150)
+    nom = page.locator(".st-ligne:last-child [data-k=nom]")
+    verif(nom.get_attribute("data-choisir") == "B" and nom.get_attribute("list") is None, "nouvel article : liste sous le champ (forme B), sans liste native")
+    nom.click(); nom.type("pot")
+    page.wait_for_selector(".ch-liste:not([hidden])")
+    opts = page.locator(".ch-liste .ch-option").all_inner_texts()
+    verif(any("Pot 250 g vide" in o and "en stock" in o for o in opts) and any("Pot 1 kg vide" in o and "catalogue" in o for o in opts) and any("Garder « pot »" in o for o in opts), "liste filtrée : tes articles avec leur stock, le catalogue, « Garder » : %s" % opts)
+    shot("choisir-b-article")
+    page.locator(".ch-liste .ch-option").filter(has_text="Pot 1 kg vide").dispatch_event("pointerdown")
+    verif(nom.input_value() == "Pot 1 kg vide" and page.locator(".ch-liste:not([hidden])").count() == 0, "toucher une option remplit le champ et ferme la liste")
+    nom.fill(""); nom.type("cand"); page.keyboard.press("ArrowDown"); page.keyboard.press("Enter"); page.wait_for_timeout(300)
+    verif(page.locator(".st-ligne").count() == 3 and page.locator(".st-ligne:last-child [data-k=nom]").count() == 0, "« Candy » existe déjà : la ligne nouvelle disparaît (Candy est déjà dans l'achat), pas de doublon")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
+
+    verif(page.evaluate("document.querySelectorAll('input[list]').length") == 0, "plus aucune liste native dans la page")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
