@@ -5,6 +5,36 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.41 · à publier en recette · listes de choix : puces, liste sous le champ, feuille de choix
+Aucune migration. Maquettes du 15 nov. 2026, « mélange recommandé » validé par Pierre-Louis.
+
+Les 16 champs à suggestions de l'app passaient par la liste native du navigateur (sur Android : une bande coupée
+au-dessus du clavier, sans contexte). Un composant unique, « Choisir », les remplace tous automatiquement :
+- **Puces sous le champ** (8 choix ou moins) : tous les choix visibles, un toucher remplit le champ, un second le vide
+  (champ facultatif) ; « Autre… » rouvre la saisie libre, la valeur reste ensuite dans la puce. Rucher, type de ruche,
+  unité, format du pot, moyen de paiement entre associés…
+- **Choix multiple** : les étiquettes d'un client se cochent (plus de « séparées par des virgules »).
+- **Liste sous le champ** (plus de 8 choix) : filtre à chaque lettre, accents ignorés, partie tapée en gras, flèches
+  et Entrée au clavier, « Garder « … » » pour une valeur nouvelle ; sur téléphone, le champ remonte en haut pour que la
+  liste tienne au-dessus du clavier. Traitement d'une visite, miel d'une récolte et de la mise en pots, nom d'un article.
+- **Achat** : au-delà de 8 articles, « Choisir dans tes articles » ouvre une **feuille de choix** plein écran
+  (recherche, familles, groupe « À racheter », stock de chaque article, plusieurs cases d'un coup, Échap pour annuler).
+  Le nom d'un nouvel article propose d'abord tes articles avec leur stock, puis le catalogue ; choisir un article qui
+  existe déjà y rattache la ligne (plus de doublon).
+
+Les menus déroulants classiques (`<select>`, 28) ne changent pas encore.
+
+Technique : `src/noyau/choisir.js` (règles pures + transformation des `<input list>` dès qu'ils apparaissent, le vrai
+champ reste celui du formulaire), `styles/53-choisir.css`, `sheet()` (`multiple`), `achat.js` (feuille, suggestions,
+rattachement). Tests : unitaires `choisir.test.mjs` (7) ; bout en bout `etapes_ch` (nouveau, 23 vérifications).
+
+### À vérifier
+- Téléphone, Ajouter des ruches : rucher et type en puces ; « Autre… » pour un type nouveau.
+- Fiche client : cocher deux étiquettes, enregistrer, rouvrir.
+- Ajouter un achat : « Choisir dans tes articles », cocher 2 ou 3 articles ; « + Nouvel article », taper « pot » :
+  la liste s'affiche sous le champ, au-dessus du clavier, sans la bande d'Android.
+- Visite : produit de traitement ; Récolte : miel.
+
 ## v5.40 · à publier en recette · Ruchers sur téléphone : liste dense et alvéoles, une seule barre
 Aucune migration. Maquettes « Réagencement mobile » du 14 nov. 2026, pistes B et C retenues par Pierre-Louis.
 Constat : sur un téléphone de 844 px, 7 bandes empilées laissaient 3 colonies visibles en tableau, et aucune dans

@@ -4,6 +4,7 @@
 import * as routeur from "./noyau/routeur.js";
 import * as actions from "./noyau/actions.js";
 import { ecrans } from "./domaines/index.js";
+import * as choisir from "./noyau/choisir.js";
 
 for (const def of ecrans) {
   routeur.enregistrer(def);
@@ -16,3 +17,7 @@ Object.assign(window.Noyau, {
   ecrans: routeur.liste,
   proprietaireAction: actions.proprietaire,
 });
+
+// Champs à suggestions transformés en puces ou en liste sous le champ (v5.41).
+choisir.demarrer();
+window.Noyau.choisir = choisir;
