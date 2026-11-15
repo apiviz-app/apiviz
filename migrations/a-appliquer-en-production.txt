@@ -5,3 +5,5 @@
 # État au 14 nov. 2026 : apidoo et apidoo-test en sont à 021 (021 appliquée par la mise en ligne du 14 nov. : recette à
 # 10 h 58, production à 11 h 05 ; 020 l'était déjà). Aucune migration en attente pour la production.
 # 022-suppression-compte.sql (PR claude/suite) : sera appliquée par la mise en ligne en recette, puis en production.
+# 023-visite-rapide.sql (PR claude/visite-rapide, v5.43) : force, œufs vus, cellules royales ; creer_visite étendue. Additive.
+#   À appliquer sur apidoo-test par la mise en ligne en recette, puis sur apidoo avec l'accord de Pierre-Louis.
