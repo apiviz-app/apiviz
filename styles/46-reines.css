@@ -21,7 +21,7 @@
 .rn-suite{display:block;margin-top:10px;text-align:left}
 
 /* Événement de la colonie dans le journal, entre deux visites. */
-.cl-evt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-left:3px solid var(--honey);border-radius:10px;background:var(--card)}
+.cl-evt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-left:3px solid var(--honey);border-radius:var(--r-s);background:var(--card)}
 .cl-evt-d{font-size:12px;font-weight:600;color:var(--muted);min-width:52px}
 .cl-evt-t{display:flex;flex-direction:column;min-width:0}
 .rn-chip .v3-pastille{border-width:1.5px}

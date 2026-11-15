@@ -1,6 +1,6 @@
 /* ---------- Gestion en blocs ---------- */
 .n4-grille.g-blocs{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.n4-grille.g-blocs .n4-g.g-bloc{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;min-height:232px;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:none;cursor:pointer;color:var(--ink);transition:border-color var(--duree-rapide,.15s) ease,transform var(--duree-rapide,.15s) ease}
+.n4-grille.g-blocs .n4-g.g-bloc{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;min-height:232px;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;cursor:pointer;color:var(--ink);transition:border-color var(--duree-rapide,.15s) ease,transform var(--duree-rapide,.15s) ease}
 .n4-grille.g-blocs .n4-g.g-bloc:hover{border-color:var(--pine);transform:translateY(-1px)}
 .n4-g.g-bloc .small{display:block;max-width:none;margin:0;text-align:left;font-weight:400;color:var(--muted);white-space:normal}
 .n4-g.g-bloc>*{width:100%}
@@ -15,7 +15,7 @@
 .g-jauge i{display:block;height:100%;border-radius:5px;background:var(--honey)}
 .g-jauge i.vert{background:var(--good)}
 .g-barres{display:flex;align-items:flex-end;gap:5px;height:44px}
-.g-barres i{flex:1;min-width:0;border-radius:3px 3px 0 0;background:#C4CABD}
+.g-barres i{flex:1;min-width:0;border-radius:3px 3px 0 0;background:var(--line2)}
 .g-barres i.on{background:var(--pine)}
 .g-av{display:flex}
 .g-av i{width:34px;height:34px;margin-right:-6px;border-radius:50%;border:2px solid #fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-weight:600;font-size:14px;background:var(--pine);color:#fff}

@@ -204,6 +204,27 @@ def verif(cond, msg):
     global ok
     print(("OK   " if cond else "ECHEC") + " " + msg); ok = ok and cond
 
+def entete(page):
+    """Titre et résumé de l'écran (gabarit commun v5.43 : une phrase passe du titre au résumé)."""
+    return page.locator(".wrap > .head").first.inner_text()
+
+def existe(page, sel):
+    """Vrai si le bouton est à l'écran ou rangé dans ⋯ (gabarit commun v5.43)."""
+    if page.locator(sel).count(): return True
+    return page.evaluate("""(sel) => { const b = document.querySelector('.wrap > .head .g-plus'); const s = sel.split(/\\s+/).pop();
+      return ((b && b._g) || []).some((x) => x.matches(s)); }""", sel)
+
+def cliquer(page, sel):
+    """Clique un bouton de l'écran ; s'il est rangé dans ⋯ (gabarit commun v5.43), passe par la feuille « Actions »."""
+    for j in range(page.locator(sel).count()):
+        if page.locator(sel).nth(j).is_visible():
+            page.locator(sel).nth(j).click(); return
+    page.locator(".wrap > .head .g-plus").first.click(); page.wait_for_selector("#sheet[open] .g-action")
+    i = page.evaluate("""(sel) => { const b = document.querySelector('.wrap > .head .g-plus'); const l = (b && b._g) || [];
+      const s = sel.split(/\\s+/).pop(); return l.findIndex((x) => x.matches(s)); }""", sel)
+    if i < 0: raise Exception("bouton introuvable, ni à l'écran ni dans ⋯ : " + sel)
+    page.locator("#sheet .g-action").nth(i).click()
+
 with sync_playwright() as pw:
     nav = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
     ctx = nav.new_context(viewport={"width": 390, "height": 844})

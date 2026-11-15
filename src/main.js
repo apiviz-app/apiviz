@@ -5,6 +5,7 @@ import * as routeur from "./noyau/routeur.js";
 import * as actions from "./noyau/actions.js";
 import { ecrans } from "./domaines/index.js";
 import * as choisir from "./noyau/choisir.js";
+import * as gabarit from "./noyau/gabarit.js";
 
 for (const def of ecrans) {
   routeur.enregistrer(def);
@@ -21,3 +22,8 @@ Object.assign(window.Noyau, {
 // Champs à suggestions transformés en puces ou en liste sous le champ (v5.41).
 choisir.demarrer();
 window.Noyau.choisir = choisir;
+
+// Gabarit d'écran commun (v5.43) : en-tête, retour, bouton principal en bas, ⋯, puce d'année. Déclaré en dernier :
+// il passe après tous les autres crochets « après le rendu », sur l'écran tel qu'ils l'ont laissé.
+window.Noyau.crochets.sur("apresRendu", "gabarit", () => gabarit.appliquer());
+window.Noyau.gabarit = gabarit;

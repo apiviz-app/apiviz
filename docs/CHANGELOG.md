@@ -5,6 +5,41 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.43 · à publier en recette · gabarit d'écran commun
+Aucune migration. Audit « ergonomie et uniformisation » du 14 nov. 2026, étape 2 (s'appuie sur la v5.42).
+
+Le même squelette sur tous les écrans, posé par un seul module au lieu de chaque écran à sa façon :
+1. **En-tête** : un seul retour « ‹ Parent » (plus de fil d'Ariane « Finances › Dépenses », plus de « ‹ Gestion »), et
+   seulement pour un écran de 2e niveau ; le titre est un nom (« Dépenses », « Matériel », « Rappels »), la phrase passe
+   dessous (« 0 € dépensés en 2026 »).
+2. **Un seul bouton principal** : en bas sur téléphone, au-dessus du menu ; à droite du titre sur ordinateur. Les
+   autres boutons de l'en-tête et des barres du bas (Fichier comptable, Faire l'inventaire, Exporter, Associés…) vont
+   dans **⋯**, qui ouvre la feuille « Actions ».
+3. **Fiche ruche** : « Nouvelle visite » (ou « Visite express » si la ruche a déjà une visite) et un bouton **+**
+   (Visite complète, Tâche). La barre fait une ligne au lieu de deux.
+4. **Année** : une puce « 2026 ▾ » ouvre la liste des années (Dépenses, Bilan, Budget, Registre…).
+5. **Santé** : le seuil d'alerte varroa passe dans ⋯ (feuille de saisie) ; la liste des ruches à compter vient tout de
+   suite ; Registre et Déclaration restent dans le Menu.
+6. **Agenda** : « Filtrer » ouvre une feuille (Visites, Tâches, Ventes, Récoltes, En retard) au lieu d'une rangée qui
+   débordait ; Mois / Semaine prennent le style des autres choix de vue.
+7. **Dépenses** : un seul nom, « Ajouter une dépense », et un seul bouton (plus de second bouton au milieu).
+8. **Jetons** : 4 rayons, textes de 12 px minimum (30 tailles plus petites relevées), couleurs de la charte par variables
+   (72 valeurs), cibles de 44 px pour le retour et ⋯.
+
+Technique : `src/noyau/gabarit.js` (règles pures + habillage, dernier crochet « après le rendu »),
+`styles/composants/gabarit.css`, `styles/jetons.css` ; retraits : fil d'Ariane d'`ergonomie.js` et de
+`navigation.js`, retours de `nav4.js`, flèches d'année de `compact.js`, liens Registre/Déclaration de Santé
+(`alveoles.js`). Règles : `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §5 ; liste à cocher des PR d'écran :
+`docs/PROCESSUS.md`. Tests : unitaires `gabarit.test.mjs` (4) ; bout en bout `etapes_gb` (nouveau, 17 vérifications) ;
+`ab`, `al`, `as`, `eg`, `lc`, `mt`, `n4`, `nk`, `op`, `rg`, `rp`, `ru`, `st`, `v4`, `vt` adaptés (aides `cliquer()`,
+`existe()` et `entete()` dans `test_hl.py` : un bouton rangé dans ⋯ se trouve par la feuille « Actions »).
+
+### À vérifier
+- Dépenses, Matériel, Bilan : titre court, phrase dessous, un seul gros bouton en bas, ⋯ en haut à droite.
+- Fiche ruche : « Visite express » et + (Visite complète, Tâche) ; sur ordinateur, les mêmes boutons en haut.
+- Santé : ⋯ › Seuil d'alerte varroa. Agenda : Filtrer. Dépenses : puce 2026.
+- Liste de courses, Lot, Météo : « ‹ Matériel », « ‹ Miel », « ‹ … » en haut à gauche.
+
 ## v5.42 · à publier en recette · correctifs bloquants de l'audit du 14 nov. 2026
 Aucune migration. Audit « ergonomie et uniformisation » (canvas du 14 nov. 2026), étape 1.
 

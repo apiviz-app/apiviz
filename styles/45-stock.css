@@ -28,10 +28,10 @@
 .st-achat-corps{display:flex;flex-direction:column;gap:12px}
 .st-choix{display:flex;flex-direction:column;gap:6px}
 .st-puces{display:flex;flex-wrap:wrap;gap:6px}
-.st-puces button{min-height:40px;padding:0 13px;border:1px solid var(--line2);border-radius:999px;background:#fff;font:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.st-puces button{min-height:40px;padding:0 13px;border:1px solid var(--line2);border-radius:var(--r-pill);background:#fff;font:inherit;font-size:14px;font-weight:600;color:var(--ink)}
 .st-puces button.on{background:var(--pine);border-color:var(--pine);color:#fff}
 .st-puces button.st-tiret{border-style:dashed}
-.st-lignes{border:1px solid var(--line);border-radius:14px;padding:0 12px}
+.st-lignes{border:1px solid var(--line);border-radius:var(--r-m);padding:0 12px}
 .st-ligne{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
 .st-ligne:first-child{border-top:0}
 .st-ligne-t{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -41,7 +41,7 @@
 .st-nature{grid-template-columns:repeat(2,minmax(0,1fr))}
 .st-nature button{min-height:40px}
 .st-tags{display:flex;gap:6px;flex-wrap:wrap}
-.st-info{margin:0;padding:10px 12px;border-radius:14px;background:var(--honeysoft);font-size:13px}
+.st-info{margin:0;padding:10px 12px;border-radius:var(--r-m);background:var(--honeysoft);font-size:13px}
 .st-total{display:flex;justify-content:space-between;align-items:baseline;margin:0}
 .st-total b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-variant-numeric:tabular-nums}
 .st-erreur{margin:0;color:var(--crit);min-height:0}
@@ -53,7 +53,7 @@
 .st-formats{grid-template-columns:repeat(auto-fit,minmax(70px,1fr))}
 .st-pas{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600}
 .st-pas-c{display:flex;align-items:center;gap:6px}
-.st-pas-b{width:48px;height:48px;border:1px solid var(--line2);border-radius:13px;background:#fff;font-size:22px;color:var(--ink)}
+.st-pas-b{width:48px;height:48px;border:1px solid var(--line2);border-radius:var(--r-m);background:#fff;font-size:22px;color:var(--ink)}
 .st-pas-c input{width:72px;text-align:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-weight:700}
 .st-sortie{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:48px;border-top:1px solid #EDEFE7;padding:6px 0}
 .st-mp h2+.st-sortie{border-top:0}
@@ -64,7 +64,7 @@ label.st-sortie-l select{color:var(--ink)}
 .st-aa{font-size:13px;color:var(--muted)}
 .st-aa b{font-weight:500}
 .st-aa b.st-moins{font-weight:700}
-.st-alerte{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--critbg);color:#8A1414;font-size:13px;font-weight:600}
+.st-alerte{margin:8px 0 0;padding:8px 10px;border-radius:var(--r-s);background:var(--critbg);color:#8A1414;font-size:13px;font-weight:600}
 .st-alerte-douce{background:var(--honeysoft);color:var(--watch)}
 .st-hex{width:16px;height:14px;flex:none;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 .st-deja{display:block;margin:12px auto 0;text-align:center}

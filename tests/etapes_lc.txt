@@ -32,7 +32,9 @@
     # Fiche rucher (IT-05) : ni Renommer, ni Infos, ni Archiver ; l'appel et l'itinéraire restent.
     page.evaluate("ACT.alrucher('Verger')"); page.wait_for_selector("h1 >> text=Verger", timeout=5000)
     verif(visibles("[data-act=rcrenommer]") + visibles("[data-act=rcarchiver]") + visibles("[data-act=rcinfos]") == 0, "fiche rucher : ni Renommer, ni Infos, ni Archiver")
-    verif(visibles("a[href='tel:0612345678']") >= 1 and visibles("a.u-lienbtn[href*='destination=']") >= 1, "fiche rucher : Appeler et Itinéraire restent")
+    dans_menu = page.evaluate("() => ((document.querySelector('.wrap > .head .g-plus') || {})._g || []).map((b) => b.getAttribute('href') || '').join(' ')")
+    verif((visibles("a[href='tel:0612345678']") >= 1 or "tel:0612345678" in dans_menu) and (visibles("a.u-lienbtn[href*='destination=']") >= 1 or "destination=" in dans_menu),
+          "fiche rucher : Appeler et Itinéraire restent (à l'écran ou dans ⋯, v5.43)")
     page.evaluate("ACT.ruche(arguments[0])" if False else f"ACT.ruche('{R1}')"); page.wait_for_timeout(400)
     verif(page.locator("text=Calme").count() >= 1, "fiche de la ruche : le journal des visites se lit")
     verif(visibles("[data-act=delvisite]") == 0, "fiche de la ruche : pas de lien « Supprimer »")

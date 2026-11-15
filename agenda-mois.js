@@ -70,15 +70,14 @@ const AG = (() => {
       return `<button type="button" class="ag-case${dehors ? " dehors" : ""}${t === auj ? " auj" : ""}${t === etat.jour ? " choisi" : ""}${d.getDay() % 6 === 0 ? " we" : ""}" data-cp="agjour" data-v="${t}" aria-label="${esc(lib)}"${t === etat.jour ? ' aria-current="date"' : ""}>
         <span class="ag-num">${etat.vue === "semaine" ? `<small>${esc(d.toLocaleDateString("fr-FR", { weekday: "short" }))}</small>` : ""}${d.getDate()}</span>${pastilles}${plus}${points}</button>`;
     }).join("");
-    const filtres = Object.entries(TYPES).map(([k, x]) => `<button type="button" class="ag-filtre" data-cp="agfiltre" data-v="${k}" aria-pressed="${!etat.caches.has(k)}"><i class="ag-${k}"></i>${esc(x.nom)}</button>`).join("");
     const entetes = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((j) => `<span>${j}</span>`).join("");
     return `<div class="ag-barre">
         <div class="ag-nav"><button type="button" class="cp-icone" data-cp="agpas" data-v="-1" aria-label="${etat.vue === "semaine" ? "Semaine précédente" : "Mois précédent"}">${ic("M15 6l-6 6 6 6")}</button>
           <button type="button" class="cp-icone" data-cp="agpas" data-v="1" aria-label="${etat.vue === "semaine" ? "Semaine suivante" : "Mois suivant"}">${ic("M9 6l6 6-6 6")}</button>
           <h2>${esc(titre())}</h2><button type="button" class="btn sm ag-auj" data-cp="agauj">Aujourd’hui</button></div>
-        <div class="cp-bascule" role="tablist" aria-label="Vue"><button type="button" role="tab" data-cp="agvue" data-v="mois" aria-selected="${etat.vue === "mois"}">Mois</button><button type="button" role="tab" data-cp="agvue" data-v="semaine" aria-selected="${etat.vue === "semaine"}">Semaine</button></div>
+        <div class="ag-outils"><button type="button" class="g-puce" data-cp="agfeuille" aria-label="Filtrer ce qui s’affiche${etat.caches.size ? `, ${etat.caches.size} masqué${etat.caches.size > 1 ? "s" : ""}` : ""}">${ic("M4 6h16M7 12h10M10 18h4", 16)}Filtrer${etat.caches.size ? `<span class="g-n">${etat.caches.size}</span>` : ""}</button>
+        <div class="cp-bascule" role="tablist" aria-label="Vue"><button type="button" role="tab" data-cp="agvue" data-v="mois" aria-selected="${etat.vue === "mois"}">Mois</button><button type="button" role="tab" data-cp="agvue" data-v="semaine" aria-selected="${etat.vue === "semaine"}">Semaine</button></div></div>
       </div>
-      <div class="ag-filtres" aria-label="Afficher">${filtres}</div>
       <div class="ag-grille ag-${etat.vue}" role="grid"><div class="ag-entetes" aria-hidden="true">${entetes}</div><div class="ag-cases">${cases}</div></div>`;
   }
 
@@ -125,6 +124,18 @@ const AG = (() => {
 
   Noyau.crochets.sur("apresRendu", "agenda-mois", () => { if (S.route === "agenda" && S.d) completer(); });
 
+  // Feuille « Filtrer » (gabarit commun v5.43) : ce qui s'affiche dans le calendrier, au lieu d'une rangée de puces
+  // qui débordait de l'écran sur téléphone.
+  function feuille() {
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    const vus = Object.keys(TYPES).filter((k) => !etat.caches.has(k)).length;
+    $sheetForm.innerHTML = `<div class="g-ftete"><h2>Filtrer</h2><button type="button" class="g-fermer" data-act="closesheet" aria-label="Fermer">${ic("M18 6L6 18M6 6l12 12", 22)}</button></div>
+      <p class="small">Ce qui s’affiche dans le calendrier.</p>
+      <div class="g-puces">${Object.entries(TYPES).map(([k, x]) => `<button type="button" class="g-puce ag-filtre${etat.caches.has(k) ? "" : " on"}" data-cp="agfiltre" data-v="${k}" aria-pressed="${!etat.caches.has(k)}"><i class="ag-${k}"></i>${esc(x.nom)}</button>`).join("")}</div>
+      <button type="button" class="btn main" data-act="closesheet">Voir ${vus === Object.keys(TYPES).length ? "tout" : `${vus} sur ${Object.keys(TYPES).length}`}</button>`;
+    if (!$sheet.open) $sheet.showModal();
+  }
+
   document.addEventListener("click", (e) => {
     const b = e.target.closest?.("[data-cp^=ag]");
     if (!b) return;
@@ -141,7 +152,8 @@ const AG = (() => {
       dessiner();
     } else if (a === "agauj") { etat.jour = today(); etat.mois = etat.jour.slice(0, 7); dessiner(); }
     else if (a === "agvue") { etat.vue = v; if (v === "semaine" && etat.jour.slice(0, 7) !== etat.mois) etat.jour = etat.mois + "-01"; dessiner(); }
-    else if (a === "agfiltre") { etat.caches.has(v) ? etat.caches.delete(v) : etat.caches.add(v); dessiner(); }
+    else if (a === "agfiltre") { etat.caches.has(v) ? etat.caches.delete(v) : etat.caches.add(v); dessiner(); if ($sheet.open) feuille(); }
+    else if (a === "agfeuille") feuille();
     else if (a === "agajout") {
       ACT.newtache();
       const champ = document.querySelector("#sheetForm [name=echeance]");

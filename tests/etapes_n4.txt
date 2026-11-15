@@ -44,7 +44,7 @@
     verif(page.locator(".subtabs button[data-act=go]").all_inner_texts() == ["Liste", "Carte", "Santé"] and page.locator(".subtabs .tb-plus").count() == 1, "Ruchers : Liste, Carte, Santé, et le menu ⋯")
     verif(page.locator(".n4-ruche").count() == 6 and page.locator(".tb-gr [data-act=v3tournee]").count() == 2, "liste rangée par rucher, avec la tournée de chaque rucher")
     shot("ruchers")
-    page.click(".subtabs [data-v=varroa]"); page.wait_for_selector("form[data-form=v3seuil]")
+    page.click(".subtabs [data-v=varroa]"); page.wait_for_function("document.querySelector('.wrap > .head h1')?.textContent === 'Santé'")
     verif(page.locator(".bottom button.on[data-v=ruches]").count() == 1, "Santé reste dans Ruchers")
     page.click(".subtabs [data-v=ruches]")
     # Fiche ruche
@@ -53,7 +53,7 @@
     nom1 = page.locator(".head h1").inner_text()
     page.click(".n4-fleches [aria-label^='Ruche suivante']"); page.wait_for_function("n => document.querySelector('.head h1')?.innerText !== n", arg=nom1, timeout=5000)
     verif(page.locator(".head h1").inner_text() != nom1, "flèche : ruche suivante (%s)" % page.locator(".head h1").inner_text())
-    verif(page.locator(".u-quatre > div").count() == 4 and page.locator(".n4-rbarre [data-act=newvisite]").is_visible() and page.locator(".n4-rbarre [data-act=veruche]").is_visible(), "4 chiffres clés, « Visite express » et « Visite complète » en bas (v5.32)")
+    verif(page.locator(".u-quatre > div").count() == 4 and page.locator(".n4-rbarre > [data-act=veruche]").is_visible() and page.locator(".n4-rbarre .g-autres [data-act=newvisite]").count() == 1, "4 chiffres clés, « Visite express » en bas, « Visite complète » dans le + (v5.43)")
     shot("ruche")
     # Supprimer avec Annuler
     nv = page.locator(".u-visite").count()
@@ -76,11 +76,11 @@
     cats = page.locator("#nlVolet h2").all_inner_texts()
     verif([c.lower() for c in cats] == ["au quotidien", "ruchers", "miel et ventes", "finances", "administration", "équipe et compte"], "catégories du volet : %s" % cats)
     shot("menu")
-    page.click("#nlVolet [data-v=pilotage]"); page.wait_for_selector(".er-ariane >> text=Finances")
+    page.click("#nlVolet [data-v=pilotage]"); page.wait_for_function("S.route === 'pilotage'")
     verif(not page.evaluate("document.getElementById('nlVolet').open"), "le volet se ferme après un choix")
     verif(page.locator(".head h1").inner_text() == "Bilan", "« Pilotage » devient « Bilan »")
     verif(page.locator(".bottom button.on[data-v=menu]").count() == 1, "Bilan rangé derrière Menu")
-    page.click(".er-ariane [data-act=nlmenu]"); page.wait_for_selector("#nlVolet[open] button.on[data-v=pilotage]")
+    page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] button.on[data-v=pilotage]")
     page.click("#nlVolet [data-v=materiel]"); page.wait_for_function("S.route === 'materiel' && document.querySelector('.head h1')?.textContent === 'Matériel'", timeout=5000)
     verif(page.locator(".head h1").inner_text() == "Matériel", "écran Matériel")
     # Compte

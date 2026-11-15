@@ -1,6 +1,6 @@
 /* ---------- Fiche ruche d'après les maquettes (v5.25, src/domaines/colonies/apercu.js) ----------
    Ce qu'en dit API sous l'en-tête, courbe de poids resserrée tracée puis pointée, journal qui entre carte après carte. */
-.fr-api{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px;border-radius:16px;background:var(--honeysoft);animation:vt-monte var(--duree-lente) var(--sortie) .08s both}
+.fr-api{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px;border-radius:var(--r-m);background:var(--honeysoft);animation:vt-monte var(--duree-lente) var(--sortie) .08s both}
 .fr-api-t{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fr-api-t p{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
 .fr-api-t .small{color:var(--muted)}

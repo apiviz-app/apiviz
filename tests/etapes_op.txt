@@ -73,7 +73,7 @@
 
     # 4. Inventaire : un écart enregistré, les cases vides ignorées
     page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
-    page.click(".op-pied [data-v=inventaire]"); page.wait_for_selector(".inv-corps")
+    cliquer(page, "[data-v=inventaire]"); page.wait_for_selector(".inv-corps")
     page.fill(f".inv-in[data-art='{A1}']", "4"); page.fill(f".inv-in[data-art='{P250}']", "35")
     verif("−5" in page.locator(f".inv-l[data-art='{P250}'] .inv-ec").inner_text() and "comme prévu" in page.locator(f".inv-l[data-art='{A1}'] .inv-ec").inner_text(), "écart affiché en tapant")
     verif(page.locator(".inv-ok").inner_text() == "Enregistrer 1 écart", "bouton : « Enregistrer 1 écart »")

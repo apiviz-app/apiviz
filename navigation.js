@@ -108,19 +108,7 @@ const NL = (() => {
         if (barre) main.querySelector(".nl-entete").append(barre);
       }
     }
-    // Fil d'Ariane : la catégorie à la place de « Gestion » ; sur téléphone, elle ouvre le volet.
-    const cat = categorieDe(S.route);
-    const lien = document.querySelector('.er-ariane [data-v="plus"], .wrap > .u-retour[data-v="plus"]');
-    if (lien && cat) {
-      lien.textContent = cat;
-      lien.dataset.act = "nlmenu";
-      lien.removeAttribute("data-v");
-      // Ce n'est plus un retour (transitions.js, ergonomie.js) : il ouvre le volet.
-      lien.classList.replace("u-retour", "nl-categorie");
-    }
-    if (!lien && cat && S.route === "associes" && !document.querySelector(".er-ariane")) {
-      document.querySelector(".wrap > .head")?.insertAdjacentHTML("beforebegin", `<nav class="er-ariane" aria-label="Fil d’Ariane"><button type="button" class="link nl-categorie" data-act="nlmenu">${esc(cat)}</button><span aria-hidden="true">›</span><span>Entre associés</span></nav>`);
-    }
+    // Fil d'Ariane : retiré en v5.43 (gabarit commun, src/noyau/gabarit.js) ; un écran du Menu n'a pas de retour.
   });
 
   return { CATEGORIES, ouvrir, fermer, categorieDe };
