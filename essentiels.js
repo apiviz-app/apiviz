@@ -179,6 +179,21 @@ const ES = (() => {
       <section class="card"><h2>De quoi te prévenir</h2>${CATS.map(([k, t]) => bascule(t, "", p[k], "ercat", k)).join("")}</section></div></div>`);
     phrase(nb === 0 ? "Rien de nouveau pour l’instant." : nb === 1 ? "Un rappel à voir." : `${nb} rappels à voir.`);
   };
+  // Feuille « Rappels » (v5.44) : ce qui demande ton attention, sans quitter l'écran ; les réglages restent dans l'écran
+  // Rappels (Réglages › Rappels et notifications).
+  let enFeuille = [];
+  ACT.errappels = () => {
+    const l = rappels(), v = vus(), nb = l.filter((r) => !v.has(r.cle)).length;
+    enFeuille = l;
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    $sheetForm.innerHTML = `<div class="g-ftete"><h2>Rappels${nb ? ` · ${nb}` : ""}</h2><button type="button" class="g-fermer" data-act="closesheet" aria-label="Fermer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="er-fliste">${l.map((r, i) => `<button type="button" class="u-todo ${v.has(r.cle) ? "er-vu" : ""}" data-act="errouvrir" data-v="${i}"><span class="u-todo-t"><b>${esc(r.titre)}</b><span class="small">${esc(r.sous)}</span></span><span class="u-chip ${CL[r.cl]}">${esc(r.tag)}</span></button>`).join("") || '<p class="small">Rien à signaler pour le moment.</p>'}</div>
+      <div class="u-deux">${nb ? '<button type="button" class="btn" data-act="ertoutvufeuille">Tout marquer comme vu</button>' : ""}<button type="button" class="btn" data-act="errgrappels">Réglages des rappels</button></div>`;
+    if (!$sheet.open) $sheet.showModal();
+  };
+  ACT.errouvrir = (i) => { const r = enFeuille[Number(i)]; $sheet.close(); if (r && ACT[r.act]) ACT[r.act](r.v); };
+  ACT.ertoutvufeuille = () => { ACT.ertoutvu(); ACT.errappels(); };
+  ACT.errgrappels = () => { $sheet.close(); go("rappels"); };
   ACT.ertoutvu = () => { memo("apidoo-rappels-vus", JSON.stringify([...new Set([...vus(), ...rappels().map((r) => r.cle)])].slice(-300))); render(); };
   ACT.ercat = (k) => { const p = prefs(); p[k] = !p[k]; memo("apidoo-rappels", JSON.stringify(p)); render(); };
   ACT.ernotif = async () => {
@@ -197,7 +212,8 @@ const ES = (() => {
   const CLOCHE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4"/></svg>';
   function cloche() {
     const nb = nouveaux().length;
-    const b = `<button type="button" class="er-cloche" data-act="go" data-v="rappels" aria-label="Rappels${nb ? `, ${nb} à voir` : ""}">${CLOCHE}${nb ? `<em>${nb}</em>` : ""}</button>`;
+    // v5.44 (rationalisation) : la cloche ouvre la feuille « Rappels » ; l'écran Rappels garde les réglages.
+    const b = `<button type="button" class="er-cloche" data-act="errappels" aria-label="Rappels${nb ? `, ${nb} à voir` : ""}">${CLOCHE}${nb ? `<em>${nb}</em>` : ""}</button>`;
     document.querySelector('.side [data-v="saisir"]')?.insertAdjacentHTML("beforebegin", b);
     document.querySelector(".topbar .avatar")?.insertAdjacentHTML("beforebegin", b);
   }

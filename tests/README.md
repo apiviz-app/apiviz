@@ -40,6 +40,9 @@ Avec `CAPTURES=<dossier>` : captures à 390 px.
 Scénario v5.43 : `etapes_gb` (gabarit commun : titres, retour, bouton principal, ⋯, puce d'année, seuil varroa et
 filtres de l'agenda en feuille, ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
 
+Scénario v5.44 : `etapes_ra` (rationalisation : volet à 5 entrées, Finances, Matériel, Registre et déclaration et
+Réglages à onglets, feuille Rappels, 8 entrées sur ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 

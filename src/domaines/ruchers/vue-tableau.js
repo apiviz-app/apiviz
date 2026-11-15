@@ -417,6 +417,8 @@ export const actions = {
     const ids = idsVus();
     if (!ids.length) return;
     etat().sel = []; etat().choix = false;
+    // v5.44 : feuille « Déplacer N colonies » (destination, date, motif) au lieu d'un écran à part.
+    if (typeof ACT.dpfeuille == "function") { render(); ACT.dpfeuille(ids.join(",")); return; }
     ACT.dpouvrir("");
     if (S.dp) { S.dp.sel = [...ids]; render(); }
   },

@@ -20,7 +20,7 @@
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
     # Détail des dépenses et fil d'Ariane
     page.click(".g-bloc[data-v=compta]"); page.wait_for_function("S.route === 'compta'")
-    verif(page.locator(".wrap .head h1").inner_text() == "Dépenses" and page.locator(".er-ariane").count() == 0, "titre « Dépenses », plus de fil d'Ariane (v5.43)")
+    verif(page.locator(".wrap .head h1").inner_text() == "Finances" and page.locator(".g-onglets button.on").inner_text() == "Dépenses" and page.locator(".er-ariane").count() == 0, "Finances › onglet Dépenses, plus de fil d'Ariane (v5.44)")
     # v5.38 : journal des dépenses (tuiles par catégorie, puces, tableau)
     verif(page.locator(".dj-tuile").count() == 2 and "30" in entete(page), "tuiles par catégorie et total en résumé : " + entete(page))
     page.click(".op-puce[data-v='cat:Autre']")
@@ -95,9 +95,10 @@
     if CAP: page.screenshot(path=CAP + ".tel.png", full_page=True)
     # Rappels et réglages
     page.set_viewport_size({"width": 1440, "height": 900})
-    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".side .nav[data-v=rappels]")
-    verif(page.locator(".side .er-cloche").count() == 0, "ordinateur : pas de cloche, Rappels est dans le menu")
-    page.click(".side .nav[data-v=rappels]"); page.wait_for_selector(".er-rang")
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".nl-entete .er-cloche")
+    verif(page.locator(".side .er-cloche").count() == 0 and page.locator(".side .nav[data-v=rappels]").count() == 0, "ordinateur : la cloche dans le bandeau, plus d'entrée Rappels dans le menu (v5.44)")
+    page.click(".nl-entete .er-cloche"); page.wait_for_selector("#sheet[open] .er-fliste")
+    page.click("#sheet [data-act=errgrappels]"); page.wait_for_selector(".er-rang")
     verif("Cire gaufrée : stock bas" in page.locator(".er-liste-r").inner_text(), "stock bas dans les rappels")
     nb = page.locator(".er-liste-r .u-todo").count()
     page.click(".er-bascule[data-v=stock]"); page.wait_for_timeout(100)

@@ -28,10 +28,21 @@ test("retour : jamais au 1er niveau ni dans un flux ; celui de l'écran, sinon l
   assert.equal(G.retourDe("visite", { act: "go", v: "ruches", texte: "‹ Ruchers" }), null);
   assert.deepEqual(G.retourDe("ruche", { act: "go", v: "ruches", texte: "‹ Le Verger" }), { act: "go", v: "ruches", k: "", texte: "Le Verger" });
   assert.deepEqual(G.retourDe("ruche", { act: "go", v: "ruches", texte: "‹ Ruches · Verger" }).texte, "Ruches");
-  assert.deepEqual(G.retourDe("courses"), { act: "go", v: "materiel", k: "", texte: "Matériel" });
+  assert.deepEqual(G.retourDe("lot"), { act: "go", v: "miel", k: "", texte: "Miel" });
   assert.equal(G.retourDe("inconnu"), null);
 });
 
 test("années de la puce : uniques, la plus récente d'abord", () => {
   assert.deepEqual(G.annees(["2024", "2026", "2025", "2026", ""]), [2026, 2025, 2024]);
+});
+
+test("écrans-sujets : une adresse donne son sujet, ses onglets et l'onglet allumé", () => {
+  assert.equal(G.sujetDe("compta").titre, "Finances");
+  assert.deepEqual(G.sujetDe("compta").onglets.map(([r]) => r), ["pilotage", "compta", "previsions", "associes"]);
+  assert.equal(G.sujetDe("courses").cle, "materiel");
+  assert.equal(G.sujetDe("declaration").titre, "Registre et déclaration");
+  assert.equal(G.sujetDe("membres").actif, "membres");
+  assert.equal(G.sujetDe("ruche"), null);
+  // un onglet de sujet est un écran de 1er niveau : pas de retour
+  assert.equal(G.retourDe("courses", { act: "go", v: "materiel", texte: "‹ Matériel" }), null);
 });

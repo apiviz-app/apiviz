@@ -39,6 +39,21 @@ function ligne(c) {
       <span class="ve-etat ve-${etat.replace(" ", "-")}">${ETIQUETTE[etat]}</span></button>${corps}</li>`;
 }
 
+/** Une seule visite, deux modes (v5.44, rationalisation) : « Express » (3 touches, reprend la précédente) ou
+ *  « Complète ». La bascule est en tête des deux écrans de saisie et garde la ruche. */
+export function bascule(mode) {
+  return `<div class="cp-bascule ve-mode" role="tablist" aria-label="Type de visite">
+    <button type="button" role="tab" aria-selected="${mode === "express"}" data-act="${mode === "express" ? "vemodeactif" : "vemodeexpress"}">Express</button>
+    <button type="button" role="tab" aria-selected="${mode === "complete"}" data-act="${mode === "complete" ? "vemodeactif" : "vecomplete"}">Complète</button></div>`;
+}
+
+/** Visite complète d'une seule ruche déjà visitée : la bascule Express / Complète en tête du formulaire. */
+export function completerVisite() {
+  const id = S.visite?.ruche_id, wrap = document.querySelector(".wrap");
+  if (!id || !wrap || S.tournee || (S.visite.ruches || []).length > 1 || !lastVisit(id) || wrap.querySelector(".ve-mode")) return;
+  (wrap.querySelector(":scope > .head") || wrap.firstElementChild)?.insertAdjacentHTML("afterend", bascule("complete"));
+}
+
 /** L'écran « visiteexpress ». */
 export function ecran() {
   const f = S.ve;
@@ -48,9 +63,8 @@ export function ecran() {
   const total = CHAMPS_EXPRESS.length;
   const resume = [res.changes ? `${res.changes} changement${res.changes > 1 ? "s" : ""}` : "Aucun changement",
     res.repris ? `${res.repris} valeur${res.repris > 1 ? "s" : ""} reprise${res.repris > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
-  shell(r.nom, `Visite express · ${total} points`,
-    `<button type="button" class="btn" data-act="vecomplete">Visite complète</button>`,
-    `<div class="ve">
+  shell(r.nom, `Visite express · ${total} points`, "",
+    `${bascule("express")}<div class="ve">
       <div class="ve-api"><span class="ve-api-i" aria-hidden="true"></span>
         <p>Je reprends ta visite du ${e(dfr(f.date_base))}. Touche seulement ce qui a changé.</p></div>
       <ul class="ve-liste" aria-label="Ce que tu notes">${CHAMPS_EXPRESS.map(ligne).join("")}</ul>
@@ -118,4 +132,6 @@ export const actions = {
   },
   veenregistrer: enregistrer,
   vecomplete: () => { const id = S.ve?.ruche_id; S.ve = null; ACT.newvisite(id); },
+  vemodeexpress: () => { const id = S.visite?.ruche_id; if (id) ouvrir(id); },
+  "vemodeactif": () => {},
 };

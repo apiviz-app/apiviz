@@ -18,27 +18,40 @@ Inspiration Linear, Stripe, Qonto, Pennylane : peu d'éléments, hiérarchie net
 
 ```text
 Accueil
- ├─ Priorité du jour · Ce mois-ci · Mes ruchers (alvéoles, météo) · À faire · Activité
+ ├─ Priorité du jour · Mes ruchers (alvéoles, météo) · À faire · Activité (détail : Activité récente)
 Ruchers
- ├─ Liste (liste, alvéoles ou tableau) / Carte / Santé
- ├─ Fiche rucher : colonies · météo 5 j · tâches · historique · infos (accès, propriétaire)
- └─ Fiche colonie : en-tête (état, reine, force, dernière visite)
-       onglets Journal · Santé · Reine & lignée · Production · Photos
+ ├─ Liste / Carte / Santé (liste, alvéoles ou tableau ; seuil varroa dans ⋯)
+ ├─ Fiche rucher : colonies · météo 5 j (détail : Météo heure par heure) · tâches · historique · infos
+ ├─ Fiche colonie : en-tête, onglets Journal · Santé · Reine & lignée · Colonie · Photos ; bouton principal + « + »
+ └─ Saisies (flux) : Visite (Express / Complète) · Tournée · Déplacer (écran, ou feuille après une sélection)
 Miel
- ├─ Ventes (à encaisser, à livrer) · Clients · Stock de pots
- └─ Production : récoltes · extractions · lots · étiquettes
-Finances
- └─ Bilan · Dépenses & achats · Budget & prévisions · Entre associés
-Administration
- └─ Matériel (tableau ou liste ; Inventaire · Liste de courses) · Fournisseurs · Registre d'élevage · Déclaration · Opérations (traitements, nourrissements) · Élevage*
-Équipe et compte
- └─ Équipe (exploitation & membres, personnes sans compte) · Réglages (Toi › Mon profil · L'exploitation · Sur le terrain · Affichage · Tes données)
-Inscription (une fois, avant tout le reste) : ton nom · pour mieux te connaître (facultatif) · puis création du rucher s'il n'y en a pas
-Au quotidien (avec l'Accueil) : Agenda & tâches · Rappels
-API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche, opération) · demander à API
-Compte (avatar) : exploitations · installer · plein soleil · aide · se déconnecter
+ ├─ Ventes · Clients · Stock et récoltes (détail : Lot, Facture)
+ └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots
+Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
+Finances : onglets Bilan · Dépenses · Budget · Associés
+Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
+Registre et déclaration : onglets Registre · Déclaration
+Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications)
+Cloche : feuille Rappels · Loupe : recherche plein écran · Avatar : exploitations, plein soleil, aide, déconnexion
+API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche)
+Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.44 (15 nov. 2026)** : **rationalisation des écrans**. Un sujet = un écran, avec des onglets ; chaque écran est
+une **liste** (sujet, vues, onglets), une **fiche** (un objet) ou un **flux** (saisie pas à pas) ; le reste devient
+une feuille du bas, une vue ou un onglet. Menu : 18 entrées → **8 sur ordinateur, 5 dans le volet du téléphone**
+(Agenda, Finances, Matériel, Registre et déclaration, Réglages ; Accueil, Ruchers et Miel restent dans la barre du bas).
+Finances réunit Bilan, Dépenses, Budget et Entre associés ; Matériel réunit Stock, Liste de courses et Fournisseurs ;
+Registre et Déclaration ne font plus qu'un ; Équipe devient un onglet de Réglages. La cloche ouvre une feuille
+« Rappels » (l'écran Rappels reste pour les réglages, sous Réglages). Une seule visite avec la bascule
+**Express / Complète**. Déplacer des colonies sélectionnées ouvre une feuille. Les catégories « Au quotidien »,
+« Ruchers », « Miel et ventes », « Administration », « Équipe et compte » disparaissent du volet. Aucune adresse
+supprimée : les anciennes routes (`compta`, `courses`, `fournisseurs`, `declaration`, `membres`, `rappels`, `plus`…)
+ouvrent le bon onglet ou le bon écran. Écarts avec les maquettes du 15 nov. : Carte et Santé restent des onglets de
+Ruchers (déjà soulignés, conformes au gabarit) ; la fiche rucher garde sa mise en page, la météo détaillée reste un
+écran de détail (« ‹ rucher »). Décision de Pierre-Louis (15 nov. 2026, « implémente la totalité de tes
+recommandations », après l'audit du 14 nov. et les maquettes de rationalisation du 15).
 
 **v5.38 (14 nov. 2026)** : écrans « opérationnels ». Pas de nouvelle rubrique. Nouveaux écrans rangés dans des
 rubriques existantes : **Inventaire** et **Liste de courses** sous Administration › Matériel (ouverts depuis Matériel),

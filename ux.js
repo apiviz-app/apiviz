@@ -322,7 +322,7 @@ const UX = (() => {
     return `<div class="u-tuiles">${tuile("uonglet", "stock", String(stock().pots), "pots en stock", actif === "stock")}
       ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
       ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>
-      ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock et lots"]], actif, "uonglet")}`;
+      ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock et récoltes"]], actif, "uonglet")}`;
   }
   const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);
   function carteVente(v) {
@@ -339,7 +339,7 @@ const UX = (() => {
   }
   function viewClients() {
     const d = S.d;
-    if (!d.clients.length) return shell("Miel et ventes", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
+    if (!d.clients.length) return shell("Miel", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
     const impayees = d.ventes.filter((v) => !v.paye);
     const du = sum(impayees, venteTotal);
     let corps = "";

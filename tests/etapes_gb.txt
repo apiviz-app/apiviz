@@ -16,7 +16,7 @@
             petits: [...document.querySelectorAll('.shell main *')].filter((el) => v(el) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(el).fontSize) < 12).map((el) => el.textContent.trim().slice(0, 20)).slice(0, 5) }; }""")
     # Dépenses : titre-nom, un seul « Ajouter une dépense », fichier comptable dans ⋯, puce d'année
     e = ecran("compta")
-    verif(e["titre"] == "Dépenses" and not e["retour"] and e["anciens"] == 0, "Dépenses : titre « Dépenses », pas de fil d'Ariane ni de retour (" + str(e) + ")")
+    verif(e["titre"] in ("Dépenses", "Finances") and not e["retour"] and e["anciens"] == 0, "Dépenses : titre court (Finances depuis la v5.44), pas de fil d'Ariane ni de retour (" + str(e) + ")")
     verif(e["barre"] == ["Ajouter une dépense"] and e["principaux"] == ["Ajouter une dépense"], "Dépenses : un seul bouton principal, en bas (" + str(e["principaux"]) + ")")
     verif(page.locator(".wrap .g-annee").count() == 1 and not page.locator("label.yr").first.is_visible(), "Dépenses : puce d'année à la place de la liste")
     if cap: page.screenshot(path=cap + "/gb-depenses-390.png")
@@ -58,8 +58,8 @@
     verif(e["titre"] == "Matériel" and len(e["principaux"]) <= 1, "Matériel : titre « Matériel », un seul bouton principal (" + str(e) + ")")
     if cap: page.screenshot(path=cap + "/gb-materiel-390.png")
     # Écran de 2e niveau : « ‹ Parent »
-    e = ecran("courses")
-    verif(e["retour"] == ["Matériel"], "Liste de courses : retour « ‹ Matériel » (" + str(e["retour"]) + ")")
+    e = ecran("activite")
+    verif(e["retour"] == ["Accueil"], "Activité récente (2e niveau) : retour « ‹ Accueil » (" + str(e["retour"]) + ")")
     # Ordinateur : bouton principal dans l'en-tête, pas de barre du bas
     page.set_viewport_size({"width": 1280, "height": 900})
     e = ecran("compta")
