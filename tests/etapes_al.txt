@@ -35,7 +35,7 @@
     # Ruchers et fiche
     page.click(".bottom button[data-v=ruches]"); page.wait_for_selector(".n4-ruche")
     verif(page.locator(".n4-ruche .al-kg").count() == 1 and page.locator(".n4-ruche .al-kg").inner_text() == "38 kg", "dernier poids sur la ligne de la ruche")
-    page.locator(".n4-ruche", has_text="Ruche 5").click(); page.wait_for_selector(".n4-rnav")
+    page.locator(".n4-ruche", has_text="Ruche 5").click(); page.wait_for_function("S.route === 'ruche'")
     verif(page.locator("details.u-pli[open]", has_text="Évolution du poids").count() == 1, "courbe de poids ouverte")
     # Calcul du créneau : température, pluie, vent, heures de visite
     calc = page.evaluate("""() => {

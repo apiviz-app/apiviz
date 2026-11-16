@@ -1,0 +1,79 @@
+    # v5.50 — Standards d'écran (maquettes du 16 nov. 2026, validées par Pierre-Louis) : garde-fou sur tous les écrans,
+    # à 390 px. Le titre est au même endroit et à la même taille partout (sauf l'Accueil et les saisies pas à pas), le
+    # retour est dans la barre du haut, les boutons ont une des trois hauteurs (36, 44, 52), les titres de section un
+    # des deux styles (17 px, ou étiquette de groupe 13 px), pas de demi-pixel dans les tailles de texte, et les arrondis
+    # viennent des jetons. Un écart affiche l'écran, l'élément et la valeur. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    DATA["clients"][0]["telephone"] = "0612345678"
+    DATA["taches"] = [{"id": str(uuid.uuid4()), "titre": "Peser les ruches", "echeance": J(-4), "ruche_id": None, "faite": False, "assigne": ""}]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    LF = _ici / "leaflet" / "package" / "dist"
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
+              headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    MESURE = """() => {
+      const vis = (el) => el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none';
+      const w = document.querySelector('.shell > main .wrap');
+      const h = w && w.querySelector(':scope > .head');
+      const h1 = h && h.querySelector('h1');
+      const nom = (e) => (e.tagName.toLowerCase() + '.' + [...e.classList].slice(0, 2).join('.') + ' « ' + (e.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 24) + ' »');
+      const tous = w ? [...w.querySelectorAll('*')].filter(vis) : [];
+      const boutons = tous.filter((e) => e.matches('.btn') && !e.closest('#sheet')).map((e) => {
+        const r = e.getBoundingClientRect(), lh = parseFloat(getComputedStyle(e).lineHeight) || 20;
+        return [nom(e), Math.round(r.height), Math.round(r.height - parseFloat(getComputedStyle(e).paddingTop) - parseFloat(getComputedStyle(e).paddingBottom)) > lh * 1.5];
+      });
+      const titres = tous.filter((e) => e.matches('h2, h3') && !e.closest('#sheet')).map((e) => [nom(e), getComputedStyle(e).fontSize, !!e.closest('.card.hero')]);
+      const demi = tous.filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && /\\.5px$/.test(getComputedStyle(e).fontSize)).map((e) => [nom(e), getComputedStyle(e).fontSize]);
+      // Surfaces seulement (16 px de haut et plus) : les barres de jauge et de graphique sont des marques de données.
+      const rayons = tous.filter((e) => { const s = getComputedStyle(e); return e.getBoundingClientRect().height >= 16 && e.tagName !== 'I' && !e.closest('.leaflet-container')
+        && (parseFloat(s.borderTopWidth) > 0 || s.backgroundColor !== 'rgba(0, 0, 0, 0)') && s.borderTopLeftRadius !== '0px'; })
+        .map((e) => [nom(e), getComputedStyle(e).borderTopLeftRadius]);
+      const barre = document.querySelector('.shell > .topbar');
+      return { route: S.route, titreY: h1 && vis(h1) ? Math.round(h1.getBoundingClientRect().top + scrollY) : null, taille: h1 ? getComputedStyle(h1).fontSize : null,
+               retourDansEcran: !!(w && [...w.querySelectorAll('.g-retour, .u-retour')].some(vis)), retourEnHaut: !!(barre && vis(barre.querySelector('.g-retour-haut'))),
+               boutons, titres, demi, rayons };
+    }"""
+    ECRANS = [("dash", "ACT.go('dash')"), ("ruches", "ACT.go('ruches')"), ("carte", "ACT.go('carte')"), ("varroa", "ACT.go('varroa')"),
+              ("rucher", "ACT.alrucher(S.d.ruches[0].rucher)"), ("ruche", "ACT.ruche(S.d.ruches[1].id)"), ("meteo", "ACT.go('meteo')"),
+              ("miel", "ACT.go('miel')"), ("lot", "S.lotId = S.d.lots[0].id; ACT.go('lot')"), ("clients", "ACT.go('clients')"), ("agenda", "ACT.go('agenda')"),
+              ("materiel", "ACT.go('materiel')"), ("courses", "ACT.go('courses')"), ("fournisseurs", "ACT.go('fournisseurs')"),
+              ("pilotage", "ACT.go('pilotage')"), ("compta", "ACT.go('compta')"), ("previsions", "ACT.go('previsions')"), ("associes", "ACT.go('associes')"),
+              ("registre", "ACT.go('registre')"), ("declaration", "ACT.go('declaration')"), ("reglages", "ACT.go('reglages')"), ("membres", "ACT.go('membres')"),
+              ("profil", "ACT.go('profil')"), ("rappels", "ACT.go('rappels')"), ("activite", "ACT.go('activite')"), ("recherche", "ACT.go('recherche')"),
+              ("saison", "ACT.go('saison')"), ("plus", "ACT.go('plus')"),
+              ("visite", "S.visite = null; ACT.newvisite()"), ("vente", "ACT.newvente()"), ("recolte", "ACT.go('recolte')")]
+    NIVEAU2 = {"rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "recherche", "saison"}
+    RAYONS = {"10px", "12px", "14px", "20px", "999px", "50%"}
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    res = {}
+    for nom, js in ECRANS:
+        page.evaluate("window.scrollTo(0, 0)"); page.evaluate(js); page.wait_for_timeout(500)
+        page.evaluate("window.scrollTo(0, 0)"); page.wait_for_timeout(80)
+        res[nom] = page.evaluate(MESURE)
+        if cap: page.screenshot(path=f"{cap}/sd-{nom}-390.png")
+    if os.environ.get("MESURES"): open(os.environ["MESURES"], "w").write(json.dumps(res, ensure_ascii=False, indent=1))
+    ys = {n: v["titreY"] for n, v in res.items() if n != "dash"}
+    verif(len(set(ys.values())) == 1, "titre au même endroit sur chaque écran : %s" % ys)
+    # Titre long (plus de 16 caractères, « Registre et déclaration ») : 22 px pour tenir entier à côté de ⋯, quelle que soit la police de secours.
+    LONGS = {"registre", "declaration"}
+    tailles = {n: v["taille"] for n, v in res.items() if n != "dash"}
+    verif(all(t == ("22px" if n in LONGS else "27px") for n, t in tailles.items()), "titre à 27 px partout (22 px si long) : %s" % {n: t for n, t in tailles.items() if t != ("22px" if n in LONGS else "27px")})
+    for n in NIVEAU2:
+        verif(res[n]["retourEnHaut"] and not res[n]["retourDansEcran"], f"{n} : retour dans la barre du haut, pas dans l'écran")
+    for n in set(res) - NIVEAU2 - {"visite", "vente", "recolte"}:
+        verif(not res[n]["retourEnHaut"], f"{n} : 1er niveau, pas de retour")
+    mauvais = {n: [b for b in v["boutons"] if b[1] not in (36, 44, 52) and not b[2]] for n, v in res.items()}
+    verif(not any(mauvais.values()), "boutons à 36, 44 ou 52 px : %s" % {n: l[:4] for n, l in mauvais.items() if l})
+    mauvais = {n: [t[:2] for t in v["titres"] if t[1] not in ("13px", "17px") and not (t[2] and t[1] == "20px")] for n, v in res.items()}
+    verif(not any(mauvais.values()), "titres de section à 17 px (étiquette 13 px, état vide 20 px) : %s" % {n: l[:4] for n, l in mauvais.items() if l})
+    mauvais = {n: v["demi"][:3] for n, v in res.items() if v["demi"]}
+    verif(not mauvais, "pas de demi-pixel dans les tailles de texte : %s" % mauvais)
+    mauvais = {n: [r for r in v["rayons"] if r[1] not in RAYONS][:4] for n, v in res.items()}
+    verif(not any(mauvais.values()), "arrondis des jetons (10, 12, 14, 20, pilule, rond) : %s" % {n: l for n, l in mauvais.items() if l})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

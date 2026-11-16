@@ -33,7 +33,7 @@
     # 1. Liste rangée par rucher, par défaut sur téléphone ; plus de titre au-dessus des onglets, menu ⋯ à la place.
     page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-l", timeout=5000)
     verif(page.locator(".tb-aff [data-v=liste][aria-pressed=true]").count() == 1 and page.locator(".tb-l").count() == 6, "téléphone : liste par défaut, 6 colonies")
-    verif(visibles(".wrap > .head") == 0 and visibles(".subtabs .tb-plus") == 1, "téléphone : pas de titre ni de boutons, bouton ⋯ dans les onglets")
+    verif(visibles(".wrap > .head") == 1 and visibles(".wrap > .head .tb-plus") == 1, "téléphone : titre « Ruchers » et ⋯ à droite du titre (standards d'écran, v5.50)")
     verif(page.locator(".tb-gr").count() == 2 and page.locator(".tb-gr[data-k='Les Chênes'] .tb-l").count() == 4, "rangée par rucher : Les Chênes et ses 4 colonies")
     verif(lignes()[:1] == ["Thym"] or page.locator(".tb-gr[data-k='Les Chênes'] .tb-l").first.inner_text().startswith("Bruyère"), "dans un rucher : l'urgente d'abord")
     verif(page.locator(".tb-gr [data-act=v3tournee]").count() == 2 and page.locator(".tb-gr .mt-ligne").count() == 2, "en-tête de rucher : tournée et météo en une ligne")
@@ -78,7 +78,7 @@
     page.click("[data-act=tbvisite]"); page.wait_for_selector("text=Nouvelle visite", timeout=5000)
     verif(page.evaluate("S.visite.multi && S.visite.ruches.length") == 2, "visite groupée ouverte pour les 2 colonies")
     page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-l", timeout=5000)
-    page.locator(".tb-l", has_text="Thym").click(); page.wait_for_selector(".n4-rnav", timeout=5000)
+    page.locator(".tb-l", has_text="Thym").click(); page.wait_for_function("S.route === 'ruche'", timeout=5000)
     verif("Thym" in page.locator(".head h1").inner_text(), "hors sélection, toucher ouvre la fiche de la colonie")
     page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-l", timeout=5000)
     if cap: page.screenshot(path=f"{cap}/tb-liste-390.png")
