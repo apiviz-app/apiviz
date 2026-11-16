@@ -1,0 +1,50 @@
+# Mise en ligne de la landing page (apiviz.fr et www.apiviz.fr), à la main seulement.
+# Actions › Mise en ligne de la landing › Run workflow. Une fusion sur main ne publie rien.
+# Publie le dossier landing/ de main sur le Worker Cloudflare « apiviz-landing » (landing/wrangler.jsonc).
+# Indépendant de l'application : app.apiviz.fr et recette.apiviz.fr ne bougent pas.
+name: Mise en ligne de la landing
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: mise-en-ligne-landing
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    name: Publier apiviz.fr
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contrôler la page
+        run: |
+          test -s landing/public/index.html || { echo "::error::landing/public/index.html est absent ou vide."; exit 1; }
+          grep -q '</html>' landing/public/index.html || { echo "::error::landing/public/index.html semble tronqué."; exit 1; }
+      - name: Publier sur Cloudflare
+        working-directory: landing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Secrets Cloudflare absents : rien n'est publié."; exit 1
+          fi
+          # Cloudflare répond parfois par une erreur passagère : trois essais espacés.
+          ok=0
+          for essai in 1 2 3; do
+            if npx --yes wrangler@4 deploy; then ok=1; break; fi
+            if [ "$essai" -lt 3 ]; then echo "::warning::Essai $essai refusé, nouvel essai dans $((essai * 20)) s."; sleep $((essai * 20)); fi
+          done
+          [ "$ok" = 1 ] || { echo "::error::Cloudflare a refusé les 3 essais : rien n'est publié."; exit 1; }
+      - name: Vérifier apiviz.fr
+        run: |
+          sleep 10
+          code=$(curl -s -o /tmp/page.html -w '%{http_code}' https://apiviz.fr/)
+          [ "$code" = 200 ] || { echo "::error::apiviz.fr répond $code."; exit 1; }
+          grep -q 'Lancé en trois gestes' /tmp/page.html && echo "Nouvelle page en ligne sur https://apiviz.fr/" >> "$GITHUB_STEP_SUMMARY" \
+            || echo "::warning::apiviz.fr répond, mais pas encore avec la nouvelle page (cache Cloudflare). Recharger dans une minute."
