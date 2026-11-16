@@ -52,9 +52,10 @@ Scénario v5.48 : `etapes_ar` (écrans à onglets : titre, ligne d'état, en-tê
 endroit sur chaque onglet de Matériel, Finances, Registre et déclaration, Réglages, à 390 et 1 280 px ; Courses vide).
 Avec `CAPTURES=<dossier>` : captures à 390 px.
 
-Scénario v5.50 : `etapes_sd` (standards d'écran sur 31 écrans à 390 px : place et taille du titre, retour dans la barre
-du haut au 2e niveau, hauteurs de bouton, titres de section, demi-pixels, arrondis). `etapes_ar` couvre aussi Ruchers et
-Miel. Avec `CAPTURES=<dossier>` : captures à 390 px ; avec `MESURES=<fichier>` : toutes les mesures en JSON.
+Scénario v5.50 : `etapes_nv` (ordinateur : menu repliable et gardé, compteurs Agenda et Ruchers, API dans la barre du haut,
+recherche Ctrl K en fenêtre — le clic dans le champ ne la ferme plus, filtre par type, récents, clic à côté —, panneau
+« Filtrer et trier » fermé par défaut, entier sans défilement à 1 440 × 842 et 1 366 × 650, épinglé et gardé ; téléphone
+inchangé). Avec `CAPTURES=<dossier>` : captures à 1 440 et 1 366 px.
 
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).

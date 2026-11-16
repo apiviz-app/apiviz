@@ -1,8 +1,8 @@
 // Apiviz — écran Ruchers : liste des colonies en trois présentations, choisies dans la barre (v5.40, maquettes
 // « Réagencement mobile » validées le 14 nov. 2026 : B « liste dense groupée par rucher » et C « alvéoles » ; le
 // tableau des v5.37 reste la troisième présentation, par défaut sur ordinateur).
-//   - Une seule barre sous les onglets : « Filtrer et trier » (feuille du bas sur téléphone, panneau à gauche sur
-//     ordinateur), raccourcis en puces avec leur nombre, choix Liste / Alvéoles / Tableau. Recherche : la loupe de la
+//   - Une seule barre sous les onglets : « Filtrer et trier » (feuille du bas sur téléphone ; sur ordinateur, panneau
+//     qui s'ouvre à la demande par-dessus la liste ou reste épinglé à gauche, v5.50), raccourcis en puces avec leur nombre, choix Liste / Alvéoles / Tableau. Recherche : la loupe de la
 //     barre du haut sur téléphone, un champ sur ordinateur.
 //   - Liste : une ligne de 54 px par colonie (état, nom, raison ou force et reine, varroa et jours), rangée par rucher
 //     sous un en-tête fin (nom, nombre, « Tournée » ou « Visiter », météo en une ligne). Toucher ouvre la fiche.
@@ -26,7 +26,7 @@ const plur = (k, mot) => `${k} ${mot}${k > 1 ? "s" : ""}`;
 const lire = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch { return {}; } };
 function garderPrefs() {
   const t = S.tb;
-  try { localStorage.setItem(CLE, JSON.stringify({ aff: t.aff, grouper: t.grouper, cols: t.cols, compact: t.compact })); } catch { /* navigation privée */ }
+  try { localStorage.setItem(CLE, JSON.stringify({ aff: t.aff, grouper: t.grouper, cols: t.cols, compact: t.compact, epingle: t.epingle })); } catch { /* navigation privée */ }
 }
 
 /** État de l'affichage (gardé entre deux rendus) ; préférences relues sur l'appareil. */
@@ -38,7 +38,7 @@ export function etat() {
     const cols = Object.fromEntries(T.COLONNES.map((c) => [c.id, typeof p.cols?.[c.id] === "boolean" ? p.cols[c.id] : c.defaut || large]));
     // Présentation : celle choisie sur cet appareil depuis la v5.40 ; sinon la liste sur téléphone, le tableau sur ordinateur.
     const aff = AFFS.includes(lire(CLE).aff) ? lire(CLE).aff : large ? "tableau" : "liste";
-    S.tb = { aff, grouper: p.grouper !== false, cols, compact: !!p.compact,
+    S.tb = { aff, grouper: p.grouper !== false, cols, compact: !!p.compact, epingle: !!p.epingle,
       q: "", f: T.filtresVides(), tri: "niveau", sens: 1, sel: [], choix: false, feuille: null, fiche: null };
   }
   return S.tb;
@@ -56,7 +56,10 @@ const I = {
   colonnes: "M4 4h16v16H4zM10 4v16M15 4v16",
   croix: "M6 6l12 12M18 6L6 18",
   telecharger: "M12 4v11M7 10l5 5 5-5M5 20h14",
+  panneau: "M4 4h16v16H4zM10 4v16",
 };
+// Ordinateur (v5.50) : le panneau « Filtrer et trier » s'ouvre à la demande, par-dessus la liste, ou reste épinglé.
+const ordinateur = () => typeof matchMedia == "function" && matchMedia("(min-width:1024px)").matches;
 
 // ---------- Morceaux ----------
 const ton = (niveau) => T.NIVEAUX[niveau].ton;
@@ -191,22 +194,30 @@ function menu(t) {
   </section>`;
 }
 
+// Libellés courts des alertes : le panneau tient sans défiler sur un écran d'ordinateur (v5.50).
+const ALERTES_COURTES = { varroa: "Varroa ≥ seuil", provisions: "Provisions faibles", visite: `Sans visite ${T.JOURS_SANS_VISITE} j` };
 function filtres(t, toutes, nbVus) {
   const o = T.options(toutes), f = t.f;
   const opt = (act, k, x, on, extra = "") => `<button type="button" class="tb-opt${on ? " on" : ""}" data-act="${act}" data-k="${k}" data-v="${e(x.v)}" aria-pressed="${on}"><span class="tb-case" aria-hidden="true"></span>${extra}<span class="tb-opt-t">${e(x.libelle)}</span>${x.n !== "" ? `<span class="tb-opt-n">${x.n}</span>` : ""}</button>`;
-  const groupe = (titre, html) => `<fieldset class="tb-groupe"><legend>${titre}</legend><div class="tb-opts">${html}</div></fieldset>`;
+  const groupe = (titre, html, extra = "", cls = "") => `<div class="tb-groupe${cls}" role="group" aria-label="${titre}"><div class="tb-gtete"><span class="tb-gt" aria-hidden="true">${titre}</span>${extra}</div><div class="tb-opts">${html}</div></div>`;
   const marque = (k) => /^\d+$/.test(k) ? `<span class="tb-marque" style="background:${MARQUAGES[couleurMarquage(Number(k))]?.[1] || "transparent"}" aria-hidden="true"></span>` : k === "absente" ? '<span class="tb-marque vide" aria-hidden="true"></span>' : "";
   const TRIS = [["niveau", "Urgence"], ["nom", "Nom"], ["varroa", "Varroa"], ["visite", "Dernière visite"], ["provisions", "Provisions"], ["force", "Force"]];
-  const tri = TRIS.map(([k, lib]) => `<button type="button" class="tb-opt tb-opt-tri${t.tri === k ? " on" : ""}" data-act="tbtri" data-v="${k}" aria-pressed="${t.tri === k}"><span class="tb-rond" aria-hidden="true"></span><span class="tb-opt-t">${lib}</span>${t.tri === k ? `<span class="tb-opt-n" aria-label="${t.sens === 1 ? "ce qui demande de l’attention d’abord" : "ordre inversé"}">${t.sens === 1 ? "↓" : "↑"}</span>` : ""}</button>`).join("");
+  const tri = TRIS.map(([k, lib]) => `<button type="button" class="tb-opt tb-opt-tri${t.tri === k ? " on" : ""}" data-act="tbtri" data-v="${k}" aria-pressed="${t.tri === k}"><span class="tb-rond" aria-hidden="true"></span><span class="tb-opt-t">${lib}</span></button>`).join("");
+  const sens = `<button type="button" class="tb-sens" data-act="tbsens" aria-label="Inverser l’ordre (${t.sens === 1 ? "ce qui demande de l’attention d’abord" : "ordre inversé"})">${t.sens === 1 ? "↓" : "↑"} Inverser</button>`;
   const inter = (act, lib, aide, on) => `<button type="button" class="tb-inter${on ? " on" : ""}" role="switch" aria-checked="${on}" data-act="${act}"><span class="tb-opt-t">${lib}<span class="small">${aide}</span></span><span class="tb-case" aria-hidden="true"></span></button>`;
   const colonnesTel = t.aff === "tableau" ? `<details class="tb-plie tb-tel"><summary>Colonnes du tableau<span class="small">${T.COLONNES.filter((c) => t.cols[c.id]).length} affichées</span></summary>
       <div class="tb-opts">${T.COLONNES.map((c) => opt("tbcol", "", { v: c.id, libelle: c.libelle, n: "" }, !!t.cols[c.id])).join("")}</div>${inter("tbcompact", "Lignes compactes", "Plus de colonies à l’écran", t.compact)}</details>` : "";
-  return `<section class="tb-filtres${t.feuille === "filtres" ? " ouverte" : ""}" aria-label="Filtrer et trier" ${t.feuille === "filtres" ? 'role="dialog" aria-modal="true"' : ""}>
-    <div class="tb-feuille-t"><h2>Filtrer et trier</h2><button type="button" class="link" data-act="tbeffacer">Tout effacer</button></div>
-    ${groupe("Trier par", tri)}
-    ${o.ruchers.length > 1 ? groupe("Rucher", o.ruchers.map((x) => opt("tbfiltre", "ruchers", x, f.ruchers.includes(x.v))).join("")) : ""}
+  const ouverte = t.feuille === "filtres", epingle = t.epingle && ordinateur();
+  if (ordinateur() && !ouverte && !epingle) return "";
+  const libEpingle = epingle ? "Ne plus garder ouvert" : "Garder ouvert à côté de la liste";
+  return `<section class="tb-filtres${ouverte ? " ouverte" : ""}${epingle ? " epingle" : ""}" aria-label="Filtrer et trier" ${ouverte && !epingle ? 'role="dialog" aria-modal="true"' : ""}>
+    <div class="tb-feuille-t"><h2>Filtrer et trier</h2><button type="button" class="link" data-act="tbeffacer">Tout effacer</button>
+      <button type="button" class="tb-x tb-ordi tb-epingle" data-act="tbepingle" aria-pressed="${epingle}" aria-label="${libEpingle}" title="${libEpingle}">${svg(I.panneau)}</button>
+      <button type="button" class="tb-x tb-ordi tb-fermer" data-act="tbfermer" aria-label="Fermer le panneau">${svg(I.croix)}</button></div>
+    ${groupe("Trier par", tri, sens, " tb-gtri")}
     ${groupe("État", o.niveaux.map((x) => opt("tbfiltre", "niveaux", x, f.niveaux.includes(x.v), `<span class="tb-pt bg-${T.NIVEAUX[x.v].ton}" aria-hidden="true"></span>`)).join(""))}
-    ${groupe("Seuils d’alerte", o.seuils.map((x) => opt("tbseuil", "", x, !!f[x.v])).join(""))}
+    ${o.ruchers.length > 1 ? groupe("Rucher", o.ruchers.map((x) => opt("tbfiltre", "ruchers", x, f.ruchers.includes(x.v))).join("")) : ""}
+    ${groupe("Alertes", o.seuils.map((x) => opt("tbseuil", "", { ...x, libelle: ALERTES_COURTES[x.v] || x.libelle }, !!f[x.v])).join(""))}
     <details class="tb-plie"${f.reines.length ? " open" : ""}><summary>Reine<span class="small">${f.reines.length ? f.reines.map(T.libelleReine).join(", ") : "Toutes"}</span></summary>
       <div class="tb-opts">${o.reines.map((x) => opt("tbfiltre", "reines", x, f.reines.includes(x.v), marque(x.v))).join("")}</div></details>
     ${t.aff !== "tableau" ? inter("tbgrouper", "Grouper par rucher", "Un en-tête par rucher, avec la tournée et la météo", t.grouper) : ""}
@@ -245,6 +256,11 @@ function fiche(t, toutes) {
 }
 
 // ---------- Écran ----------
+/** Nombre de colonies « à voir » (urgentes ou à surveiller), pour le compteur du menu latéral (v5.50). */
+export function nbAVoir() {
+  if (typeof S == "undefined" || !S.d?.ruches) return 0;
+  try { return T.lignes(S.d, { seuil: UX.seuilVarroa(), aujourdhui: new Date() }).filter((l) => l.niveau !== "ok").length; } catch { return 0; }
+}
 let calculs = null;
 function calculer() {
   const t = etat();
@@ -272,7 +288,7 @@ export function ecran() {
       <span class="tb-sel-t">${sel.size ? `${sel.size} ${sel.size > 1 ? "sélectionnées" : "sélectionnée"}` : "Touche les colonies"}</span>
       ${sel.size ? `<button type="button" class="btn" data-act="tbdeplacer">Déplacer</button><button type="button" class="btn honey" data-act="tbvisite">${sel.size > 1 ? "Visite groupée" : "Visiter"}</button>` : ""}</div>`
     : `<div class="tb-barre">
-      <button type="button" class="tb-bouton tb-bfiltres" data-act="tbfeuille" data-v="filtres" aria-haspopup="dialog" aria-label="Filtrer et trier${nf ? ` (${nf} filtre${nf > 1 ? "s" : ""})` : ""}">${svg(I.filtres)}${nf ? `<span class="tb-nb">${nf}</span>` : ""}</button>
+      <button type="button" class="tb-bouton tb-bfiltres" data-act="tbfeuille" data-v="filtres" aria-haspopup="dialog" aria-expanded="${t.feuille === "filtres" || (t.epingle && ordinateur())}" aria-label="Filtrer et trier${nf ? ` (${nf} filtre${nf > 1 ? "s" : ""})` : ""}">${svg(I.filtres)}<span class="tb-bf-t" aria-hidden="true">Filtrer et trier</span>${nf ? `<span class="tb-nb">${nf}</span>` : ""}</button>
       <label class="tb-cherche tb-ordi">${svg(I.cherche)}<span class="tb-cache">Chercher une colonie</span><input id="tb_q" type="search" value="${e(t.q)}" placeholder="Nom ou code…" autocomplete="off" enterkeyhint="search"></label>
       <div class="tb-puces" role="group" aria-label="Raccourcis">${puces(t, toutes)}</div>
       ${t.aff === "tableau" ? `<div class="tb-ancre tb-ordi"><button type="button" class="tb-bouton" data-act="tbfeuille" data-v="colonnes" aria-haspopup="dialog" aria-expanded="${t.feuille === "colonnes"}">${svg(I.colonnes)}<span>Colonnes</span></button>${colonnes(t)}</div>
@@ -280,11 +296,11 @@ export function ecran() {
       <button type="button" class="tb-bouton tb-ordi" data-act="tbexport">${svg(I.telecharger)}<span>Exporter</span></button>
       <div class="tb-aff" role="group" aria-label="Présentation">${aff("liste", "Liste", I.liste)}${aff("alveoles", "Alvéoles", I.alveoles)}${aff("tableau", "Tableau", I.tableau)}</div>
     </div>`;
-  const voile = t.feuille || t.fiche ? `<button type="button" class="tb-voile${t.feuille === "colonnes" ? " leger" : ""}${t.fiche ? " pour-fiche" : ""}" data-act="tbfermer" aria-label="Fermer" tabindex="-1"></button>` : "";
+  const voile = t.feuille || t.fiche ? `<button type="button" class="tb-voile${t.feuille === "colonnes" ? " leger" : ""}${t.feuille === "filtres" ? " pour-filtres" : ""}${t.fiche ? " pour-fiche" : ""}" data-act="tbfermer" aria-label="Fermer" tabindex="-1"></button>` : "";
   const entete = '<button class="btn" data-act="rcnouveau">Nouveau rucher</button><button class="btn" data-act="newruches">Ajouter des ruches</button>'
     + (typeof ACT.dpouvrir == "function" ? '<button class="btn" data-act="dpouvrir" data-v="">Déplacer</button>' : "");
   const principal = t.aff === "tableau" ? tableau(vues, cols, t, sel) : listeOuAlveoles(t, vues, sel) + (typeof N4 != "undefined" && N4.basRuchers ? N4.basRuchers() : "");
-  shell("Ruchers", sous, entete, `<div class="tb${t.compact ? " compact" : ""}${enSelection ? " avec-sel" : ""}" data-aff="${t.aff}">
+  shell("Ruchers", sous, entete, `<div class="tb${t.compact ? " compact" : ""}${enSelection ? " avec-sel" : ""}${t.epingle && ordinateur() ? " avec-filtres" : ""}" data-aff="${t.aff}">
       ${barre}
       <div class="tb-corps">
         ${filtres(t, toutes, vues.length)}
@@ -313,7 +329,7 @@ function ajuster() {
   const haut = b.getBoundingClientRect().top + window.scrollY;
   b.style.height = Math.max(220, limite - haut - 12) + "px";
 }
-addEventListener("resize", () => { if (typeof S != "undefined" && S.route === "ruches" && S.tb?.aff === "tableau") ajuster(); });
+addEventListener("resize", () => { if (typeof S != "undefined" && S.route === "ruches") { if (S.tb?.aff === "tableau") ajuster(); placerFiltres(); } });
 
 // Sélection par appui long (liste, alvéoles) ; en sélection, un toucher coche ou décoche au lieu d'ouvrir la fiche.
 let appui = null, ignorerClic = false;
@@ -345,8 +361,14 @@ addEventListener("keydown", (ev) => {
 });
 
 let minuterie = 0;
+function placerFiltres() {
+  const p = document.querySelector(".tb-filtres.ouverte:not(.epingle)"), tb = document.querySelector(".tb");
+  if (!p || !tb || !ordinateur()) { if (p) p.style.left = ""; return; }
+  p.style.left = Math.max(8, tb.getBoundingClientRect().left) + "px";
+}
 function apresRendu() {
   ajuster();
+  placerFiltres();
   const t = etat();
   const q = document.getElementById("tb_q");
   q?.addEventListener("input", () => {
@@ -379,7 +401,14 @@ const idsVus = () => { const t = etat(), vus = new Set((calculs || calculer()).v
 export const actions = {
   tbaff: (v) => { const t = etat(); if (!AFFS.includes(v)) return; t.aff = v; t.feuille = t.fiche = null; garderPrefs(); render(); },
   tbgrouper: () => { const t = etat(); t.grouper = !t.grouper; garderPrefs(); render(); },
-  tbfeuille: (v) => { const t = etat(); t.feuille = t.feuille === v ? null : v; t.fiche = null; render(); },
+  tbfeuille: (v) => {
+    const t = etat();
+    // Panneau épinglé sur ordinateur : le bouton le referme.
+    if (v === "filtres" && t.epingle && ordinateur()) { t.epingle = false; t.feuille = null; garderPrefs(); render(); return; }
+    t.feuille = t.feuille === v ? null : v; t.fiche = null; render();
+  },
+  tbepingle: () => { const t = etat(); t.epingle = !t.epingle; t.feuille = null; garderPrefs(); render(); },
+  tbsens: () => { const t = etat(); t.sens = -t.sens; render(); },
   tbfermer: () => fermer(),
   tbfiltre: (v, k) => { const t = etat(); if (!["ruchers", "niveaux", "reines"].includes(k)) return; t.f = { ...t.f, [k]: basculer(t.f[k], v) }; render(); },
   tbseuil: (v) => { const t = etat(); if (!["varroa", "provisions", "visite"].includes(v)) return; t.f = { ...t.f, [v]: !t.f[v] }; render(); },

@@ -1,6 +1,6 @@
 /* Apiviz — écran Ruchers : liste, alvéoles (v5.40) et tableau (v5.37), src/domaines/ruchers/vue-tableau.js.
    Téléphone d'abord : feuilles du bas pour les filtres, les colonnes et la fiche rapide. À partir de 1 024 px :
-   filtres toujours visibles à gauche, colonnes en menu, fiche rapide à droite. */
+   filtres dans un panneau ouvert à la demande (ou épinglé à gauche, v5.50), colonnes en menu, fiche rapide à droite. */
 
 
 .tb{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -102,7 +102,10 @@ html.lecteur .tb-coche{display:none}
 .tb-feuille-t{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tb-feuille-t h2,.tb-fiche h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px}
 .tb-groupe{margin:0;padding:0;border:0;display:flex;flex-direction:column;gap:8px}
-.tb-groupe legend{padding:0;margin-bottom:8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3F4A44}
+.tb-groupe legend,.tb-gt{padding:0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3F4A44}
+.tb-gtete{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px}
+.tb-sens{flex:none;height:32px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r-pill);background:#fff;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap}
+.tb-bf-t{display:none}
 .tb-opts{display:flex;flex-wrap:wrap;gap:8px}
 .tb-opt{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r-s);background:#fff;font-size:14px;font-weight:600;text-align:left}
 .tb-opt.on{background:var(--pine);border-color:var(--pine);color:#fff}
@@ -138,19 +141,45 @@ html.lecteur .tb-coche{display:none}
 @media (min-width:1024px){
   .wrap:has(> .tb){max-width:1440px}
   .tb-ordi{display:inline-flex}
-  .tb-bfiltres,.tb-voir{display:none}
+  /* v5.50 : le panneau s'ouvre par le bouton (avec son libellé), il ne prend plus de place quand il est fermé. */
   .tb-cherche{flex:0 1 300px}
   .tb-aff{margin-left:auto}
-  .tb-filtres,.tb-filtres.ouverte{position:static;display:flex;flex-direction:column;gap:18px;flex:0 0 232px;max-height:none;overflow:visible;padding:18px;border-radius:var(--radius);background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
-  .tb-filtres .tb-feuille-t h2{font-size:19px}
-  .tb-filtres .tb-opts{flex-direction:column;flex-wrap:nowrap;gap:0}
-  .tb-filtres .tb-opt{border:0;background:none;color:var(--ink);padding:0 4px;min-height:38px;border-radius:var(--r-s);font-weight:500}
-  .tb-filtres .tb-opt:hover{background:var(--ground)}
-  .tb-filtres .tb-opt.on{background:none;color:var(--ink)}
-  .tb-filtres .tb-case{display:block;flex:none;width:18px;height:18px;border:2px solid #7A847D;border-radius:5px;box-sizing:border-box}
-  .tb-filtres .tb-opt.on .tb-case{background:var(--pine) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--pine)}
-  .tb-filtres .tb-opt-t{flex:1}
-  .tb-filtres .tb-opt-n,.tb-filtres .tb-opt.on .tb-opt-n{background:none;padding:0;color:var(--muted)}
+  /* Panneau « Filtrer et trier » (v5.50) : ouvert par-dessus la liste, sous la barre du haut, sans défilement ;
+     épinglé, il se range à gauche de la liste. */
+  .tb-corps{position:relative}
+  .tb-filtres.ouverte,.tb-filtres.epingle{display:flex;flex-direction:column;gap:14px;box-sizing:border-box;width:400px;max-height:calc(100vh - 96px);overflow-y:auto;padding:14px 18px 16px;border-radius:var(--r-l);background:#fff;border:1px solid var(--line)}
+  .tb-filtres.ouverte:not(.epingle){position:fixed;top:80px;left:300px;right:auto;bottom:auto;z-index:41;box-shadow:16px 16px 44px rgba(30,43,36,.2)}
+  .tb-filtres.epingle{position:sticky;top:80px;flex:0 0 340px;width:340px;box-shadow:var(--shadow)}
+  .tb-filtres .tb-feuille-t{gap:2px;flex-wrap:nowrap}
+  .tb-filtres .tb-feuille-t h2{flex:1;font-size:19px}
+  .tb-filtres .tb-feuille-t .link{font-size:13.5px;margin-right:2px}
+  .tb-filtres .tb-x{width:38px;height:38px;color:var(--ink)}
+  .tb-filtres .tb-x:hover{background:var(--ground)}
+  .tb-filtres .tb-epingle[aria-pressed=true]{background:var(--honeysoft);color:#7A5300}
+  .tb-filtres .tb-groupe{gap:6px}
+  .tb-filtres .tb-opts{gap:6px}
+  .tb-filtres .tb-opt{min-height:36px;padding:0 12px;border-radius:var(--r-pill);font-size:13.5px}
+  .tb-filtres .tb-opt:not(.on):hover{border-color:var(--pine)}
+  .tb-filtres .tb-opt-n{padding:0 6px}
+  .tb-filtres .tb-gtri .tb-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tb-filtres .tb-opt-tri{justify-content:center;min-height:38px;padding:0 6px;border-radius:var(--r-s)}
+  .tb-filtres .tb-opt-tri .tb-rond{display:none}
+  .tb-filtres .tb-opt-tri .tb-opt-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tb-filtres .tb-opt-tri.on{background:var(--honeysoft);border-color:var(--honey);color:var(--ink);font-weight:700}
+  .tb-filtres .tb-plie summary{min-height:40px;font-size:14px}
+  .tb-filtres .tb-inter{min-height:44px;padding:4px 0}
+  .tb-filtres .tb-inter .tb-opt-t{font-size:14px}
+  .tb-filtres .tb-inter .tb-opt-t .small{display:none}
+  .tb-filtres .tb-voir{position:static;box-shadow:none;margin-top:2px;min-height:44px}
+  .tb-filtres.epingle .tb-voir,.tb-filtres.epingle .tb-fermer{display:none}
+  .tb-voile.pour-filtres{background:rgba(246,244,238,.55)}
+}
+/* Écran peu haut (portable 1 366 × 768…) : le panneau ouvert passe sur deux colonnes pour tenir sans défiler. */
+@media (min-width:1024px) and (max-height:780px){
+  .tb-filtres.ouverte:not(.epingle){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px;row-gap:12px;align-content:start;width:min(760px,calc(100vw - 340px));top:72px;max-height:calc(100vh - 84px)}
+  .tb-filtres.ouverte:not(.epingle) .tb-feuille-t,.tb-filtres.ouverte:not(.epingle) .tb-voir{grid-column:1/-1}
+}
+@media (min-width:1024px){
   .tb-colonnes{position:absolute;top:52px;right:0;left:auto;bottom:auto;width:280px;max-height:none;border-radius:var(--r-m);border:1px solid var(--line);padding:12px 16px;gap:8px;z-index:41}
   .tb-colonnes .tb-feuille-t h2{font-size:17px}
   .tb-voile.leger{background:transparent}
@@ -175,6 +204,12 @@ html.lecteur .tb-coche{display:none}
 .tb-barre{flex-wrap:nowrap;gap:8px;min-height:56px}
 .tb-bfiltres{position:relative;flex:none;width:44px;height:44px;padding:0;justify-content:center}
 .tb-bfiltres .tb-nb{position:absolute;top:-5px;right:-5px}
+@media (min-width:1024px){
+  .tb-bfiltres{width:auto;height:46px;gap:8px;padding:0 14px;white-space:nowrap}
+  .tb-bfiltres .tb-nb{position:static}
+  .tb-bf-t{display:inline}
+  .tb-bfiltres[aria-expanded=true]{background:var(--pine);border-color:var(--pine);color:#fff}
+}
 .tb-puces{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;padding:2px 0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
 .tb-puce{min-height:38px}
 .tb-puce span{margin-left:2px}
@@ -265,9 +300,7 @@ button.tb-gr-nom{text-decoration:underline;text-decoration-color:rgba(30,43,36,.
 }
 .tb-voir{position:sticky;bottom:0;box-shadow:0 -10px 14px #fff}
 @media (min-width:1024px){
-  .tb-filtres .tb-feuille-t{flex-wrap:wrap;gap:2px 10px}
-  .tb-filtres .tb-feuille-t h2{font-size:18px}
   .tb-grille{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
   .tb-tel{display:none}
-  .tb-puces{-webkit-mask-image:none;mask-image:none;flex-wrap:wrap;overflow:visible}
+  .tb-puces{-webkit-mask-image:none;mask-image:none;flex-wrap:wrap;overflow:visible;flex:1 1 240px;min-width:0}
 }

@@ -110,9 +110,10 @@
     verif(page.locator(".tb-fiche").count() == 0, "Échap ferme la fiche rapide")
     if cap: page.screenshot(path=f"{cap}/tb-tableau-390.png")
 
-    # 4. Ordinateur : titre et boutons, recherche dans la barre, filtres à gauche, pas de menu ⋯.
+    # 4. Ordinateur : titre et boutons, recherche dans la barre, bouton Filtrer et trier, pas de menu ⋯.
     page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("render()"); page.wait_for_timeout(300)
-    verif(visibles(".wrap > .head") == 1 and visibles(".tb-plus") == 0 and visibles(".tb-filtres") == 1 and visibles("#tb_q") == 1, "ordinateur : titre, recherche, filtres à gauche, pas de ⋯")
+    # v5.50 : le panneau « Filtrer et trier » ne prend plus de place tant qu'on ne l'ouvre pas (scénario nv).
+    verif(visibles(".wrap > .head") == 1 and visibles(".tb-plus") == 0 and visibles(".tb-filtres") == 0 and visibles(".tb-bfiltres") == 1 and visibles("#tb_q") == 1, "ordinateur : titre, recherche, bouton Filtrer et trier (panneau fermé), pas de ⋯")
     page.fill("#tb_q", "bruy"); page.wait_for_timeout(500)
     verif(noms() == ["Bruyère"] and page.evaluate("document.activeElement.id") == "tb_q", "recherche « bruy » : Bruyère, le champ garde le focus")
     page.fill("#tb_q", ""); page.wait_for_timeout(500)

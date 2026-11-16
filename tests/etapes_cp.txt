@@ -9,13 +9,14 @@
     page.set_viewport_size({"width": 1280, "height": 640})
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
 
-    # 1. Menu latéral : il garde sa position d'un écran à l'autre ; Nouvelle visite et API côte à côte.
+    # 1. Menu latéral : il garde sa position d'un écran à l'autre ; Nouvelle visite en tête (API dans la barre du haut, v5.50).
     page.evaluate("document.querySelector('.side').scrollTop = 9999")
     avant = page.evaluate("document.querySelector('.side').scrollTop")
     page.click(".side .nav[data-v=reglages]"); page.wait_for_function("S.route === 'reglages'")
     apres = page.evaluate("document.querySelector('.side').scrollTop")
     verif(abs(avant - apres) < 2, f"menu latéral : position gardée après un clic ({avant} → {apres})")
-    verif(page.locator(".side .cp-actions [data-act=newvisite]").count() == 1 and page.locator(".side .cp-actions .nav[data-v=saisir]").count() == 1, "Nouvelle visite et API côte à côte")
+    # v5.50 : « Nouvelle visite » seule en tête du menu, API dans la barre du haut (« Demander à API »).
+    verif(page.locator(".side .cp-actions [data-act=newvisite]").count() == 1 and page.locator(".nl-entete .no-api[data-v=saisir]").count() == 1 and page.locator(".side .nav[data-v=saisir]").count() == 0, "Nouvelle visite en tête du menu, API dans la barre du haut")
     verif(page.locator(".side .cp-sortir[data-act=logout]").count() == 1 and page.locator(".side .me .link").count() == 0, "déconnexion en icône, plus de texte souligné")
     page.set_viewport_size({"width": 1440, "height": 900}); page.evaluate("ACT.go('dash')"); page.wait_for_selector(".wrap.ac.cp")
     verif(page.evaluate("(() => { const s = document.querySelector('.side'); return s.scrollHeight <= s.clientHeight + 1; })()"), "1 440 × 900 : le menu tient sans défiler")

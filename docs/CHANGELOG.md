@@ -5,47 +5,41 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.50 · à publier en recette · Standards d'écran : le titre au même endroit partout, Ruchers et Miel alignés
-Aucune migration. Maquettes du 16 nov. 2026 (canvas « apiviz — Standards d'écran »), validées par Pierre-Louis.
-Correctif de la v5.48 : le titre des écrans à onglets passe de 30 à 27 px sur téléphone, comme sur les autres écrans.
+## v5.50 · à publier en recette · navigation, recherche et filtres sur ordinateur
+**Aucune migration.** Maquettes validées par Pierre-Louis le 16 nov. 2026 (canvas « Navigation, recherche et filtres »).
+Le téléphone ne change pas.
 
-Mesuré avant sur 28 écrans à 390 px : titre à 82, 96, 120 ou 180 px (aucun titre sur Ruchers › Liste), titres
-d'écran en 24 à 30 px, onglets de Ruchers qui descendaient de 67 px entre Liste et Carte, onglets de Miel sous les
-chiffres et les pots (de ≈ 232 à ≈ 440 px selon l'onglet), titres de section en 7 tailles, demi-pixels sur l'Accueil.
+Pour l'apiculteur (ordinateur) :
+1. **Menu latéral** : un bouton « Replier » le réduit à une colonne d'icônes (76 px, libellés en infobulle) ; le choix est
+   gardé sur l'appareil. « Nouvelle visite » est seule en tête ; Agenda montre le nombre de tâches du jour ou en retard,
+   Ruchers le nombre de colonies « à voir ». Titres de catégorie discrets ; en bas, le prénom (ou l'adresse) et
+   l'exploitation.
+2. **Barre du haut** : le bouton API devient « Demander à API », à côté de la cloche.
+3. **Recherche** : cliquer sur la barre (ou Ctrl K) ouvre une fenêtre au centre de l'écran ; on peut écrire tout de suite et
+   elle reste ouverte pendant la saisie. Vide : colonies ouvertes récemment et actions rapides. En tapant : résultats
+   rangés par type avec leur nombre, filtre par type, mot surligné. ↑ ↓ pour parcourir, Entrée pour ouvrir, Échap pour
+   vider puis fermer, clic à côté pour fermer.
+   *Bug corrigé* : depuis la v5.32, le voile gris de la recherche passait au-dessus du champ ; le clic suivant tombait sur
+   le voile et refermait la recherche, qui semblait « disparaître ».
+4. **Ruchers › Filtrer et trier** : le panneau ne prend plus de place tant qu'on ne l'ouvre pas (le tableau a toute la
+   largeur). Le bouton « Filtrer et trier » l'ouvre par-dessus la liste, sans défilement : tri en six boutons avec
+   « Inverser », état, rucher, alertes en puces, reine, « Voir N colonies ». Les filtres s'appliquent tout de suite. Sur un
+   écran peu haut, le panneau passe sur deux colonnes. « Garder ouvert » (épingle) le range à côté de la liste ; le choix
+   est gardé sur l'appareil.
 
-- **Le titre est au même endroit sur tous les écrans** (82 px sur téléphone), à la même taille (27 px ; 22 px pour un
-  titre long comme « Registre et déclaration », qui sinon serait coupé à côté de ⋯), sauf l'Accueil.
-  - Sur téléphone, le retour « ‹ Parent » monte dans la barre du haut, à la place du logo (fiche ruche, rucher, lot,
-    météo, Mon profil, Rappels, Activité, Rechercher, Ce mois-ci). Sur ordinateur, il reste au-dessus du titre.
-  - Les flèches « ‹ › » de la fiche ruche passent à droite du titre, à côté de ⋯ (le « 2 sur 3 » reste pour les
-    lecteurs d'écran).
-  - ⋯ toujours à droite du titre, sur la même rangée ; la ligne d'état tient sur une ligne (texte entier au survol).
-  - Saisies (visite, vente, récolte) : « Annuler » reste à droite, mais le titre ne descend plus de 14 px.
-- **Ruchers et Miel deviennent des écrans à onglets comme Matériel et Finances** :
-  - Ruchers : titre « Ruchers » et ⋯ revenus sur téléphone ; Liste, Carte, Santé au même endroit.
-  - Miel : titre, ligne d'état commune (« 29 pots en stock · 28 € à encaisser ») et onglets Ventes, Clients, Stock et
-    récoltes juste dessous ; les chiffres et les pots passent dans l'onglet ; la recherche des clients remonte dans la
-    barre d'outils.
-- **Échelle** : titres de section à 17 px (étiquettes de groupe 13 px, titre d'un état vide 20 px) ; plus de
-  demi-pixel (12,5 → 13, 14,5 → 15, 15,5 → 15) ; même espacement entre en-tête, onglets et contenu sur Ruchers.
-
-Garde-fous :
-- `etapes_sd` (nouveau) : sur 31 écrans à 390 px, titre au même endroit et à 27 px (22 px si long), retour dans la barre du haut au
-  2e niveau, boutons à 36, 44 ou 52 px, titres de section à 17 / 13 / 20 px, pas de demi-pixel, arrondis des jetons.
-- `etapes_ar` couvre aussi Ruchers et Miel (onglets touchés un à un, positions dans la page).
-- `changelog.test.mjs` : chaque version une seule fois et sans trou depuis la v5.40 (aurait détecté la rubrique
-  effacée par la fusion de #73, rétablie dans la section v5.48).
-
-Technique : `src/noyau/gabarit.js` (sujets `ruchers` et `miel`, onglets par action, `ongletActif()`, en-tête `g-tete`
-pour tous les écrans, `retourEnHaut()`, flèches), `styles/composants/gabarit.css`, `vue-tableau.js` (⋯ du téléphone
-dans l'en-tête, `data-g-menu`), `nav4.js` (ligne d'état de Miel), `ux.js` (`UX.ongletMiel`), `51-ruches-tableau.css`.
+Technique : `navigation-ordi.js` et `styles/55-navigation-ordi.css` (chargés après `compact.js`) ; `Noyau.ruches.nbAVoir()`
+(`src/main.js`, `vue-tableau.js`) ; panneau dans `vue-tableau.js` / `51-ruches-tableau.css` (actions `tbepingle`, `tbsens`) ;
+raccourci N : le bouton API est aussi cherché dans la barre du haut (`ergonomie.js`). L'ancienne barre de recherche
+(`#erQ`) n'est plus affichée sur ordinateur. Le bandeau garde la couleur choisie dans Réglages.
+Tests : nouveau scénario `etapes_nv` ; `etapes_tb`, `etapes_cp`, `etapes_eg` adaptés.
 
 ### À vérifier
-- Téléphone : ouvrir Ruchers, une ruche, Météo, Mon profil, Miel, Matériel, une nouvelle visite : le titre ne bouge
-  pas d'un écran à l'autre ; sur une ruche, « ‹ Verger » en haut à gauche, « ‹ › » et ⋯ à droite du titre.
-- Ruchers : Liste, Carte, Santé : titre et onglets fixes ; ⋯ ouvre le menu (Nouveau rucher, Sélectionner, Exporter…).
-- Miel : Ventes, Clients, Stock et récoltes : titre, ligne d'état et onglets fixes ; « à encaisser » filtre toujours.
-- Ordinateur : rien ne change de place, le retour reste au-dessus du titre.
+- Ordinateur : cliquer dans la barre de recherche, taper « 12 » ou un nom de client : la fenêtre reste, les résultats suivent.
+- Ctrl K depuis n'importe quel écran ; Échap deux fois ; clic à côté.
+- Menu : Replier / Déplier, recharger la page : le choix reste. Compteurs Agenda et Ruchers.
+- « Demander à API » ouvre le choix d'API ; la touche N aussi.
+- Ruchers sur un portable : « Filtrer et trier » s'ouvre entier, sans défiler ; épingler, recharger.
+- Téléphone : menu, recherche par la loupe et feuille « Filtrer et trier » comme avant.
 
 ## v5.49 · à publier en recette · visite rapide (IT-08 réduite)
 **Migration 023** (`023-visite-rapide.sql`) : à appliquer sur `apidoo-test` (la mise en ligne en recette le fait), puis sur

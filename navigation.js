@@ -1,5 +1,6 @@
 // Apiviz — navigation par catégories (v5.32, maquettes validées le 12 nov. 2026).
-//   - Ordinateur : menu latéral permanent à gauche, rangé par catégorie, sans compteur ni pastille.
+//   - Ordinateur : menu latéral permanent à gauche, rangé par catégorie (v5.50 : repliable, compteurs, API dans la barre
+//     du haut et recherche en fenêtre : navigation-ordi.js).
 //     Plus d'onglets en haut ni de rubrique « Gestion » ; la recherche passe dans un bandeau en haut du contenu.
 //   - Téléphone : la 5e touche de la barre du bas devient « Menu » et ouvre un volet par la droite, avec les mêmes
 //     catégories. Accueil, Ruchers, API et Miel restent dans la barre du bas.
