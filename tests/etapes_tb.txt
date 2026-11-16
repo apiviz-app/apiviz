@@ -40,6 +40,19 @@
     lav = page.locator(".tb-l", has_text="Lavande")
     verif("Varroa 2 %" in lav.inner_text() and lav.locator(".tb-l-fin .tb-alerte").inner_text() == "40 j", "Lavande : raison en clair, 40 j en alerte")
     verif(page.evaluate("() => [...document.querySelectorAll('.tb-l')].every(r => r.getBoundingClientRect().bottom < innerHeight - 67)"), "les 6 colonies tiennent sur l'écran, au-dessus du menu du bas")
+    # Météo arrivée : la bande du rucher garde sa hauteur (plus de saut de 4 px) et les 6 colonies tiennent toujours.
+    hb = lambda: page.locator(".tb-gr-m").evaluate_all("l => l.map(e => e.getBoundingClientRect().height)")
+    h_avant = hb()
+    t0 = datetime.datetime.combine(datetime.date.today(), datetime.time())
+    hs = [(t0 + datetime.timedelta(hours=h)).strftime("%Y-%m-%dT%H:00") for h in range(144)]
+    meteo = {"current": {"temperature_2m": 14, "wind_speed_10m": 9, "precipitation": 0, "weather_code": 2},
+             "hourly": {"time": hs, **{k: [v] * 144 for k, v in {"temperature_2m": 16, "precipitation_probability": 5, "precipitation": 0, "wind_speed_10m": 8,
+                        "wind_gusts_10m": 15, "relative_humidity_2m": 60, "weather_code": 2}.items()}},
+             "daily": {"time": [(datetime.date.today() + datetime.timedelta(days=i)).isoformat() for i in range(6)], "temperature_2m_max": [17] * 6, "weather_code": [2] * 6}}
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, body=json.dumps(meteo)))
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-gr-m .mt-ligne-b", timeout=5000); page.wait_for_timeout(200)
+    verif(page.locator(".tb-gr-m .mt-ligne-b").count() == 2 and hb() == h_avant, f"météo arrivée : bande du rucher à la même hauteur ({h_avant} → {hb()})")
+    verif(page.evaluate("() => [...document.querySelectorAll('.tb-l')].every(r => r.getBoundingClientRect().bottom < innerHeight - 67)"), "météo arrivée : les 6 colonies tiennent toujours au-dessus du menu du bas")
 
     # Raccourcis de la barre.
     verif(page.locator(".tb-puce.on").inner_text().startswith("Toutes"), "raccourci « Toutes » actif")

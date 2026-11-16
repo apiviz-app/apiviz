@@ -24,6 +24,12 @@ Pour l'apiculteur :
 7. **Confidentialité** : la page cite Anthropic (modèle Claude) : questions et données utiles à la réponse lui sont
    envoyées au moment de la question, ne servent pas à entraîner ses modèles et sont gardées au plus 30 jours.
 
+Correctif (16 nov. 2026, avant la recette) : « Vérifier » était rouge sur `main` après la fusion de #79 (test_tb), ce qui a
+refusé la mise en ligne. Cause : les tests appelaient la vraie météo d'Open-Meteo ; quand elle arrivait à temps, la bande
+météo de chaque rucher grandissait de 4 px et la 6e colonie passait sous le menu du bas. Sur téléphone, la bande garde
+maintenant 30 px avant et après la météo (plus de saut), et les tests coupent tout appel réseau réel (`tests/test_hl.py`).
+`etapes_tb` vérifie aussi l'écran une fois la météo arrivée.
+
 Technique : `supabase/functions/assistant/` (fonction, boucle, outils de lecture, règles, consignes) ;
 `src/domaines/assistant/` (écran `api`, client, rendu) ; `styles/56-assistant.css`. Lectures avec le jeton de
 l'utilisateur et `x-exploitation` (RLS). Modèle `claude-sonnet-5-5` par défaut ; secrets de la fonction et retour arrière

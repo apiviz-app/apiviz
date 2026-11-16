@@ -228,6 +228,10 @@ def cliquer(page, sel):
 with sync_playwright() as pw:
     nav = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
     ctx = nav.new_context(viewport={"width": 390, "height": 844})
+    # Aucun appel réseau réel : tout ce qui n'est pas le site local est coupé, sauf ce qu'un scénario simule lui-même
+    # (une route déclarée plus tard l'emporte). Sans ce garde-fou, la vraie météo d'Open-Meteo arrivait en CI selon le
+    # moment et faisait échouer test_tb au hasard : mise en ligne refusée le 16 nov. 2026.
+    ctx.route(lambda u: not u.startswith(("http://127.0.0.1", "http://localhost")), lambda r: r.abort())
     ctx.route("**/*supabase.co/**", supabase)
     ctx.route("https://cdn.jsdelivr.net/**", cdn)
     ctx.route(re.compile(r"https://fonts\.(googleapis|gstatic)\.com/.*"), lambda r: r.abort() if etat["coupe"] else r.fulfill(status=200, body="", headers={"Content-Type": "text/css"}))
