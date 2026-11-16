@@ -5,6 +5,24 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.48 · à publier en recette · calendrier stable au doigt, « Qui s’en occupe » en liste
+Aucune migration.
+
+- **Calendrier qui s’ouvrait et se refermait aussitôt sur téléphone** (signalé par Pierre-Louis le 15 nov., fiche
+  « Ajouter une tâche »). Le calendrier s’ouvre dès que le doigt se pose ; au relâché, le navigateur envoie un clic à
+  l’endroit touché, qui tombait sur le fond du calendrier tout juste ouvert et le refermait (ou choisissait un jour s’il
+  tombait sur la grille). Ce clic est désormais avalé (`calendrier.js`), et toucher à côté ne ferme que si le doigt
+  s’est posé à côté. Souris et clavier inchangés.
+- **« Qui s’en occupe » (tâches) : liste des personnes de l’exploitation** au lieu d’une saisie libre : membres ayant
+  un prénom, puis personnes sans compte (Réglages › Membres et associés), comme « Acheté par ». Choix « Personne en
+  particulier » par défaut ; un nom déjà saisi qui n’est plus dans la liste reste proposé. Sans personne connue (base
+  sans 021, hors ligne au premier chargement) : saisie libre comme avant.
+
+### À vérifier
+- Téléphone : toucher un champ date (Échéance d'une tâche, date d'une visite…) : le calendrier reste ouvert ; toucher
+  à côté le ferme ; un jour se choisit normalement.
+- « Ajouter une tâche » : « Qui s’en occupe » propose les membres et les personnes sans compte.
+
 ## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
 Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :
 le bandeau de l'ordinateur (recherche et cloche, v5.44) s'affichait aussi sur téléphone, parce qu'une règle de

@@ -15,14 +15,17 @@ const CAL = (() => {
   const fleche = (d) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
 
   let champ = null, vue = null, mode = "jours"; // vue : AAAA-MM du mois affiché
-  let d = null;
+  let d = null, aCote = false, avaler = 0;
 
   function boite() {
     if (d) return d;
     document.body.insertAdjacentHTML("beforeend", '<dialog id="calDate" class="cal" aria-label="Choisir une date"></dialog>');
     d = document.getElementById("calDate");
+    // Fermer en touchant à côté seulement si le doigt s'est posé à côté : le clic qui suit l'ouverture (voir plus bas)
+    // ne doit jamais refermer le calendrier.
+    d.addEventListener("pointerdown", (e) => { aCote = e.target === d; });
     d.addEventListener("click", (e) => {
-      if (e.target === d) return fermer();
+      if (e.target === d) { const fond = aCote; aCote = false; return fond ? fermer() : undefined; }
       const b = e.target.closest("[data-cal]");
       if (!b || b.disabled) return;
       const a = b.dataset.cal, v = b.dataset.v;
@@ -116,12 +119,22 @@ const CAL = (() => {
 
   // Le champ : un clic (souris, doigt) ouvre notre calendrier au lieu de celui du navigateur.
   const estDate = (el) => el?.matches?.("input[type=date]:not([data-cal-natif])");
+  // Au doigt (téléphone), le navigateur envoie un clic juste après le relâché, à l'endroit touché ; le calendrier vient
+  // de s'ouvrir par-dessus : ce clic tombait sur son fond (et le refermait aussitôt) ou sur un jour. On l'avale.
   document.addEventListener("pointerdown", (e) => {
     if (!estDate(e.target) || e.button > 0) return;
     e.preventDefault();
+    avaler = e.pointerType === "mouse" ? 0 : Date.now();
     ouvrir(e.target);
   }, true);
-  document.addEventListener("click", (e) => { if (estDate(e.target)) e.preventDefault(); }, true);
+  document.addEventListener("click", (e) => {
+    if (avaler && Date.now() - avaler < 1000) {
+      avaler = 0;
+      if (estDate(e.target) || e.target === d || d?.contains(e.target)) { e.preventDefault(); e.stopPropagation(); return; }
+    }
+    avaler = 0;
+    if (estDate(e.target)) e.preventDefault();
+  }, true);
   document.addEventListener("keydown", (e) => {
     if (!estDate(e.target)) return;
     if (e.key === "Enter" || e.key === " " || (e.altKey && e.key === "ArrowDown")) { e.preventDefault(); ouvrir(e.target); }
