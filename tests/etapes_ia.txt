@@ -64,10 +64,11 @@
     verif(page.evaluate("S.route") == "api" and not page.evaluate("document.getElementById('sheet').open"), "Entrée : feuille fermée, écran API")
     verif(page.locator(".as-tete api-compagnon").get_attribute("etat") == "reflexion", "API réfléchit pendant le calcul")
     verif(page.locator(".as-form button[type=submit]").is_disabled(), "pas de seconde question pendant le calcul")
-    page.wait_for_function("1", timeout=1000); IA["attente"] = False
-    for _ in range(50):
+    # La question est retenue tant qu'elle n'est pas arrivée (jusqu'à 10 s : machines de GitHub lentes), puis relâchée.
+    for _ in range(100):
         if IA["pendante"]: break
         page.wait_for_timeout(100)
+    IA["attente"] = False
     IA["pendante"](); page.wait_for_selector(".as-resume", timeout=8000)
     rep = page.locator(".as-rep").last
     verif(rep.locator(".as-resume").inner_text() == "Commence par Ruche 5 : elle perd du poids.", "résumé en premier")
