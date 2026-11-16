@@ -54,15 +54,16 @@
    L'en-tête a une hauteur fixe : titre sur une ligne, une seule ligne d'état (coupée par « … »), ⋯ et bouton principal
    à droite. Les onglets suivent, puis la barre d'outils (année, choix de vue, recherche, puces) : mêmes places sur
    chaque onglet. Seul le contenu change. Test : etapes_ar. */
-.wrap>.head.g-sujet{display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:12px;height:var(--g-tete);min-height:var(--g-tete);margin:0;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
-.wrap>.head.g-sujet::after{display:none}
-.wrap>.head.g-sujet>div:first-child{flex:1;min-width:0}
-.wrap>.head.g-sujet h1{margin:0;font-size:var(--g-h1);line-height:var(--g-h1-l);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none}
-.wrap>.head.g-sujet .sub{margin:2px 0 0;font-size:15px;line-height:22px;height:22px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wrap>.head.g-sujet .actions{flex:none;width:auto;align-self:flex-start}
-.wrap>.head.g-sujet .actions .btn{flex:none}
-.wrap>.g-onglets{margin:6px 0 0}
-.g-outils{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 0}
+.wrap>.head.g-tete{display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:12px;min-height:var(--g-tete);margin:0;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
+.wrap>.head.g-sujet{height:var(--g-tete)}
+.wrap>.head.g-tete::after{display:none}
+.wrap>.head.g-tete>div:first-child{flex:1;min-width:0}
+.wrap>.head.g-tete h1{margin:0;font-size:var(--g-h1);line-height:var(--g-h1-l);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none}
+.wrap>.head.g-tete .sub{margin:2px 0 0;font-size:15px;line-height:22px;height:22px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrap>.head.g-tete .actions{flex:none;width:auto;align-self:flex-start;flex-wrap:nowrap}
+.wrap>.head.g-tete .actions .btn{flex:none}
+.wrap>.g-onglets{margin:0}
+.g-outils{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0}
 .g-outils>.op-barre,.g-outils>.op-puces{flex:1 1 100%;margin:0}
 .g-outils>.op-puces{padding:2px 0}
 .g-outils>.subtabs.g-segment{flex:0 1 auto;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -72,8 +73,29 @@
 .g-outils>.er-onglets{flex:0 1 auto;max-width:100%;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
 .g-outils>.er-onglets::-webkit-scrollbar{display:none}
 .g-outils>.er-onglets button{flex:none;white-space:nowrap}
-.wrap>.g-onglets+*:not(.g-outils),.g-outils+*{margin-top:14px}
+.wrap>.g-onglets+*,.g-outils+*{margin-top:0}
 :root{--g-tete:58px;--g-h1:27px;--g-h1-l:34px}
 @media (min-width:801px){
   :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px}
 }
+
+/* ---------- Standards d'écran (v5.50, maquettes du 16 nov. 2026) ----------
+   Retour dans la barre du haut sur téléphone, flèches d'une fiche à côté de ⋯, Ruchers avec son titre. */
+.g-retour-haut{display:none}
+@media (max-width:800px){
+  body[data-g-retour] .shell > .topbar > img{display:none}
+  .topbar .g-retour-haut{display:flex;align-items:center;gap:2px;min-height:var(--cible);margin:0 0 0 -10px;padding:0 10px 0 2px;border:0;background:none;font:inherit;font-size:var(--t-m);font-weight:700;color:inherit;cursor:pointer}
+  .wrap>.head .g-retour{display:none}
+}
+.wrap>.head .n4-fleches .small{font-size:13px;color:var(--muted);white-space:nowrap}
+.wrap>.head .n4-fleches{display:inline-flex;gap:6px;align-items:center}
+.wrap>.head .n4-fleches .btn{width:var(--cible);min-width:var(--cible);height:var(--cible);min-height:var(--cible);padding:0;border-radius:12px;font-size:20px}
+.wrap>.head .tb-plus{position:static;transform:none;width:var(--cible);height:var(--cible);border:1px solid var(--line2);border-radius:12px;background:var(--card);box-shadow:none;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+@media (min-width:801px){ .wrap>.head .tb-plus{display:none} }
+/* Même espacement entre en-tête, onglets et contenu sur tous les écrans à onglets (Ruchers avait 24 px). */
+.wrap:has(> .head.g-sujet){gap:16px}
+/* Titres de section : un seul style (17 px), ou l'étiquette de groupe (13 px, Matériel, Réglages, Mon profil, dates de
+   l'activité) ; titre d'un état vide à 20 px. Garde-fou : etapes_sd. */
+.shell .wrap h2{font-size:17px;line-height:24px}
+.shell .wrap h2.op-gt,.shell .wrap h2.pf-g,.shell .wrap h2.rg-g,body[data-route=activite] .shell .wrap h2.u-titre{font-size:13px;line-height:18px}
+.shell .wrap .card.hero h2{font-size:20px;line-height:26px}

@@ -637,7 +637,7 @@ const UX = (() => {
     carte, lieux, meteoHtml,
     // Ouvrir la carte en mode « placer ce rucher » (bouton « Placer sur la carte » de l'écran Ruchers, IT-05).
     viser: (cle) => { visee = cle; choix = cle; }, texteMessage, tauxVarroa, seuilVarroa, dateCourte, quand, chip, qui, pluriel, nomRucher, ruchers,
-    onglet: (v) => { onglet = v; }, enteteMiel, carteVisite, hexMini, pire,
+    onglet: (v) => { onglet = v; }, ongletMiel: () => onglet, enteteMiel, carteVisite, hexMini, pire,
     ouvrir: (id) => { const o = ouverts.get(S.visite) || {}; o[id] = true; ouverts.set(S.visite, o); },
   };
 })();

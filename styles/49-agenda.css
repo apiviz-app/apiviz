@@ -8,7 +8,7 @@
 .ag-nav h2{margin:0 8px 0 6px;font-size:18px}
 .ag-auj{min-height:34px}
 .ag-filtres{display:flex;flex-wrap:wrap;gap:6px}
-.ag-filtre{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 11px;border:1px solid var(--line);border-radius:var(--r-pill);background:#fff;color:var(--ink);font:600 12.5px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.ag-filtre{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 11px;border:1px solid var(--line);border-radius:var(--r-pill);background:#fff;color:var(--ink);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
 .ag-filtre i{width:9px;height:9px;border-radius:3px}
 .ag-filtre[aria-pressed=false]{color:var(--muted);background:var(--ground);border-style:dashed}
 .ag-filtre[aria-pressed=false] i{opacity:.35}
@@ -56,7 +56,7 @@
 .ag-ligne>i{flex:none;align-self:stretch;width:4px;border-radius:2px}
 .ag-ouvrir{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;min-height:44px;justify-content:center;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .ag-ouvrir b{font-size:14px}
-.ag-ouvrir span{font-size:12.5px;color:var(--muted)}
+.ag-ouvrir span{font-size:13px;color:var(--muted)}
 .ag-ouvrir:hover b{color:var(--pine2)}
 .ag-ligne.fait b{text-decoration:line-through;color:var(--muted);font-weight:500}
 .ag-ligne .check{flex:none;width:30px;height:30px;border-radius:var(--r-s);border:2px solid var(--line2);background:#fff;color:#fff;font-weight:700;cursor:pointer}

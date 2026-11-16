@@ -53,9 +53,9 @@
 .tb-coche{width:20px;height:20px;margin:0;flex:none;accent-color:var(--pine);cursor:pointer}
 .tb-nom{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:100%;padding:0;border:0;background:none;text-align:left}
 .tb-nom-t{display:flex;flex-direction:column;min-width:0}
-.tb-nom-t b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis}
+.tb-nom-t b{font-size:15px;overflow:hidden;text-overflow:ellipsis}
 .tb-sous{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
-.tb-code{display:none;font-size:12.5px;color:var(--muted)}
+.tb-code{display:none;font-size:13px;color:var(--muted)}
 .tb-pt{flex:none;width:10px;height:10px;border-radius:5px;background:#8FC4A0}
 .tb-pt.bg-watch{background:var(--honey)}.tb-pt.bg-crit{background:var(--crit)}.tb-pt.bg-good{background:#8FC4A0}
 .tb-ligne.coche .tb-c{background:#FFF4D6}
@@ -75,7 +75,7 @@
 .tb-reste{flex:1 0 0;display:flex;min-height:0}
 .tb-reste .tb-c-nom{height:auto;border:0}
 .tb-synthese{position:sticky;bottom:0;z-index:3}
-.tb-synthese .tb-c{height:50px;background:#F2F3EC;border-top:1px solid var(--line);font-size:12.5px;font-weight:600;color:#3F4A44}
+.tb-synthese .tb-c{height:50px;background:#F2F3EC;border-top:1px solid var(--line);font-size:13px;font-weight:600;color:#3F4A44}
 .tb-synthese .tb-c-nom{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;z-index:4;box-shadow:1px 0 0 var(--line),4px 0 6px -2px rgba(30,43,36,.12)}
 .tb-synthese .tb-c-nom b{font-size:12px;letter-spacing:.04em;text-transform:uppercase}
 .tb-synthese .tb-c-nom span{font-weight:400;color:var(--muted)}
@@ -90,7 +90,7 @@
 /* Sélection : actions groupées */
 .tb-selection{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 4px;background:var(--pine);color:#fff;border-radius:var(--r-m)}
 .tb-sel-t{flex:1;font-weight:600;font-size:14px}
-.tb-selection .btn{min-height:42px;padding:0 12px;font-size:13.5px}
+.tb-selection .btn{min-height:42px;padding:0 12px;font-size:13px}
 .tb-selection .btn:not(.honey){background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
 .tb-x{flex:none;width:44px;height:44px;border:0;background:none;color:inherit;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-s)}
 html.lecteur .tb-coche{display:none}
@@ -158,7 +158,7 @@ html.lecteur .tb-coche{display:none}
   .tb-voile.pour-fiche{background:rgba(20,30,24,.18)}
   .tb-fiche-b{margin-top:auto}
   .tb-selection{flex-wrap:wrap}
-  .tb-c{height:52px;font-size:14.5px}
+  .tb-c{height:52px;font-size:15px}
   .tb-c-rucher,.tb-c-afaire{line-height:52px}
   .tb-c-nom{width:240px;padding-left:16px}
   .tb-sous{display:none}
@@ -191,12 +191,12 @@ html.lecteur .tb-coche{display:none}
 .tb-gr-t{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px 0 14px;background:#EEF1E8}
 .tb-gr-nom{border:0;background:none;padding:0;min-height:40px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);text-align:left;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 button.tb-gr-nom{text-decoration:underline;text-decoration-color:rgba(30,43,36,.25);text-underline-offset:3px}
-.tb-gr-nb{flex:1;min-width:0;font-size:12.5px;color:#3F4A44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-gr-nb{flex:1;min-width:0;font-size:13px;color:#3F4A44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-gr-nb b{color:var(--watch)}
 .tb-gr-t .btn.sm{flex:none;min-height:36px;padding:0 12px;font-size:13px}
-.tb-gr-m{display:flex;align-items:center;min-height:30px;padding:0 14px 4px;background:#EEF1E8;font-size:12.5px;color:#3F4A44}
-.tb-gr-m .link{font-size:12.5px;min-height:30px}
-.mt-ligne-b{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;min-height:30px;font-size:12.5px;color:#3F4A44;text-align:left;white-space:nowrap;overflow:hidden;max-width:100%}
+.tb-gr-m{display:flex;align-items:center;min-height:30px;padding:0 14px 4px;background:#EEF1E8;font-size:13px;color:#3F4A44}
+.tb-gr-m .link{font-size:13px;min-height:30px}
+.mt-ligne-b{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;min-height:30px;font-size:13px;color:#3F4A44;text-align:left;white-space:nowrap;overflow:hidden;max-width:100%}
 .mt-ligne-b svg{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .mt-ligne-b span{overflow:hidden;text-overflow:ellipsis}
 .tb-liste{display:flex;flex-direction:column;background:#fff}
@@ -208,12 +208,12 @@ button.tb-gr-nom{text-decoration:underline;text-decoration-color:rgba(30,43,36,.
 .tb-hex{flex:none;width:28px;height:30px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:#8FC4A0;color:#1F5C38}
 .tb-hex.bg-crit{background:var(--crit);color:#fff}.tb-hex.bg-watch{background:var(--honey);color:var(--ink)}.tb-hex.bg-good{background:#8FC4A0}
 .tb-l-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.tb-l-t b{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-l-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-l-code{font-size:12px;font-weight:500;color:var(--muted)}
-.tb-l-s{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-l-s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-l-s .t-crit{color:var(--crit);font-weight:600}.tb-l-s .t-watch{color:var(--watch);font-weight:600}
 .tb-l-s .al-kg{color:var(--muted)}
-.tb-l-fin{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tb-l-fin{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink)}
 .tb-l-fin span:last-child:not(.tb-alerte){color:var(--muted)}
 .tb-rond-sel{flex:none;width:24px;height:24px;box-sizing:border-box;border-radius:var(--r-s);border:2px solid #9AA39C;display:flex;align-items:center;justify-content:center;background:#fff}
 .tb-rond-sel.on{background:var(--pine);border-color:var(--pine);color:#fff}
@@ -254,15 +254,11 @@ button.tb-gr-nom{text-decoration:underline;text-decoration-color:rgba(30,43,36,.
 .tb-menu-b{min-height:50px;justify-content:flex-start;font-size:15px}
 .tb-menu-lien{border:0;background:none;text-align:left;padding:0 14px;font-weight:600;color:var(--ink)}
 
-/* Téléphone : plus de titre ni de boutons au-dessus des onglets (bouton ⋯ dans la rangée des onglets), barre collée en haut */
+/* Téléphone : barre collée en haut. v5.50 (standards d'écran) : le titre et ⋯ sont revenus au-dessus des onglets,
+   comme sur les autres écrans à onglets (gabarit.css). */
 @media (max-width:800px){
-  .wrap:has(> .tb){gap:8px;padding-top:4px}
-  .wrap:has(> .tb) > .head{display:none}
-  .wrap:has(> .tb) > .subtabs{position:relative;padding-right:52px}
-  .tb-plus{display:flex;position:absolute;right:4px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;border-radius:var(--r-s);background:#fff;align-items:center;justify-content:center;color:var(--ink);box-shadow:0 1px 0 rgba(30,43,36,.08)}
   .tb-barre{position:sticky;top:calc(64px + env(safe-area-inset-top));z-index:12;margin:0 -16px;padding:6px 16px;background:var(--ground);border-bottom:1px solid var(--line)}
   .tb-barre.tb-selection{margin:0 -16px;border-radius:0;padding:6px 10px 6px 4px;background:var(--pine);color:#fff;border-bottom:0}
-  .wrap:has(> .tb) > .subtabs{margin-bottom:-6px}
   .tb-selection .btn{min-height:40px}
   .tb-corps{display:block}
   .tb-principal{gap:10px}

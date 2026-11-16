@@ -14,16 +14,20 @@
     DATA["mouvements_stock"] = []
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
     ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    LF = _ici / "leaflet" / "package" / "dist"  # carte des ruchers (onglet Carte), comme etapes_rc
+    ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
+              headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))
     cap = os.environ.get("CAPTURES")
     if cap: os.makedirs(cap, exist_ok=True)
     MESURE = """() => {
-      const r = (el) => el && el.getClientRects().length ? Math.round(el.getBoundingClientRect().top) : null;
+      // Positions dans la page (pas à l'écran) : un défilement de Playwright au clic ne fausse pas la mesure.
+      const r = (el) => el && el.getClientRects().length ? Math.round(el.getBoundingClientRect().top + scrollY) : null;
       const w = document.querySelector('.wrap');
       const h = w && w.querySelector(':scope > .head');
       const o = w && w.querySelector(':scope > .g-onglets');
       const outils = w && w.querySelector(':scope > .g-outils');
-      return { titre: r(h && h.querySelector('h1')), etat: r(h && h.querySelector('.sub')), onglets: r(o), basOnglets: o ? Math.round(o.getBoundingClientRect().bottom) : null,
-               outils: r(outils), puces: r(outils && outils.querySelector('.op-puces')), basTete: h ? Math.round(h.getBoundingClientRect().bottom) : null,
+      return { titre: r(h && h.querySelector('h1')), etat: r(h && h.querySelector('.sub')), onglets: r(o), basOnglets: o ? Math.round(o.getBoundingClientRect().bottom + scrollY) : null,
+               outils: r(outils), puces: r(outils && outils.querySelector('.op-puces')), basTete: h ? Math.round(h.getBoundingClientRect().bottom + scrollY) : null,
                lignes: h && h.querySelector('.sub') ? Math.round(h.querySelector('.sub').getBoundingClientRect().height) : 0,
                coupe: !!(h && h.querySelector('h1') && h.querySelector('h1').scrollWidth > h.querySelector('h1').clientWidth + 1),
                taille: h && h.querySelector('h1') ? getComputedStyle(h.querySelector('h1')).fontSize : null };
@@ -31,17 +35,22 @@
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
     page.evaluate("try{localStorage.setItem('apiviz-materiel-affichage','liste')}catch(e){}; S.mt=null")
-    SUJETS_TEST = [("Matériel", ["materiel", "courses", "fournisseurs"]), ("Finances", ["pilotage", "compta", "previsions", "associes"]),
-                   ("Registre", ["registre", "declaration"]), ("Réglages", ["reglages", "membres"])]
+    SUJETS_TEST = [("Matériel", "materiel"), ("Finances", "pilotage"), ("Registre", "registre"), ("Réglages", "reglages"),
+                   ("Ruchers", "ruches"), ("Miel", "clients")]
     for largeur in (390, 1280):
         page.set_viewport_size({"width": largeur, "height": 844 if largeur == 390 else 900})
-        for sujet, routes in SUJETS_TEST:
+        for sujet, depart in SUJETS_TEST:
             vues = {}
-            for rt in routes:
-                page.evaluate("(r) => { window.scrollTo(0, 0); ACT.go(r); }", rt); page.wait_for_function("(r) => S.route === r && document.querySelector('.wrap > .g-onglets')", arg=rt)
+            page.evaluate("(r) => { window.scrollTo(0, 0); ACT.go(r); }", depart); page.wait_for_function("(r) => S.route === r && document.querySelector('.wrap > .g-onglets')", arg=depart)
+            n = page.locator(".wrap > .g-onglets button").count()
+            for i in range(n):
+                b = page.locator(".wrap > .g-onglets button").nth(i); nom = b.inner_text()
+                page.evaluate("window.scrollTo(0, 0)"); b.click()
+                page.wait_for_function("(t) => { const o = document.querySelector('.wrap > .g-onglets button.on'); return o && o.textContent === t; }", arg=nom)
                 page.wait_for_timeout(250)
-                vues[rt] = page.evaluate(MESURE)
-                if cap and largeur == 390: page.screenshot(path=f"{cap}/ar-{rt}-390.png")
+                vues[nom] = page.evaluate(MESURE)
+                if cap and largeur == 390: page.screenshot(path=f"{cap}/ar-{sujet}-{i}-390.png")
+            verif(n >= 2, f"{largeur} px, {sujet} : {n} onglets")
             print(largeur, sujet, json.dumps(vues))
             for cle in ("titre", "etat", "basTete", "onglets", "basOnglets"):
                 valeurs = {rt: v[cle] for rt, v in vues.items()}
