@@ -8,7 +8,7 @@
         page.evaluate(f"ACT.go('{route}')"); page.wait_for_timeout(350)
         return page.evaluate("""() => { const v = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
           const h = document.querySelector('.wrap > .head h1');
-          return { titre: h ? h.textContent.trim() : '', retour: [...document.querySelectorAll('.wrap .g-retour')].filter(v).map((b) => b.textContent.trim()),
+          return { titre: h ? h.textContent.trim() : '', retour: [...document.querySelectorAll('.wrap .g-retour, .topbar .g-retour-haut')].filter(v).map((b) => b.textContent.trim()),
             anciens: document.querySelectorAll('.wrap .er-ariane, .wrap .nl-categorie').length,
             principaux: [...document.querySelectorAll('.wrap .btn.main, .wrap .btn.honey')].filter(v).map((b) => b.textContent.trim()),
             barre: [...document.querySelectorAll('.wrap .g-barre > .btn')].filter(v).map((b) => b.textContent.trim()),
@@ -29,7 +29,7 @@
     verif(not e["petits"], "Dépenses : aucun texte sous 12 px " + str(e["petits"]))
     # Santé : le seuil n'est plus dans l'écran, il s'ouvre par ⋯
     e = ecran("varroa")
-    verif(e["titre"] == "Santé" and page.locator("form[data-form=v3seuil]").count() == 0, "Santé : titre « Santé », plus de formulaire de seuil dans l'écran")
+    verif(e["titre"] == "Ruchers" and page.locator("form[data-form=v3seuil]").count() == 0, "Santé : onglet de Ruchers (titre « Ruchers », v5.50), plus de formulaire de seuil dans l'écran")
     page.locator(".wrap > .head .g-plus").click(); page.wait_for_selector("#sheet[open] .g-action")
     page.locator("#sheet .g-action", has_text="Seuil d’alerte varroa").click()
     page.wait_for_selector("#sheet[open] input[name=s]")

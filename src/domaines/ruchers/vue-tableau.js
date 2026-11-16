@@ -308,9 +308,10 @@ export function ecran() {
       </div>
       ${voile}${fiche(t, toutes)}${menu(t)}
     </div>`);
-  // Téléphone : bouton ⋯ dans la rangée des onglets (le titre et ses boutons sont masqués).
-  document.querySelector(".wrap > .subtabs")?.insertAdjacentHTML("beforeend",
-    `<button type="button" class="tb-plus" data-act="tbfeuille" data-v="menu" aria-haspopup="dialog" aria-expanded="${t.feuille === "menu"}" aria-label="Plus d’actions">${svg(I.points, 22)}</button>`);
+  // Téléphone : bouton ⋯ à droite du titre (v5.50, standards d'écran ; il était dans la rangée des onglets et le titre
+  // était masqué). Il ouvre le menu de l'écran (sélection, export) ; le gabarit garde son ⋯ pour l'ordinateur.
+  document.querySelector(".wrap > .head > .actions")?.insertAdjacentHTML("beforeend",
+    `<button type="button" class="tb-plus g-tel g-garder" data-g-menu data-act="tbfeuille" data-v="menu" aria-haspopup="dialog" aria-expanded="${t.feuille === "menu"}" aria-label="Plus d’actions">${svg(I.points, 22)}</button>`);
   apresRendu();
 }
 

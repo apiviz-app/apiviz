@@ -34,7 +34,7 @@
 .ac-chiffre span{font-size:13px;color:var(--muted)}
 .ac-chiffre b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;line-height:1.15;font-weight:700}
 .ac-chiffre b.good{color:var(--good)}.ac-chiffre b.crit{color:var(--crit)}
-.ac-chiffre small{font-size:12.5px;line-height:1.3;color:var(--muted)}
+.ac-chiffre small{font-size:13px;line-height:1.3;color:var(--muted)}
 .ac-chiffre small.watch{color:var(--watch);font-weight:600}
 
 /* 4. État des ruches : la carte des alvéoles devient une carte blanche avec son titre */
@@ -61,11 +61,11 @@
 /* 6. À faire étiqueté */
 .ac-liste .ac-todo{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;width:100%;min-height:52px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
 .ac-liste .u-entete+.ac-todo{border-top:0}
-.ac-tag{justify-self:start;max-width:100%;padding:4px 9px;border-radius:var(--r-s);font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--ground);color:var(--ink)}
+.ac-tag{justify-self:start;max-width:100%;padding:4px 9px;border-radius:var(--r-s);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--ground);color:var(--ink)}
 .ac-tag.crit{background:#F7DEDA;color:#8E1F14}
 .ac-tag.watch{background:var(--honeysoft);color:#7A5200}
 .ac-tag.good{background:var(--goodbg);color:#1F5239}
-.ac-todo-t{font-size:14.5px;line-height:1.35}
+.ac-todo-t{font-size:15px;line-height:1.35}
 
 /* 7. Dernières actions */
 .ac-dernieres .ac-fil{display:flex;gap:12px;align-items:flex-start;width:100%;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
@@ -75,8 +75,8 @@
 .ac-dernieres .ac-fil:nth-of-type(even) .ac-avatar:not(.vide){background:var(--honey);color:var(--pine)}
 .ac-avatar.vide{flex-basis:22px;height:24px;margin:2px 4px 0;border-radius:0;background:var(--line2);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
 .ac-fil>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
-.ac-fil-t{font-size:14.5px;line-height:1.35}
-.ac-fil small{font-size:12.5px;color:var(--muted)}
+.ac-fil-t{font-size:15px;line-height:1.35}
+.ac-fil small{font-size:13px;color:var(--muted)}
 
 @keyframes ac-monte{from{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:reduce){.wrap.ac *{animation:none!important;transition:none!important}}

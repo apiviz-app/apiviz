@@ -87,7 +87,12 @@ Technique :
 - Tournée Standard au doigt : tout tient sur l'écran, « Force, œufs, cellules royales » replié.
 - Ancienne version de l'app ouverte en parallèle : une visite s'enregistre toujours (champs vides).
 
-## v5.48 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
+## v5.48 · à publier en recette · En-têtes de rubrique alignés ; calendrier stable au doigt, « Qui s’en occupe » en liste
+Deux PR fusionnées sous ce numéro : #72 (agenda) et #73 (en-têtes). La fusion de #73 avait effacé la rubrique de
+l'agenda : elle est rétablie à la fin de cette section (« Agenda »). Correctif dans la v5.50 : titre des écrans à
+onglets à 27 px sur téléphone (il était à 30 px).
+
+### En-têtes de rubrique alignés
 Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis.
 
 Dans les écrans à onglets (Matériel, Finances, Registre et déclaration, Réglages), passer d'un onglet à l'autre faisait
@@ -118,6 +123,24 @@ d'outils sur chaque onglet des 4 sujets, à 390 et 1 280 px (aucun pixel d'écar
 - Finances : la puce « 2026 » et Financier / Opérationnel sous les onglets, au même endroit sur Bilan, Dépenses, Budget.
 - Registre : Traitements, Mouvements, Interventions, Exploitation sur une ligne (glisser pour voir la suite).
 - Ordinateur : mêmes vérifications ; le bouton principal reste à droite de l'en-tête.
+
+### Agenda : calendrier stable au doigt, « Qui s’en occupe » en liste des personnes
+Aucune migration.
+
+- **Calendrier qui s’ouvrait et se refermait aussitôt sur téléphone** (signalé par Pierre-Louis le 15 nov., fiche
+  « Ajouter une tâche »). Le calendrier s’ouvre dès que le doigt se pose ; au relâché, le navigateur envoie un clic à
+  l’endroit touché, qui tombait sur le fond du calendrier tout juste ouvert et le refermait (ou choisissait un jour s’il
+  tombait sur la grille). Ce clic est désormais avalé (`calendrier.js`), et toucher à côté ne ferme que si le doigt
+  s’est posé à côté. Souris et clavier inchangés.
+- **« Qui s’en occupe » (tâches) : liste des personnes de l’exploitation** au lieu d’une saisie libre : membres ayant
+  un prénom, puis personnes sans compte (Réglages › Membres et associés), comme « Acheté par ». Choix « Personne en
+  particulier » par défaut ; un nom déjà saisi qui n’est plus dans la liste reste proposé. Sans personne connue (base
+  sans 021, hors ligne au premier chargement) : saisie libre comme avant.
+
+#### À vérifier (agenda)
+- Téléphone : toucher un champ date (Échéance d'une tâche, date d'une visite…) : le calendrier reste ouvert ; toucher
+  à côté le ferme ; un jour se choisit normalement.
+- « Ajouter une tâche » : « Qui s’en occupe » propose les membres et les personnes sans compte.
 
 ## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
 Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :
