@@ -52,8 +52,21 @@
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
     ecritures = len(recu["rpc"]) + len(recu["upsert"]) + len(patchs)
 
+    # 0. Accès (v5.53) : « Donner une facture à API » dans la feuille du bouton API, libellé explicite dans Matériel
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .fx-entree", timeout=5000)
+    verif("Donner une facture à API" in page.locator("#sheet .fx-entree").inner_text(), "feuille du bouton API : « Donner une facture à API »")
+    verif(page.locator("#sheet .al-bientot").count() == 0, "la phrase « Bientôt, API… lira tes factures » disparaît")
+    verif(page.evaluate("(() => { const a = document.querySelector('#sheet .fx-entree'), t = document.querySelector('#sheet .n4-tuiles'); return !!(a.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING); })()"), "la ligne est au-dessus des six saisies")
+    shot("facture-0-feuille-api")
+    page.click("#sheet .fx-entree"); page.wait_for_selector("#sheet[open] .fx[data-etape=source]", timeout=5000)
+    verif(True, "la ligne ouvre directement la feuille Source")
+    page.evaluate("document.getElementById('sheet').close()")
+
     # 1. Source : « Ajouter un achat » propose la facture à API
     page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
+    page.wait_for_function("[...document.querySelectorAll('[data-act=newdepense]')].some((b) => b.textContent.includes('ou une facture'))", timeout=5000)
+    verif(True, "Matériel : « + Ajouter un achat ou une facture »")
+    shot("facture-0-materiel")
     cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .fx[data-etape=source]", timeout=5000)
     f = page.locator("#sheet")
     verif("Étape 1 sur 4" in f.inner_text() and "Prendre en photo" in f.inner_text() and "Importer un fichier" in f.inner_text(), "feuille Source : étape 1, photo ou fichier")
@@ -148,3 +161,7 @@
     page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
     cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .st-achat-corps", timeout=5000)
     verif(page.locator("#sheet .fx").count() == 0, "API indisponible : directement la saisie à la main")
+    verif(all("facture" not in t for t in page.locator("[data-act=newdepense]").all_inner_texts()), "API indisponible : Matériel garde « + Ajouter un achat »")
+    page.evaluate("document.getElementById('sheet').close()")
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .n4-tuiles"); page.wait_for_timeout(600)
+    verif(page.locator("#sheet .fx-entree").count() == 0, "API indisponible : pas de ligne facture dans la feuille du bouton API")

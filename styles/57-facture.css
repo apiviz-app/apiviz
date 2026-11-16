@@ -109,3 +109,9 @@
   .fx-pied{flex-direction:row-reverse;flex-wrap:wrap}
   .fx-pied .btn{width:auto;flex:1}
 }
+
+/* v5.53 : « Donner une facture à API » dans la feuille du bouton API */
+.fx-entree{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;padding:12px 14px;border:0;border-radius:var(--r-m);background:var(--honeysoft);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.fx-entree .fx-ic{background:var(--pine);color:var(--honey-light)}
+.fx-entree .fx-t>span{color:var(--neutral-ink,#3F4A44)}
+.fx-entree:focus-visible{outline:2px solid var(--pine);box-shadow:0 0 0 4px var(--honey)}

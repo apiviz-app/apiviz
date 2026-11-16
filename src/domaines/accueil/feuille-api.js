@@ -3,6 +3,8 @@
 // rapides (nav4.js, alveoles.js). Les maquettes y ajoutent la suggestion du jour : la même priorité que l'accueil,
 // dite par API, avec deux gestes, « Visiter … » et « Ajouter à l'agenda ». Sans priorité (tout va bien), rien n'est
 // ajouté : API ne parle pas pour rien. Les tuiles entrent l'une après l'autre (styles/42-feuille-api.css).
+// v5.53 : la ligne « Donner une facture à API » au-dessus des saisies, là où API peut lire les factures (facture.js) ;
+// elle remplace la phrase « Bientôt, API … lira tes factures » d'alveoles.js.
 // Globales lues à l'appel : S, esc, $sheet, $sheetForm, ACT, AL, UX, MT.
 
 const prioritaire = () => S.d?.ruches?.find((x) => x.etat === "Critique") || S.d?.ruches?.find((x) => x.etat !== "Bonne");
@@ -18,6 +20,16 @@ export function suggestion() {
     <button type="button" class="btn" data-act="fasagenda" data-v="${esc(r.id)}">Ajouter à l’agenda</button></div></section>`;
 }
 
+import { disponible, factureProposee, ligneFacture } from "../finances/facture.js";
+
+/** Ajoute la ligne « Donner une facture à API » à la feuille ouverte, une fois. */
+function ajouterFacture() {
+  const tuiles = $sheetForm.querySelector(".n4-tuiles");
+  if (!tuiles || !$sheet.open || $sheetForm.querySelector(".fx-entree") || !factureProposee()) return;
+  tuiles.insertAdjacentHTML("beforebegin", ligneFacture());
+  $sheetForm.querySelector(".al-bientot")?.remove();
+}
+
 /** Enveloppe la feuille du bouton API (chargé après nav4.js et alveoles.js, par src/main.js). */
 export function installer() {
   if (typeof window == "undefined" || typeof window.quickSheet != "function" || window.quickSheet.faApi) return;
@@ -28,6 +40,9 @@ export function installer() {
     tuiles?.querySelectorAll(".n4-tuile").forEach((t, i) => t.style.setProperty("--i", i));
     tuiles?.classList.add("fa-tuiles");
     if (s && tuiles) tuiles.insertAdjacentHTML("afterend", s);
+    // Disponibilité déjà connue : tout de suite ; sinon dès la réponse du serveur, si la feuille est encore ouverte.
+    ajouterFacture();
+    if (!$sheetForm.querySelector(".fx-entree")) disponible().then((ok) => ok && ajouterFacture());
   };
   feuille.faApi = true;
   window.quickSheet = feuille;
