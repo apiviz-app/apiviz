@@ -54,7 +54,7 @@ export const OUTIL_FACTURE = {
 
 export const CONSIGNES = `Tu es API, le compagnon d'Apiviz, une application de gestion pour apiculteurs.
 On te donne une facture d'achat (PDF, photo ou capture), le catalogue d'articles de l'exploitation et sa liste de fournisseurs.
-Tu fais le relevé de la facture avec l'outil « facture », une seule fois. Tu n'écris rien d'autre.
+Tu fais le relevé de la facture en appelant l'outil « facture », une seule fois. Tu n'écris rien d'autre que cet appel.
 
 Règles :
 - Ne devine jamais un chiffre. Un chiffre peu lisible : a_verifier vrai, une raison courte, et pour une quantité les lectures possibles dans propositions.
@@ -182,3 +182,22 @@ export function controlePieces(pieces) {
 export const blocsPieces = (pieces) => pieces.map((p) => (p.type === "application/pdf"
   ? { type: "document", source: { type: "base64", media_type: p.type, data: p.donnees } }
   : { type: "image", source: { type: "base64", media_type: p.type, data: p.donnees } }));
+
+/**
+ * Relevé rendu par le modèle : l'entrée de l'outil « facture » ; à défaut, un objet JSON écrit en texte (certains
+ * modèles n'acceptent pas qu'on impose l'outil). null si rien d'exploitable.
+ */
+export function extraireReleve(content) {
+  const blocs = Array.isArray(content) ? content : [];
+  const outil = blocs.find((c) => c?.type === "tool_use" && c.name === "facture");
+  if (outil?.input && typeof outil.input === "object") return outil.input;
+  const texteBrut = blocs.filter((c) => c?.type === "text").map((c) => c.text || "").join("\n");
+  const debut = texteBrut.indexOf("{"), fin = texteBrut.lastIndexOf("}");
+  if (debut < 0 || fin <= debut) return null;
+  try {
+    const o = JSON.parse(texteBrut.slice(debut, fin + 1));
+    return o && typeof o === "object" && Array.isArray(o.lignes) ? o : null;
+  } catch {
+    return null;
+  }
+}

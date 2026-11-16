@@ -159,3 +159,12 @@ test("phrasePaiement : poche d'un associé ou compte de l'exploitation", () => {
   assert.equal(V.phrasePaiement("Johan", "Société", 142.2, "Société", eur), "Acheté par Johan, payé avec le compte de l’exploitation.");
   assert.equal(V.phrasePaiement("", "", 1, "Société", eur), "");
 });
+
+test("extraireReleve : l'outil d'abord, sinon un JSON écrit en texte", () => {
+  const rel = { lisible: true, lignes: [{ libelle: "Candy" }] };
+  assert.deepEqual(S.extraireReleve([{ type: "text", text: "Je relève." }, { type: "tool_use", name: "facture", input: rel }]), rel);
+  assert.deepEqual(S.extraireReleve([{ type: "text", text: "Voici le relevé :\n```json\n" + JSON.stringify(rel) + "\n```" }]), rel);
+  assert.equal(S.extraireReleve([{ type: "text", text: "Je ne peux pas lire cette image." }]), null);
+  assert.equal(S.extraireReleve([{ type: "text", text: "{ pas du json }" }]), null);
+  assert.equal(S.extraireReleve(null), null);
+});
