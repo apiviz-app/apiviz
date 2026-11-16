@@ -1,0 +1,146 @@
+    # IT-24 — Assistant API : lecture. Fonction serveur « assistant » simulée (aucun appel au modèle).
+    # Feuille du bouton API : champ « Demande à API… » quand la fonction est disponible ; écran API : question, attente
+    # (compagnon qui réfléchit), réponse en quatre blocs avec liens vers les fiches, suite de conversation (historique
+    # envoyé), erreur en français avec « Réessayer », plafond atteint, sans réseau ; en-têtes jeton et exploitation ;
+    # aucune écriture en base pendant l'échange. Avec CAPTURES=<dossier>, captures à 375 et 1 280 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    r5 = next(r for r in DATA["ruches"] if r["nom"] == "Ruche 5")
+    IA = {"etat": {"actif": True, "plafond": 30, "restant": 30}, "recus": [], "mode": "ok", "attente": False, "pendante": None}
+    def reponse_ia(q):
+        return {"resume": "Commence par Ruche 5 : elle perd du poids.",
+                "faits": [{"texte": "Ruche 5 a perdu du poids entre deux pesées.", "date": "2026-10-20", "refs": [{"type": "ruche", "id": r5["id"], "libelle": "Ruche 5"}]},
+                          {"texte": "Fiche citée mais inconnue de l'application.", "refs": [{"type": "ruche", "id": "inconnue", "libelle": "Ruche ?"}]}],
+                "hypotheses": ["Les provisions sont peut-être justes pour l'hiver."],
+                "recommandations": [{"texte": "Soupèse Ruche 5 cette semaine.", "sanitaire": False},
+                                    {"texte": "Fais un comptage varroa.", "sanitaire": True, "source": {"titre": "GDSA de ton département"}}],
+                "manques": ["Aucune pesée récente de Ruche 2."]}
+    def fonction_ia(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}
+        IA["recus"].append({"corps": corps, "auth": req.headers.get("authorization", ""), "expl": req.headers.get("x-exploitation", "")})
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps(IA["etat"]))
+        if IA["attente"]:
+            IA["pendante"] = lambda: repondre_ia(route, corps, h); return
+        return repondre_ia(route, corps, h)
+    def repondre_ia(route, corps, h):
+        if IA["mode"] == "erreur": return route.fulfill(status=502, headers=h, body=json.dumps({"erreur": "API n'a pas pu répondre. Réessaie dans un instant.", "code": "modele"}))
+        if IA["mode"] == "plafond": return route.fulfill(status=429, headers=h, body=json.dumps({"erreur": "Tu as posé tes 30 questions du jour. API sera de nouveau là demain.", "code": "plafond"}))
+        IA["etat"]["restant"] -= 1
+        return route.fulfill(status=200, headers=h, body=json.dumps({"reponse": reponse_ia(corps.get("question")), "restant": IA["etat"]["restant"], "lus": ["visites"]}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/assistant", fonction_ia)
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    ecritures = len(recu["rpc"]) + len(recu["upsert"]) + len(patchs)
+
+    # 1. Feuille du bouton API : le champ de question apparaît en tête.
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-champ input", timeout=5000)
+    f = page.locator("#sheet")
+    verif(f.locator(".as-champ input").get_attribute("placeholder") == "Demande à API…", "champ « Demande à API… » dans la feuille")
+    pos = page.evaluate("[...document.querySelectorAll('#sheetForm > *')].map(e => e.className)")
+    verif(pos.index("as-champ") < pos.index("n4-tuiles fa-tuiles"), "le champ est au-dessus des saisies rapides : " + ", ".join(pos))
+    verif("factures" in f.locator(".al-bientot").inner_text() and "répondra" not in f.locator(".al-bientot").inner_text(), "« Bientôt » ne parle plus que des factures")
+    verif(f.locator(".fa-tuiles .n4-tuile").count() == 6 and f.locator(".fa-sugg").count() == 1, "saisies rapides et suggestion du jour intactes")
+    if cap: page.wait_for_timeout(600); page.screenshot(path=f"{cap}/ia-feuille-375.png")
+    etats = len([x for x in IA["recus"] if x["corps"].get("etat")])
+    page.click("[data-act=closesheet]"); page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-champ")
+    verif(len([x for x in IA["recus"] if x["corps"].get("etat")]) == etats, "l'état d'API est demandé une seule fois, pas à chaque ouverture")
+
+    # 2. Question depuis la feuille : écran API, attente, puis réponse en quatre blocs.
+    IA["attente"] = True
+    f.locator(".as-champ input").fill("Quelles colonies dois-je visiter cette semaine ?")
+    f.locator(".as-champ input").press("Enter")
+    page.wait_for_selector(".as-attente", timeout=5000)
+    verif(page.evaluate("S.route") == "api" and not page.evaluate("document.getElementById('sheet').open"), "Entrée : feuille fermée, écran API")
+    verif(page.locator(".as-tete api-compagnon").get_attribute("etat") == "reflexion", "API réfléchit pendant le calcul")
+    verif(page.locator(".as-form button[type=submit]").is_disabled(), "pas de seconde question pendant le calcul")
+    page.wait_for_function("1", timeout=1000); IA["attente"] = False
+    for _ in range(50):
+        if IA["pendante"]: break
+        page.wait_for_timeout(100)
+    IA["pendante"](); page.wait_for_selector(".as-resume", timeout=8000)
+    rep = page.locator(".as-rep").last
+    verif(rep.locator(".as-resume").inner_text() == "Commence par Ruche 5 : elle perd du poids.", "résumé en premier")
+    titres = rep.locator(".as-bloc h3").all_text_contents()
+    verif(titres == ["Ce que disent tes données", "Ce que je suppose", "Ce que je te conseille", "Ce qui me manque"], "quatre blocs dans l'ordre : %s" % titres)
+    verif(rep.locator("time[datetime='2026-10-20']").count() == 1, "fait daté")
+    verif(rep.locator(".as-ref.sans").count() == 1, "fiche inconnue de l'application : affichée sans lien")
+    verif("GDSA" in rep.locator(".as-sanitaire").inner_text(), "recommandation sanitaire avec sa source")
+    verif(page.locator(".as-tete api-compagnon").get_attribute("etat") == "repond", "API répond")
+    verif("29 questions encore possibles" in page.locator(".as-tete").inner_text(), "questions restantes du jour")
+    d = IA["recus"][-1]
+    verif(d["corps"]["question"] == "Quelles colonies dois-je visiter cette semaine ?" and d["corps"]["historique"] == [], "question envoyée, sans historique la première fois")
+    verif(d["auth"].startswith("Bearer ") and d["expl"] == page.evaluate("sb.rest.headers['x-exploitation']") and d["expl"], "jeton de l'utilisateur et exploitation choisie envoyés")
+    if cap: page.wait_for_timeout(500); page.screenshot(path=f"{cap}/ia-reponse-375.png", full_page=True)
+
+    # 3. Lien vers la fiche, puis retour : la conversation est gardée.
+    rep.locator(f".as-ref[data-v='{r5['id']}']").click(); page.wait_for_timeout(400)
+    verif(page.evaluate("S.route") == "ruche" and page.evaluate("S.ruche") == r5["id"], "le lien ouvre la fiche de Ruche 5")
+    page.evaluate("ACT.go('api')"); page.wait_for_selector(".as-resume")
+    verif(page.locator(".as-ech").count() == 1, "conversation gardée en revenant sur l'écran")
+
+    # 4. Suite de la conversation : l'échange précédent part comme contexte.
+    page.fill("#asTexte", "Et pour Ruche 2 ?"); page.click(".as-form button[type=submit]")
+    page.wait_for_function("document.querySelectorAll('.as-resume').length === 2", timeout=8000)
+    h = IA["recus"][-1]["corps"]["historique"]
+    verif(len(h) == 1 and h[0]["resume"].startswith("Commence par Ruche 5"), "historique envoyé : la réponse précédente")
+
+    # 5. Erreur : message en français et « Réessayer » ; puis plafond atteint.
+    IA["mode"] = "erreur"
+    page.fill("#asTexte", "Combien de pots me reste-t-il ?"); page.locator("#asTexte").press("Enter")
+    page.wait_for_selector(".as-erreur", timeout=8000)
+    verif("Réessaie dans un instant" in page.locator(".as-erreur").inner_text(), "erreur en français")
+    verif(page.locator(".as-tete api-compagnon").get_attribute("etat") == "attention", "API s'inquiète")
+    IA["mode"] = "ok"; page.click(".as-erreur [data-act=apireessayer]")
+    page.wait_for_function("document.querySelectorAll('.as-resume').length === 3 && !document.querySelector('.as-erreur')", timeout=8000)
+    verif(IA["recus"][-1]["corps"]["question"] == "Combien de pots me reste-t-il ?", "Réessayer renvoie la même question")
+    IA["mode"] = "plafond"
+    page.click(".as-sugg [data-act=apisugg]") if page.locator(".as-sugg").count() else (page.fill("#asTexte", "Encore une ?"), page.click(".as-form button[type=submit]"))
+    page.wait_for_selector(".as-erreur", timeout=8000)
+    verif("30 questions du jour" in page.locator(".as-erreur").inner_text(), "plafond atteint : expliqué")
+    IA["mode"] = "ok"
+
+    # 6. Nouvelle conversation : suggestions de questions.
+    cliquer(page, "[data-act=apinouveau]"); page.wait_for_selector(".as-sugg")
+    verif(page.locator(".as-ech").count() == 0 and page.locator(".as-sugg .as-puce").count() == 5, "conversation effacée, cinq suggestions")
+    page.locator(".as-puce").first.click(); page.wait_for_selector(".as-resume", timeout=8000)
+    verif(IA["recus"][-1]["corps"]["question"] == "Quelles colonies dois-je visiter cette semaine ?", "une suggestion pose sa question")
+
+    # 7. Sans réseau : le champ est désactivé, aucune requête.
+    n = len(IA["recus"])
+    ctx.set_offline(True); page.evaluate("render()"); page.wait_for_timeout(200)
+    verif(page.locator("#asTexte").is_disabled() and page.locator(".as-tete api-compagnon").get_attribute("etat") == "horsligne", "sans réseau : champ désactivé, API dort")
+    page.evaluate("document.getElementById('asTexte').disabled = false")
+    page.fill("#asTexte", "Test"); page.locator("#asTexte").press("Enter"); page.wait_for_timeout(300)
+    verif(len(IA["recus"]) == n and "Sans réseau" in page.locator(".toast").last.inner_text(), "sans réseau : rien n'est envoyé, message clair")
+    ctx.set_offline(False); page.evaluate("render()")
+
+    # 8. Lecture seule : aucune écriture en base pendant tout l'échange.
+    verif(len(recu["rpc"]) + len(recu["upsert"]) + len(patchs) == ecritures, "aucune écriture en base depuis l'écran API")
+
+    # 9. Ordinateur : « Demander à API » de la barre du haut ouvre la feuille avec le champ ; écran lisible.
+    page.set_viewport_size({"width": 1280, "height": 860}); page.evaluate("render()"); page.wait_for_timeout(300)
+    verif(page.locator(".as-ecran").bounding_box()["width"] <= 760, "colonne de lecture sur ordinateur")
+    if cap: page.screenshot(path=f"{cap}/ia-ecran-1280.png", full_page=True)
+    page.evaluate("quickSheet()"); page.wait_for_selector("#sheet[open] .as-champ")
+    verif(page.locator("#sheet .as-champ input").is_visible(), "ordinateur : champ dans la feuille d'API")
+    page.evaluate("$sheet.close()")
+
+    # 10. API indisponible (clé absente ou ASSISTANT_ACTIF=non) : « Bientôt », comme avant.
+    IA["etat"] = {"actif": False, "plafond": 30, "restant": 0}
+    page.reload(); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.evaluate("quickSheet()"); page.wait_for_timeout(600)
+    verif(page.locator("#sheet .as-champ").count() == 0 and "répondra à tes questions" in page.locator("#sheet .al-bientot").inner_text(), "indisponible : pas de champ, « Bientôt » intact")
+    page.evaluate("$sheet.close(); ACT.go('api')"); page.wait_for_timeout(500)
+    verif("Bientôt" in page.locator(".as-tete").inner_text() and page.locator(".as-form").count() == 0, "écran API indisponible : « Bientôt », pas de champ")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
