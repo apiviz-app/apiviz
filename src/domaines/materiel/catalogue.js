@@ -8,6 +8,7 @@
 // Globales d'app.js lues à l'appel : S, esc, n, eur, dfr, shell, sheet, $sheetForm, write, sb, num, orNull,
 // fournOpts, del, render, go, ACT, HL, toast, refresh.
 import * as R from "./regles.js";
+import { disponible, factureProposee } from "../finances/facture.js";
 
 const e = (t) => esc(t);
 /** La base a-t-elle la migration 018 ? (table mouvements_stock lue sans erreur) */
@@ -88,7 +89,9 @@ export function ecran() {
     ${sugg.length && ecrire ? `<details class="card st-sugg"${arts.length ? "" : " open"}><summary><h2>Ajouter vite</h2></summary><p class="small">Articles courants, à toucher pour les ajouter.</p>
       <div class="chips">${sugg.map((c) => `<button type="button" data-act="preset" data-v="${e(c.nom)}">+ ${e(c.nom)}</button>`).join("")}</div>
       <p><button type="button" class="link" data-act="newarticle">Autre article…</button></p></details>` : ""}
-    ${ecrire ? `<div class="op-pied"><button type="button" class="btn" data-act="go" data-v="inventaire"${arts.length ? "" : " disabled"}>Faire l’inventaire</button><button type="button" class="btn main" data-act="newdepense">+ Ajouter un achat</button></div>` : ""}`);
+    ${ecrire ? `<div class="op-pied"><button type="button" class="btn" data-act="go" data-v="inventaire"${arts.length ? "" : " disabled"}>Faire l’inventaire</button><button type="button" class="btn main" data-act="newdepense">${factureProposee() ? "+ Ajouter un achat ou une facture" : "+ Ajouter un achat"}</button></div>` : ""}`);
+  // v5.53 : disponibilité de la lecture des factures pas encore connue → redessiner dès la réponse.
+  if (ecrire && !factureProposee()) disponible().then((ok) => ok && S.route === "materiel" && factureProposee() && render());
   const h = document.querySelector(".wrap .head h1");
   if (h) { h.textContent = R.phrase(arts); h.closest(".head")?.classList.add("g-tete"); }
   document.querySelector(".wrap")?.classList.add("op-ecran");

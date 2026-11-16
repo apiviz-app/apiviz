@@ -9,7 +9,7 @@ import * as R from "../materiel/regles.js";
 import { stockSuivi } from "../materiel/catalogue.js";
 import { champsAchatAssocies } from "./entre-associes.js";
 import { MAX_PUCES, plat } from "../../noyau/choisir.js";
-import { ouvrirOuSaisir } from "./facture.js";
+import { ouvrirFacture, ouvrirOuSaisir } from "./facture.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
@@ -259,6 +259,7 @@ function poste(art) {
 const prerempli = (v) => v && typeof v === "object" && Object.keys(v).length > 0;
 export const actions = {
   newdepense: (v) => (prerempli(v) ? ouvrir(v) : ouvrirOuSaisir(() => ouvrir({}))),
+  newfacture: () => ouvrirFacture(() => ouvrir({})),
   stachart: (id) => { lire(); ajouterArticle(id); dessiner(); },
   stachfeuille: () => feuilleArticles(),
   stachnouveau: () => { lire(); etat().lignes.push({ id: nouvelId(), article: { id: nouvelId(), nom: "" }, quantite: "", montant: "" }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },

@@ -5,6 +5,30 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.53 · à publier en recette · un accès à la facture qui dit « facture »
+**Aucune migration.** Suite des maquettes « Import de facture » (page « Comment y accéder », 16 nov. 2026) : la lecture
+des factures (v5.52) n'était atteignable que par « Dépense » ou « + Ajouter un achat », sans que rien ne le dise.
+
+Pour l'apiculteur :
+1. **Bouton API** : la feuille « Que veux-tu faire ? » montre une ligne **« Donner une facture à API »** (photo ou PDF)
+   au-dessus des six saisies. Elle ouvre directement la feuille de la facture. La phrase « Bientôt, API … lira tes
+   factures » disparaît.
+2. **Matériel** : le bouton du bas devient **« + Ajouter un achat ou une facture »**. Il garde un seul bouton (règle du
+   gabarit : un bouton par barre du bas) ; « Faire l'inventaire » reste dans ⋯.
+3. Ces accès n'apparaissent que là où API peut lire les factures : fonction `lire-facture` présente, réseau, droit
+   d'écrire, stock suivi. Sinon, tout reste comme avant. **En production, il faut d'abord déployer `lire-facture` sur
+   `apidoo`** (pas encore fait).
+
+Technique : `facture.js` (`dispoConnue`, `factureProposee`, `ouvrirFacture`, `ligneFacture` ; plus d'import de
+`catalogue.js`, pour éviter un import circulaire), action `newfacture` (`achat.js`), `feuille-api.js`, `catalogue.js`
+(redessin dès que la disponibilité est connue), `styles/57-facture.css`. Scénario `etapes_fx` complété (42 vérifications).
+
+### À vérifier
+- Recette, téléphone : bouton API › la ligne « Donner une facture à API » est au-dessus des tuiles ; la toucher ouvre
+  « Prendre en photo / Importer un fichier ».
+- Menu › Matériel : le bouton du bas dit « + Ajouter un achat ou une facture ».
+- Mode avion : ni la ligne ni le libellé « ou une facture ».
+
 ## v5.52 · à publier en recette · accueil condensé
 **Aucune migration.** Maquette validée par Pierre-Louis le 16 nov. 2026 (canvas « Apiviz – Accueil condensé »).
 

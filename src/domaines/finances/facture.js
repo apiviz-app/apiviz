@@ -12,12 +12,13 @@
 // sb, APIDOO, HL, Apiviz.
 import * as R from "../materiel/regles.js";
 import * as V from "./facture-regles.js";
-import { stockSuivi } from "../materiel/catalogue.js";
 import { champsAchatAssocies } from "./entre-associes.js";
 import { SOCIETE } from "./associes.js";
 
 const e = (t) => esc(t);
 const nouvelId = () => crypto.randomUUID();
+// Même règle que stockSuivi() de catalogue.js (redite ici : catalogue.js importe ce module, pas d'import circulaire).
+const stockSuivi = () => !S.absentes?.has("mouvements");
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
 const exploitation = () => (typeof sb != "undefined" && sb.rest?.headers?.["x-exploitation"]) || "";
 const enLigne = () => typeof navigator == "undefined" || navigator.onLine !== false;
@@ -45,6 +46,7 @@ async function appeler(corps) {
 
 /** La lecture de facture est-elle disponible ici ? Un échec vaut « non » et n'est pas gardé. */
 export function disponible() {
+  if (!enLigne()) return Promise.resolve(false);
   if (dispo !== null && cleDispo === exploitation()) return Promise.resolve(dispo);
   if (enVol) return enVol;
   const cle = exploitation();
@@ -55,6 +57,8 @@ export function disponible() {
     .finally(() => { enVol = null; });
   return enVol;
 }
+/** Disponibilité déjà connue et positive (sans appel) : pour les écrans dessinés d'un coup (Matériel, feuille d'API). */
+export const dispoConnue = () => dispo === true && cleDispo === exploitation();
 /** Pour les tests : oublie la disponibilité. */
 export function _oublier() { dispo = null; cleDispo = ""; enVol = null; }
 
@@ -64,16 +68,26 @@ const peutEcrire = () => !document.documentElement.classList.contains("lecteur")
  * « Ajouter un achat » sans préremplissage : la feuille Source si API peut lire les factures (réponse en 1,5 s au
  * plus), sinon `repli` (la saisie à la main).
  */
-export async function ouvrirOuSaisir(repli) {
+export async function ouvrirOuSaisir(repli, { direct = false } = {}) {
   poser();
   if (!stockSuivi() || !enLigne() || !peutEcrire()) return repli();
-  const ok = await Promise.race([disponible(), new Promise((r) => setTimeout(() => r(false), 1500))]);
+  const ok = direct && dispoConnue() ? true : await Promise.race([disponible(), new Promise((r) => setTimeout(() => r(false), 1500))]);
   if (!ok) return repli();
   S.facture = S.facture?.etape === "validation" ? S.facture : { etape: "source", pieces: [], repli };
   S.facture.repli = repli;
   dessiner();
   if (!$sheet.open) $sheet.showModal();
 }
+
+/** « Donner une facture à API » (v5.53) : la feuille Source directement, sans passer par « Dépense ». */
+export const ouvrirFacture = (repli) => ouvrirOuSaisir(repli, { direct: true });
+
+/** La facture est-elle proposée ici (Matériel suivi, réseau, droit d'écrire, API disponible) ? Sans appel. */
+export const factureProposee = () => stockSuivi() && enLigne() && peutEcrire() && dispoConnue();
+
+/** Ligne « Donner une facture à API » de la feuille du bouton API (src/domaines/accueil/feuille-api.js). */
+export const ligneFacture = () => `<button type="button" class="fx-entree" data-act="n4q" data-v="newfacture">
+  <span class="fx-ic">${icone("photo")}</span><span class="fx-t"><b>Donner une facture à API</b><span>Photo ou PDF, il remplit ton stock</span></span>${icone("suite")}</button>`;
 
 // ---------- Rendu ----------
 const ETAPES = { source: 1, pages: 1, analyse: 2, erreur: 2, validation: 3, fait: 4 };
