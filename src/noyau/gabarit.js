@@ -129,6 +129,25 @@ function choisirAnnee(a) {
   sel.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+/** Ce qui va dans la barre d'outils d'un écran-sujet, dans l'ordre (v5.48). */
+export const OUTILS = ["label.yr", ".g-annee", ".subtabs.g-segment", ".er-onglets", ".op-barre", ".op-puces"];
+
+/** Barre d'outils sous les onglets d'un écran-sujet. Idempotent ; sans outil, pas de barre. */
+function barreOutils(wrap, head) {
+  const onglets = wrap.querySelector(":scope > .g-onglets");
+  if (!onglets) return;
+  let outils = wrap.querySelector(":scope > .g-outils");
+  const elements = OUTILS.flatMap((sel) => [...head.querySelectorAll(sel), ...wrap.querySelectorAll(`:scope > ${sel}`)]);
+  if (!elements.length) return;
+  if (!outils) {
+    outils = Object.assign(document.createElement("div"), { className: "g-outils" });
+    onglets.after(outils);
+  }
+  outils.append(...elements);
+  // Le lien « Voir la liste de courses » passe sous la barre : il ne décale plus la recherche.
+  wrap.querySelectorAll(":scope > .op-lien").forEach((l) => outils.after(l));
+}
+
 /** Habille l'écran affiché selon le gabarit. Idempotent : peut tourner plusieurs fois sur le même écran. */
 export function appliquer() {
   if (typeof S == "undefined" || !S?.session || !S.d) return;
@@ -152,10 +171,19 @@ export function appliquer() {
   }
 
   // 1 bis. Écran-sujet : titre du sujet, onglets sous l'en-tête.
+  // v5.48 (maquettes du 16 nov. 2026) : l'en-tête a la même forme et la même hauteur sur chaque onglet (titre, une
+  // seule ligne d'état, ⋯ à droite ; ni surtitre ni bandeau foncé), pour que rien ne saute d'un onglet à l'autre.
   const sujet = sujetDe(route);
   if (sujet && h1 && !head.dataset.gs) {
     head.dataset.gs = "1";
     h1.textContent = sujet.titre;
+    head.classList.remove("hero-head");
+    head.classList.add("g-sujet");
+    head.classList.toggle("g-long", sujet.titre.length > 16);
+    head.querySelectorAll(".eyebrow").forEach((x) => x.remove());
+    let etat = head.querySelector(".sub");
+    if (!etat) { h1.insertAdjacentHTML("afterend", `<p class="sub"></p>`); etat = head.querySelector(".sub"); }
+    etat.title = etat.textContent.trim();
     wrap.querySelectorAll(":scope > .subtabs.g-onglets").forEach((x) => x.remove());
     // Les onglets propres à l'écran (Financier / Opérationnel…) deviennent un choix de vue (segment) : un seul rang d'onglets.
     wrap.querySelectorAll(".subtabs:not(.g-onglets)").forEach((x) => x.classList.add("g-segment"));
@@ -177,6 +205,10 @@ export function appliquer() {
 
   // 3. Puce d'année.
   wrap.querySelectorAll("label.yr").forEach(puceAnnee);
+
+  // 3 bis. Écran-sujet : une barre d'outils juste sous les onglets (v5.48). L'année, le choix de vue (segment), la
+  // recherche et les puces de filtre y sont rangés dans cet ordre : ils commencent au même endroit sur chaque onglet.
+  if (sujet) barreOutils(wrap, head);
 
   // 4. Boutons : un principal, le reste dans ⋯.
   if (head.dataset.g) return;

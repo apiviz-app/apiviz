@@ -5,6 +5,38 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.48 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
+Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis.
+
+Dans les écrans à onglets (Matériel, Finances, Registre et déclaration, Réglages), passer d'un onglet à l'autre faisait
+sauter l'écran : le titre, la phrase dessous, les onglets et les filtres changeaient de place (mesuré sur `main` à
+390 px : onglets de 130 à 210 px selon l'onglet, jusqu'à 80 px d'écart). Causes : surtitre « Liste de courses » et
+bandeau sur Courses, ligne d'état absente sur Fournisseurs et Réglages, puce d'année et ⋯ passés à la ligne sous le
+titre sur téléphone, lien « Voir la liste de courses » au-dessus de la recherche.
+
+Désormais (gabarit commun, `src/noyau/gabarit.js` étape 1 bis et 3 bis, `styles/composants/gabarit.css`) :
+- **En-tête de hauteur fixe** : le titre du sujet sur une ligne, toujours une seule ligne d'état (coupée par « … » si
+  elle est trop longue), ⋯ et bouton principal à droite. Plus de surtitre. « Registre et déclaration » en un peu plus
+  petit pour tenir à côté de ⋯.
+- **Onglets au même endroit** sur chaque onglet, à 390 comme à 1 280 px.
+- **Barre d'outils sous les onglets**, au même endroit : année, choix de vue (Financier / Opérationnel, Traitements /
+  Mouvements…), recherche, puces de filtre, dans cet ordre. Les parties du registre défilent sur une ligne au lieu
+  de passer sur deux.
+- **Courses vide** : carte « Rien à racheter » au lieu d'un écran blanc.
+- Lignes d'état ajoutées : Fournisseurs (« Aucun fournisseur pour l'instant ») et Réglages.
+
+Test : `etapes_ar` mesure la place du titre, de la ligne d'état, du bas de l'en-tête, des onglets et de la barre
+d'outils sur chaque onglet des 4 sujets, à 390 et 1 280 px (aucun pixel d'écart). Règle 11 du gabarit dans
+`docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §5.
+
+### À vérifier
+- Téléphone, Matériel : passer de Stock à Courses puis Fournisseurs : « Matériel », la phrase et les onglets ne bougent
+  pas ; sur Stock, la recherche commence juste sous les onglets.
+- Courses sans article à racheter : carte « Rien à racheter ».
+- Finances : la puce « 2026 » et Financier / Opérationnel sous les onglets, au même endroit sur Bilan, Dépenses, Budget.
+- Registre : Traitements, Mouvements, Interventions, Exploitation sur une ligne (glisser pour voir la suite).
+- Ordinateur : mêmes vérifications ; le bouton principal reste à droite de l'en-tête.
+
 ## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
 Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :
 le bandeau de l'ordinateur (recherche et cloche, v5.44) s'affichait aussi sur téléphone, parce qu'une règle de

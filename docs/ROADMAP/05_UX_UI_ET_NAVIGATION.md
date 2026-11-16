@@ -139,6 +139,11 @@ squelette, posé par un seul module (`src/noyau/gabarit.js`, styles `styles/comp
 9. **Jetons** : rayons `--r-s` 10, `--r-m` 14, `--r-l` 20, `--r-pill` ; textes de 12 px minimum (`--t-*`) ; couleurs par
    variables ; cibles de 44 px (`--cible`).
 10. **Ordinateur** : même squelette ; la feuille devient un panneau, le bouton principal monte dans l'en-tête.
+11. **Écran-sujet à onglets** (v5.48, maquettes du 16 nov. 2026) : rien ne bouge d'un onglet à l'autre. En-tête de
+    hauteur fixe (titre du sujet sur une ligne, une seule ligne d'état coupée par « … », ⋯ et bouton principal à
+    droite ; ni surtitre ni bandeau foncé), onglets juste dessous, puis une barre d'outils `.g-outils` (année, choix de
+    vue, recherche, puces, dans cet ordre) posée par le gabarit. Un onglet sans contenu affiche un état vide, jamais un
+    écran blanc. Test : `etapes_ar` (positions mesurées au pixel, 390 et 1 280 px).
 
 Les écrans de saisie pas à pas (« flux » : visite, visite express, tournée, vente, récolte, mise en pots, déplacer,
 inventaire) gardent leur propre en-tête (Annuler, étapes). **Règle de développement** : pas de nouveau script qui

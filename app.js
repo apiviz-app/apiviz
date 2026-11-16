@@ -945,7 +945,7 @@ function viewFournisseurs() {
   if (!donnees.fournisseurs.length)
     return shell(
       "Fournisseurs",
-      "",
+      "Aucun fournisseur pour l\u2019instant",
       "",
       emptyState(
         "Ajoute tes fournisseurs",

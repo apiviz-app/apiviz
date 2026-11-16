@@ -46,3 +46,12 @@ test("écrans-sujets : une adresse donne son sujet, ses onglets et l'onglet allu
   // un onglet de sujet est un écran de 1er niveau : pas de retour
   assert.equal(G.retourDe("courses", { act: "go", v: "materiel", texte: "‹ Matériel" }), null);
 });
+
+test("v5.48 : barre d'outils d'un écran-sujet — année, choix de vue, recherche, puces, dans cet ordre", () => {
+  const i = (s) => G.OUTILS.indexOf(s);
+  assert.ok(i(".g-annee") < i(".subtabs.g-segment") && i(".subtabs.g-segment") < i(".op-barre") && i(".op-barre") < i(".op-puces"));
+  assert.ok(G.OUTILS.includes(".er-onglets"));
+  // Chaque écran à onglets a son sujet : l'en-tête aligné s'y applique.
+  for (const r of ["materiel", "courses", "fournisseurs", "pilotage", "compta", "previsions", "associes", "registre", "declaration", "reglages", "membres"])
+    assert.ok(G.sujetDe(r), r);
+});
