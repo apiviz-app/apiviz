@@ -38,6 +38,8 @@
     verif(page.locator(".g-onglets button").all_inner_texts() == ["Réglages", "Équipe"], "Réglages : Réglages, Équipe")
     # Rappels : la cloche ouvre une feuille
     page.evaluate("ACT.go('dash')"); page.wait_for_selector(".topbar .er-cloche")
+    cloches = page.evaluate("[...document.querySelectorAll('.er-cloche')].filter((b) => b.getClientRects().length > 0 && getComputedStyle(b).visibility !== 'hidden').length")
+    verif(cloches == 1 and page.locator(".nl-entete").first.is_hidden(), "téléphone : une seule cloche, le bandeau de l'ordinateur reste caché (v5.47 ; %d visibles)" % cloches)
     page.click(".topbar .er-cloche"); page.wait_for_selector("#sheet[open] .er-fliste")
     verif(page.evaluate("S.route") == "dash" and page.locator("#sheet h2").inner_text().startswith("Rappels"), "cloche : feuille Rappels, on reste sur l'accueil")
     page.wait_for_timeout(400)
@@ -61,6 +63,8 @@
     page.click("#sheet [data-act=closesheet]")
     # Ordinateur : 8 entrées
     page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.go('dash')"); page.wait_for_timeout(300)
+    cloches = page.evaluate("[...document.querySelectorAll('.er-cloche')].filter((b) => b.getClientRects().length > 0).length")
+    verif(cloches == 1 and page.locator(".nl-entete .er-cloche").is_visible(), "ordinateur : une seule cloche, dans le bandeau (%d visibles)" % cloches)
     side = page.locator(".side .nav[data-v]").all_inner_texts()
     verif([x.strip() for x in side if x.strip() != "API"] == ["Accueil", "Agenda", "Ruchers", "Miel", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "ordinateur : 8 entrées (%s)" % side)
     if cap: page.screenshot(path=cap + "/ra-menu-1280.png")

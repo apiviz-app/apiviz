@@ -5,6 +5,16 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
+Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :
+le bandeau de l'ordinateur (recherche et cloche, v5.44) s'affichait aussi sur téléphone, parce qu'une règle de
+`styles/composants/menu.css`, chargée en dernier, l'affichait sans condition de largeur. La règle ne vaut plus qu'au-delà
+de 800 px. Test : `etapes_ra` vérifie une seule cloche visible, à 390 px et à 1 280 px.
+
+### À vérifier
+- Téléphone : une seule cloche, en haut à droite à côté de l'avatar ; plus de bande vide au-dessus du titre.
+- Ordinateur : la cloche à droite de la barre de recherche.
+
 ## v5.46 · à publier en recette · correctif : styles du gabarit commun rechargés
 Aucune migration. **Bloquait la mise en ligne** : « Vérifier » était rouge sur `main` depuis la fusion de #69, et
 « Mise en ligne » refuse de publier un commit rouge.
