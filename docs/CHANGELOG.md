@@ -15,9 +15,9 @@ bandeau sur Courses, ligne d'état absente sur Fournisseurs et Réglages, puce d
 titre sur téléphone, lien « Voir la liste de courses » au-dessus de la recherche.
 
 Désormais (gabarit commun, `src/noyau/gabarit.js` étape 1 bis et 3 bis, `styles/composants/gabarit.css`) :
-- **En-tête de hauteur fixe** : le titre du sujet sur une ligne, toujours une seule ligne d'état (coupée par « … » si
-  elle est trop longue), ⋯ et bouton principal à droite. Plus de surtitre. « Registre et déclaration » en un peu plus
-  petit pour tenir à côté de ⋯.
+- **En-tête de hauteur fixe** : le titre du sujet sur une ligne, à la même taille que sur les autres écrans (27 px sur
+  téléphone), toujours une seule ligne d'état (coupée par « … » si elle est trop longue), ⋯ et bouton principal à
+  droite. Plus de surtitre.
 - **Onglets au même endroit** sur chaque onglet, à 390 comme à 1 280 px.
 - **Barre d'outils sous les onglets**, au même endroit : année, choix de vue (Financier / Opérationnel, Traitements /
   Mouvements…), recherche, puces de filtre, dans cet ordre. Les parties du registre défilent sur une ligne au lieu

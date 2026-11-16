@@ -72,9 +72,8 @@
 .g-outils>.er-onglets{flex:0 1 auto;max-width:100%;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
 .g-outils>.er-onglets::-webkit-scrollbar{display:none}
 .g-outils>.er-onglets button{flex:none;white-space:nowrap}
-.wrap>.head.g-sujet.g-long h1{font-size:var(--g-h1-long)}
 .wrap>.g-onglets+*:not(.g-outils),.g-outils+*{margin-top:14px}
-:root{--g-tete:62px;--g-h1:30px;--g-h1-l:38px;--g-h1-long:25px}
+:root{--g-tete:58px;--g-h1:27px;--g-h1-l:34px}
 @media (min-width:801px){
-  :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px;--g-h1-long:34px}
+  :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px}
 }

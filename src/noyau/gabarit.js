@@ -179,7 +179,6 @@ export function appliquer() {
     h1.textContent = sujet.titre;
     head.classList.remove("hero-head");
     head.classList.add("g-sujet");
-    head.classList.toggle("g-long", sujet.titre.length > 16);
     head.querySelectorAll(".eyebrow").forEach((x) => x.remove());
     let etat = head.querySelector(".sub");
     if (!etat) { h1.insertAdjacentHTML("afterend", `<p class="sub"></p>`); etat = head.querySelector(".sub"); }
