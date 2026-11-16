@@ -6,6 +6,7 @@ import * as actions from "./noyau/actions.js";
 import { ecrans } from "./domaines/index.js";
 import * as choisir from "./noyau/choisir.js";
 import * as gabarit from "./noyau/gabarit.js";
+import { nbAVoir } from "./domaines/ruchers/vue-tableau.js";
 
 for (const def of ecrans) {
   routeur.enregistrer(def);
@@ -17,6 +18,8 @@ Object.assign(window.Noyau, {
   ecran: routeur.ecran,
   ecrans: routeur.liste,
   proprietaireAction: actions.proprietaire,
+  // Compteur « N à voir » du menu latéral (navigation-ordi.js, v5.50).
+  ruches: { nbAVoir },
 });
 
 // Champs à suggestions transformés en puces ou en liste sous le champ (v5.41).

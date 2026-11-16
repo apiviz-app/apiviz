@@ -5,6 +5,42 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.50 · à publier en recette · navigation, recherche et filtres sur ordinateur
+**Aucune migration.** Maquettes validées par Pierre-Louis le 16 nov. 2026 (canvas « Navigation, recherche et filtres »).
+Le téléphone ne change pas.
+
+Pour l'apiculteur (ordinateur) :
+1. **Menu latéral** : un bouton « Replier » le réduit à une colonne d'icônes (76 px, libellés en infobulle) ; le choix est
+   gardé sur l'appareil. « Nouvelle visite » est seule en tête ; Agenda montre le nombre de tâches du jour ou en retard,
+   Ruchers le nombre de colonies « à voir ». Titres de catégorie discrets ; en bas, le prénom (ou l'adresse) et
+   l'exploitation.
+2. **Barre du haut** : le bouton API devient « Demander à API », à côté de la cloche.
+3. **Recherche** : cliquer sur la barre (ou Ctrl K) ouvre une fenêtre au centre de l'écran ; on peut écrire tout de suite et
+   elle reste ouverte pendant la saisie. Vide : colonies ouvertes récemment et actions rapides. En tapant : résultats
+   rangés par type avec leur nombre, filtre par type, mot surligné. ↑ ↓ pour parcourir, Entrée pour ouvrir, Échap pour
+   vider puis fermer, clic à côté pour fermer.
+   *Bug corrigé* : depuis la v5.32, le voile gris de la recherche passait au-dessus du champ ; le clic suivant tombait sur
+   le voile et refermait la recherche, qui semblait « disparaître ».
+4. **Ruchers › Filtrer et trier** : le panneau ne prend plus de place tant qu'on ne l'ouvre pas (le tableau a toute la
+   largeur). Le bouton « Filtrer et trier » l'ouvre par-dessus la liste, sans défilement : tri en six boutons avec
+   « Inverser », état, rucher, alertes en puces, reine, « Voir N colonies ». Les filtres s'appliquent tout de suite. Sur un
+   écran peu haut, le panneau passe sur deux colonnes. « Garder ouvert » (épingle) le range à côté de la liste ; le choix
+   est gardé sur l'appareil.
+
+Technique : `navigation-ordi.js` et `styles/55-navigation-ordi.css` (chargés après `compact.js`) ; `Noyau.ruches.nbAVoir()`
+(`src/main.js`, `vue-tableau.js`) ; panneau dans `vue-tableau.js` / `51-ruches-tableau.css` (actions `tbepingle`, `tbsens`) ;
+raccourci N : le bouton API est aussi cherché dans la barre du haut (`ergonomie.js`). L'ancienne barre de recherche
+(`#erQ`) n'est plus affichée sur ordinateur. Le bandeau garde la couleur choisie dans Réglages.
+Tests : nouveau scénario `etapes_nv` ; `etapes_tb`, `etapes_cp`, `etapes_eg` adaptés.
+
+### À vérifier
+- Ordinateur : cliquer dans la barre de recherche, taper « 12 » ou un nom de client : la fenêtre reste, les résultats suivent.
+- Ctrl K depuis n'importe quel écran ; Échap deux fois ; clic à côté.
+- Menu : Replier / Déplier, recharger la page : le choix reste. Compteurs Agenda et Ruchers.
+- « Demander à API » ouvre le choix d'API ; la touche N aussi.
+- Ruchers sur un portable : « Filtrer et trier » s'ouvre entier, sans défiler ; épingler, recharger.
+- Téléphone : menu, recherche par la loupe et feuille « Filtrer et trier » comme avant.
+
 ## v5.49 · à publier en recette · visite rapide (IT-08 réduite)
 **Migration 023** (`023-visite-rapide.sql`) : à appliquer sur `apidoo-test` (la mise en ligne en recette le fait), puis sur
 `apidoo` avec l'accord de Pierre-Louis. Additive, **ne casse pas l'ancienne version**. Maquette validée le 15 nov. 2026 ;

@@ -260,7 +260,7 @@ const ER = (() => {
     }
     if (e.key.toLowerCase() !== "n" || e.ctrlKey || e.metaKey || e.altKey || $sheet.open || !S.d) return;
     if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
-    document.querySelector('.side [data-v="saisir"], .bottom [data-v="saisir"]')?.click();
+    document.querySelector('.side [data-v="saisir"], .nl-entete [data-v="saisir"], .bottom [data-v="saisir"]')?.click();
   });
 
   // ---------- Après chaque écran ----------

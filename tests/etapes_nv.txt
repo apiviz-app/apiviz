@@ -1,0 +1,117 @@
+    # v5.50 — Navigation sur ordinateur (menu repliable, compteurs, API dans la barre du haut), recherche Ctrl K dans
+    # une fenêtre (le champ garde la main), panneau « Filtrer et trier » de Ruchers ouvert à la demande, sans défilement.
+    import os, datetime
+    cap = os.environ.get("CAPTURES")
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    RC, RL = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["ruchers"] = [{"id": RC, "nom": "Les Chênes", "lat": 47.32, "lng": 5.04, **vide}, {"id": RL, "nom": "Bord du Lot", "lat": 47.6, "lng": 5.4, **vide}]
+    il_y_a = lambda j: (datetime.date.today() - datetime.timedelta(days=j)).isoformat()
+    def col(nom, code, rid, rnom, etat="Bonne", statut="active", reine=2025):
+        return {"id": str(uuid.uuid4()), "nom": nom, "code": code, "rucher": rnom, "rucher_id": rid, "etat": etat, "type_ruche": "", "annee_reine": reine,
+                "notes": "", "lat": None, "lng": None, "statut": statut, "sortie": ""}
+    DATA["ruches"] = [col("Acacia", "C-01", RC, "Les Chênes"), col("Bruyère", "C-02", RC, "Les Chênes", statut="orpheline", reine=None),
+                      col("Châtaigne", "C-03", RC, "Les Chênes", reine=2024), col("Lavande", "C-04", RC, "Les Chênes", etat="À surveiller"),
+                      col("Sarrasin", "C-07", RL, "Bord du Lot", reine=2026), col("Thym", "C-08", RL, "Bord du Lot", reine=2024)]
+    ID = {r["nom"]: r["id"] for r in DATA["ruches"]}
+    def vis(nom, j, **x):
+        base = {"id": str(uuid.uuid4()), "ruche_id": ID[nom], "date_visite": il_y_a(j), "activite": "Normale", "provisions": "Moyennes", "reine": "Vue", "couvain": "",
+                "poids_kg": None, "varroa": None, "varroa_abeilles": None, "varroa_methode": "", "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "",
+                "retrait_prevu": None, "ordonnance": False}
+        base.update(x); return base
+    DATA["visites"] = [vis("Acacia", 6, activite="Forte", provisions="Bonnes", varroa=2, varroa_abeilles=300, varroa_methode="Sucre glace", note="Calme"),
+                       vis("Bruyère", 9, activite="Faible", provisions="Faibles"),
+                       vis("Châtaigne", 6, varroa=3, varroa_abeilles=300, varroa_methode="Sucre glace"),
+                       vis("Lavande", 40, varroa=6, varroa_abeilles=300, varroa_methode="Sucre glace"),
+                       vis("Sarrasin", 12, activite="Forte", provisions="Bonnes"),
+                       vis("Thym", 12, varroa=15, varroa_abeilles=300, varroa_methode="Sucre glace")]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    visibles = lambda sel: page.locator(sel).evaluate_all("l => l.filter(e => e.offsetParent !== null).length")
+    lignes = lambda: page.locator(".tb-l .tb-l-t b").evaluate_all("l => l.map(e => e.firstChild.textContent.trim())")
+    noms = lambda: page.locator(".tb-ligne:not(.tb-tete):not(.tb-synthese) .tb-nom-t b").all_inner_texts()
+    pref = lambda: page.evaluate("JSON.parse(localStorage.getItem('apiviz-ruches-presentation') || '{}')")
+
+    DATA["taches"] = [{"id": str(uuid.uuid4()), "titre": "Nourrir Bruyère", "echeance": il_y_a(1), "faite": False, "ruche_id": ID["Bruyère"]},
+                      {"id": str(uuid.uuid4()), "titre": "Commander des cadres", "echeance": il_y_a(-10), "faite": False, "ruche_id": None}]
+    page.set_viewport_size({"width": 1440, "height": 842}); page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-boite", timeout=5000)
+    largeur = lambda: page.evaluate("document.querySelector('.side').getBoundingClientRect().width")
+
+    # 1. Menu latéral.
+    verif(page.locator(".side .no-replier").count() == 1 and page.locator(".side .cp-actions .cp-visite").count() == 1, "menu : bouton Replier, Nouvelle visite en tête")
+    verif(page.locator(".side .nav[data-v=saisir]").count() == 0 and page.locator(".nl-entete .no-api").is_visible(), "API dans la barre du haut")
+    verif(page.locator(".side .nav[data-v=ruches] .no-nb").inner_text() == "3 à voir", "Ruchers : 3 à voir")
+    verif(page.locator(".side .nav[data-v=agenda] .no-nb").inner_text() == "1", "Agenda : 1 tâche en retard ou du jour")
+    verif("Bee’s Brothers" in page.locator(".side .me").inner_text(), "compte : exploitation sous le nom")
+    verif(page.evaluate("getComputedStyle(document.querySelector('.side .nl-titre')).textTransform") == "none", "titres de catégorie sans capitales")
+    if cap: page.screenshot(path=f"{cap}/nv-menu-1440.png")
+    page.click(".side .no-replier"); page.wait_for_timeout(300)
+    verif(largeur() < 90 and page.locator(".side .nav[data-v=ruches] .no-lib").is_hidden() and page.locator(".side .nav[data-v=ruches]").get_attribute("title") == "Ruchers", "replié : rail d'icônes, libellés en infobulle (%s px)" % largeur())
+    verif(page.locator(".side .nav[data-v=ruches] .no-nb").is_visible(), "replié : le compteur reste (un point)")
+    if cap: page.screenshot(path=f"{cap}/nv-menu-replie-1440.png")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-boite", timeout=5000)
+    verif(largeur() < 90, "replié : choix gardé après rechargement")
+    page.click(".side .no-replier"); page.wait_for_timeout(300)
+    verif(largeur() > 240, "déplié de nouveau")
+    page.click(".nl-entete .no-api"); page.wait_for_selector("#sheet[open]")
+    verif(page.locator("#sheet .n4-tuiles").count() == 1, "Demander à API ouvre le choix d'API")
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
+
+    # 2. Recherche : la fenêtre s'ouvre, le champ garde la main (le clic sur le champ ne la referme plus).
+    page.click(".nl-entete .no-chercher"); page.wait_for_selector("#noRecherche[open]")
+    verif(page.evaluate("document.activeElement.id") == "noQ", "clic sur la recherche : la fenêtre s'ouvre, le champ a la main")
+    verif("Nouvelle visite" in page.locator("#noRes").inner_text(), "champ vide : actions rapides")
+    page.click("#noQ"); page.wait_for_timeout(150)
+    verif(page.evaluate("document.getElementById('noRecherche').open && document.activeElement.id === 'noQ'"), "un clic dans le champ ne ferme rien")
+    page.keyboard.type("ch"); page.wait_for_timeout(150)
+    verif(page.input_value("#noQ") == "ch" and page.locator("#noRes .no-r").count() >= 4, "la saisie s'affiche, résultats")
+    verif(page.locator(".no-p-portee").count() >= 3, "filtre par type proposé")
+    page.click(".no-p-portee[data-v=Ruches]"); page.wait_for_timeout(100)
+    verif(page.locator("#noRes h3").all_inner_texts() == ["Ruches · 4"] and page.evaluate("document.activeElement.id") == "noQ", "filtre « Ruches » : seulement les ruches, le champ garde la main")
+    if cap: page.screenshot(path=f"{cap}/nv-recherche-1440.png")
+    page.fill("#noQ", "acac"); page.wait_for_timeout(100)
+    page.keyboard.press("Enter"); page.wait_for_function("S.route === 'ruche'")
+    verif("Acacia" in page.locator(".head h1").inner_text() and not page.evaluate("document.getElementById('noRecherche').open"), "Entrée ouvre Acacia, la fenêtre se ferme")
+    page.wait_for_timeout(800)  # fin du mouvement de l'alvéole (transition de vue d'alveoles.js)
+    page.keyboard.press("Control+k"); page.wait_for_selector("#noRecherche[open]")
+    verif("Acacia" in page.locator("#noRes").inner_text(), "Ctrl K : Acacia dans « Ouvertes récemment »")
+    page.mouse.click(30, 820); page.wait_for_timeout(150)
+    verif(not page.evaluate("document.getElementById('noRecherche').open"), "clic à côté : la fenêtre se ferme")
+
+    # 3. Ruchers : panneau « Filtrer et trier » fermé par défaut, ouvert par le bouton, sans défilement.
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-boite", timeout=5000)
+    verif(page.locator(".tb-filtres").count() == 0 and page.locator(".tb-bfiltres .tb-bf-t").is_visible(), "panneau fermé : le tableau prend toute la largeur")
+    page.click(".tb-bfiltres"); page.wait_for_selector(".tb-filtres.ouverte")
+    g = page.evaluate("(() => { const p = document.querySelector('.tb-filtres'); const r = p.getBoundingClientRect(); return [r.top, r.bottom, p.scrollHeight, p.clientHeight, innerHeight]; })()")
+    verif(g[1] <= g[4] and g[2] <= g[3] + 1, "1 440 × 842 : tout le panneau est visible, sans défilement (%s)" % g)
+    verif(page.locator(".tb-filtres .tb-opt-tri").count() == 6 and page.locator(".tb-filtres .tb-sens").count() == 1, "tri : six boutons et « Inverser »")
+    avant = noms()
+    page.click(".tb-filtres .tb-sens"); page.wait_for_timeout(150)
+    verif(noms()[0] != avant[0] and noms()[-1] in ("Bruyère", "Thym"), "Inverser : les urgentes passent à la fin (%s)" % noms())
+    page.click(".tb-filtres .tb-sens"); page.wait_for_timeout(100)
+    page.click(".tb-filtres [data-act=tbfiltre][data-k=niveaux][data-v=urg]"); page.wait_for_timeout(150)
+    verif(page.locator(".tb-voir").inner_text() == "Voir 2 colonies" and len(noms()) == 2, "filtre appliqué tout de suite : 2 colonies")
+    if cap: page.screenshot(path=f"{cap}/nv-filtres-1440.png")
+    page.mouse.click(1400, 600); page.wait_for_timeout(200)
+    verif(page.locator(".tb-filtres").count() == 0 and page.locator(".tb-bfiltres .tb-nb").inner_text() == "1", "clic à côté : panneau fermé, 1 filtre sur le bouton")
+    # Écran peu haut : deux colonnes, toujours sans défilement.
+    page.set_viewport_size({"width": 1366, "height": 650}); page.wait_for_timeout(200)
+    page.click(".tb-bfiltres"); page.wait_for_selector(".tb-filtres.ouverte")
+    g = page.evaluate("(() => { const p = document.querySelector('.tb-filtres'); const r = p.getBoundingClientRect(); return [r.top, r.bottom, p.scrollHeight, p.clientHeight, innerHeight]; })()")
+    verif(g[1] <= g[4] and g[2] <= g[3] + 1, "1 366 × 650 : panneau sur deux colonnes, sans défilement (%s)" % g)
+    if cap: page.screenshot(path=f"{cap}/nv-filtres-1366x650.png")
+    # Épingler : le panneau se range à côté de la liste et le reste après rechargement.
+    page.set_viewport_size({"width": 1440, "height": 842}); page.wait_for_timeout(200)
+    page.click(".tb-filtres .tb-epingle"); page.wait_for_selector(".tb-filtres.epingle")
+    verif(page.locator(".tb-voile").count() == 0 and page.locator(".tb-boite").is_visible(), "épinglé : à côté de la liste, sans voile")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-boite", timeout=5000)
+    verif(page.locator(".tb-filtres.epingle").count() == 1, "épinglé : gardé après rechargement")
+    page.click(".tb-bfiltres"); page.wait_for_timeout(200)
+    verif(page.locator(".tb-filtres").count() == 0, "le bouton referme le panneau épinglé")
+
+    # 4. Téléphone : rien ne change (feuille du bas, pas de bouton de recherche de l'ordinateur).
+    page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("render()"); page.wait_for_timeout(300)
+    verif(page.locator(".no-chercher").is_hidden() and page.locator("html.menu-replie").count() == 0, "téléphone : barre et menu de l'ordinateur cachés")
+    page.click(".tb-bfiltres"); page.wait_for_selector(".tb-filtres.ouverte")
+    verif(page.locator(".tb-voir").is_visible(), "téléphone : feuille du bas avec « Voir … »")
