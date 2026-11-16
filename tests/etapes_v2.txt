@@ -24,17 +24,19 @@
     verif(page.locator("#sheet .n4-tuile").count() == 6, "« Saisir » ouvre le choix des saisies")
     page.click("#sheet [data-act=closesheet]")
     # Accueil
-    page.wait_for_selector(".al-wx .al-temps", timeout=5000)
-    verif("17°" in page.locator(".al-wx >> nth=0").inner_text() or "17°" in page.locator(".al-wx >> nth=1").inner_text(), "météo du rucher sur l'accueil")
+    page.wait_for_selector(".ac-rucher .ac-wx-t", timeout=5000)  # v5.52 : la météo est en face de chaque rucher
+    verif(any("17°" in t for t in page.locator(".ac-rucher .ac-wx").all_inner_texts()), "météo du rucher sur l'accueil")
     verif("latitude=47.32" in meteo_appels[0], "météo demandée à la position du rucher")
     # v5.24 (maquettes) : six points sur téléphone, étiquetés, puis « Voir les autres ».
     verif(page.locator(".u-todo").count() == 6 and page.locator("[data-act=utout]").count() == 1, "accueil : 6 points à faire, « Voir les autres »")
     page.click("[data-act=utout]"); page.wait_for_selector(".u-todo >> nth=6"); verif(page.locator(".u-todo").count() > 6, "« Voir les autres » déplie la liste")
     verif(page.locator(".u-todo").first.locator(".ac-tag.crit").count() == 1, "le plus urgent en premier")
-    verif(page.locator(".u-rucher").count() == 2 and page.locator(".u-hex").count() == 6, "ruchers et alvéoles")
+    verif(page.locator(".ac-rucher").count() == 2 and page.locator(".u-hex").count() == 0, "une ligne par rucher, sans alvéoles (v5.52)")
     page.wait_for_timeout(400); page.screenshot(path="v2/accueil.png", full_page=True)
     # Fiche ruche
-    page.locator(".u-hex").nth(1).click(); page.wait_for_selector(".u-visite")
+    # v5.52 : plus d'alvéoles sur l'accueil, la fiche s'ouvre depuis Ruchers.
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb-l", timeout=5000)
+    page.locator(".tb-l", has_text="Ruche 2").click(); page.wait_for_selector(".u-visite")
     verif(page.locator(".u-visite").count() == 3 and page.locator(".u-visite .u-chip").count() >= 9, "journal en cartes avec pastilles")
     verif(page.locator(".card.u-trois b").first.inner_text().endswith(" j"), "chiffres clés de la ruche")
     page.wait_for_timeout(400); page.screenshot(path="v2/ruche.png", full_page=True)
