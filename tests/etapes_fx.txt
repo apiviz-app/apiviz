@@ -1,0 +1,150 @@
+    # v5.52 — Facture lue par API (maquettes « Import de facture » du 16 nov. 2026). Fonction serveur « lire-facture »
+    # simulée (aucun appel au modèle). « Ajouter un achat » ouvre la feuille Source quand la fonction est disponible :
+    # photo (une ou plusieurs pages) ou fichier PDF ; lecture (fichier, jeton et exploitation envoyés) ; validation
+    # (lignes rapprochées du stock, ligne douteuse qui bloque, nouvel article, frais sans stock, totaux) ; intégration
+    # par enregistrer_achat (stock monté, nouvel article créé) ; document illisible ; plafond atteint ; « Saisir
+    # toi-même » ; fonction absente : la feuille d'achat habituelle, sans détour. Rien n'est écrit avant la validation.
+    # Avec CAPTURES=<dossier>, captures à 390 et 1 280 px.
+    import pathlib as _pl, os, base64
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    F = str(uuid.uuid4()); DATA["fournisseurs"] = [{"id": F, "nom": "L'Abeille Matérielle"}]
+    P250 = str(uuid.uuid4())
+    DATA["articles"] = [{"id": A1, "nom": "Candy", "type": "Consommable", "famille": "alimentation", "unite": "kg", "stock": 3, "seuil": 2},
+                        {"id": P250, "nom": "Pots verre 250 g", "type": "Consommable", "famille": "emballage", "contenance_g": 250, "unite": "unité", "stock": 34, "seuil": 20}]
+    DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    stock = lambda i: float(next(a for a in DATA["articles"] if a["id"] == i)["stock"])
+
+    def releve_ok():
+        return {"lisible": True, "raison": "", "fournisseur": {"id": F, "nom": "L'Abeille Matérielle"}, "numero": "2611", "date": "2026-11-12",
+                "totaux": {"ht": 118.5, "tva": 23.7, "ttc": 142.2},
+                "lignes": [
+                    {"libelle": "Pot verre 250g TO63", "article_id": P250, "nouvel_article": None, "sans_stock": False, "quantite": 120, "montant": 60.48, "a_verifier": False, "raison": "", "propositions": []},
+                    {"libelle": "Candy sac 1 kg", "article_id": A1, "nouvel_article": None, "sans_stock": False, "quantite": 10, "montant": 34.8, "a_verifier": True, "raison": "La quantité est peu lisible.", "propositions": [10, 16]},
+                    {"libelle": "Nourrisseur couvre-cadres", "article_id": None, "nouvel_article": {"nom": "Nourrisseur couvre-cadres", "famille": "equipement", "unite": "unité"}, "sans_stock": False, "quantite": 2, "montant": 23.52, "a_verifier": False, "raison": "", "propositions": []},
+                    {"libelle": "Frais de port", "article_id": None, "nouvel_article": None, "sans_stock": True, "quantite": None, "montant": 23.4, "a_verifier": False, "raison": "", "propositions": []}],
+                "controle": {"somme": 142.2, "ecart": 0, "coherent": True}}
+    FX = {"etat": {"actif": True, "plafond": 30, "restant": 30}, "recus": [], "mode": "ok"}
+    def fonction_fx(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}
+        FX["recus"].append({"corps": corps, "auth": req.headers.get("authorization", ""), "expl": req.headers.get("x-exploitation", "")})
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps(FX["etat"]))
+        if FX["mode"] == "plafond": return route.fulfill(status=429, headers=h, body=json.dumps({"erreur": "Tu as utilisé tes 30 demandes à API aujourd'hui. Il sera de nouveau là demain.", "code": "plafond"}))
+        if FX["mode"] == "illisible": return route.fulfill(status=200, headers=h, body=json.dumps({"facture": {"lisible": False, "raison": "C'est une photo de ruche, pas une facture.", "lignes": []}, "restant": 28}))
+        return route.fulfill(status=200, headers=h, body=json.dumps({"facture": releve_ok(), "restant": 29}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/lire-facture", fonction_fx)
+
+    PDF = {"name": "facture-AM-2611.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4\n% facture d'essai\n%%EOF\n"}
+    # PNG 2 x 2 valide (le navigateur le redessine en JPEG avant l'envoi).
+    PNG = {"name": "photo.png", "mimeType": "image/png", "buffer": base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGP4z8DwnwGM/zMwAAAf7gP9NRsAMwAAAABJRU5ErkJggg==")}
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    ecritures = len(recu["rpc"]) + len(recu["upsert"]) + len(patchs)
+
+    # 1. Source : « Ajouter un achat » propose la facture à API
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
+    cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .fx[data-etape=source]", timeout=5000)
+    f = page.locator("#sheet")
+    verif("Étape 1 sur 4" in f.inner_text() and "Prendre en photo" in f.inner_text() and "Importer un fichier" in f.inner_text(), "feuille Source : étape 1, photo ou fichier")
+    verif(page.locator("#sheet input[data-fx-fichier=photo]").get_attribute("capture") == "environment", "la photo ouvre l'appareil photo arrière")
+    verif("application/pdf" in page.locator("#sheet input[data-fx-fichier=fichier]").get_attribute("accept"), "le fichier accepte le PDF")
+    verif(f.locator("[data-fx=soi]").count() == 1, "« Ou saisir toi-même » reste proposé")
+    shot("facture-1-source")
+
+    # 2. Lecture d'un PDF
+    page.set_input_files("#sheet input[data-fx-fichier=fichier]", PDF)
+    page.wait_for_selector("#sheet [data-fx=voir]", timeout=5000)
+    env = FX["recus"][-1]
+    verif(env["corps"]["pieces"][0]["type"] == "application/pdf" and base64.b64decode(env["corps"]["pieces"][0]["donnees"]) == PDF["buffer"], "le PDF est envoyé tel quel")
+    verif(env["auth"].startswith("Bearer ") and env["expl"] == E1, "jeton de l'utilisateur et exploitation envoyés")
+    t = f.inner_text()
+    verif("J'ai lu ta facture." in t and "Étape 2 sur 4" in t and "facture-AM-2611.pdf" in t, "écran de lecture : résultat, étape 2, nom du fichier")
+    verif("4 lignes trouvées" in t and "1 à vérifier" in t and "Total cohérent" in t and "déjà dans tes fournisseurs" in t, "étapes de la lecture : lignes, doute, totaux, fournisseur")
+    verif(len(recu["rpc"]) + len(recu["upsert"]) + len(patchs) == ecritures, "rien n'est écrit pendant la lecture")
+    shot("facture-2-lecture")
+
+    # 3. Validation
+    page.click("#sheet [data-fx=voir]"); page.wait_for_selector("#sheet .fx[data-etape=validation]")
+    t = f.inner_text()
+    verif("Étape 3 sur 4" in t and "Une ligne à vérifier" in t, "validation : étape 3, une ligne à vérifier")
+    verif(page.locator("#sheet .fx-ligne").count() == 4 and page.locator("#sheet .fx-verif").count() == 1, "quatre lignes, une en miel doux")
+    verif(page.locator("#sheet [data-fx=integrer]").count() == 0, "pas d'intégration tant que la ligne n'est pas réglée")
+    verif(page.input_value("#sheet .fx-ligne >> nth=0 >> select") == f"article:{P250}", "pots rapprochés de l'article existant")
+    verif("34 → 154" in page.locator("#sheet .fx-ligne").nth(0).inner_text(), "stock avant → après sur la ligne")
+    verif("Nouvel article" in page.locator("#sheet .fx-ligne").nth(2).inner_text() and "Sans stock" in page.locator("#sheet .fx-ligne").nth(3).inner_text(), "nouvel article et frais sans stock")
+    verif(page.input_value("#sheet [data-k=piece]") == "2611" and page.input_value("#sheet [data-k=date]") == "2026-11-12", "numéro et date de la facture repris")
+    shot("facture-3-validation")
+    page.click("#sheet .fx-verif [data-fx=prop][data-q='16']"); page.wait_for_selector("#sheet [data-fx=integrer]")
+    verif(page.locator("#sheet .fx-verif").count() == 0 and "Tout est prêt" in f.inner_text(), "la lecture choisie règle la ligne")
+    verif("3 kg → 19 kg" in page.locator("#sheet .fx-ligne").nth(1).inner_text(), "candy : 3 kg → 19 kg")
+    page.fill("#sheet .fx-ligne >> nth=0 >> [data-k=montant]", "50")
+    verif("Écart" in page.locator("#sheet .fx-coherence").inner_text(), "un montant changé fait apparaître l'écart avec la facture")
+    page.fill("#sheet .fx-ligne >> nth=0 >> [data-k=montant]", "60.48")
+    verif("cohérent" in page.locator("#sheet .fx-coherence").inner_text(), "montant remis : total cohérent")
+    verif(len(recu["rpc"]) + len(recu["upsert"]) + len(patchs) == ecritures, "rien n'est écrit pendant la validation")
+
+    # 4. Intégration
+    page.click("#sheet [data-fx=integrer]"); page.wait_for_selector("#sheet .fx[data-etape=fait]", timeout=5000)
+    rpc = [b for n, b in recu["rpc"] if n == "enregistrer_achat"]
+    verif(len(rpc) == 1 and len(rpc[0]["p"]["lignes"]) == 4 and rpc[0]["p"]["piece"] == "2611" and rpc[0]["p"]["fournisseur_id"] == F and rpc[0]["p"]["date"] == "2026-11-12", "un appel enregistrer_achat : 4 lignes, n°, fournisseur, date")
+    verif(stock(P250) == 154 and stock(A1) == 19, "stock monté : pots 34 → 154, candy 3 → 19")
+    nv = next((a for a in DATA["articles"] if a["nom"] == "Nourrisseur couvre-cadres"), None)
+    verif(nv and nv["stock"] == 2 and nv["type"] == "Équipement", "nouvel article créé, en équipement, 2 en stock")
+    t = f.inner_text()
+    verif("C'est dans ton stock." in t and "4 lignes intégrées" in t and "142,2" in t.replace("\xa0", " ").replace(" ", " "), "écran final : lignes intégrées et montant")
+    verif("Étape 4 sur 4" in t and "Créé" in t, "étape 4, nouvel article signalé")
+    shot("facture-4-integration")
+
+    # 5. Photo en deux pages, document illisible, « Saisir toi-même »
+    page.click("#sheet [data-fx=autre]"); page.wait_for_selector("#sheet .fx[data-etape=source]")
+    FX["mode"] = "illisible"
+    page.set_input_files("#sheet input[data-fx-fichier=photo]", PNG); page.wait_for_selector("#sheet .fx[data-etape=pages]")
+    verif("Photo prête." in f.inner_text() and page.locator("#sheet .fx-pages img").count() == 1, "une photo : aperçu et page 2 proposée")
+    page.set_input_files("#sheet .fx-plus input", PNG); page.wait_for_timeout(300)
+    verif(page.locator("#sheet .fx-pages img").count() == 2 and "2 pages prêtes." in f.inner_text(), "deux pages")
+    page.click("#sheet [data-fx=lire]"); page.wait_for_selector("#sheet .fx[data-etape=erreur]", timeout=5000)
+    pieces = FX["recus"][-1]["corps"]["pieces"]
+    verif(len(pieces) == 2 and all(p["type"] == "image/jpeg" for p in pieces), "deux photos envoyées en JPEG")
+    verif("Je n'arrive pas à lire cette facture." in f.inner_text() and "photo de ruche" in f.inner_text(), "document illisible : la raison d'API")
+    verif(page.locator("#sheet .fx [data-fx=lire]").count() == 0, "pas de « Réessayer » sur un document illisible")
+    page.click("#sheet [data-fx=soi]"); page.wait_for_selector("#sheet[open] .st-achat-corps", timeout=5000)
+    verif(True, "« Saisir toi-même » ouvre la feuille d'achat habituelle")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_function("!document.getElementById('sheet').open")
+
+    # 6. Plafond atteint
+    FX["mode"] = "plafond"
+    cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .fx[data-etape=source]", timeout=5000)
+    page.set_input_files("#sheet input[data-fx-fichier=fichier]", PDF); page.wait_for_selector("#sheet .fx[data-etape=erreur]", timeout=5000)
+    verif("30 demandes" in f.inner_text() and page.locator("#sheet .fx [data-fx=lire]").count() == 0, "plafond : message clair, pas de « Réessayer »")
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
+
+    # 7. Ordinateur
+    page.set_viewport_size({"width": 1280, "height": 860})
+    FX["mode"] = "ok"
+    if page.evaluate("document.getElementById('sheet').open"): page.evaluate("document.getElementById('sheet').close()")
+    page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] .fx[data-etape=source]", timeout=5000)
+    page.set_input_files("#sheet input[data-fx-fichier=fichier]", PDF); page.wait_for_selector("#sheet [data-fx=voir]", timeout=5000)
+    page.click("#sheet [data-fx=voir]"); page.wait_for_selector("#sheet .fx[data-etape=validation]")
+    larg = page.evaluate("Math.round(document.querySelector('#sheet .fx').getBoundingClientRect().width)")
+    verif(larg >= 300 and page.evaluate("document.querySelector('#sheet').scrollWidth <= document.querySelector('#sheet').clientWidth + 1"), f"ordinateur : feuille lisible, sans défilement de côté ({larg} px)")
+    shot("facture-3-validation-ordinateur")
+    page.evaluate("document.getElementById('sheet').close()")
+
+    # 8. Fonction absente : la feuille d'achat, sans détour
+    page.set_viewport_size({"width": 390, "height": 844})
+    FX["etat"] = {"actif": False, "plafond": 30, "restant": 0}
+    page.reload(); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ma-corps")
+    cliquer(page, ".btn.main[data-act=newdepense]"); page.wait_for_selector("#sheet[open] .st-achat-corps", timeout=5000)
+    verif(page.locator("#sheet .fx").count() == 0, "API indisponible : directement la saisie à la main")
