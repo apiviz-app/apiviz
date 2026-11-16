@@ -29,6 +29,9 @@
 .cp-bascule.ve-mode{display:flex;width:max-content;max-width:100%;margin:0 0 12px}
 .cp-bascule.ve-mode button{min-height:36px;padding:0 18px}
 
-/* Ordinateur : la cloche à droite du bandeau de recherche (v5.44). */
-.nl-entete{display:flex;align-items:center;gap:12px}
-.nl-entete .er-cloche{margin-left:auto;flex:none}
+/* Ordinateur : la cloche à droite du bandeau de recherche (v5.44). Seulement au-delà de 800 px : sur téléphone, le
+   bandeau reste caché (47-navigation.css) et la cloche est dans la barre du haut. v5.47 : la règle sans condition
+   affichait le bandeau sur téléphone, donc deux cloches. */
+@media (min-width:801px){
+  .nl-entete .er-cloche{margin-left:auto;flex:none}
+}

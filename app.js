@@ -1836,6 +1836,21 @@ function depenseForm(depense, prerempli = {}) {
     del: depense ? del("depenses", depense.id, "D\xE9pense supprim\xE9e") : null,
   });
 }
+// « Qui s'en occupe » : liste des personnes de l'exploitation (membres avec un prénom, puis personnes sans compte,
+// profil.js). Un nom déjà saisi qui n'est plus dans la liste reste proposé. Sans personne connue : saisie libre.
+function champAssigne(valeur) {
+  const noms = typeof PF != "undefined" && !PF.absent() ? PF.associes() : [],
+    actuel = String(valeur || "").trim();
+  if (!noms.length) return { name: "assigne", label: "Qui s\u2019en occupe", value: valeur };
+  const liste = actuel && !noms.includes(actuel) ? [...noms, actuel] : noms;
+  return {
+    name: "assigne",
+    label: "Qui s\u2019en occupe",
+    type: "select",
+    options: [["", "Personne en particulier"]].concat(liste.map((nom) => [nom, nom])),
+    value: actuel,
+  };
+}
 function tacheForm(tache, rucheId) {
   sheet({
     title: tache ? "Modifier la t\xE2che" : "Ajouter une t\xE2che",
@@ -1849,7 +1864,7 @@ function tacheForm(tache, rucheId) {
         options: [["", "Toutes"]].concat(S.d.ruches.map((ruche) => [ruche.id, ruche.nom])),
         value: tache?.ruche_id ?? rucheId ?? "",
       },
-      { name: "assigne", label: "Qui s\u2019en occupe", value: tache?.assigne },
+      champAssigne(tache?.assigne),
     ],
     submit: (saisie) => {
       const ligne = {
