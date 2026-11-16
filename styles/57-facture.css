@@ -1,0 +1,111 @@
+/* ---------- Facture lue par API (v5.52) : source, lecture, validation, intégration ----------
+   src/domaines/finances/facture.js. Maquettes « Import de facture » du 16 nov. 2026. */
+.fx{display:flex;flex-direction:column;gap:16px}
+.fx-tete{display:flex;flex-direction:column;gap:10px;margin:-4px 0 2px}
+.fx-tete-l{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-right:48px}
+.fx-tete h2{margin:0}
+.fx-etapes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.fx-etapes span{height:4px;border-radius:var(--r-pill);background:#EBD9A6}
+.fx-etapes span.on{background:var(--pine)}
+.fx-say{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;line-height:1.15;font-weight:700;letter-spacing:-.018em}
+.fx-sous{margin:-8px 0 0;color:var(--muted)}
+.fx-cache{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* 1. Source */
+.fx-choix{display:flex;flex-direction:column;gap:10px}
+.fx label.fx-source{position:relative;display:flex;flex-direction:row;align-items:center;text-align:left;font-size:inherit;font-weight:inherit;gap:14px;min-height:76px;padding:14px 16px;border:1px solid var(--line2);border-radius:var(--r-m);background:#fff;color:var(--ink);cursor:pointer}
+.fx label.fx-source.fx-photo{background:var(--pine);border-color:var(--pine);color:#fff}
+.fx-source:focus-within{outline:2px solid var(--pine);box-shadow:0 0 0 4px var(--honey)}
+.fx-ic{flex:none;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:13px;background:var(--honeysoft)}
+.fx-photo .fx-ic{background:var(--pine2);color:var(--honey-light)}
+.fx-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fx-t b{font-size:16px;font-weight:600}
+.fx-t>span{font-weight:400}
+.fx-t>span{font-size:13px;color:var(--muted)}
+.fx-photo .fx-t>span{color:#C5D0C8}
+.fx-api{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft)}
+.fx-api p{margin:0;font-size:14px;line-height:1.38}
+.fx-alerte{margin:0;padding:10px 12px;border-radius:var(--r-m);background:var(--critbg);color:#8A1414;font-size:14px;font-weight:600}
+.fx-recents h3{margin:0 0 6px;font-size:17px}
+.fx-recents ul{list-style:none;margin:0;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff}
+.fx-recents li{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;border-top:1px solid var(--line)}
+.fx-recents li:first-child{border-top:0}
+.fx-recents li>span{display:flex;flex-direction:column;min-width:0}
+.fx-recents .small{color:var(--muted)}
+.fx-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fx-soi{align-self:center;min-height:44px;font-size:15px;font-weight:600}
+
+/* 1 bis. Pages photographiées */
+.fx-pages{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fx-pages li{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.fx-pages img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--r-s);border:1px solid var(--line)}
+.fx-pages .fx-ote{position:absolute;top:2px;right:2px;margin:0;background:rgba(255,255,255,.9);border-radius:var(--r-pill);width:36px;height:36px}
+.fx .fx-plus label{display:flex;font-size:13px;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;aspect-ratio:3/4;border:1px dashed var(--line2);border-radius:var(--r-s);background:#fff;color:var(--ink);cursor:pointer;position:relative}
+
+/* 2. Lecture */
+.fx-api-grand{display:flex;align-items:center;gap:14px}
+.fx-api-grand .fx-sous{margin:6px 0 0}
+.fx-fichier{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff}
+.fx-vignette{flex:none;width:46px;height:60px;border-radius:6px;border:1px solid var(--line);object-fit:cover;background:#F7F5EE}
+.fx-pdf{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)}
+.fx-suivi{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r-m);background:#fff;overflow:hidden}
+.fx-etape{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-top:1px solid var(--line)}
+.fx-etape:first-child{border-top:0}
+.fx-etape>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fx-etape .small{color:var(--muted)}
+.fx-etape:not(.fait):not(.encours):not(.attention) b{color:var(--muted)}
+.fx-etape.encours,.fx-etape.attention{background:var(--honeysoft)}
+.fx-alv{flex:none;display:flex;align-items:center;justify-content:center;width:26px;height:24px;background:#E3E6DC;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);color:#fff;font-weight:700}
+.fx-alv.fait{background:var(--good)}
+.fx-alv.encours{background:var(--honey);animation:fx-pouls 1.2s var(--sortie) infinite alternate}
+.fx-alv.attention{background:var(--honey);color:var(--ink)}
+@keyframes fx-pouls{from{opacity:.45}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.fx-alv.encours{animation:none}}
+
+/* 3. Validation */
+.fx-carte{display:flex;flex-direction:column;gap:10px;margin:0;padding:14px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff}
+.fx-lignes{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-m);background:#fff;overflow:hidden}
+.fx-lignes-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:12px 14px 4px}
+.fx-lignes-t h3{margin:0;font-size:17px}
+.fx-lignes-t .small{color:var(--muted)}
+.fx-ligne{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.fx-lignes-t+.fx-ligne{border-top:0}
+.fx-ligne.fx-verif{background:var(--honeysoft)}
+.fx-l-t{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fx-lib{font-size:15px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.fx-ote{flex:none;width:44px;height:44px;margin-right:-10px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer}
+.fx-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:24px}
+.fx-stock{margin-left:auto;font-size:13px;font-weight:600;color:#1F5239;font-variant-numeric:tabular-nums}
+.fx-a-verifier{display:flex;flex-direction:column;gap:8px}
+.fx-a-verifier p{margin:0;font-size:13px;font-weight:600;color:var(--watch)}
+.fx-props{display:flex;flex-wrap:wrap;gap:6px}
+.fx-props button{min-height:44px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r-s);background:#fff;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer}
+.fx-props .fx-ok{background:var(--pine);border-color:var(--pine);color:#fff}
+.fx-ajout{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;border:0;border-top:1px solid var(--line);background:#fff;font:inherit;font-size:15px;font-weight:600;color:var(--good);cursor:pointer}
+.fx-tot{display:flex;justify-content:space-between;margin:0;font-size:15px;font-variant-numeric:tabular-nums}
+.fx-tot span:first-child{color:var(--muted)}
+.fx-ttc{align-items:baseline;border-top:1px solid var(--line);padding-top:8px}
+.fx-ttc span:first-child{color:var(--ink);font-weight:600}
+.fx-ttc b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px}
+.fx-coherence{margin:0;font-weight:600;color:var(--muted)}
+.fx-coherence.good{color:#1F5239}
+.fx-coherence.watch{color:var(--watch)}
+.fx-associes{display:flex;flex-direction:column;gap:10px}
+.fx-err:empty{display:none}
+.fx-pied{display:flex;flex-direction:column;gap:10px}
+.fx-pied .btn{min-height:48px;width:100%}
+
+/* 4. Intégration */
+.fx-mvts{list-style:none;margin:0;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff}
+.fx-mvts li{display:flex;align-items:center;gap:8px;min-height:48px;border-top:1px solid var(--line);font-size:15px}
+.fx-mvts li:first-child{border-top:0}
+.fx-mvts li>span:first-child{flex:1;min-width:0}
+.fx-mvts b{color:#1F5239;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fx-paie{font-size:15px;font-weight:600}
+
+@media (min-width:900px){
+  .fx-choix{flex-direction:row}
+  .fx-source{flex:1}
+  .fx-pied{flex-direction:row-reverse;flex-wrap:wrap}
+  .fx-pied .btn{width:auto;flex:1}
+}

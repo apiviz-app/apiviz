@@ -217,3 +217,22 @@ exploitation). `scripts/evaluer-api.mjs` les rejoue sur la recette avec un compt
 **Coût.** Tarifs de l'API Claude relevés le 16 nov. 2026 : Sonnet 5.5 à 2 $ / 10 $ par million de jetons (lecture du
 cache à 0,10 $), Haiku 5.5 à 0,10 $ / 0,50 $. Une question coûte de l'ordre de 2 à 4 centimes avec Sonnet. Les jetons de
 chaque question sont écrits dans le journal de la fonction (Supabase › Edge Functions › assistant › Logs).
+
+
+## Lecture des factures par API (v5.52)
+
+« Ajouter un achat » propose de donner la facture (photo ou PDF) à API ; l'apiculteur valide le relevé, puis l'achat est
+enregistré par `enregistrer_achat()` (migration 018), exactement comme une saisie à la main.
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Fonction serveur | `supabase/functions/lire-facture/index.ts` | Vérifie la connexion, l'appartenance (`est_membre`) et le plafond (`assistant_consommer`, partagé avec les questions), lit articles et fournisseurs avec le jeton de l'utilisateur, appelle Claude avec la facture (bloc `document` pour un PDF, `image` pour une photo) et l'outil `facture` imposé |
+| Règles | `…/regles.js` | Consignes, schéma de l'outil, contrôle des pièces (PDF seul, ou 1 à 4 images, 10 Mo), `normaliser()` (identifiants connus seulement, montant TTC par ligne, lignes sans quantité ou sans montant à vérifier, date pas dans le futur, contrôle des totaux à 5 centimes) |
+| Écran | `src/domaines/finances/facture.js` | Source, pages photographiées, lecture, validation, intégration, dans la feuille du bas ; photos réduites à 2 000 px en JPEG |
+| Règles de l'écran | `src/domaines/finances/facture-regles.js` | État de validation, lignes à vérifier, stock avant → après, achat envoyé à `enregistrer_achat` |
+
+**Secrets** : ceux de la fonction `assistant` (`ANTHROPIC_API_KEY`, `ASSISTANT_PLAFOND`) ; facultatifs `FACTURE_MODELE`
+(à défaut `ASSISTANT_MODELE`, puis `claude-sonnet-5-5`) et `FACTURE_ACTIF` (`non` coupe la lecture : retour arrière).
+`ASSISTANT_ACTIF=non` la coupe aussi. **Aucune écriture** par la fonction ; la facture n'est pas conservée.
+**Déploiement** : comme `assistant`, par Claude (accès Supabase), `apidoo-test` d'abord, `apidoo` après accord.
+**Coût** : une facture d'une page coûte de l'ordre de 2 à 5 centimes avec Sonnet ; jetons écrits dans le journal de la fonction.

@@ -9,6 +9,7 @@ import * as R from "../materiel/regles.js";
 import { stockSuivi } from "../materiel/catalogue.js";
 import { champsAchatAssocies } from "./entre-associes.js";
 import { MAX_PUCES, plat } from "../../noyau/choisir.js";
+import { ouvrirOuSaisir } from "./facture.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
@@ -253,9 +254,11 @@ function poste(art) {
   return art?.poste || R.posteDeFamille(R.famille(art || {}));
 }
 
-/** Actions de la feuille d'achat ; « newdepense » ouvre l'achat (remplace l'ancienne fiche dépense d'app.js). */
+/** Actions de la feuille d'achat ; « newdepense » ouvre l'achat (remplace l'ancienne fiche dépense d'app.js).
+ *  v5.52 : sans préremplissage, elle propose d'abord de donner la facture à API (facture.js), quand il est disponible. */
+const prerempli = (v) => v && typeof v === "object" && Object.keys(v).length > 0;
 export const actions = {
-  newdepense: (v) => ouvrir(v && typeof v === "object" ? v : {}),
+  newdepense: (v) => (prerempli(v) ? ouvrir(v) : ouvrirOuSaisir(() => ouvrir({}))),
   stachart: (id) => { lire(); ajouterArticle(id); dessiner(); },
   stachfeuille: () => feuilleArticles(),
   stachnouveau: () => { lire(); etat().lignes.push({ id: nouvelId(), article: { id: nouvelId(), nom: "" }, quantite: "", montant: "" }); dessiner(); $sheetForm.querySelector(".st-ligne:last-child input")?.focus(); },

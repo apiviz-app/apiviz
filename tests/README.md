@@ -57,6 +57,11 @@ recherche Ctrl K en fenêtre — le clic dans le champ ne la ferme plus, filtre 
 « Filtrer et trier » fermé par défaut, entier sans défilement à 1 440 × 842 et 1 366 × 650, épinglé et gardé ; téléphone
 inchangé). Avec `CAPTURES=<dossier>` : captures à 1 440 et 1 366 px.
 
+Scénario v5.52 : `etapes_fx` (facture lue par API, fonction « lire-facture » simulée : feuille Source, PDF envoyé avec
+jeton et exploitation, lecture, validation avec ligne à vérifier qui bloque, nouvel article, frais sans stock, écart de
+total, intégration par enregistrer_achat, photo en deux pages envoyées en JPEG, document illisible, plafond, ordinateur,
+fonction absente). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
 Tests SQL seuls : `sh tests/sql/lancer.sh` (voir `migrations/README.md`). En CI, ils ont leur job (« Tests SQL ») et
 `lancer.sh` les saute (`SANS_SQL=1`).
 
