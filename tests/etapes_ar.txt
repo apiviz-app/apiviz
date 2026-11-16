@@ -35,6 +35,7 @@
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
     page.evaluate("try{localStorage.setItem('apiviz-materiel-affichage','liste')}catch(e){}; S.mt=null")
+    sujet_titre = {"Matériel": "Matériel", "Finances": "Finances", "Registre": "Registre et déclaration", "Réglages": "Réglages", "Ruchers": "Ruchers", "Miel": "Miel"}
     SUJETS_TEST = [("Matériel", "materiel"), ("Finances", "pilotage"), ("Registre", "registre"), ("Réglages", "reglages"),
                    ("Ruchers", "ruches"), ("Miel", "clients")]
     for largeur in (390, 1280):
@@ -59,6 +60,6 @@
             verif(len(set(avec.values())) <= 1, f"{largeur} px, {sujet} : barre d'outils au même endroit {avec}")
             verif(all(v["lignes"] <= 24 for v in vues.values()), f"{largeur} px, {sujet} : ligne d'état sur une ligne")
             verif(not any(v["coupe"] for v in vues.values()), f"{largeur} px, {sujet} : titre entier, sans « … »")
-            verif({v["taille"] for v in vues.values()} == {"27px" if largeur == 390 else "34px"}, f"{largeur} px, {sujet} : titre à la taille de tous les écrans ({ {v['taille'] for v in vues.values()} })")
+            verif({v["taille"] for v in vues.values()} == {("22px" if len(sujet_titre[sujet]) > 16 else "27px") if largeur == 390 else "34px"}, f"{largeur} px, {sujet} : titre à la taille de tous les écrans ({ {v['taille'] for v in vues.values()} })")
     page.set_viewport_size({"width": 390, "height": 844})
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

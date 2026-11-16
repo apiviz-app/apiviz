@@ -147,7 +147,7 @@ squelette, posé par un seul module (`src/noyau/gabarit.js`, styles `styles/comp
 12. **Standards d'écran** (v5.50, maquettes du 16 nov. 2026, canvas « apiviz — Standards d'écran ») : 5 gabarits
     (Liste, Sujet à onglets — dont Ruchers et Miel —, Fiche, Saisie pas à pas, Accueil). Le titre est au même endroit
     et à la même taille sur tous les écrans sauf l'Accueil : sur téléphone, le retour est dans la barre du haut, les
-    flèches d'une fiche et ⋯ à droite du titre. Échelle : titre 27 px, section 17 px, étiquette de groupe 13 px, état
+    flèches d'une fiche et ⋯ à droite du titre. Échelle : titre 27 px (22 px au-delà de 16 caractères), section 17 px, étiquette de groupe 13 px, état
     vide 20 px, texte 15 px, méta 13 px, minimum 12 px, jamais de demi-pixel ; boutons 52 (principal), 44, 36 ; arrondis
     des jetons. Garde-fou : `etapes_sd` (31 écrans, un écart affiche l'écran, l'élément et la valeur).
 

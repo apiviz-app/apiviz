@@ -13,7 +13,8 @@ Mesuré avant sur 28 écrans à 390 px : titre à 82, 96, 120 ou 180 px (aucun t
 d'écran en 24 à 30 px, onglets de Ruchers qui descendaient de 67 px entre Liste et Carte, onglets de Miel sous les
 chiffres et les pots (de ≈ 232 à ≈ 440 px selon l'onglet), titres de section en 7 tailles, demi-pixels sur l'Accueil.
 
-- **Le titre est au même endroit sur tous les écrans** (82 px sur téléphone), à la même taille (27 px), sauf l'Accueil.
+- **Le titre est au même endroit sur tous les écrans** (82 px sur téléphone), à la même taille (27 px ; 22 px pour un
+  titre long comme « Registre et déclaration », qui sinon serait coupé à côté de ⋯), sauf l'Accueil.
   - Sur téléphone, le retour « ‹ Parent » monte dans la barre du haut, à la place du logo (fiche ruche, rucher, lot,
     météo, Mon profil, Rappels, Activité, Rechercher, Ce mois-ci). Sur ordinateur, il reste au-dessus du titre.
   - Les flèches « ‹ › » de la fiche ruche passent à droite du titre, à côté de ⋯ (le « 2 sur 3 » reste pour les
@@ -29,7 +30,7 @@ chiffres et les pots (de ≈ 232 à ≈ 440 px selon l'onglet), titres de sectio
   demi-pixel (12,5 → 13, 14,5 → 15, 15,5 → 15) ; même espacement entre en-tête, onglets et contenu sur Ruchers.
 
 Garde-fous :
-- `etapes_sd` (nouveau) : sur 31 écrans à 390 px, titre au même endroit et à 27 px, retour dans la barre du haut au
+- `etapes_sd` (nouveau) : sur 31 écrans à 390 px, titre au même endroit et à 27 px (22 px si long), retour dans la barre du haut au
   2e niveau, boutons à 36, 44 ou 52 px, titres de section à 17 / 13 / 20 px, pas de demi-pixel, arrondis des jetons.
 - `etapes_ar` couvre aussi Ruchers et Miel (onglets touchés un à un, positions dans la page).
 - `changelog.test.mjs` : chaque version une seule fois et sans trou depuis la v5.40 (aurait détecté la rubrique

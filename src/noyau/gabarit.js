@@ -42,6 +42,8 @@ export const SUJETS = {
  * Index de l'onglet allumé : celui de l'adresse ; si plusieurs onglets partagent l'adresse, celui dont la valeur est
  * l'onglet interne de l'écran (« livrer » compte pour Ventes), sinon le premier.
  */
+/** Titres d'écran longs (plus de 16 caractères) : 22 px au lieu de 27 sur téléphone (gabarit.css, .g-long). */
+export const TITRE_LONG = 16;
 export function ongletActif(sujet, route, interne) {
   const l = sujet.onglets.map((o, i) => [o, i]).filter(([o]) => o[0] === route);
   if (l.length < 2) return l.length ? l[0][1] : -1;
@@ -215,6 +217,8 @@ export function appliquer() {
     h1.textContent = sujet.titre;
     head.classList.remove("hero-head");
     head.classList.add("g-sujet");
+    // Titre long (« Registre et déclaration ») : un peu plus petit sur téléphone pour tenir entier à côté de ⋯.
+    head.classList.toggle("g-long", sujet.titre.length > TITRE_LONG);
     head.querySelectorAll(".eyebrow").forEach((x) => x.remove());
     let etat = head.querySelector(".sub");
     if (!etat) { h1.insertAdjacentHTML("afterend", `<p class="sub"></p>`); etat = head.querySelector(".sub"); }

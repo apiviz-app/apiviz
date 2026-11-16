@@ -60,8 +60,10 @@
     if os.environ.get("MESURES"): open(os.environ["MESURES"], "w").write(json.dumps(res, ensure_ascii=False, indent=1))
     ys = {n: v["titreY"] for n, v in res.items() if n != "dash"}
     verif(len(set(ys.values())) == 1, "titre au même endroit sur chaque écran : %s" % ys)
+    # Titre long (plus de 16 caractères, « Registre et déclaration ») : 22 px pour tenir entier à côté de ⋯, quelle que soit la police de secours.
+    LONGS = {"registre", "declaration"}
     tailles = {n: v["taille"] for n, v in res.items() if n != "dash"}
-    verif(set(tailles.values()) == {"27px"}, "titre à 27 px partout : %s" % {n: t for n, t in tailles.items() if t != "27px"})
+    verif(all(t == ("22px" if n in LONGS else "27px") for n, t in tailles.items()), "titre à 27 px partout (22 px si long) : %s" % {n: t for n, t in tailles.items() if t != ("22px" if n in LONGS else "27px")})
     for n in NIVEAU2:
         verif(res[n]["retourEnHaut"] and not res[n]["retourDansEcran"], f"{n} : retour dans la barre du haut, pas dans l'écran")
     for n in set(res) - NIVEAU2 - {"visite", "vente", "recolte"}:

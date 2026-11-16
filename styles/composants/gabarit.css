@@ -56,6 +56,7 @@
    chaque onglet. Seul le contenu change. Test : etapes_ar. */
 .wrap>.head.g-tete{display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:12px;min-height:var(--g-tete);margin:0;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
 .wrap>.head.g-sujet{height:var(--g-tete)}
+.wrap>.head.g-tete.g-long h1{font-size:var(--g-h1-long)}
 .wrap>.head.g-tete::after{display:none}
 .wrap>.head.g-tete>div:first-child{flex:1;min-width:0}
 .wrap>.head.g-tete h1{margin:0;font-size:var(--g-h1);line-height:var(--g-h1-l);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none}
@@ -74,9 +75,9 @@
 .g-outils>.er-onglets::-webkit-scrollbar{display:none}
 .g-outils>.er-onglets button{flex:none;white-space:nowrap}
 .wrap>.g-onglets+*,.g-outils+*{margin-top:0}
-:root{--g-tete:58px;--g-h1:27px;--g-h1-l:34px}
+:root{--g-tete:58px;--g-h1:27px;--g-h1-l:34px;--g-h1-long:22px}
 @media (min-width:801px){
-  :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px}
+  :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px;--g-h1-long:34px}
 }
 
 /* ---------- Standards d'écran (v5.50, maquettes du 16 nov. 2026) ----------
