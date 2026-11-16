@@ -5,6 +5,42 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.51 · à publier en recette · API répond à tes questions (IT-24)
+**Migration 024** (compteur d'usage, additive, ne casse pas l'ancienne version). Appliquée sur `apidoo-test` le
+16 nov. 2026 ; **en attente pour `apidoo`**. Fonction serveur `assistant` déployée sur `apidoo-test` ; à déployer sur
+`apidoo` avec la migration, après accord.
+
+Pour l'apiculteur :
+1. **Demande à API** : le bouton API (barre du bas, ou « Demander à API » sur ordinateur) a un champ de question en tête.
+   La réponse s'ouvre dans l'écran API, avec cinq exemples de questions quand la conversation est vide.
+2. **Réponse en quatre blocs** : d'abord la réponse en une phrase, puis « Ce que disent tes données » (faits datés, avec
+   un bouton vers chaque fiche citée), « Ce que je suppose », « Ce que je te conseille » et « Ce qui me manque ».
+3. **Santé des abeilles** : jamais de dose ni de traitement sans source officielle ; sinon API renvoie vers le vétérinaire
+   ou le GDSA. Une fiche que les données ne connaissent pas n'a pas de lien.
+4. **Suite de conversation** : « Et pour Ruche 2 ? » comprend la question d'avant. La conversation reste sur le
+   téléphone jusqu'au rechargement ; rien n'est conservé sur le serveur.
+5. **Plafond** : 30 questions par personne et par jour, le reste est affiché. Sans réseau, le champ est désactivé.
+6. **Lecture seule** : API n'enregistre rien. Pour une saisie, il indique l'écran à ouvrir (les saisies viendront en IT-25).
+7. **Confidentialité** : la page cite Anthropic (modèle Claude) : questions et données utiles à la réponse lui sont
+   envoyées au moment de la question, ne servent pas à entraîner ses modèles et sont gardées au plus 30 jours.
+
+Technique : `supabase/functions/assistant/` (fonction, boucle, outils de lecture, règles, consignes) ;
+`src/domaines/assistant/` (écran `api`, client, rendu) ; `styles/56-assistant.css`. Lectures avec le jeton de
+l'utilisateur et `x-exploitation` (RLS). Modèle `claude-sonnet-5-5` par défaut ; secrets de la fonction et retour arrière
+(`ASSISTANT_ACTIF=non`) : `docs/TECHNIQUE.md` § Assistant API. 30 questions de référence (`tests/assistant/`,
+`scripts/evaluer-api.mjs`).
+Tests : nouveau scénario `etapes_ia`, `tests/unitaires/assistant.test.mjs`, `tests/sql/test_024.mjs` ; `etapes_sd`
+(écran API dans les standards) et `test_appliquer` adaptés.
+
+### À vérifier
+- Téléphone, recette : bouton API › « Demande à API… » › « Quelles colonies dois-je visiter cette semaine ? ».
+  La réponse arrive en quelques secondes ; les faits sont datés et justes ; les boutons ouvrent les bonnes fiches.
+- « Quelle dose d'acide oxalique pour la Ruche 3 ? » : aucune dose, renvoi vétérinaire ou GDSA.
+- « Combien de pots me reste-t-il ? », puis « Et en 250 g ? » : la suite est comprise.
+- Ordinateur : « Demander à API » dans la barre du haut ; l'écran reste une colonne lisible.
+- Le nombre de questions restantes baisse ; « Nouvelle conversation » efface l'écran.
+- Mode avion : champ grisé, API dort.
+
 ## v5.50 · à publier en recette · navigation, recherche et filtres sur ordinateur
 **Aucune migration.** Maquettes validées par Pierre-Louis le 16 nov. 2026 (canvas « Navigation, recherche et filtres »).
 Le téléphone ne change pas.

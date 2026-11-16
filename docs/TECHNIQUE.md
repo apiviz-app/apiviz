@@ -181,3 +181,39 @@
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).
   - Pluie : ces sources disent de ne pas ouvrir sous la pluie, sans chiffre. Apiviz refuse dès 30 % de risque ou de la pluie prévue.
   - Vent : elles disent d'éviter le vent, sans chiffre. Apiviz refuse dès 25 km/h. Ces deux valeurs sont des choix, à ajuster à l'usage.
+
+## Assistant API (IT-24, v5.51)
+
+API répond en lecture seule aux questions sur les données de l'exploitation. Même code en recette et en production.
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Fonction serveur | `supabase/functions/assistant/index.ts` | Reçoit la question, vérifie la connexion, l'appartenance à l'exploitation (`est_membre`) et le plafond, appelle Claude |
+| Boucle | `…/boucle.js` | Lectures puis réponse : au plus 6 appels au modèle, un outil à chaque tour, « repondre » imposé au dernier, format redemandé une fois |
+| Outils de lecture | `…/outils.js` | Instantané (colonies, dernières visites, tâches, miel en stock) envoyé avec chaque question, puis 12 lectures typées : visites, santé, reines, événements, récoltes, lots, ventes, clients, dépenses et budget, matériel, tâches, météo |
+| Règles | `…/regles.js` | Schéma de la réponse en quatre blocs, contrôle du format, retrait des références inventées et des recommandations sanitaires non sourcées ou chiffrées |
+| Consignes | `…/consignes.js` | Texte fixe envoyé au modèle (mis en cache) : rôle, quatre blocs, interdits sanitaires, raisonnement de saison |
+| Écran | `src/domaines/assistant/` | Champ dans la feuille du bouton API, écran `api` (conversation en mémoire), rendu des quatre blocs |
+| Compteur | `migrations/024-assistant-usage.sql` | Plafond de questions par personne et par jour |
+
+**Sécurité.** Chaque lecture passe par le jeton de l'utilisateur et l'en-tête `x-exploitation` : la RLS s'applique, API ne
+voit que ce que voit l'utilisateur. Aucun outil n'écrit. Une exploitation dont on n'est pas membre reçoit une réponse fixe,
+sans appel au modèle. La clé Claude ne quitte jamais le serveur.
+
+**Secrets de la fonction** (Supabase › Edge Functions › Secrets, un jeu par projet, jamais dans le dépôt) :
+`ANTHROPIC_API_KEY` (clé de l'espace de travail « Apiviz recette » ou « Apiviz production », chacun avec sa limite de
+dépense), et facultatifs `ASSISTANT_MODELE` (défaut `claude-sonnet-5-5`), `ASSISTANT_PLAFOND` (défaut 30),
+`ASSISTANT_ACTIF` (`non` coupe API : l'application revient à « Bientôt » ; c'est le retour arrière d'IT-24).
+
+**Déploiement.** Recette : `apidoo-test`, par Claude (accès Supabase), avec la migration 024. Production : même code sur
+`apidoo` avec la migration 024, après l'accord de Pierre-Louis. La mise en ligne GitHub ne déploie pas encore les
+fonctions serveur (il lui faudrait un jeton `SUPABASE_ACCESS_TOKEN`).
+
+**Qualité des réponses.** `tests/assistant/questions.json` : 30 questions de référence (semaine, colonies, santé, hiver,
+météo, miel, ventes, finances, matériel, écriture refusée, consignes contournées, suite de conversation, autre
+exploitation). `scripts/evaluer-api.mjs` les rejoue sur la recette avec un compte d'essai et écrit un rapport à relire.
+À relancer après toute modification des consignes ou des outils.
+
+**Coût.** Tarifs de l'API Claude relevés le 16 nov. 2026 : Sonnet 5.5 à 2 $ / 10 $ par million de jetons (lecture du
+cache à 0,10 $), Haiku 5.5 à 0,10 $ / 0,50 $. Une question coûte de l'ordre de 2 à 4 centimes avec Sonnet. Les jetons de
+chaque question sont écrits dans le journal de la fonction (Supabase › Edge Functions › assistant › Logs).

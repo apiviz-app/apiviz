@@ -7,3 +7,6 @@
 # 022-suppression-compte.sql (PR claude/suite) : sera appliquée par la mise en ligne en recette, puis en production.
 # 023-visite-rapide.sql (PR claude/visite-rapide, v5.49) : force, œufs vus, cellules royales ; creer_visite étendue. Additive.
 #   À appliquer sur apidoo-test par la mise en ligne en recette, puis sur apidoo avec l'accord de Pierre-Louis.
+# 024-assistant-usage.sql (PR claude/it-24-assistant-api, v5.51) : compteur d'usage d'API. Additive.
+#   Appliquée sur apidoo-test le 16 nov. 2026 par Claude ; sur apidoo avec l'accord de Pierre-Louis, avec le déploiement
+#   de la fonction serveur « assistant » sur apidoo (voir docs/TECHNIQUE.md § Assistant API).

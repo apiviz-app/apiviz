@@ -60,6 +60,7 @@ et choisir de recevoir ou non les nouveautés par e-mail (non par défaut).
 | Google Fonts (polices de caractères) | Votre adresse IP | Afficher les polices | Google, réseau mondial |
 | OpenStreetMap (fonds de carte, recherche d'adresse) | Votre adresse IP, la zone de carte affichée, l'adresse ou la position recherchée | Carte des ruchers, nom de la commune | Royaume-Uni (fondation OpenStreetMap), réseau mondial |
 | Open-Meteo (météo) | La position de vos ruchers (latitude, longitude) | Prévisions et créneaux de visite | Europe |
+| Anthropic (modèle Claude, pour l'assistant API) | Votre question et les données de votre exploitation utiles à la réponse (colonies, visites, ventes…), au moment où vous la posez | Répondre à vos questions | États-Unis (Anthropic, PBC) ; données non utilisées pour entraîner ses modèles, conservées au plus 30 jours par Anthropic pour la sécurité |
 
 Certaines fonctions passent par votre navigateur ou une autre application, seulement si vous les utilisez :
 
@@ -87,6 +88,7 @@ déconnexion. Vos préférences d'affichage y sont aussi gardées.
 | Profil (nom, réponses facultatives) | Tant que le compte existe ; les réponses s'effacent à tout moment dans Mon profil |
 | Journal des suppressions et modifications | 1 an, puis effacement automatique |
 | Journal des erreurs techniques | 90 jours, puis effacement automatique |
+| Questions posées à API | Non conservées : seul le nombre de questions du jour est gardé, pour le plafond d'usage |
 | Données sur votre appareil | Jusqu'à la déconnexion |
 
 ## Vos droits

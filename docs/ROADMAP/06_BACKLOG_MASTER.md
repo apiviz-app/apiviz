@@ -4405,7 +4405,7 @@ Questions en langage naturel sur ses données.
 | Type | Fonctionnalité |
 | Domaine | D17 Assistant intelligent API |
 | Epic parent | AP-EPIC-042 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS (v5.51 en recette, 16 nov. 2026) |
 | Priorité | P2 |
 | Valeur métier | 5/5 |
 | Complexité | L |
@@ -4443,7 +4443,7 @@ Questions en langage naturel sur ses données.
 | Type | Fonctionnalité |
 | Domaine | D17 Assistant intelligent API |
 | Epic parent | AP-EPIC-042 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS (v5.51 en recette, 16 nov. 2026) |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |

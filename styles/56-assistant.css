@@ -1,0 +1,49 @@
+/* ---------- Écran API et champ de question (IT-24, src/domaines/assistant/ecrans.js) ----------
+   Réponse en quatre blocs : résumé en premier, puis faits (datés, avec liens vers les fiches), hypothèses,
+   recommandations (sanitaires marquées) et ce qui manque. Téléphone d'abord ; sur ordinateur, colonne de lecture. */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* Feuille du bouton API */
+.as-champ{display:flex;gap:8px;margin:0 0 10px;animation:vt-monte var(--duree-lente) var(--sortie) both}
+.as-champ input{flex:1;min-width:0;min-height:var(--cible);padding:0 14px;border:1.5px solid var(--honey);border-radius:var(--r-pill);font:inherit;font-size:16px;background:var(--card);color:var(--ink)}
+.as-champ input:focus{outline:2px solid var(--honey);outline-offset:1px}
+.as-champ .btn{min-height:var(--cible);border-radius:var(--r-pill)}
+
+/* Écran */
+.as-ecran{display:flex;flex-direction:column;gap:12px;max-width:760px}
+.as-tete{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--honeysoft);border:0}
+.as-tete p{margin:0;font-size:var(--t-m);font-weight:600;color:var(--ink)}
+.as-tete .small{display:block;margin-top:4px;color:var(--muted)}
+.as-sugg{display:flex;flex-wrap:wrap;gap:8px}
+.as-puce{min-height:var(--cible);padding:8px 14px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card);color:var(--ink);font:inherit;font-size:var(--t-s);text-align:left;cursor:pointer;animation:vt-monte var(--duree-lente) var(--sortie) both}
+.as-puce:hover{border-color:var(--honey)}
+.as-fil{display:flex;flex-direction:column;gap:14px}
+.as-fil:empty{display:none}
+.as-ech{display:flex;flex-direction:column;gap:8px;scroll-margin-top:80px}
+.as-q{align-self:flex-end;max-width:85%;margin:0;padding:10px 14px;border-radius:var(--r-m);background:var(--pine);color:#fff;font-size:var(--t-m)}
+.as-rep{padding:14px 16px;border-radius:var(--r-m);background:var(--card);box-shadow:var(--shadow);animation:vt-monte var(--duree-lente) var(--sortie) both}
+.as-resume{margin:0 0 4px;font-size:var(--t-l);font-weight:600;line-height:1.4;color:var(--ink)}
+.as-bloc{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.as-bloc h3{margin:0 0 6px;font-size:var(--t-s);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.as-bloc ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.as-bloc li{font-size:var(--t-m);line-height:1.45}
+.as-hypotheses li{color:var(--muted);font-style:italic}
+.as-sanitaire::marker{color:var(--crit)}
+.as-src{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:var(--t-xs);color:var(--muted)}
+.as-src time{font-variant-numeric:tabular-nums}
+.as-ref{display:inline-flex;align-items:center;min-height:36px;padding:4px 12px;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--ground);color:var(--ink);font:inherit;font-size:var(--t-xs);font-weight:600;cursor:pointer}
+.as-ref:hover{border-color:var(--honey)}
+.as-ref.sans{cursor:default}
+.as-attente{display:flex;align-items:center;gap:6px}
+.as-attente i{width:14px;height:16px;background:var(--honey);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);animation:mt-respire 1s ease-in-out infinite}
+.as-attente i:nth-child(2){animation-delay:.15s}.as-attente i:nth-child(3){animation-delay:.3s}
+.as-attente .small{margin-left:6px}
+.as-erreur{background:var(--critbg)}
+.as-erreur p{margin:0 0 8px;color:var(--ink)}
+.as-form{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end;padding:8px;border-radius:var(--r-l);background:var(--card);box-shadow:var(--shadow);z-index:2}
+.as-form textarea{flex:1;min-width:0;min-height:var(--cible);max-height:140px;padding:10px 12px;border:0;resize:none;font:inherit;font-size:16px;background:transparent;color:var(--ink)}
+.as-form textarea:focus{outline:none}
+.as-form .btn{min-height:var(--cible)}
+.as-note{margin:0;color:var(--muted)}
+@media (min-width:801px){.as-form{bottom:16px}}
+@media (prefers-reduced-motion:reduce){.as-champ,.as-puce,.as-rep,.as-attente i{animation:none}}

@@ -8,7 +8,7 @@
 | Phase | Phase 8 — Pilotage et intelligence |
 | Taille | L |
 | Hypothèse de taille | Edge Function appelant un modèle de langage avec des outils de lecture qui utilisent le jeton de l'utilisateur (RLS). Coût d'API à budgéter (D-07). |
-| Migration | aucune |
+| Migration | 024 (compteur d'usage ; la table de conversations, facultative, n'est pas créée) |
 
 ## 1. Objectif
 
@@ -22,8 +22,8 @@ Répondre en langage naturel aux questions sur ses propres données, en séparan
 
 | ID | Titre | Prio | Statut de départ |
 |---|---|---|---|
-| AP-FEAT-107 | Questions sur ses données | P2 | NON IMPLÉMENTÉ |
-| AP-FEAT-108 | Réponses structurées et sourcées | P1 | NON IMPLÉMENTÉ |
+| AP-FEAT-107 | Questions sur ses données | P2 | NON IMPLÉMENTÉ → EN COURS (v5.51) |
+| AP-FEAT-108 | Réponses structurées et sourcées | P1 | NON IMPLÉMENTÉ → EN COURS (v5.51) |
 
 ## 4. User stories associées
 
