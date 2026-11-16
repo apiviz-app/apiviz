@@ -5,6 +5,18 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.54 · fonction serveur seulement · API lit enfin la photo de la facture
+**Aucune migration, rien à publier côté application.** Correctif de la fonction `lire-facture`, déployé le 16 nov. 2026
+sur `apidoo-test` puis `apidoo` à la demande de Pierre-Louis.
+
+- **Problème** : la première facture photographiée en production (Bretagne Apiculture) a renvoyé « API n'arrive pas
+  à ouvrir ce fichier ». Le journal de la fonction montrait un refus du modèle : il n'accepte pas qu'on lui impose
+  l'outil (`tool_choice` de type `tool`). La photo n'y était pour rien.
+- **Correctif** : `tool_choice` passe à `auto` (les consignes demandent toujours l'outil « facture ») ;
+  `extraireReleve()` lit l'outil ou, à défaut, un relevé JSON écrit en texte ; `max_tokens` 8 000 ; le message
+  « n'arrive pas à ouvrir ce fichier » n'est plus donné que pour une vraie erreur de fichier.
+- Test : `extraireReleve` dans `tests/unitaires/facture.test.mjs`.
+
 ## v5.53 · à publier en recette · un accès à la facture qui dit « facture »
 **Aucune migration.** Suite des maquettes « Import de facture » (page « Comment y accéder », 16 nov. 2026) : la lecture
 des factures (v5.52) n'était atteignable que par « Dépense » ou « + Ajouter un achat », sans que rien ne le dise.
