@@ -30,7 +30,7 @@ l'utilisateur et `x-exploitation` (RLS). Modèle `claude-sonnet-5-5` par défaut
 (`ASSISTANT_ACTIF=non`) : `docs/TECHNIQUE.md` § Assistant API. 30 questions de référence (`tests/assistant/`,
 `scripts/evaluer-api.mjs`).
 Tests : nouveau scénario `etapes_ia`, `tests/unitaires/assistant.test.mjs`, `tests/sql/test_024.mjs` ; `etapes_sd`
-(écran API dans les standards) et `test_appliquer` adaptés.
+(écran API dans les standards), `etapes_nk` (38 écrans) et `test_appliquer` adaptés.
 
 ### À vérifier
 - Téléphone, recette : bouton API › « Demande à API… » › « Quelles colonies dois-je visiter cette semaine ? ».
