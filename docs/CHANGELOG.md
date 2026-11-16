@@ -5,6 +5,44 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.52 · à publier en recette · donne ta facture à API
+**Aucune migration.** Maquettes « Import de facture » validées par Pierre-Louis le 16 nov. 2026. Nouvelle fonction serveur
+`lire-facture` (mêmes secrets que `assistant`), déployée sur `apidoo-test` ; à déployer sur `apidoo` après accord.
+
+Pour l'apiculteur :
+1. **Ajouter un achat** propose d'abord de donner la facture à API : « Prendre en photo » (une à quatre pages) ou
+   « Importer un fichier » (PDF, PNG ou JPG, 10 Mo au plus). « Ou saisir toi-même » ouvre la feuille d'achat habituelle,
+   qui reste aussi celle des achats préremplis (liste de courses) et la seule sans réseau.
+2. **Lecture** : API dit ce qu'il a trouvé — numéro et date, fournisseur (connu ou nouveau), lignes, rapprochement avec
+   ton stock, contrôle des totaux. Rien n'est enregistré à cette étape.
+3. **Validation** : chaque ligne montre l'article choisi (ou « Nouvel article », ou « Sans stock » pour les frais), la
+   quantité, le montant TTC et le stock avant → après. Une ligne douteuse est en miel doux : choisir la bonne lecture ou
+   « C'est bon » ; tant qu'il en reste une, le bouton d'intégration n'apparaît pas. Le total de tes lignes est comparé
+   au total de la facture. « Acheté par » et « Payé avec » comme pour un achat saisi.
+4. **Intégration** : l'achat est enregistré comme une saisie à la main (même fonction `enregistrer_achat`), le stock
+   monte, un nouvel article ou fournisseur est créé. L'écran final récapitule les mouvements et ce que l'exploitation
+   doit à celui qui a payé de sa poche.
+5. **Plafond** : une facture lue compte pour une demande à API (30 par personne et par jour, partagées avec les questions).
+6. **Confidentialité** : la facture et la liste de tes articles et fournisseurs sont envoyées à Anthropic au moment de
+   la lecture. La facture n'est conservée ni par Apiviz ni jointe à l'achat (à prévoir : pièce jointe à l'achat, avec
+   une migration et le stockage des fichiers).
+
+Technique : `supabase/functions/lire-facture/` (fonction, règles pures : consignes, outil `facture`, `normaliser()` qui
+écarte les identifiants inventés, arrondit, signale les lignes sans quantité ou sans montant et contrôle les totaux) ;
+`src/domaines/finances/facture.js` (quatre étapes dans la feuille du bas) et `facture-regles.js` (état de validation,
+lignes à vérifier, achat envoyé) ; `styles/57-facture.css`. Photos réduites à 2 000 px en JPEG avant l'envoi. Sans la
+fonction (ou avec `FACTURE_ACTIF=non`), « Ajouter un achat » ouvre directement la saisie à la main : c'est le retour arrière.
+Tests : `tests/unitaires/facture.test.mjs`, nouveau scénario `etapes_fx` (fonction simulée).
+
+### À vérifier
+- Téléphone, recette : Matériel › « + Ajouter un achat » › « Prendre en photo » sur une vraie facture papier, puis
+  « Donner à API ». Les lignes, quantités et montants sont justes ; les pots, le candy… sont rapprochés des bons articles.
+- « Importer un fichier » avec une facture PDF reçue par e-mail : même chose ; le total des lignes égale le total payé.
+- Une ligne à vérifier bloque l'intégration ; un article inconnu devient « Nouvel article » ; les frais de port sont « Sans stock ».
+- Après « Valider et intégrer au stock » : le stock de chaque article a monté, l'achat est dans Dépenses avec son numéro.
+- Une photo de ruche à la place d'une facture : API dit qu'il ne peut pas la lire, « Saisir toi-même » reste possible.
+- Mode avion : « Ajouter un achat » ouvre directement la saisie à la main.
+
 ## v5.51 · à publier en recette · API répond à tes questions (IT-24)
 **Migration 024** (compteur d'usage, additive, ne casse pas l'ancienne version). Appliquée sur `apidoo-test` le
 16 nov. 2026 ; **en attente pour `apidoo`**. Fonction serveur `assistant` déployée sur `apidoo-test` ; à déployer sur
