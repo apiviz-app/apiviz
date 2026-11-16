@@ -123,10 +123,17 @@ const CP = (() => {
     const cols = wrap.querySelector(".ac-cols");
     if (!cols) return;
     const [g, dr] = cols.children;
+    // v5.52 : l'accueil n'a plus de bloc météo à part (la météo est en face de chaque rucher) : deux colonnes.
+    const meteo = document.getElementById("acCreneau");
+    if (!meteo) {
+      // Ce qui suit les colonnes (astuce, prise en main…) : chaque bloc sous la colonne la plus courte à ce moment-là.
+      let x = cols.nextElementSibling;
+      while (x && g && dr) { const suivant = x.nextElementSibling; (g.offsetHeight > dr.offsetHeight ? dr : g).append(x); x = suivant; }
+      return;
+    }
     const milieu = document.createElement("div");
     milieu.className = "ac-col cp-milieu";
-    const meteo = document.getElementById("acCreneau");
-    if (meteo) milieu.append(meteo);
+    milieu.append(meteo);
     g?.after(milieu);
     cols.classList.add("cp-trois");
     // Ce qui suivait sous les colonnes (astuce, prise en main…) passe au bas de la colonne de droite.

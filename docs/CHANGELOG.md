@@ -5,6 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.52 · à publier en recette · accueil condensé
+**Aucune migration.** Maquette validée par Pierre-Louis le 16 nov. 2026 (canvas « Apiviz – Accueil condensé »).
+
+Pour l'apiculteur :
+1. **Mes ruchers** : une ligne par rucher au lieu du plan des alvéoles. Chaque ligne montre le nombre de ruches, leur
+   état (« 6 en forme », « 1 critique · 2 à surveiller ») et, en face, **la météo de ce rucher** : temps, température et
+   prochain créneau pour ouvrir (« Créneau jeu. 14 h », « Rapide », « Pas de créneau »). Les ruchers n'étant pas au même
+   endroit, chacun a la sienne. Les plus urgents d'abord ; les 3 premiers seulement, puis « Voir les N ruchers ».
+2. **Plus de bloc « Prochain créneau de visite »** sur l'accueil : il ne regardait qu'un rucher. Le détail heure par heure
+   reste sur la fiche de chaque rucher et sur la page Météo.
+3. **Onglets État / Provisions / Varroa** : retirés de l'accueil ; Ruchers les couvre (tri, filtres, alvéoles, tableau).
+4. **Quatre chiffres** dans une seule carte, plus compacte.
+5. **Sans visite** : le conseil d'API tient sur une ligne, avec un bouton « Noter ».
+6. Ordinateur : deux colonnes, Mes ruchers et Dernières actions à gauche, À faire à droite ; astuces et prise en main
+   sous la colonne la plus courte.
+
+Technique : `accueil.js` (`ruchers()` remplace `creneau()` ; la météo de chaque ligne se met à jour à l'arrivée de la
+prévision), `styles/39-accueil.css`, `compact.js` (plus de colonne météo au milieu). Tests : `etapes_ac` (lignes,
+météo par rucher, 5 ruchers → « Voir les 5 ruchers », bannière sans visite), `etapes_ab` et `etapes_al` adaptés.
+
+### À vérifier
+- Téléphone, recette : l'accueil tient en peu d'écrans ; chaque rucher a sa météo en face, cohérente avec sa fiche.
+- Toucher un rucher ouvre sa fiche ; « Tout voir » ou « Voir les N ruchers » ouvre Ruchers.
+- Un rucher non placé affiche « Pas placé sur la carte ».
+- Ordinateur : deux colonnes, rien de vide.
+
 ## v5.51 · à publier en recette · API répond à tes questions (IT-24)
 **Migration 024** (compteur d'usage, additive, ne casse pas l'ancienne version). Appliquée sur `apidoo-test` le
 16 nov. 2026 ; **en attente pour `apidoo`**. Fonction serveur `assistant` déployée sur `apidoo-test` ; à déployer sur

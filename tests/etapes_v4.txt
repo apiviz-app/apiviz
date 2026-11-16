@@ -29,18 +29,19 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     # Accueil : alerte varroa, commande à livrer, météo 3 jours
-    page.wait_for_selector(".al-temps", timeout=5000)
+    page.wait_for_selector(".ac-wx-t", timeout=5000)  # v5.52 : la météo est en face de chaque rucher
     verif(page.locator(".u-todo >> text=Varroa 4,0 %").count() == 1 or page.locator(".u-todo >> text=Varroa 4 %").count() == 1, "alerte varroa au-dessus du seuil sur l'accueil")
     page.click("[data-act=utout]")
     verif(page.locator(".u-todo >> text=1 commande à livrer").count() == 1, "commande à livrer dans « À faire »")
-    verif(page.locator(".al-creneau").count() >= 1, "créneau calculé pour le rucher")
+    verif(page.locator(".ac-rucher .ac-wx-c").count() >= 1 and "Météo" not in page.locator(".ac-rucher .ac-wx-c").first.inner_text(), "créneau calculé pour le rucher")
     verif(page.locator(".topbar .v3-cherche").count() == 1, "bouton de recherche dans la barre du haut")
-    verif(page.locator("[data-act=v3tournee][data-v=Verger]").count() == 1, "« Faire la tournée » sur le rucher")
     page.evaluate("window.scrollTo(0,0)"); page.wait_for_timeout(450); page.screenshot(path="v4/accueil_haut.png")
     shot("accueil")
+    page.click(".ac-rucher:has-text('Verger')"); page.wait_for_function("S.route === 'rucher'")  # v5.52 : la tournée part de la fiche du rucher
+    verif(page.locator("[data-act=v3tournee][data-v=Verger]:visible").count() == 1, "« Faire la tournée » sur le rucher (%d boutons)" % page.locator("[data-act=v3tournee][data-v=Verger]").count())
 
     # Tournée au rucher
-    page.click("[data-act=v3tournee][data-v=Verger]"); page.wait_for_selector(".tn-e-depart")
+    page.click("[data-act=v3tournee][data-v=Verger]:visible"); page.wait_for_selector(".tn-e-depart")
     page.evaluate("ACT.tnmode('manuel')"); page.wait_for_selector(".tn-e-manuel")
     page.evaluate(f"ACT.tnaller(S.tournee.ids.indexOf('{R[0]}'))")
     page.click("[data-act=tnplus]:not([data-v])"); page.wait_for_selector(".v3-tournee")
