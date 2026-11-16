@@ -5,14 +5,28 @@
 // Sans la migration 020, la base ignore ces deux champs : la visite est enregistrée comme une visite complète.
 // Après l'enregistrement : la ruche suivante du même rucher pas encore vue ce jour, sinon la fiche de la ruche.
 // Globales d'app.js lues à l'appel : S, esc, n, dfr, today, shell, render, toast, go, byId, lastVisit, apresVisites, ACT, GROUP.
-import { CHAMPS_EXPRESS, departExpress, etatChamp, resumeExpress, chargeExpress, rucheSuivante } from "./regles.js";
+import { CHAMPS_EXPRESS, departExpress, etatChamp, resumeExpress, chargeExpress, rucheSuivante, jourMoisCourt, dureeTexte, vide } from "./regles.js";
+import { proposerTacheEssaimage } from "./essaimage.js";
+import { oublier as oublierBrouillon } from "./brouillon.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
 const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
 const ETIQUETTE = { repris: "repris", vu: "pareil", change: "changé", "non vu": "à regarder" };
 const poidsTexte = (x) => (x === "" || x === null || x === undefined ? "Non pesée" : `${n(Number(x))} kg`);
-const texte = (k, v) => (k === "poids_kg" ? poidsTexte(v) : k === "reine" && v === "Non cherchée" ? "Pas cherchée" : v);
+const texte = (k, v) => (k === "poids_kg" ? poidsTexte(v) : k === "reine" && v === "Non cherchée" ? "Pas cherchée"
+  : k === "force" ? (vide(v) ? "—" : `${v} sur 5`) : vide(v) ? "—" : v);
+// Chrono de la saisie (AP-TECH-128) : le texte suit chaque seconde sans redessiner l'écran.
+let chrono = null;
+function suivreChrono() {
+  clearInterval(chrono);
+  chrono = setInterval(() => {
+    const z = document.getElementById("ve_chrono");
+    if (!z || !S.ve) return clearInterval(chrono);
+    z.lastChild.textContent = dureeTexte((Date.now() - S.ve.debut) / 1000);
+  }, 1000);
+}
+const ICONE_CHRONO = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>';
 
 /** Ouvre la visite express d'une ruche (ou la visite complète s'il n'y a encore aucune visite à reprendre). */
 export function ouvrir(rucheId) {
@@ -25,18 +39,27 @@ export function ouvrir(rucheId) {
   go("visiteexpress");
 }
 
+/** Reprend une visite express gardée en brouillon (brouillon.js). */
+export function reprendre(ve) {
+  S.ve = ve;
+  go("visiteexpress");
+}
+
 function ligne(c) {
   const f = S.ve, etat = etatChamp(c.k, f.valeurs, f.depart, f.touches), ouvert = f.ouvert === c.k;
-  const avant = etat === "change" ? `<s>${e(texte(c.k, f.depart[c.k]))}</s> → ` : "";
+  const avant = etat === "change" && !vide(f.depart[c.k]) ? `<s>${e(texte(c.k, f.depart[c.k]))}</s> → ` : "";
+  // « comme le 12/05 » sous une valeur reprise qui existe (AP-TECH-127).
+  const sous = etat === "repris" && !vide(f.depart[c.k]) && c.k !== "etat" ? `<small class="ve-comme">comme le ${e(jourMoisCourt(f.date_base))}</small>` : "";
   const corps = !ouvert ? "" : c.choix
-    ? `<div class="seg ve-choix" role="group" aria-label="${e(c.nom)}" style="grid-template-columns:repeat(${c.choix.length},minmax(0,1fr))">${c.choix.map((x) => `<button type="button" class="${f.valeurs[c.k] === x ? "on" : ""}" aria-pressed="${f.valeurs[c.k] === x}" data-act="vechoix" data-k="${c.k}" data-v="${e(x)}">${e(texte(c.k, x))}</button>`).join("")}</div>`
+    ? `<div class="seg ve-choix" role="group" aria-label="${e(c.nom)}" style="grid-template-columns:repeat(${c.choix.length},minmax(0,1fr))">${c.choix.map((x) => `<button type="button" class="${f.valeurs[c.k] === x ? "on" : ""}${x === "Operculées" ? " ve-alerte" : ""}" aria-pressed="${f.valeurs[c.k] === x}" data-act="vechoix" data-k="${c.k}" data-v="${e(x)}">${e(c.k === "force" ? x : texte(c.k, x))}</button>`).join("")}</div>`
     : `<div class="ve-poids"><button type="button" class="ve-pas" data-act="vepoids" data-v="-0.5" aria-label="Retirer 500 g">−</button>
         <input id="ve_poids" class="ve-poids-i" type="number" inputmode="decimal" step="0.1" min="0" value="${e(f.valeurs.poids_kg)}" placeholder="kg" aria-label="Poids en kilos">
         <button type="button" class="ve-pas" data-act="vepoids" data-v="0.5" aria-label="Ajouter 500 g">+</button></div>`;
   return `<li class="ve-ligne ${etat === "change" ? "ve-modifie" : ""} ${ouvert ? "ve-ouvert" : ""}">
     <button type="button" class="ve-tete" data-act="veouvrir" data-v="${c.k}" aria-expanded="${ouvert}">
-      <span class="ve-nom">${e(c.nom)}</span><span class="ve-val">${avant}${e(texte(c.k, f.valeurs[c.k]))}</span>
-      <span class="ve-etat ve-${etat.replace(" ", "-")}">${ETIQUETTE[etat]}</span></button>${corps}</li>`;
+      <span class="ve-nom">${e(c.nom)}</span><span class="ve-val">${avant}${e(texte(c.k, f.valeurs[c.k]))}${sous}</span>
+      <span class="ve-etat ve-${etat.replace(" ", "-")}">${ETIQUETTE[etat]}</span></button>${corps}${c.k === "cellules_royales" && f.valeurs[c.k] === "Operculées"
+        ? '<p class="ve-essaimage">Cellules operculées : l’essaimage peut être proche. Je te proposerai une tâche à l’enregistrement.</p>' : ""}</li>`;
 }
 
 /** Une seule visite, deux modes (v5.44, rationalisation) : « Express » (3 touches, reprend la précédente) ou
@@ -62,14 +85,15 @@ export function ecran() {
   const res = resumeExpress(f.valeurs, f.depart, f.touches), suivante = rucheSuivante(S.d, r.id, today());
   const total = CHAMPS_EXPRESS.length;
   const resume = [res.changes ? `${res.changes} changement${res.changes > 1 ? "s" : ""}` : "Aucun changement",
-    res.repris ? `${res.repris} valeur${res.repris > 1 ? "s" : ""} reprise${res.repris > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+    res.repris ? `${res.repris} reprise${res.repris > 1 ? "s" : ""}` : "",
+    res.aRegarder ? `${res.aRegarder} à regarder` : ""].filter(Boolean).join(" · ");
   shell(r.nom, `Visite express · ${total} points`, "",
     `${bascule("express")}<div class="ve">
       <div class="ve-api"><span class="ve-api-i" aria-hidden="true"></span>
         <p>Je reprends ta visite du ${e(dfr(f.date_base))}. Touche seulement ce qui a changé.</p></div>
       <ul class="ve-liste" aria-label="Ce que tu notes">${CHAMPS_EXPRESS.map(ligne).join("")}</ul>
       <label class="ve-note">Note (facultatif)<textarea id="ve_note" rows="2" placeholder="Ce que tu as remarqué">${e(f.note)}</textarea></label>
-      <p class="ve-resume" aria-live="polite">${e(resume)}</p>
+      <div class="ve-bas"><p class="ve-resume" aria-live="polite">${e(resume)}</p><span class="ve-chrono" id="ve_chrono" role="timer" aria-label="Durée de la visite">${ICONE_CHRONO}<span>${e(dureeTexte((Date.now() - f.debut) / 1000))}</span></span></div>
       <button type="button" class="btn main block ve-ok" data-act="veenregistrer" ${S.busy ? "disabled" : ""}>${suivante ? `Enregistrer et passer à ${e(suivante.nom)}` : "Enregistrer la visite"}</button>
       ${suivante ? `<button type="button" class="link ve-seul" data-act="veenregistrer" data-v="seul">Enregistrer et revenir à la ruche</button>` : ""}
     </div>`);
@@ -80,6 +104,7 @@ export function ecran() {
     if (!f.touches.includes("poids_kg")) f.touches.push("poids_kg");
   });
   document.getElementById("ve_note")?.addEventListener("input", (ev) => { f.note = ev.target.value; });
+  suivreChrono();
 }
 
 const lireNote = () => { const z = document.getElementById("ve_note"); if (z && S.ve) S.ve.note = z.value; };
@@ -97,10 +122,12 @@ async function enregistrer(mode, _k, bouton) {
     if (error) throw error;
     const suivante = mode === "seul" ? null : rucheSuivante(S.d, f.ruche_id, today());
     S.ve = null;
+    oublierBrouillon(f.ruche_id);
     S.ruche = f.ruche_id; S.route = "ruche";
     await apresVisites([{ ...p, id: vid || p.id }], local);
-    toast(local ? "Visite gardée sur le téléphone" : `Visite enregistrée${p.duree_s ? ` en ${p.duree_s} s` : ""}`);
-    if (suivante) ouvrir(suivante.id);
+    toast(local ? "Visite gardée sur le téléphone" : `Visite enregistrée${p.duree_s ? ` en ${dureeTexte(p.duree_s)}` : ""}`);
+    if (p.cellules_royales === "Operculées") proposerTacheEssaimage(f.ruche_id, suivante ? () => ouvrir(suivante.id) : null);
+    else if (suivante) ouvrir(suivante.id);
   } finally { S.busy = false; if (bouton?.isConnected) bouton.disabled = false; }
 }
 
@@ -124,14 +151,21 @@ if (typeof GROUP != "undefined") GROUP.visiteexpress = "ruches";
 export const actions = {
   veruche: (id) => ouvrir(id),
   veouvrir: (k) => { lireNote(); S.ve.ouvert = S.ve.ouvert === k ? null : k; render(); if (S.ve.ouvert === "poids_kg") document.getElementById("ve_poids")?.focus(); },
-  vechoix: (v, k) => { lireNote(); S.ve.valeurs[k] = v; toucher(k); S.ve.ouvert = null; render(); },
+  vechoix: (v, k) => {
+    lireNote();
+    const c = CHAMPS_EXPRESS.find((x) => x.k === k);
+    // Champ qui peut rester vide (force, œufs, cellules) : un second toucher sur la valeur choisie l'efface.
+    if (c?.vide && S.ve.touches.includes(k) && S.ve.valeurs[k] === v) { S.ve.valeurs[k] = S.ve.depart[k]; S.ve.touches = S.ve.touches.filter((x) => x !== k); S.ve.ouvert = null; }
+    else { S.ve.valeurs[k] = v; toucher(k); S.ve.ouvert = null; }
+    render();
+  },
   vepoids: (pas) => {
     lireNote();
     const f = S.ve, x = f.valeurs.poids_kg === "" ? Number(f.depart.poids_kg) || 0 : Number(f.valeurs.poids_kg);
     f.valeurs.poids_kg = Math.max(0, Math.round((x + Number(pas)) * 10) / 10); toucher("poids_kg"); render();
   },
   veenregistrer: enregistrer,
-  vecomplete: () => { const id = S.ve?.ruche_id; S.ve = null; ACT.newvisite(id); },
+  vecomplete: () => { const id = S.ve?.ruche_id; S.ve = null; oublierBrouillon(id); ACT.newvisite(id); },
   vemodeexpress: () => { const id = S.visite?.ruche_id; if (id) ouvrir(id); },
   "vemodeactif": () => {},
 };

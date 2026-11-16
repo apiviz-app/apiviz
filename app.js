@@ -2205,13 +2205,18 @@ const ACT = {
       poids_kg: "",
       varroa: "",
       note: "",
+      force: "",
+      oeufs_vus: "",
+      cellules_royales: "",
+      debut: Date.now(), // durée de la saisie (duree_s, v5.49)
       q: {},
     }),
       go("visite"));
   },
   vset: (valeur, cle) => {
     (readVisitForm(),
-      (S.visite[cle] = valeur),
+      // Force, œufs, cellules royales (v5.49) : un second toucher sur le choix l'efface (pas regardé).
+      (S.visite[cle] = ["force", "oeufs_vus", "cellules_royales"].includes(cle) && S.visite[cle] === valeur ? "" : valeur),
       cle === "ruche_id" && (S.visite.etat = byId(S.d.ruches, valeur).etat),
       redessiner("visite"));
   },

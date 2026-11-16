@@ -9,6 +9,7 @@
     DATA["visites"] = [{"id": str(uuid.uuid4()), "ruche_id": R[1], "date_visite": J(12), "activite": "Normale", "provisions": "Moyennes", "reine": "Non vue", "couvain": "Normal",
         "poids_kg": 42, "varroa": None, "note": "A surveiller", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None, "ordonnance": False}]
     page.add_init_script("localStorage.setItem('apidoo-dictee-info', '1')")  # information de la première dictée déjà vue (testée dans vx)
+    page.add_init_script("localStorage.setItem('apidoo-tournee-modele', 'standard')")  # v5.49 : Hiver est proposé de novembre à février (testé dans vq)
     page.add_init_script("""
       window.__recos = [];
       window.SpeechRecognition = window.webkitSpeechRecognition = class { constructor() { window.__recos.push(this); } start() {} stop() { this.onend && this.onend(); } };
@@ -78,7 +79,8 @@
     shot("tn-guide")
     verif(page.evaluate(plein)["vide"] <= 16, "question sans zone vide")
     page.click("text=Passer cette question"); page.wait_for_selector("text=Et les provisions")
-    page.click("[data-act=tnrep][data-v=Bonnes]"); page.wait_for_selector("text=Quel poids")
+    page.click("[data-act=tnrep][data-v=Bonnes]"); page.wait_for_selector("text=Des cellules royales")  # v5.49
+    page.click("[data-act=tnrep][data-v=Aucune]"); page.wait_for_selector("text=Quel poids")
     page.click("[data-act=tnpas] >> nth=1"); page.click("text=Valider le poids"); page.wait_for_selector("text=Comment est l’activité")
     verif(page.evaluate("S.tn.fiches[S.tournee.ids[0]].poids_kg") is not None, "poids gardé")
     page.evaluate("ACT.tnquitter()"); page.wait_for_selector(".bottom")

@@ -5,6 +5,52 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.49 · à publier en recette · visite rapide (IT-08 réduite)
+**Migration 023** (`023-visite-rapide.sql`) : à appliquer sur `apidoo-test` (la mise en ligne en recette le fait), puis sur
+`apidoo` avec l'accord de Pierre-Louis. Additive, **ne casse pas l'ancienne version**. Maquette validée le 15 nov. 2026 ;
+version réduite décidée le même jour (modèles personnalisables, notes de caractère et météo enregistrée reportés).
+
+Pour l'apiculteur :
+1. **Visite express à neuf points** : force (1 à 5), œufs vus, cellules royales (aucune, ouvertes, operculées) s'ajoutent.
+   Sous chaque valeur reprise : « comme le 12/05 ». La force se reprend ; les œufs, les cellules et la reine jamais
+   (« à regarder »). Un second toucher efface un choix facultatif. Un chrono montre la durée de la visite.
+2. **Essaimage** : des cellules royales operculées affichent un avertissement ; à l'enregistrement, une tâche
+   « Surveiller l'essaimage · Ruche 4 » est proposée (échéance dans 6 jours, modifiable : repère, pas une règle). L'accueil
+   montre « Essaimage à surveiller » tant que la dernière visite de la colonie note des cellules operculées ; le tableau
+   des ruches la passe en « Urgent ».
+3. **Journal** : les valeurs reprises d'une visite express sont en retrait avec « reprise » ; la ligne dit la durée et
+   le nombre de points observés. Cellules, œufs et force ont leurs puces.
+4. **Visite gardée** : la visite en cours (express ou complète) est gardée sur le téléphone à chaque saisie. Après un
+   appel, une application fermée ou un rechargement, l'accueil propose « Reprendre la visite de Ruche 4 » (Reprendre /
+   Oublier). Gardée 48 h ; oubliée à l'enregistrement et à « Annuler » ; rien n'est gardé tant que rien n'est saisi.
+5. **Tournée, modèle Hiver** : au départ, « Quelle visite ? » Standard ou Hiver. Hiver ne demande que le poids et
+   l'activité (« comme le 28/10 : 31 kg », écart de poids, chrono par ruche) ; le reste est repris de la dernière visite
+   et enregistré comme non observé. Hiver est proposé par défaut de novembre à février ; le choix est retenu.
+   Standard gagne les trois champs (repliés en mode manuel, question « Des cellules royales ? » en mode questions,
+   compris à la voix).
+6. **Formulaire complet** : section « Force, œufs, cellules royales » ; durée de saisie enregistrée.
+7. **Dictée** : « cellules operculées », « pas de cellules », « des œufs », « pas d'œufs », « force quatre ».
+
+Technique :
+- 023 : `visites.force` (1 à 5), `oeufs_vus` (vide = pas regardé), `cellules_royales` (liste fermée) ; `creer_visite()` de
+  020 plus ces champs, refus en français hors liste. Aucune table, aucune fonction nouvelle.
+- `src/domaines/visites/regles.js` (neuf points, `alertesEssaimage`, `tacheEssaimage`, conversions), `essaimage.js`
+  (feuille, carte d'accueil), `brouillon.js` (garde IndexedDB dans la base locale du hors ligne, magasin `kv`, une
+  ligne par exploitation ; pont `window.VB` pour `visites-groupees.js` et `nav4.js`), `express.js`, `tournee.js`
+  (`MODELES`, durée par ruche, `observes` en Hiver), `ux.js`, `voix.js`, `colonies/tableau.js`, `offline.js` (`HL.kv`).
+  Aucune nouvelle surcharge `window.*` : écran « visite » et accueil complétés dans `src/domaines/*/ecrans.js`.
+- Tests : SQL `test_023.mjs` (16) ; unitaires `visites.test.mjs` (+6) ; bout en bout `etapes_vq` (nouveau, 33
+  vérifications, captures 375 et 1 280 px), `etapes_ve` et `etapes_tn` mis à jour.
+
+### À vérifier
+- Fiche d'une ruche déjà visitée › Visite express : neuf lignes, « comme le … » sous les valeurs reprises, chrono qui tourne.
+- Cellules royales « Operculées », enregistrer : feuille « essaimage possible », tâche dans l'agenda ; accueil : carte
+  « Essaimage à surveiller ».
+- Commencer une visite, fermer l'application depuis le sélecteur d'applis, la rouvrir : « Reprendre la visite de … ».
+- Tournée d'un rucher : Hiver présélectionné en novembre ; seuls poids et activité ; bilan.
+- Tournée Standard au doigt : tout tient sur l'écran, « Force, œufs, cellules royales » replié.
+- Ancienne version de l'app ouverte en parallèle : une visite s'enregistre toujours (champs vides).
+
 ## v5.48 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
 Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis.
 

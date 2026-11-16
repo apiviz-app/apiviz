@@ -8,8 +8,26 @@ const TN = (() => {
     reine: ["Vue", "Non vue", "Non cherchée"],
     couvain: ["Non vu", "Réduit", "Normal", "Abondant"],
     provisions: ["Faibles", "Moyennes", "Bonnes"],
+    // v5.49 (migration 023) : facultatifs, sans valeur par défaut (vide = pas regardé ; un second toucher efface).
+    force: ["1", "2", "3", "4", "5"],
+    oeufs_vus: ["Oui", "Non"],
+    cellules_royales: ["Aucune", "Ouvertes", "Operculées"],
   };
-  const NOMS = { activite: "Activité", reine: "Reine", couvain: "Couvain", provisions: "Provisions" };
+  const NOMS = { activite: "Activité", reine: "Reine", couvain: "Couvain", provisions: "Provisions", force: "Force", oeufs_vus: "Œufs vus", cellules_royales: "Cellules royales", poids_kg: "Poids" };
+  const FACULTATIFS = ["force", "oeufs_vus", "cellules_royales"];
+  // Modèles de visite (v5.49, AP-US-043) : « Standard » = le formulaire de la tournée ; « Hiver » = poids et activité
+  // seulement. Fixes dans l'application (pas de table en base) ; le choix est retenu sur le téléphone. Hiver est
+  // proposé par défaut de novembre à février, tant qu'on n'a pas choisi soi-même.
+  const MODELES = {
+    standard: { nom: "Standard", champs: ["activite", "reine", "couvain", "provisions", "force", "oeufs_vus", "cellules_royales", "poids_kg"],
+      aide: "Activité, reine, couvain, provisions, force, œufs, cellules royales, poids" },
+    hiver: { nom: "Hiver", champs: ["poids_kg", "activite"], aide: "Poids et activité seulement · environ 30 s par ruche" },
+  };
+  const moisHiver = () => [10, 11, 0, 1].includes(new Date().getMonth());
+  const lireModele = () => { try { return localStorage.getItem("apidoo-tournee-modele") || (moisHiver() ? "hiver" : "standard"); } catch { return "standard"; } };
+  const noterModele = (m) => { try { localStorage.setItem("apidoo-tournee-modele", m); } catch {} };
+  const modele = () => MODELES[S.tn?.modele] || MODELES.standard;
+  const dans = (k) => modele().champs.includes(k);
   const DEFAUT = { activite: "Normale", provisions: "Moyennes", reine: "Non cherchée", couvain: "Non vu" };
   const MODES = [
     ["libre", "Je parle librement", "Une seule dictée, API range par ruche", "Commencer à dicter"],
@@ -53,7 +71,19 @@ const TN = (() => {
     const quand = (id) => lastVisit(id)?.date_visite || "";
     return [...ids].sort((a, b) => poids(a) - poids(b) || quand(a).localeCompare(quand(b)));
   }
-  const fiche = (id) => (S.tn.fiches[id] ||= { etat: "vide", activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, note: "", seg: "", vu: {} });
+  const fiche = (id) => (S.tn.fiches[id] ||= { etat: "vide", activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, note: "", seg: "", vu: {},
+    force: "", oeufs_vus: "", cellules_royales: "", touche: {}, duree_ms: 0 });
+  const toucher = (f, k) => { (f.touche ||= {})[k] = 1; };
+  // Durée passée sur chaque ruche (duree_s, AP-TECH-128) : comptée tant qu'elle est à l'écran en questions ou au doigt.
+  function compterTemps() {
+    const ici = S.tn?.ici;
+    if (ici && S.tn.fiches[ici.id]) S.tn.fiches[ici.id].duree_ms = (S.tn.fiches[ici.id].duree_ms || 0) + Math.max(0, Date.now() - ici.depuis);
+    if (S.tn) S.tn.ici = null;
+  }
+  function demarrerTemps() {
+    compterTemps();
+    if (["manuel", "guide"].includes(S.tn?.etape) && T()) S.tn.ici = { id: courante(), depuis: Date.now() };
+  }
   const val = (f, k) => f[k] || DEFAUT[k];
   const courante = () => T().ids[T().i];
   const reste = () => T().ids.filter((id) => fiche(id).etat !== "enregistree");
@@ -64,11 +94,12 @@ const TN = (() => {
   }
   function aller(i) {
     const t = T();
+    compterTemps();
     if (S.tn.etape === "manuel") arreter();
     while (i < t.ids.length && fiche(t.ids[i]).etat === "enregistree") i++;
     if (i >= t.ids.length) { t.i = Math.max(0, t.ids.length - 1); arreter(); S.tn.etape = "verif"; }
     else { t.i = i; if (S.tn.etape === "manuel") reprendre(fiche(t.ids[i]), t.ids[i]); }
-    sauver(); render();
+    demarrerTemps(); sauver(); render();
   }
 
   // ---------- Dictée libre : un seul texte, rangé par ruche ----------
@@ -98,14 +129,18 @@ const TN = (() => {
       if (f.etat === "enregistree" || f.corrige) return;
       const seg = res.get(id) || "";
       if (f.etat === "notee" && !f.seg) return; // déjà rempli à la main ou par les questions
-      if (!seg) { if (f.seg) Object.assign(f, { etat: "vide", activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, note: "", seg: "" }); return; }
+      if (!seg) { if (f.seg) Object.assign(f, { etat: "vide", activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, note: "", seg: "", force: "", oeufs_vus: "", cellules_royales: "", touche: {} }); return; }
       const l = VX.lire(seg);
-      Object.assign(f, { etat: "notee", activite: l.activite || "", reine: l.reine || "", couvain: l.couvain || "", provisions: l.provisions || "", poids_kg: l.poids_kg ?? null, note: seg, seg });
+      Object.assign(f, { etat: "notee", activite: l.activite || "", reine: l.reine || "", couvain: l.couvain || "", provisions: l.provisions || "", poids_kg: l.poids_kg ?? null, note: seg, seg,
+        force: l.force || "", oeufs_vus: l.oeufs_vus || "", cellules_royales: l.cellules_royales || "",
+        touche: Object.fromEntries(Object.keys(l).filter((k) => l[k] != null && l[k] !== "").map((k) => [k, 1])) });
     });
     if (fiche(cur).etat !== "enregistree") T().i = T().ids.indexOf(cur);
   }
-  const lus = (f) => [f.activite && "Activité " + f.activite.toLowerCase(), f.reine && "Reine " + f.reine.toLowerCase(), f.couvain && f.couvain !== "Non vu" && "Couvain " + f.couvain.toLowerCase(),
-    f.provisions && "Provisions " + f.provisions.toLowerCase(), f.poids_kg != null && f.poids_kg !== "" && n(f.poids_kg) + " kg", ...detecterTaches(f.seg).map((t) => "Tâche : " + t.toLowerCase())].filter(Boolean);
+  const lus = (f) => [f.activite && "Activité " + f.activite.toLowerCase(), dans("reine") && f.reine && "Reine " + f.reine.toLowerCase(), dans("couvain") && f.couvain && f.couvain !== "Non vu" && "Couvain " + f.couvain.toLowerCase(),
+    dans("provisions") && f.provisions && "Provisions " + f.provisions.toLowerCase(), f.poids_kg != null && f.poids_kg !== "" && n(f.poids_kg) + " kg",
+    dans("force") && f.force && `Force ${f.force}/5`, dans("oeufs_vus") && f.oeufs_vus && (f.oeufs_vus === "Oui" ? "Œufs vus" : "Pas d’œufs"),
+    dans("cellules_royales") && f.cellules_royales && "Cellules " + f.cellules_royales.toLowerCase(), ...detecterTaches(f.seg).map((t) => "Tâche : " + t.toLowerCase())].filter(Boolean);
   function detecterTaches(seg) {
     const r = [], re = /(?:il faut|il faudra|faudra|faut|à faire|penser à|prévoir de|prévoir|je dois)\s+([^.,;]{4,70})/gi; let m;
     while ((m = re.exec(seg || ""))) r.push(m[1].trim().replace(/^./, (c) => c.toUpperCase()));
@@ -113,7 +148,7 @@ const TN = (() => {
   }
   function htmlCompris() {
     return T().ids.map((id) => {
-      const f = fiche(id), l = lus(f), manque = f.etat === "enregistree" ? [] : ["activite", "provisions"].filter((k) => f.etat === "notee" && !f[k]).map((k) => NOMS[k] + " ?");
+      const f = fiche(id), l = lus(f), manque = f.etat === "enregistree" ? [] : ["activite", "provisions"].filter((k) => dans(k) && f.etat === "notee" && !f[k]).map((k) => NOMS[k] + " ?");
       const vide = f.etat === "enregistree" ? '<span>Déjà enregistrée</span>' : !l.length && !manque.length ? `<span class="manque">Dis « ${esc(nomDe(id))} » pour la commencer</span>` : "";
       return `<div><b>${esc(nomDe(id))}</b><div class="tn-lus">${l.map((x) => `<span>${esc(x)}</span>`).join("")}${manque.map((x) => `<span class="manque">${esc(x)}</span>`).join("")}${vide}</div></div>`;
     }).join("");
@@ -192,17 +227,20 @@ const TN = (() => {
       f.reine === "Non vue" && { k: "oeufs", q: "Vois-tu des œufs frais ?", aide: `${deuxFois ? "Reine non vue à 2 visites de suite. " : ""}Les œufs indiquent si elle a pondu récemment.`, rep: ["Oui, des œufs", "Non, aucun"] },
       { k: "couvain", q: "Comment est le couvain ?", aide: d?.couvain ? `La dernière fois : ${d.couvain.toLowerCase()}.` : "Passe si tu n’as pas ouvert le corps.", rep: CHOIX.couvain },
       { k: "provisions", q: "Et les provisions ?", aide: d ? `La dernière fois : ${d.provisions.toLowerCase()}.` : "Regarde les cadres de rive.", rep: CHOIX.provisions },
+      { k: "cellules_royales", q: "Des cellules royales ?", aide: "Operculées : l’essaimage peut être proche.", rep: CHOIX.cellules_royales },
       { k: "poids_kg", q: "Quel poids indique la pesée ?", aide: dernierPoids(id) ? `Dernière pesée : ${n(dernierPoids(id))} kg.` : "Passe si tu ne pèses pas.", poids: true },
-    ].filter(Boolean);
+    ].filter(Boolean).filter((x) => x.k === "oeufs" ? dans("oeufs_vus") : dans(x.k)).sort((a, b) => (modele() === MODELES.hiver ? (a.k === "poids_kg" ? -1 : b.k === "poids_kg" ? 1 : 0) : 0));
   }
-  const dernierPoids = (id) => { const v = S.d.visites.find((x) => x.ruche_id === id && x.poids_kg); return v ? Number(v.poids_kg) : null; };
+  const dernierePesee = (id) => S.d.visites.find((x) => x.ruche_id === id && x.poids_kg) || null;
+  const dernierPoids = (id) => { const v = dernierePesee(id); return v ? Number(v.poids_kg) : null; };
   function repondre(id, k, v) {
     const f = fiche(id);
     f.vu[k] = 1;
     if (v != null) {
       if (k === "oeufs") f.note = [f.note, v.startsWith("Oui") ? "Œufs frais vus." : "Pas d’œufs vus."].filter(Boolean).join(" ");
       else f[k] = v;
-      if (k === "oeufs") f.oeufs = v.startsWith("Oui") ? "oui" : "non";
+      if (k === "oeufs") { f.oeufs = v.startsWith("Oui") ? "oui" : "non"; f.oeufs_vus = v.startsWith("Oui") ? "Oui" : "Non"; toucher(f, "oeufs_vus"); }
+      else toucher(f, k);
       f.etat = "notee";
     }
     const reste = questions(id).find((q) => !f.vu[q.k]);
@@ -217,7 +255,8 @@ const TN = (() => {
     const trouve = [...q.rep].sort((a, b) => b.length - a.length).find((o) => t.includes(sansAccent(o)));
     if (trouve) return { v: trouve };
     const proches = { activite: [[/normal|bien/, "Normale"], [/fort|grosse|beaucoup/, "Forte"], [/faible|peu/, "Faible"]], reine: [[/\bnon\b|pas vue?/, "Non vue"], [/\boui\b|\bvue?\b/, "Vue"], [/cherch/, "Non cherchée"]],
-      couvain: [[/reduit|peu/, "Réduit"], [/normal|compact/, "Normal"], [/abondant|beaucoup/, "Abondant"], [/pas vu|non vu/, "Non vu"]], provisions: [[/faible|peu/, "Faibles"], [/moyen/, "Moyennes"], [/bonne|plein|beaucoup/, "Bonnes"]] }[q.k] || [];
+      couvain: [[/reduit|peu/, "Réduit"], [/normal|compact/, "Normal"], [/abondant|beaucoup/, "Abondant"], [/pas vu|non vu/, "Non vu"]], provisions: [[/faible|peu/, "Faibles"], [/moyen/, "Moyennes"], [/bonne|plein|beaucoup/, "Bonnes"]],
+      cellules_royales: [[/opercul|fermee/, "Operculées"], [/ouverte/, "Ouvertes"], [/\bnon\b|aucune|pas de|rien/, "Aucune"]] }[q.k] || [];
     return proches.find(([re]) => re.test(t)) ? { v: proches.find(([re]) => re.test(t))[1] } : null;
   }
   function ecouterQuestion() {
@@ -237,8 +276,8 @@ const TN = (() => {
   function doutes(id) {
     const f = fiche(id), r = [];
     if (f.etat !== "notee") return r;
-    if (!f.activite) r.push("activite");
-    if (!f.provisions) r.push("provisions");
+    if (!f.activite && dans("activite")) r.push("activite");
+    if (!f.provisions && dans("provisions")) r.push("provisions");
     const p = dernierPoids(id);
     if (f.poids_kg != null && f.poids_kg !== "" && p && !f.poidsOk && Math.abs(Number(f.poids_kg) - p) >= 2) r.push("poids_kg");
     return r;
@@ -252,6 +291,8 @@ const TN = (() => {
       if (f.etat !== "notee") return;
       detecterTaches(f.seg).forEach((t) => ajout.set(`${t} (${nomDe(id)})`, { ruche_id: id, echeance: null }));
       if (f.reine === "Non vue" && (d?.reine === "Non vue" || f.oeufs === "non")) ajout.set(`Revoir la reine de ${nomDe(id)}`, { ruche_id: id, echeance: plusJours(7) });
+      // v5.49 : cellules royales operculées, même tâche que hors tournée (src/domaines/visites/essaimage.js).
+      if (dans("cellules_royales") && f.cellules_royales === "Operculées") { const t = Regles.visites.tacheEssaimage(nomDe(id), today()); ajout.set(t.titre, { ruche_id: id, echeance: t.echeance }); }
     });
     const envoyees = (S.tn.taches || []).filter((t) => t.envoyee);
     S.tn.taches = [...envoyees, ...[...ajout].filter(([t]) => !avant.get(t)?.envoyee).map(([titre, o]) => ({ titre, ...o, garder: avant.get(titre)?.garder ?? true }))];
@@ -263,12 +304,20 @@ const TN = (() => {
     const methode = S.d.visites.find((v) => v.varroa_methode)?.varroa_methode || "Sucre glace";
     let local = false;
     try {
+      const hiver = modele() === MODELES.hiver;
       for (const id of T().ids) {
         const f = fiche(id);
         if (f.etat !== "notee") continue;
-        const couvain = val(f, "couvain");
-        const { error, local: hl } = await appel("creer_visite", { p: { ruche_id: id, date_visite: today(), activite: val(f, "activite"), provisions: val(f, "provisions"), reine: val(f, "reine"),
-          couvain: couvain === "Non vu" ? "" : couvain, etat: rucheDe(id).etat, poids_kg: f.poids_kg ?? "", varroa: "", varroa_methode: methode, varroa_abeilles: "", note: f.note, intrants: [] } });
+        // Modèle Hiver (v5.49) : ce qui n'est pas demandé est repris de la dernière visite et marqué non observé
+        // (observes) ; reine « non cherchée ». Standard : visite complète, comme avant (observes vide).
+        const d = lastVisit(id), pris = (k) => (hiver && !dans(k) ? (k === "reine" ? "Non cherchée" : d?.[k] || DEFAUT[k] || "") : val(f, k));
+        const couvain = pris("couvain");
+        const observes = hiver ? [...modele().champs.filter((k) => f.touche?.[k]), ...(String(f.note || "").trim() ? ["note"] : [])] : undefined;
+        const duree = f.duree_ms > 0 ? Math.max(1, Math.round(f.duree_ms / 1000)) : 0; // libre : inconnue
+        const { error, local: hl } = await appel("creer_visite", { p: { ruche_id: id, date_visite: today(), activite: val(f, "activite"), provisions: pris("provisions"), reine: pris("reine"),
+          couvain: couvain === "Non vu" ? "" : couvain, etat: rucheDe(id).etat, poids_kg: f.poids_kg ?? "", varroa: "", varroa_methode: methode, varroa_abeilles: "", note: f.note, intrants: [],
+          force: dans("force") ? Regles.visites.forceVersBase(f.force) : "", oeufs_vus: dans("oeufs_vus") ? Regles.visites.oeufsVersBase(f.oeufs_vus) : null,
+          cellules_royales: dans("cellules_royales") ? f.cellules_royales || "" : "", ...(observes ? { observes } : {}), duree_s: duree > 0 ? duree : null } });
         if (error) throw error;
         local = local || !!hl;
         f.etat = "enregistree"; sauver();
@@ -300,7 +349,26 @@ const TN = (() => {
       return `<i class="${i === t.i ? "ici" : e === "notee" || e === "enregistree" ? "fait" : ""}">${numero(id, i)}</i>`;
     }).join("")}<span>${droite}</span></div>`;
   }
-  const rang = (k, f) => `<div class="tn-lab">${NOMS[k]}</div><div class="tn-rang" style="--nb:${CHOIX[k].length}">${CHOIX[k].map((o) => `<button type="button" class="${val(f, k) === o ? "on" : ""}" aria-pressed="${val(f, k) === o}" data-act="tnset" data-k="${k}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  // comme : « comme le 28/10 : Faible » (modèle Hiver, valeur reprise de la dernière visite tant qu'on n'y touche pas).
+  const comme = (k, f, id) => {
+    const d = lastVisit(id);
+    if (modele() !== MODELES.hiver || !d) return "";
+    const v = k === "poids_kg" ? (dernierPoids(id) != null ? `${n(dernierPoids(id))} kg` : "") : d[k];
+    return v ? `<span class="tn-comme">comme le ${esc(Regles.visites.jourMoisCourt(k === "poids_kg" ? dernierePesee(id)?.date_visite : d.date_visite))} : ${esc(v)}</span>` : "";
+  };
+  const rang = (k, f, id) => `<div class="tn-lab">${NOMS[k]}${id ? comme(k, f, id) : ""}</div><div class="tn-rang" style="--nb:${CHOIX[k].length}">${CHOIX[k].map((o) => `<button type="button" class="${val(f, k) === o ? "on" : ""}${o === "Operculées" ? " tn-alerte-c" : ""}" aria-pressed="${val(f, k) === o}" data-act="tnset" data-k="${k}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`
+    + (modele() === MODELES.hiver && id && !f.touche?.[k] && f[k] ? '<p class="tn-rappel tn-repris">Pas encore touchée : sera enregistrée comme reprise.</p>' : "")
+    + (k === "cellules_royales" && f[k] === "Operculées" ? '<p class="tn-rappel tn-essaim">Cellules operculées : l’essaimage peut être proche. Une tâche te sera proposée à la vérification.</p>' : "");
+  const ecartPoids = (f, id) => {
+    const p = dernierePesee(id);
+    if (f.poids_kg == null || f.poids_kg === "" || !p) return "";
+    const e = Math.round((Number(f.poids_kg) - Number(p.poids_kg)) * 10) / 10, j = Math.round((new Date(today()) - new Date(p.date_visite)) / 864e5);
+    return e ? `<p class="tn-rappel tn-ecart">${e > 0 ? "+" : "−"}${n(Math.abs(e))} kg en ${j} jour${j > 1 ? "s" : ""}</p>` : "";
+  };
+  const chronoTn = (id) => {
+    const f = fiche(id), ms = (f.duree_ms || 0) + (S.tn.ici?.id === id ? Date.now() - S.tn.ici.depuis : 0);
+    return `<span class="ve-chrono tn-chrono" id="tn_chrono" role="timer" aria-label="Durée sur cette ruche"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg><span>${esc(Regles.visites.dureeTexte(ms / 1000))}</span></span>`;
+  };
   const pas = (f) => `<div class="tn-pas"><button type="button" aria-label="Enlever 500 g" data-act="tnpas" data-v="-0.5">−</button><label><input id="tn_poids" type="number" step="0.1" min="0" inputmode="decimal" placeholder="Pas pesée" aria-label="Poids en kilos" value="${f.poids_kg ?? ""}"><span>kg</span></label><button type="button" aria-label="Ajouter 500 g" data-act="tnpas" data-v="0.5">+</button></div>`;
   const onglets = () => `<nav class="tn-onglets" aria-label="Mode de saisie">${MODES.map(([m, t]) => `<button type="button" class="${S.tn.mode === m ? "on" : ""}" aria-pressed="${S.tn.mode === m}" data-act="tnmode" data-v="${m}">${t}</button>`).join("")}</nav>`;
   const ligneMeteo = () => {
@@ -356,6 +424,8 @@ const TN = (() => {
           const f = fiche(id), d = lastVisit(id), c = classe(rucheDe(id));
           return `<div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b><small>${f.etat !== "vide" ? { notee: "Notée", passee: "Passée", enregistree: "Enregistrée" }[f.etat] : d ? (d.reine === "Non vue" ? "Reine pas vue à la dernière visite" : "Dernière visite " + esc(U.dateCourte(d.date_visite))) : "Première visite"}</small></span>${c === "crit" ? '<em class="tn-tag c">Urgent</em>' : c === "watch" ? '<em class="tn-tag w">Priorité</em>' : ""}</div>`;
         }).join("")}</section>
+        <h2 class="tn-h2">Quelle visite ?</h2>
+        <section class="tn-modeles" role="radiogroup" aria-label="Modèle de visite">${Object.entries(MODELES).map(([k, m]) => `<button type="button" class="tn-modele ${S.tn.modele === k ? "on" : ""}" role="radio" aria-checked="${S.tn.modele === k}" data-act="tnmodele" data-v="${k}"><span><b>${m.nom}${k === "hiver" && moisHiver() ? '<em class="tn-tag g">proposé en hiver</em>' : ""}</b><small>${m.aide}</small></span></button>`).join("")}</section>
         <h2 class="tn-h2">Comment veux-tu noter ?</h2>
         <section class="tn-modes" aria-label="Choisir le mode">${MODES.map(([k, a, b]) => `<button type="button" class="tn-mode ${k === S.tn.mode ? "on" : ""}" data-act="tnmode" data-v="${k}"><span class="tn-mi">${k === "manuel" ? PLUS : Apiviz.compagnon(k === "libre" ? "ecoute" : "repond", 40).replace("<api-compagnon ", "<api-compagnon muet ")}</span><span><b>${a}</b><small>${b}</small></span></button>`).join("")}</section>`,
         pied: `<button type="button" class="tn-b miel" data-act="tnmode" data-v="${S.tn.mode}">${S.tn.mode === "manuel" ? "" : MICRO}${faites ? "Reprendre" : m[3]}</button>${faites ? '<button type="button" class="tn-lien" data-act="tnzero">Recommencer la tournée</button>' : ""}`,
@@ -389,9 +459,13 @@ const TN = (() => {
       const id = courante(), f = fiche(id), d = lastVisit(id);
       return {
         titre: esc(nomDe(id)), onglets: true, suivi: suivi(`Ruche ${T().i + 1} sur ${T().ids.length}`),
-        corps: `<p class="tn-rappel">${d ? `Dernière visite ${esc(U.dateCourte(d.date_visite))} : reine ${esc(d.reine.toLowerCase())}${dernierPoids(id) ? `, ${n(dernierPoids(id))} kg` : ""}. Change ce qui diffère.` : "Première visite de cette ruche."}</p>
-        ${["activite", "reine", "couvain", "provisions"].map((k) => rang(k, f)).join("")}
-        <div class="tn-lab">Poids</div>${pas(f)}
+        droite: chronoTn(id),
+        corps: `<p class="tn-rappel">${modele() === MODELES.hiver ? `Modèle Hiver : poids et activité seulement.` : d ? `Dernière visite ${esc(U.dateCourte(d.date_visite))} : reine ${esc(d.reine.toLowerCase())}${dernierPoids(id) ? `, ${n(dernierPoids(id))} kg` : ""}. Change ce qui diffère.` : "Première visite de cette ruche."}</p>
+        ${modele().champs.filter((k) => !FACULTATIFS.includes(k)).map((k) => (k === "poids_kg" ? `<div class="tn-lab">Poids${comme(k, f, id)}</div>${pas(f)}${ecartPoids(f, id)}` : rang(k, f, id))).join("")}
+        ${modele().champs.some((k) => FACULTATIFS.includes(k)) ? (() => { // repliés : le manuel tient sur un écran de téléphone
+          const fac = modele().champs.filter((k) => FACULTATIFS.includes(k)), r = lus({ ...f, activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, seg: "" }).join(" · ");
+          return `<details class="tn-facultatifs" ${S.tn.facOuvert || fac.some((k) => f[k]) ? "open" : ""}><summary><span>Force, œufs, cellules royales</span><small>${esc(r || "Ajouter")}</small></summary>${fac.map((k) => rang(k, f, id)).join("")}</details>`;
+        })() : ""}
         ${f.note ? `<p class="tn-rappel tn-lanote">${esc(f.note)}</p>` : ""}
         <div class="tn-outils"><button type="button" data-act="tnnote">${MICRO}${S.tn.ecoute ? "J’écoute" : "Note"}</button><button type="button" data-act="tnplus" data-v="photos">${PHOTO}Photo</button><button type="button" data-act="tnplus">${PLUS}Plus</button></div>`,
         pied: `<div class="tn-deux"><button type="button" class="tn-b" data-act="tnpasser">Passer</button><button type="button" class="tn-b main" data-act="tnsuivante">${S.tn.revoir ? "Valider" : T().i + 1 < T().ids.length ? "Ruche suivante ›" : "Vérifier la tournée"}</button></div>`,
@@ -401,8 +475,9 @@ const TN = (() => {
       proposer();
       const t = T(), notees = t.ids.filter((id) => fiche(id).etat === "notee"), nb = notees.reduce((s, id) => s + doutes(id).length, 0);
       const ligne = (k, f, id) => {
-        const dt = doutes(id).includes(k), v = k === "poids_kg" ? (f.poids_kg != null && f.poids_kg !== "" ? n(f.poids_kg) + " kg" : "") : k === "couvain" && !f[k] ? "" : k === "reine" && !f[k] ? "" : val(f, k);
-        return v ? `<dt>${k === "poids_kg" ? "Poids" : NOMS[k]}</dt><dd class="${dt ? "doute" : ""}">${esc(v)}</dd>` : "";
+        const dt = doutes(id).includes(k), v = k === "poids_kg" ? (f.poids_kg != null && f.poids_kg !== "" ? n(f.poids_kg) + " kg" : "") : (k === "couvain" || k === "reine" || FACULTATIFS.includes(k)) && !f[k] ? "" : k === "force" ? `${f.force} sur 5` : val(f, k);
+        const repris = modele() === MODELES.hiver && !f.touche?.[k] ? " (reprise)" : "";
+        return v ? `<dt>${NOMS[k]}</dt><dd class="${dt ? "doute" : ""}">${esc(v + repris)}</dd>` : "";
       };
       return {
         titre: "Vérifie, puis enregistre",
@@ -410,7 +485,7 @@ const TN = (() => {
         ${nb ? '<p class="tn-rappel">Un « ? » signale une valeur non dite ou un poids éloigné de la dernière pesée.</p>' : ""}
         <div class="tn-verifs">${t.ids.map((id, i) => {
           const f = fiche(id);
-          if (f.etat === "notee") return `<section class="tn-carte"><div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b></span><button type="button" class="tn-lien" data-act="tnmodif" data-v="${i}">Modifier</button></div><dl class="tn-dl">${["activite", "reine", "couvain", "provisions", "poids_kg"].map((k) => ligne(k, f, id)).join("")}</dl>${f.note ? `<p class="small">${esc(f.note)}</p>` : ""}</section>`;
+          if (f.etat === "notee") return `<section class="tn-carte"><div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b></span><button type="button" class="tn-lien" data-act="tnmodif" data-v="${i}">Modifier</button></div><dl class="tn-dl">${modele().champs.map((k) => ligne(k, f, id)).join("")}</dl>${f.note ? `<p class="small">${esc(f.note)}</p>` : ""}</section>`;
           return `<section class="tn-carte"><div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b><small>${{ vide: "Pas de saisie, elle ne sera pas enregistrée", passee: "Passée", enregistree: "Déjà enregistrée" }[f.etat]}</small></span>${f.etat === "enregistree" ? "" : `<button type="button" class="tn-lien" data-act="tnmodif" data-v="${i}">Ajouter</button>`}</div></section>`;
         }).join("")}
         ${S.tn.taches.filter((x) => !x.envoyee).map((x, i) => `<div class="tn-prop">${Apiviz.compagnon("repond", 32).replace("<api-compagnon ", "<api-compagnon muet ")}<span><b>Tâche proposée :</b> ${esc(x.titre)}${x.echeance ? `, pour le ${esc(U.dateCourte(x.echeance))}` : ""}</span><button type="button" class="tn-lien" data-act="tngarder" data-v="${esc(x.titre)}" aria-pressed="${x.garder}">${x.garder ? "Gardée" : "Retirée"}</button></div>`).join("")}</div>`,
@@ -434,11 +509,12 @@ const TN = (() => {
     },
   };
 
+  let chronoMinuterie = null;
   function vue() {
     if (!S.tn || (!T() && S.tn.etape !== "bilan")) { S.route = "dash"; return render(); }
     const e = S.tn.etape, x = E[e](), cotes = !x.plein && T();
     const fermer = e === "bilan" ? "" : `<button type="button" class="tn-x" data-act="tnquitter" aria-label="Quitter la tournée">${CROIX}</button>`;
-    $app.innerHTML = `<div class="tn-app tn-e-${e}">
+    $app.innerHTML = `<div class="tn-app tn-e-${e}${modele() === MODELES.hiver ? " tn-m-hiver" : ""}">
       <header class="tn-haut ${x.sombre ? "sombre" : ""}"><img class="tn-logo" src="logo-apiviz.svg" alt="Apiviz" height="28"><h1>${x.titre}</h1>${x.droite ? `<span class="small">${x.droite}</span>` : ""}${fermer}</header>
       <div class="tn-grille ${cotes ? "" : "seule"}">
         ${cotes ? `<aside class="tn-cote">${colonneGauche()}</aside>` : ""}
@@ -448,7 +524,16 @@ const TN = (() => {
     const a = document.getElementById("tn_texte");
     if (a) a.addEventListener("input", () => { S.tn.texte = a.value; S.tn.alerte = ""; majLibre(); });
     const p = document.getElementById("tn_poids");
-    if (p) p.addEventListener("input", () => { const f = fiche(courante()); f.poids_kg = p.value === "" ? null : Number(p.value); sauver(); });
+    document.querySelector(".tn-facultatifs")?.addEventListener("toggle", (ev) => { S.tn.facOuvert = ev.target.open; });
+    if (p) p.addEventListener("input", () => { const f = fiche(courante()); f.poids_kg = p.value === "" ? null : Number(p.value); toucher(f, "poids_kg"); sauver(); });
+    // Chrono de la ruche en cours (v5.49) : le texte suit sans redessiner.
+    clearInterval(chronoMinuterie);
+    if (document.getElementById("tn_chrono")) chronoMinuterie = setInterval(() => {
+      const z = document.getElementById("tn_chrono");
+      if (!z || !S.tn?.ici) return clearInterval(chronoMinuterie);
+      const f = fiche(S.tn.ici.id);
+      z.lastChild.textContent = Regles.visites.dureeTexte(((f.duree_ms || 0) + Date.now() - S.tn.ici.depuis) / 1000);
+    }, 1000);
   }
   // Écran « tournee » enregistré dans le noyau : src/domaines/visites/ecrans.js (TN.vue).
 
@@ -458,7 +543,8 @@ const TN = (() => {
     if (!ids.length) return;
     const g = lireBrouillon(cle);
     S.tournee = g?.T && g.T.ids.length === ids.length ? { ...g.T, i: 0 } : { rucher: cle, nom: U.nomRucher(cle), ids, i: 0, faites: 0 };
-    S.tn = g?.T && g.T.ids.length === ids.length ? { ...g.tn, etape: "depart", ecoute: false, alerte: "", meteo: null } : { etape: "depart", mode: lireMode(), fiches: {}, taches: [], texte: "", debut: Date.now() };
+    S.tn = g?.T && g.T.ids.length === ids.length ? { ...g.tn, etape: "depart", ecoute: false, alerte: "", meteo: null } : { etape: "depart", mode: lireMode(), modele: lireModele(), fiches: {}, taches: [], texte: "", debut: Date.now() };
+    S.tn.modele ||= lireModele(); // tournée gardée avant la v5.49
     go("tournee");
     chargerMeteo();
   };
@@ -470,8 +556,9 @@ const TN = (() => {
       aller(Math.max(0, T().ids.findIndex((id) => fiche(id).etat === "vide")));
     },
     tnzero: () => { effacer(); ACT.v3tournee(T().rucher); },
+    tnmodele: (m) => { if (!MODELES[m]) return; S.tn.modele = m; noterModele(m); sauver(); render(); },
     tnquitter: () => {
-      arreter(); sauver();
+      arreter(); compterTemps(); sauver();
       const garde = T().ids.some((id) => fiche(id).etat === "notee");
       S.tournee = null; S.tn = null;
       if (garde) toast("Tournée gardée, reprends-la quand tu veux"); else effacer();
@@ -480,13 +567,17 @@ const TN = (() => {
     tnaccueil: () => { S.tn = null; go("dash"); },
     tnaller: (i) => { arreter(); if (["depart", "verif", "libre"].includes(S.tn.etape)) S.tn.etape = "manuel"; aller(Number(i)); },
     tnecoute: () => { if (S.tn.ecoute) arreter(); else ecouterLibre(); render(); },
-    tnverif: () => { arreter(); lireDictee(); S.tn.etape = "verif"; sauver(); render(); },
+    tnverif: () => { arreter(); compterTemps(); lireDictee(); S.tn.etape = "verif"; sauver(); render(); },
     tnretour: () => { S.tn.etape = S.tn.mode; if (S.tn.mode === "libre") ACT.tnmode("libre"); else aller(0); },
-    tnset: (v, k) => { const f = fiche(courante()); f[k] = v; sauver(); render(); },
+    tnset: (v, k) => {
+      const f = fiche(courante());
+      f[k] = FACULTATIFS.includes(k) && f[k] === v ? "" : v; // facultatif : un second toucher efface
+      toucher(f, k); sauver(); render();
+    },
     tnpas: (d) => {
       const f = fiche(courante()), id = courante();
       f.poids_kg = Math.max(0, Math.round(((f.poids_kg ?? dernierPoids(id) ?? 40) + (f.poids_kg == null ? 0 : Number(d))) * 10) / 10);
-      sauver(); render();
+      toucher(f, "poids_kg"); sauver(); render();
     },
     tnsuivante: () => {
       const id = courante(), f = fiche(id);

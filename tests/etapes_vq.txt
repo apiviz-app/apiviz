@@ -1,0 +1,137 @@
+    # v5.49 — Visite rapide (IT-08 réduite, migration 023, maquette du 15 nov. 2026) : neuf points en express, « comme le »,
+    # chrono ; cellules royales operculées → tâche proposée, alerte Essaimage à l'accueil, journal (reprises en retrait) ;
+    # brouillon gardé au rechargement (express et complète), Reprendre / Oublier ; tournée modèle Hiver (poids et
+    # activité, le reste repris et non observé) ; durée médiane mesurée. Avec CAPTURES=<dossier> : 375 et 1 280 px.
+    import pathlib as _pl, os, statistics
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    visites = lambda: [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
+    jm = lambda iso: iso[8:10] + "/" + iso[5:7]
+    der1 = J(3)  # dernière visite de Ruche 1 (donnees_v2)
+
+    # 1. Visite express : neuf points, « comme le », force et cellules à regarder.
+    page.evaluate(f"ACT.veruche('{R[0]}')"); page.wait_for_selector(".ve-liste")
+    lignes = page.locator(".ve-ligne").all_inner_texts()
+    verif(len(lignes) == 9, "neuf points : " + " | ".join(l.replace("\n", " ") for l in lignes))
+    verif(f"comme le {jm(der1)}" in lignes[0] and "repris" in lignes[0], "activité : « comme le %s » (%s)" % (jm(der1), lignes[0].replace("\n", " ")))
+    verif(all("à regarder" in lignes[i] for i in (3, 4, 5, 6)), "force (jamais notée), œufs, cellules, reine : à regarder")
+    verif(page.locator("#ve_chrono").count() == 1, "chrono affiché")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-express-375.png", full_page=True)
+    page.click("[data-act=veouvrir][data-v=cellules_royales]"); page.click("[data-act=vechoix][data-k=cellules_royales][data-v=Operculées]")
+    verif(page.locator(".ve-essaimage").count() == 1, "cellules operculées : avertissement affiché")
+    page.click("[data-act=veouvrir][data-v=oeufs_vus]"); page.click("[data-act=vechoix][data-k=oeufs_vus][data-v=Oui]")
+    page.click("[data-act=veouvrir][data-v=force]"); page.click("[data-act=vechoix][data-k=force][data-v='4']")
+    page.click("[data-act=veouvrir][data-v=force]"); page.click("[data-act=vechoix][data-k=force][data-v='4']")
+    verif("à regarder" in page.locator(".ve-ligne").nth(3).inner_text(), "force : un second toucher efface le choix")
+    page.click("[data-act=veouvrir][data-v=force]"); page.click("[data-act=vechoix][data-k=force][data-v='4']")
+    verif(page.locator(".ve-resume").inner_text() == "3 changements · 5 reprises · 1 à regarder", "résumé : " + page.locator(".ve-resume").inner_text())
+    page.click(".ve-seul")
+    page.wait_for_selector("dialog[open] >> text=essaimage possible", timeout=10000)
+    p = visites()[-1]
+    verif(p.get("cellules_royales") == "Operculées" and p.get("oeufs_vus") is True and p.get("force") == 4
+          and p.get("observes") == ["force", "oeufs_vus", "cellules_royales"] and isinstance(p.get("duree_s"), int),
+          "visite envoyée : %s" % {k: p.get(k) for k in ("cellules_royales", "oeufs_vus", "force", "observes", "duree_s")})
+    echeance = (datetime.date.today() + datetime.timedelta(days=6)).isoformat()
+    verif(page.locator("dialog[open] input[name=titre]").input_value() == "Surveiller l’essaimage · Ruche 1"
+          and page.locator("dialog[open] input[name=echeance]").input_value() == echeance, "tâche proposée, échéance dans 6 jours (modifiable)")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-tache-375.png")
+    page.click("dialog[open] .btn.main"); page.wait_for_selector(".toast >> text=Tâche ajoutée", timeout=10000)
+    t = [x for x in DATA["taches"] if x.get("titre") == "Surveiller l’essaimage · Ruche 1"]
+    verif(len(t) == 1 and t[0].get("echeance") == echeance and t[0].get("ruche_id") == R[0], "tâche enregistrée sur Ruche 1")
+
+    # 2. Journal : cellules en tête, valeurs reprises en retrait.
+    page.wait_for_selector(".ve-journal", timeout=10000)
+    carte = page.locator(".u-visite").first.inner_text()
+    verif("Cellules royales operculées" in carte and "Œufs vus" in carte and "· reprise" in carte, "journal : cellules, œufs, reprises (%s)" % carte.replace("\n", " "))
+    verif(page.locator(".u-visite").first.locator(".u-chip.u-repris").count() >= 3, "au moins trois valeurs reprises en retrait")
+    verif("Visite express" in page.locator(".ve-journal").first.inner_text() and "3 points observés" in page.locator(".ve-journal").first.inner_text(),
+          "ligne du journal : " + page.locator(".ve-journal").first.inner_text())
+
+    # 3. Accueil : alerte Essaimage.
+    page.evaluate("go('dash')"); page.wait_for_selector(".es-carte", timeout=10000)
+    verif("Ruche 1" in page.locator(".es-carte").inner_text() and "Essaimage" in page.locator(".es-carte").inner_text(), "accueil : « Essaimage à surveiller » Ruche 1")
+    verif(page.locator(".es-carte").count() == 1, "une seule carte essaimage")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-accueil-375.png", full_page=True)
+
+    # 4. Brouillon : visite express commencée, rechargement, « Reprendre la visite de Ruche 2 ».
+    page.evaluate(f"ACT.veruche('{R[1]}')"); page.wait_for_selector(".ve-liste")
+    page.click("[data-act=veouvrir][data-v=poids_kg]"); page.click("[data-act=vepoids][data-v='0.5']")
+    page.wait_for_timeout(900)  # garde différée (400 ms) puis écriture locale
+    page.reload(); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.wait_for_selector(".bv-carte", timeout=5000)
+    verif("Reprendre la visite de Ruche 2" in page.locator(".bv-carte").inner_text() and "1 point noté" in page.locator(".bv-carte").inner_text(),
+          "après rechargement : " + page.locator(".bv-carte").inner_text().replace("\n", " "))
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-reprendre-375.png")
+    page.click("[data-act=bvreprendre]"); page.wait_for_selector(".ve-liste")
+    verif(page.evaluate("S.route") == "visiteexpress" and "changé" in page.locator(".ve-ligne").nth(7).inner_text(), "visite express reprise, poids toujours changé")
+    page.click(".ve-seul"); page.wait_for_selector(".ve-journal", timeout=10000)
+    page.evaluate("go('dash')"); page.wait_for_selector(".ac-hero"); page.wait_for_timeout(500)
+    verif(page.locator(".bv-carte").count() == 0, "visite enregistrée : plus rien à reprendre")
+
+    # Visite complète : note écrite, rechargement, reprise ; puis Annuler l'oublie.
+    page.evaluate(f"ACT.newvisite('{R[2]}')"); page.wait_for_selector("#v_note")
+    verif(page.locator('details[data-sec="colonie"]').count() == 1, "formulaire complet : section « Force, œufs, cellules royales »")
+    page.fill("#v_note", "Ruche calme, belle ponte.")
+    page.wait_for_timeout(900)
+    page.reload(); page.wait_for_selector(".bv-carte", timeout=15000)
+    verif("Ruche 3" in page.locator(".bv-carte").inner_text(), "visite complète gardée : " + page.locator(".bv-carte").inner_text().replace("\n", " "))
+    page.click("[data-act=bvreprendre]"); page.wait_for_selector("#v_note")
+    verif(page.locator("#v_note").input_value() == "Ruche calme, belle ponte.", "note retrouvée")
+    page.click("[data-act=cancel]"); page.wait_for_timeout(600)
+    page.evaluate("go('dash')"); page.wait_for_selector(".ac-hero"); page.wait_for_timeout(500)
+    verif(page.locator(".bv-carte").count() == 0, "« Annuler » oublie le brouillon")
+
+    # Oublier depuis l'accueil ; ouvrir sans rien saisir ne crée pas de brouillon.
+    page.evaluate(f"ACT.newvisite('{R[3]}')"); page.wait_for_selector("#v_note"); page.wait_for_timeout(900)
+    page.evaluate("go('dash')"); page.wait_for_selector(".ac-hero"); page.wait_for_timeout(500)
+    verif(page.locator(".bv-carte").count() == 0, "visite ouverte sans saisie : pas de brouillon fantôme")
+    page.evaluate(f"ACT.veruche('{R[3]}')"); page.wait_for_selector(".ve-liste")
+    page.click("[data-act=veouvrir][data-v=activite]"); page.click("[data-act=vechoix][data-k=activite][data-v=Forte]"); page.wait_for_timeout(900)
+    page.evaluate("go('dash')"); page.wait_for_selector(".bv-carte", timeout=5000)
+    page.click("[data-act=bvoublier]"); page.wait_for_timeout(400)
+    page.reload(); page.wait_for_selector(".ac-hero", timeout=15000); page.wait_for_timeout(800)
+    verif(page.locator(".bv-carte").count() == 0, "« Oublier » : plus de carte, même après rechargement")
+
+    # 5. Tournée modèle Hiver : poids et activité seulement ; le reste repris, non observé.
+    n0 = len(visites())
+    page.evaluate("ACT.v3tournee('Bois')"); page.wait_for_selector(".tn-modeles")
+    page.click("[data-act=tnmodele][data-v=hiver]")
+    verif(page.locator("[data-act=tnmodele][data-v=hiver]").get_attribute("aria-checked") == "true", "modèle Hiver choisi")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-tournee-depart-375.png", full_page=True)
+    page.click("[data-act=tnmode][data-v=manuel]"); page.wait_for_selector(".tn-pas")
+    labs = page.locator(".tn-m .tn-lab").all_inner_texts()
+    verif(len(labs) == 2 and labs[0].startswith("Poids") and labs[1].startswith("Activité") and "comme le" in labs[1], "Hiver : seuls poids et activité (%s)" % labs)
+    verif(page.locator("#tn_chrono").count() == 1 and page.locator(".tn-repris").count() == 1, "chrono par ruche, activité « sera enregistrée comme reprise »")
+    if cap: page.wait_for_timeout(300); page.screenshot(path=f"{cap}/vq-tournee-hiver-375.png", full_page=True)
+    for i in range(3):
+        page.click("[data-act=tnpas][data-v='0.5']"); page.click("[data-act=tnpas][data-v='-0.5']")
+        page.click("[data-act=tnsuivante]"); page.wait_for_timeout(250)
+    page.wait_for_selector("[data-act=tnenreg]")
+    verif("(reprise)" in page.locator(".tn-verifs").inner_text(), "vérification : l'activité non touchée est marquée « reprise »")
+    page.click("[data-act=tnenreg]"); page.wait_for_selector(".tn-e-bilan", timeout=15000)
+    tn = visites()[n0:]
+    bois = {r["id"]: r for r in DATA["ruches"] if r["rucher"] == "Bois"}
+    derniere = lambda rid: sorted([v for v in DATA["visites"] if v["ruche_id"] == rid and v["date_visite"] != datetime.date.today().isoformat()], key=lambda v: v["date_visite"])[-1]
+    verif(len(tn) == 3 and all(x.get("observes") == ["poids_kg"] for x in tn), "trois visites, seul le poids observé (%s)" % [x.get("observes") for x in tn])
+    verif(all(x.get("reine") == "Non cherchée" and x.get("provisions") == derniere(x["ruche_id"])["provisions"] for x in tn), "reine non cherchée, provisions reprises de la dernière visite")
+    verif(all(isinstance(x.get("duree_s"), int) for x in tn), "durée mesurée sur chaque ruche : %s" % [x.get("duree_s") for x in tn])
+
+    # 6. Durée : médiane des visites du scénario sous deux minutes (critère d'IT-08, mesuré sur la base simulée).
+    d = [x["duree_s"] for x in visites() if isinstance(x.get("duree_s"), int)]
+    verif(len(d) >= 5 and statistics.median(d) < 120, "médiane %s s sur %d visites mesurées" % (statistics.median(d) if d else "?", len(d)))
+
+    # 7. Ordinateur : visite express et accueil à 1 280 px.
+    if cap:
+        page.set_viewport_size({"width": 1280, "height": 900})
+        page.evaluate("S.tn = null; S.tournee = null; go('dash')"); page.wait_for_selector(".es-carte", timeout=10000); page.wait_for_timeout(2000)
+        page.screenshot(path=f"{cap}/vq-accueil-1280.png")
+        page.evaluate(f"ACT.veruche('{R[0]}')"); page.wait_for_selector(".ve-liste"); page.wait_for_timeout(300)
+        page.screenshot(path=f"{cap}/vq-express-1280.png", full_page=True)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

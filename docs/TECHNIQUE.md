@@ -155,6 +155,18 @@
   `articles.type` (Consommable / Équipement) ; la nature de la dépense en découle (Consommable, Immobilisation avec
   `duree_amort`, Service pour une ligne sans article). Côté application : tables facultatives absentes notées dans
   `S.absentes` ; sans `mouvements`, Matériel, « Nouveau lot » et « Ajouter une dépense » gardent les anciens écrans.
+- **Visite rapide** (v5.49, IT-08 réduite, migration 023) : `visites.force`, `oeufs_vus`, `cellules_royales` ;
+  `observes` et `duree_s` de 020 disent ce qui a été vu et combien de temps. Les neuf points de la visite express sont
+  dans `CHAMPS_EXPRESS` (`src/domaines/visites/regles.js`) : `repris` (valeur de la dernière visite comme départ) ou non
+  (reine, œufs, cellules : à regarder). L'essaimage (`alertesEssaimage`, `tacheEssaimage`) se lit sur la dernière visite
+  de chaque colonie active : carte de l'accueil (`visites/essaimage.js`), raison « essaimage » du tableau
+  (`colonies/tableau.js`), tâche proposée par `write()` (file d'envoi). Brouillon de visite (`visites/brouillon.js`) :
+  une ligne `brouillons-visite:<exploitation>` dans le magasin `kv` de la base locale du hors ligne (`HL.kv`),
+  `{ <ruche_id>: { genre, data, depart, points, ecoule, commence, at } }`, gardée 400 ms après chaque saisie et quand
+  la page passe en arrière-plan ; expirée à 48 h ; effacée à la déconnexion avec la base. Pont `window.VB` (`oublier`,
+  `essaimage`) pour `visites-groupees.js` et `nav4.js`. Tournée : `MODELES` de `tournee.js` (Standard, Hiver) ; en Hiver,
+  les champs non demandés sont repris de la dernière visite et `observes` ne contient que ce qui a été touché ; durée
+  par ruche (`duree_ms` de chaque fiche, comptée en modes questions et manuel ; inconnue en dictée libre).
 - **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
   <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
   sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit

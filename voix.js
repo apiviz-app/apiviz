@@ -31,6 +31,13 @@ const VX = (() => {
     else if (/reine\s+vue|vu la reine/.test(t)) r.reine = "Vue";
     const k = kilos(t);
     if (k !== null) r.poids_kg = k;
+    // v5.49 (migration 023) : cellules royales, œufs, force sur 5. Seulement ce qui est dit clairement.
+    if (/(?:pas de|aucune|sans)\s+cellules?(?:\s+royales?)?/.test(t)) r.cellules_royales = "Aucune";
+    else if (/cellules?\s+(?:royales?\s+)?(?:sont\s+|d[ée]j[àa]\s+)?op[ée]rcul/.test(t)) r.cellules_royales = "Operculées";
+    else if (/cellules?\s+(?:royales?\s+)?(?:sont\s+)?ouvertes?/.test(t)) r.cellules_royales = "Ouvertes";
+    if (/(?:pas|aucun|sans)\s+(?:vu\s+)?(?:d'|de\s+|des\s+)?(?:œ|oe)ufs?/.test(t)) r.oeufs_vus = "Non";
+    else if (/(?:œ|oe)ufs?\s+(?:vus?|pr[ée]sents?)|vu\s+(?:des\s+|les\s+)?(?:œ|oe)ufs|(?:des|il y a des)\s+(?:œ|oe)ufs/.test(t)) r.oeufs_vus = "Oui";
+    if ((m = t.match(/force\s+(?:de\s+)?([1-5]|un|deux|trois|quatre|cinq)\b/))) r.force = String({ un: 1, deux: 2, trois: 3, quatre: 4, cinq: 5 }[m[1]] || m[1]);
     return r;
   }
   const finDemandee = (t) => /c'est bon[.!\s]*$/i.test(t.replace(/’/g, "'"));
@@ -138,7 +145,10 @@ const VX = (() => {
     const ecart = E.v.poids_kg != null && dernier ? E.v.poids_kg - Number(dernier.poids_kg) : null;
     const ligne = (nom, v, alerte = "") => `<div class="vx-l ${alerte ? "alerte" : ""}"><span>${esc(nom)}${alerte ? `<em>${esc(alerte)}</em>` : ""}</span><span>${esc(v || "Pas dit")}</span></div>`;
     const lignes = CHAMPS.map(([k, nom]) => ligne(nom, E.v[k])).join("") +
-      ligne("Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : "", ecart !== null && Math.abs(ecart) >= 2 ? `À vérifier, ${ecart > 0 ? "+" : "−"}${n(Math.abs(ecart))} kg par rapport à la dernière pesée` : "");
+      ligne("Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : "", ecart !== null && Math.abs(ecart) >= 2 ? `À vérifier, ${ecart > 0 ? "+" : "−"}${n(Math.abs(ecart))} kg par rapport à la dernière pesée` : "") +
+      // v5.49 : affichés seulement s'ils ont été dits (pas de case vide en plus pour qui ne les note pas).
+      (E.v.force ? ligne("Force", `${E.v.force} sur 5`) : "") + (E.v.oeufs_vus ? ligne("Œufs vus", E.v.oeufs_vus) : "") +
+      (E.v.cellules_royales ? ligne("Cellules royales", E.v.cellules_royales) : "");
     d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div class="vx-api">${Apiviz.compagnon("repond", 30).replace("<api-compagnon ", "<api-compagnon muet ")}API</div></header>
       <div class="vx-relire"><h2>Voilà ce que j’ai noté pour ${esc(E.nom)}. Vérifie avant d’enregistrer.</h2><div class="vx-t">${lignes}</div>
       ${E.final ? `<label class="vx-note">Note<textarea id="vx_note" rows="3">${esc(E.final)}</textarea></label>` : ""}</div>
@@ -148,6 +158,7 @@ const VX = (() => {
   function reporter() {
     const e = S.visite;
     CHAMPS.forEach(([k]) => { if (E.v[k]) e[k] = E.v[k]; });
+    ["force", "oeufs_vus", "cellules_royales"].forEach((k) => { if (E.v[k]) e[k] = E.v[k]; }); // v5.49
     if (E.v.poids_kg != null) e.poids_kg = E.v.poids_kg;
     const note = document.getElementById("vx_note")?.value.trim() ?? E.final;
     if (note) e.note = [e.note, note].filter(Boolean).join(" ");
