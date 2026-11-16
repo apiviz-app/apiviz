@@ -155,7 +155,7 @@
   `articles.type` (Consommable / Équipement) ; la nature de la dépense en découle (Consommable, Immobilisation avec
   `duree_amort`, Service pour une ligne sans article). Côté application : tables facultatives absentes notées dans
   `S.absentes` ; sans `mouvements`, Matériel, « Nouveau lot » et « Ajouter une dépense » gardent les anciens écrans.
-- **Visite rapide** (v5.43, IT-08 réduite, migration 023) : `visites.force`, `oeufs_vus`, `cellules_royales` ;
+- **Visite rapide** (v5.49, IT-08 réduite, migration 023) : `visites.force`, `oeufs_vus`, `cellules_royales` ;
   `observes` et `duree_s` de 020 disent ce qui a été vu et combien de temps. Les neuf points de la visite express sont
   dans `CHAMPS_EXPRESS` (`src/domaines/visites/regles.js`) : `repris` (valeur de la dernière visite comme départ) ou non
   (reine, œufs, cellules : à regarder). L'essaimage (`alertesEssaimage`, `tacheEssaimage`) se lit sur la dernière visite

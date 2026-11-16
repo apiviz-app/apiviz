@@ -27,7 +27,7 @@
 .ve-seul{align-self:center;min-height:44px}
 .ve-journal{margin:0;color:var(--muted)}
 
-/* ---------- Visite rapide (v5.43, IT-08 réduite, maquette du 15 nov. 2026) ---------- */
+/* ---------- Visite rapide (v5.49, IT-08 réduite, maquette du 15 nov. 2026) ---------- */
 .ve-val{display:flex;flex-direction:column;gap:1px}
 .ve-comme{font-size:12px;font-weight:400;color:var(--muted)}
 .ve-bas{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -51,7 +51,7 @@
 .es-ligne:first-of-type{border-top:0}
 .es-ligne span{display:flex;flex-direction:column}
 .es-puce{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--critbg);color:var(--crit)}
-/* Tournée : modèle de visite, « comme le », chrono par ruche (v5.43). */
+/* Tournée : modèle de visite, « comme le », chrono par ruche (v5.49). */
 .tn-modeles{display:flex;flex-direction:column;gap:8px}
 .tn-modele{display:flex;align-items:center;min-height:60px;padding:9px 14px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--ink);font:inherit;cursor:pointer}
 .tn-modele.on{outline:2px solid var(--pine);outline-offset:-2px;background:var(--honeysoft)}

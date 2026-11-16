@@ -112,7 +112,7 @@ base = base.replace(rpc_fin, """        if nom == "creer_rucher":
 """ + rpc_fin)
 v = '"varroa": None, "note": p.get("note", "")})'
 assert base.count(v) == 1
-base = base.replace(v, '"varroa": None, "note": p.get("note", ""), "traitement": p.get("traitement",""), "lot_produit": p.get("lot_produit",""), "traitement_dose": p.get("traitement_dose",""), "retrait_prevu": p.get("retrait_prevu") or None, "ordonnance": bool(p.get("ordonnance")),\n                    "force": p.get("force") or None, "oeufs_vus": p.get("oeufs_vus"), "cellules_royales": p.get("cellules_royales") or None})')  # v5.43 (023)
+base = base.replace(v, '"varroa": None, "note": p.get("note", ""), "traitement": p.get("traitement",""), "lot_produit": p.get("lot_produit",""), "traitement_dose": p.get("traitement_dose",""), "retrait_prevu": p.get("retrait_prevu") or None, "ordonnance": bool(p.get("ordonnance")),\n                    "force": p.get("force") or None, "oeufs_vus": p.get("oeufs_vus"), "cellules_royales": p.get("cellules_royales") or None})')  # v5.49 (023)
 
 debut, fin = base.index("    # 1. En ligne"), base.index("    nav.close()")
 for f in sorted(ici.glob("etapes_*.txt")):

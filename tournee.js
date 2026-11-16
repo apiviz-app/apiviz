@@ -8,14 +8,14 @@ const TN = (() => {
     reine: ["Vue", "Non vue", "Non cherchée"],
     couvain: ["Non vu", "Réduit", "Normal", "Abondant"],
     provisions: ["Faibles", "Moyennes", "Bonnes"],
-    // v5.43 (migration 023) : facultatifs, sans valeur par défaut (vide = pas regardé ; un second toucher efface).
+    // v5.49 (migration 023) : facultatifs, sans valeur par défaut (vide = pas regardé ; un second toucher efface).
     force: ["1", "2", "3", "4", "5"],
     oeufs_vus: ["Oui", "Non"],
     cellules_royales: ["Aucune", "Ouvertes", "Operculées"],
   };
   const NOMS = { activite: "Activité", reine: "Reine", couvain: "Couvain", provisions: "Provisions", force: "Force", oeufs_vus: "Œufs vus", cellules_royales: "Cellules royales", poids_kg: "Poids" };
   const FACULTATIFS = ["force", "oeufs_vus", "cellules_royales"];
-  // Modèles de visite (v5.43, AP-US-043) : « Standard » = le formulaire de la tournée ; « Hiver » = poids et activité
+  // Modèles de visite (v5.49, AP-US-043) : « Standard » = le formulaire de la tournée ; « Hiver » = poids et activité
   // seulement. Fixes dans l'application (pas de table en base) ; le choix est retenu sur le téléphone. Hiver est
   // proposé par défaut de novembre à février, tant qu'on n'a pas choisi soi-même.
   const MODELES = {
@@ -291,7 +291,7 @@ const TN = (() => {
       if (f.etat !== "notee") return;
       detecterTaches(f.seg).forEach((t) => ajout.set(`${t} (${nomDe(id)})`, { ruche_id: id, echeance: null }));
       if (f.reine === "Non vue" && (d?.reine === "Non vue" || f.oeufs === "non")) ajout.set(`Revoir la reine de ${nomDe(id)}`, { ruche_id: id, echeance: plusJours(7) });
-      // v5.43 : cellules royales operculées, même tâche que hors tournée (src/domaines/visites/essaimage.js).
+      // v5.49 : cellules royales operculées, même tâche que hors tournée (src/domaines/visites/essaimage.js).
       if (dans("cellules_royales") && f.cellules_royales === "Operculées") { const t = Regles.visites.tacheEssaimage(nomDe(id), today()); ajout.set(t.titre, { ruche_id: id, echeance: t.echeance }); }
     });
     const envoyees = (S.tn.taches || []).filter((t) => t.envoyee);
@@ -308,7 +308,7 @@ const TN = (() => {
       for (const id of T().ids) {
         const f = fiche(id);
         if (f.etat !== "notee") continue;
-        // Modèle Hiver (v5.43) : ce qui n'est pas demandé est repris de la dernière visite et marqué non observé
+        // Modèle Hiver (v5.49) : ce qui n'est pas demandé est repris de la dernière visite et marqué non observé
         // (observes) ; reine « non cherchée ». Standard : visite complète, comme avant (observes vide).
         const d = lastVisit(id), pris = (k) => (hiver && !dans(k) ? (k === "reine" ? "Non cherchée" : d?.[k] || DEFAUT[k] || "") : val(f, k));
         const couvain = pris("couvain");
@@ -526,7 +526,7 @@ const TN = (() => {
     const p = document.getElementById("tn_poids");
     document.querySelector(".tn-facultatifs")?.addEventListener("toggle", (ev) => { S.tn.facOuvert = ev.target.open; });
     if (p) p.addEventListener("input", () => { const f = fiche(courante()); f.poids_kg = p.value === "" ? null : Number(p.value); toucher(f, "poids_kg"); sauver(); });
-    // Chrono de la ruche en cours (v5.43) : le texte suit sans redessiner.
+    // Chrono de la ruche en cours (v5.49) : le texte suit sans redessiner.
     clearInterval(chronoMinuterie);
     if (document.getElementById("tn_chrono")) chronoMinuterie = setInterval(() => {
       const z = document.getElementById("tn_chrono");
@@ -544,7 +544,7 @@ const TN = (() => {
     const g = lireBrouillon(cle);
     S.tournee = g?.T && g.T.ids.length === ids.length ? { ...g.T, i: 0 } : { rucher: cle, nom: U.nomRucher(cle), ids, i: 0, faites: 0 };
     S.tn = g?.T && g.T.ids.length === ids.length ? { ...g.tn, etape: "depart", ecoute: false, alerte: "", meteo: null } : { etape: "depart", mode: lireMode(), modele: lireModele(), fiches: {}, taches: [], texte: "", debut: Date.now() };
-    S.tn.modele ||= lireModele(); // tournée gardée avant la v5.43
+    S.tn.modele ||= lireModele(); // tournée gardée avant la v5.49
     go("tournee");
     chargerMeteo();
   };

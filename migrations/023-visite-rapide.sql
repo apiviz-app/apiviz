@@ -1,4 +1,4 @@
--- Apiviz — migration 023 : visite rapide (IT-08 réduite, v5.43, maquette validée le 15 nov. 2026).
+-- Apiviz — migration 023 : visite rapide (IT-08 réduite, v5.49, maquette validée le 15 nov. 2026).
 --
 -- Contenu :
 --   1. Trois observations de plus dans visites (AP-FEAT-038, AP-TECH-129), toutes facultatives :

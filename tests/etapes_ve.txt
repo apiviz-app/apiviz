@@ -22,7 +22,7 @@
     page.click(".n4-rbarre [data-act=veruche]"); page.wait_for_selector(".ve-liste")
     verif(page.evaluate("S.route") == "visiteexpress", "écran Visite express ouvert")
     lignes = page.locator(".ve-ligne").all_inner_texts()
-    # v5.43 : neuf points (force, œufs, cellules royales), « comme le … » sous les valeurs reprises.
+    # v5.49 : neuf points (force, œufs, cellules royales), « comme le … » sous les valeurs reprises.
     verif(len(lignes) == 9 and "Normale" in lignes[0] and "repris" in lignes[0] and "comme le" in lignes[0] and "38 kg" in lignes[7], "valeurs de la dernière visite reprises : " + " | ".join(l.replace("\n", " ") for l in lignes))
     verif("Pas cherchée" in lignes[6] and "à regarder" in lignes[6], "la reine n'est jamais reprise")
     verif(page.locator(".ve-resume").inner_text() == "Aucun changement · 5 reprises · 4 à regarder", "résumé de départ : " + page.locator(".ve-resume").inner_text())
@@ -51,7 +51,7 @@
     p = visites()[-1]
     verif(p.get("ruche_id") == R[1] and p.get("observes") == [], "visite sans changement : rien d'observé (%s)" % p.get("observes"))
     verif(page.evaluate("S.route") == "ruche", "retour à la fiche de Ruche 2")
-    j = page.locator(".ve-journal").first.inner_text()  # v5.43 : durée, ce qui a été vu ; les reprises en retrait dans les puces
+    j = page.locator(".ve-journal").first.inner_text()  # v5.49 : durée, ce qui a été vu ; les reprises en retrait dans les puces
     verif(j.startswith("Visite express · ") and j.endswith("rien de nouveau · 4 repris") and page.locator(".u-visite").first.locator(".u-chip.u-repris").count() == 4,
           "journal : " + j)
     if cap: page.locator(".ve-journal").first.scroll_into_view_if_needed(); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/express-journal.png")

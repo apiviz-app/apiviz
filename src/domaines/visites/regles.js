@@ -29,7 +29,7 @@ export function appliquerVisite(d, p, extra = {}) {
   return d;
 }
 
-// ---------- Visite express (v5.32, AP-FEAT-037, migration 020 ; champs de 023, v5.43) ----------
+// ---------- Visite express (v5.32, AP-FEAT-037, migration 020 ; champs de 023, v5.49) ----------
 // La visite reprend les valeurs de la précédente ; seuls les champs touchés sont « observés » (visites.observes).
 // Ne sont jamais repris (à regarder à chaque visite, même règle que la tournée, tournee.js) : la reine, les œufs et les
 // cellules royales. Les cellules royales et les œufs se « dévalident » d'un second toucher (vide = pas regardé).
@@ -114,7 +114,7 @@ export function chargeExpress({ id, ruche_id, date_visite, valeurs, touches, not
   };
 }
 
-// ---------- Essaimage (v5.43) ----------
+// ---------- Essaimage (v5.49) ----------
 // Des cellules royales operculées à la dernière visite d'une colonie active : alerte « Essaimage » (accueil, tableau)
 // et tâche proposée. Repère d'observation, sans seuil ni délai réglementaire : l'échéance proposée se change.
 export const JOURS_TACHE_ESSAIMAGE = 6;

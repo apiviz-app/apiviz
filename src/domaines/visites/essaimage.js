@@ -1,4 +1,4 @@
-// Apiviz — essaimage (v5.43, AP-US-042, maquette du 15 nov. 2026).
+// Apiviz — essaimage (v5.49, AP-US-042, maquette du 15 nov. 2026).
 // Des cellules royales operculées notées à la dernière visite d'une colonie active :
 //   - une carte « Essaimage » sur l'accueil, sous la priorité d'API (completerAccueil) ;
 //   - une tâche proposée juste après l'enregistrement (proposerTacheEssaimage), échéance modifiable.

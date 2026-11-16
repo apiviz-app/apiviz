@@ -31,7 +31,7 @@ const VX = (() => {
     else if (/reine\s+vue|vu la reine/.test(t)) r.reine = "Vue";
     const k = kilos(t);
     if (k !== null) r.poids_kg = k;
-    // v5.43 (migration 023) : cellules royales, œufs, force sur 5. Seulement ce qui est dit clairement.
+    // v5.49 (migration 023) : cellules royales, œufs, force sur 5. Seulement ce qui est dit clairement.
     if (/(?:pas de|aucune|sans)\s+cellules?(?:\s+royales?)?/.test(t)) r.cellules_royales = "Aucune";
     else if (/cellules?\s+(?:royales?\s+)?(?:sont\s+|d[ée]j[àa]\s+)?op[ée]rcul/.test(t)) r.cellules_royales = "Operculées";
     else if (/cellules?\s+(?:royales?\s+)?(?:sont\s+)?ouvertes?/.test(t)) r.cellules_royales = "Ouvertes";
@@ -146,7 +146,7 @@ const VX = (() => {
     const ligne = (nom, v, alerte = "") => `<div class="vx-l ${alerte ? "alerte" : ""}"><span>${esc(nom)}${alerte ? `<em>${esc(alerte)}</em>` : ""}</span><span>${esc(v || "Pas dit")}</span></div>`;
     const lignes = CHAMPS.map(([k, nom]) => ligne(nom, E.v[k])).join("") +
       ligne("Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : "", ecart !== null && Math.abs(ecart) >= 2 ? `À vérifier, ${ecart > 0 ? "+" : "−"}${n(Math.abs(ecart))} kg par rapport à la dernière pesée` : "") +
-      // v5.43 : affichés seulement s'ils ont été dits (pas de case vide en plus pour qui ne les note pas).
+      // v5.49 : affichés seulement s'ils ont été dits (pas de case vide en plus pour qui ne les note pas).
       (E.v.force ? ligne("Force", `${E.v.force} sur 5`) : "") + (E.v.oeufs_vus ? ligne("Œufs vus", E.v.oeufs_vus) : "") +
       (E.v.cellules_royales ? ligne("Cellules royales", E.v.cellules_royales) : "");
     d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div class="vx-api">${Apiviz.compagnon("repond", 30).replace("<api-compagnon ", "<api-compagnon muet ")}API</div></header>
@@ -158,7 +158,7 @@ const VX = (() => {
   function reporter() {
     const e = S.visite;
     CHAMPS.forEach(([k]) => { if (E.v[k]) e[k] = E.v[k]; });
-    ["force", "oeufs_vus", "cellules_royales"].forEach((k) => { if (E.v[k]) e[k] = E.v[k]; }); // v5.43
+    ["force", "oeufs_vus", "cellules_royales"].forEach((k) => { if (E.v[k]) e[k] = E.v[k]; }); // v5.49
     if (E.v.poids_kg != null) e.poids_kg = E.v.poids_kg;
     const note = document.getElementById("vx_note")?.value.trim() ?? E.final;
     if (note) e.note = [e.note, note].filter(Boolean).join(" ");

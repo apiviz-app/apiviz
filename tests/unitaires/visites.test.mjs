@@ -43,7 +43,7 @@ const derniere = { activite: "Forte", provisions: "Bonnes", couvain: "", reine: 
 
 test("visite express : les valeurs de la dernière visite servent de départ, sauf la reine", () => {
   const v = departExpress(derniere, { etat: "À surveiller" });
-  // v5.43 : force reprise (vide si jamais notée) ; œufs et cellules royales jamais repris.
+  // v5.49 : force reprise (vide si jamais notée) ; œufs et cellules royales jamais repris.
   assert.deepEqual(v, { activite: "Forte", provisions: "Bonnes", couvain: "Non vu", force: "", oeufs_vus: "", cellules_royales: "", reine: "Non cherchée", poids_kg: 16, etat: "À surveiller" });
   assert.deepEqual(departExpress(null, null), { activite: "Normale", provisions: "Moyennes", couvain: "Non vu", force: "", oeufs_vus: "", cellules_royales: "", reine: "Non cherchée", poids_kg: "", etat: "Bonne" });
   const v2 = departExpress({ ...derniere, force: 4, oeufs_vus: true, cellules_royales: "Operculées" });
@@ -75,7 +75,7 @@ test("visite express : la charge ne marque observés que les champs touchés", (
 });
 
 test("visite express : le journal sait ce qui a été repris", () => {
-  // v5.43 : seuls les champs qui ont une valeur sont « repris » (l'état est celui de la ruche, pas de la visite).
+  // v5.49 : seuls les champs qui ont une valeur sont « repris » (l'état est celui de la ruche, pas de la visite).
   assert.deepEqual(champsRepris({ observes: ["poids_kg"], activite: "Forte", provisions: "Bonnes", couvain: "Normal", force: 3, poids_kg: 15 }), ["activite", "provisions", "couvain", "force"]);
   assert.deepEqual(champsRepris({ observes: ["poids_kg"], activite: "Forte", provisions: "Bonnes", couvain: "" }), ["activite", "provisions"]);
   assert.deepEqual(champsRepris({ observes: null }), [], "visite complète : rien de repris");
@@ -97,7 +97,7 @@ test("visite express : ruche suivante du même rucher, pas encore vue ce jour", 
   assert.equal(rucheSuivante(d, "x", "2026-11-12"), null, "seule ruche de son rucher");
 });
 
-// ---------- Visite rapide (v5.43, IT-08 réduite, migration 023) ----------
+// ---------- Visite rapide (v5.49, IT-08 réduite, migration 023) ----------
 import { jourMoisCourt, dureeTexte, oeufsVersBase, forceVersBase, alertesEssaimage, tacheEssaimage, CHAMPS_EXPRESS } from "../../src/domaines/visites/regles.js";
 import { pointsComplete, pointsExpress, valides, plusRecent, quand, DUREE_BROUILLON_MS } from "../../src/domaines/visites/brouillon.js";
 

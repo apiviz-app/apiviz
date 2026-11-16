@@ -1,6 +1,6 @@
 // Apiviz — écran d'accueil (IT-03). Une seule définition : l'accueil d'ux.js, complété par l'interface Alvéoles
 // (phrase du jour), par la prise en main (guide, premier succès), puis sur téléphone par la mise en page
-// des maquettes (accueil.js, v5.24), puis (v5.43) la carte « Essaimage à surveiller » et « Reprendre la visite de… »
+// des maquettes (accueil.js, v5.24), puis (v5.49) la carte « Essaimage à surveiller » et « Reprendre la visite de… »
 // (src/domaines/visites/essaimage.js et brouillon.js), dans cet ordre.
 // La feuille du bouton API (suggestion du jour, v5.27) est installée ici : elle s'ouvre depuis tous les écrans,
 // mais reprend la priorité de l'accueil ; ses deux gestes sont déclarés avec l'accueil.

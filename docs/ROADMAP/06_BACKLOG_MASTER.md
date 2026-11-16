@@ -1497,7 +1497,7 @@ Visite courante en moins de deux minutes, adaptée à chacun.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-010 |
-| Statut actuel | FAIT — à publier en recette (v5.43, IT-08 réduite) : « comme le … », durée mesurée (express, formulaire complet, tournée), reprises distinguées dans le journal, tournée Hiver avec `observes` ; la tournée Standard et le formulaire complet restent des visites complètes |
+| Statut actuel | FAIT — à publier en recette (v5.49, IT-08 réduite) : « comme le … », durée mesurée (express, formulaire complet, tournée), reprises distinguées dans le journal, tournée Hiver avec `observes` ; la tournée Standard et le formulaire complet restent des visites complètes |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | M |
@@ -1535,7 +1535,7 @@ Visite courante en moins de deux minutes, adaptée à chacun.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-010 |
-| Statut actuel | FAIT — à publier en recette (v5.43, migration 023) : force, œufs vus, cellules royales ; creer_visite étendue ; visite, tournée, dictée ; alerte Essaimage et tâche proposée. Cadres de couvain et d'abeilles, comportement : reportés |
+| Statut actuel | FAIT — à publier en recette (v5.49, migration 023) : force, œufs vus, cellules royales ; creer_visite étendue ; visite, tournée, dictée ; alerte Essaimage et tâche proposée. Cadres de couvain et d'abeilles, comportement : reportés |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -1572,7 +1572,7 @@ Visite courante en moins de deux minutes, adaptée à chacun.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-010 |
-| Statut actuel | PARTIEL — à publier en recette (v5.43) : modèle « Hiver » fixe dans la tournée (poids et activité). Table modeles_visite, éditeur, champs libres et export : reportés (décision du 15 nov. 2026) |
+| Statut actuel | PARTIEL — à publier en recette (v5.49) : modèle « Hiver » fixe dans la tournée (poids et activité). Table modeles_visite, éditeur, champs libres et export : reportés (décision du 15 nov. 2026) |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | M |
@@ -1609,7 +1609,7 @@ Visite courante en moins de deux minutes, adaptée à chacun.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-010 |
-| Statut actuel | FAIT — à publier en recette (v5.43) : brouillon IndexedDB par colonie, « Reprendre la visite de … » à l'accueil, expiration 48 h, oublié à l'enregistrement et à « Annuler » |
+| Statut actuel | FAIT — à publier en recette (v5.49) : brouillon IndexedDB par colonie, « Reprendre la visite de … » à l'accueil, expiration 48 h, oublié à l'enregistrement et à « Annuler » |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |

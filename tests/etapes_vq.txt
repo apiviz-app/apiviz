@@ -1,4 +1,4 @@
-    # v5.43 — Visite rapide (IT-08 réduite, migration 023, maquette du 15 nov. 2026) : neuf points en express, « comme le »,
+    # v5.49 — Visite rapide (IT-08 réduite, migration 023, maquette du 15 nov. 2026) : neuf points en express, « comme le »,
     # chrono ; cellules royales operculées → tâche proposée, alerte Essaimage à l'accueil, journal (reprises en retrait) ;
     # brouillon gardé au rechargement (express et complète), Reprendre / Oublier ; tournée modèle Hiver (poids et
     # activité, le reste repris et non observé) ; durée médiane mesurée. Avec CAPTURES=<dossier> : 375 et 1 280 px.

@@ -1,4 +1,4 @@
-// Apiviz — brouillon de visite persistant (v5.43, AP-FEAT-040, AP-US-044, maquette du 15 nov. 2026).
+// Apiviz — brouillon de visite persistant (v5.49, AP-FEAT-040, AP-US-044, maquette du 15 nov. 2026).
 // La visite en cours (complète ou express) est gardée sur le téléphone, par colonie, à chaque saisie : un appel, une
 // application fermée par le système ou un rechargement ne la perdent plus. À la réouverture, l'accueil propose
 // « Reprendre la visite de Ruche 4 » (Reprendre / Oublier). Un brouillon expire au bout de 48 h.

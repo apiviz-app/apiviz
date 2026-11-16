@@ -162,7 +162,7 @@ const UX = (() => {
     return chip(`Varroa ${n(t, 1)} %`, t >= seuilVarroa() ? "crit" : t >= seuilVarroa() * 0.66 ? "watch" : "good");
   }
   // Visite express (v5.32, migration 020) : les valeurs reprises de la précédente, pas observées ce jour-là, sont en
-  // retrait avec la mention « reprise » (v5.43, AP-US-041) ; la ligne dit la durée et ce qui a été vu.
+  // retrait avec la mention « reprise » (v5.49, AP-US-041) ; la ligne dit la durée et ce qui a été vu.
   function repris(v) {
     const duree = v.duree_s != null ? Regles.visites.dureeTexte(v.duree_s) : "";
     if (!Array.isArray(v.observes)) return duree ? `<p class="small ve-journal">Saisie en ${esc(duree)}</p>` : "";
@@ -266,7 +266,7 @@ const UX = (() => {
     o[el.dataset.sec] = el.open; ouverts.set(S.visite, o);
   }, true);
 
-  // Force, œufs et cellules royales (v5.43, migration 023) : résumé de la section repliable.
+  // Force, œufs et cellules royales (v5.49, migration 023) : résumé de la section repliable.
   function resumeColonie(e) {
     return [e.force ? `force ${e.force}/5` : "", e.oeufs_vus === "Oui" ? "œufs vus" : e.oeufs_vus === "Non" ? "pas d’œufs" : "",
       e.cellules_royales ? `cellules ${e.cellules_royales.toLowerCase()}` : ""].filter(Boolean).join(" · ");

@@ -94,7 +94,7 @@ const N4 = (() => {
   ACT.cancel = () => {
     if (S.route === "visite") {
       enregistree.add(S.visite); if (brouillon === S.visite) brouillon = null;
-      if (typeof VB != "undefined") VB.oublier(S.visite?.ruche_id); // brouillon persistant (v5.43) : « Annuler » l'oublie
+      if (typeof VB != "undefined") VB.oublier(S.visite?.ruche_id); // brouillon persistant (v5.49) : « Annuler » l'oublie
     }
     annulerAvant();
   };
