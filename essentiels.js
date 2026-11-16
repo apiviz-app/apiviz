@@ -242,7 +242,7 @@ const ES = (() => {
     const membres = typeof PF != "undefined" ? PF.nbPersonnes() : 0;
     const av = `<span class="rg-av" aria-hidden="true">${esc(((typeof PF != "undefined" && PF.prenom()) || S.session?.user?.email || "?")[0].toUpperCase())}</span>`;
     const nbR = nouveaux().length;
-    shell("Réglages", "", "", `<div class="rg-groupes">
+    shell("Réglages", "Ton compte, ton exploitation, tes préférences", "", `<div class="rg-groupes">
       <h2 class="rg-g">Toi</h2><div class="rg-bloc">${ligne("go", "profil", av, nomMoi, "Mon profil · nom, e-mail, tes réponses")}</div>
       <h2 class="rg-g">L’exploitation</h2><div class="rg-bloc">
         ${ligne("errgexpl", "", ic("M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"), "Mon exploitation", `${c.nom}${manque.length ? "" : " · NAPI, SIRET, adresse"}`, manque.length ? `<span class="rg-manque">${esc(manque.join(", "))} à remplir</span>` : "")}

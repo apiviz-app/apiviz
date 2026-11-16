@@ -20,7 +20,7 @@ export function ecran() {
     }).join("")}
     <div class="cs-act"><button type="button" class="btn" data-act="csenvoyer" data-v="${i}">Envoyer la liste</button>${ecrire ? `<button type="button" class="btn main" data-act="csachete" data-v="${i}">C’est acheté</button>` : ""}</div></section>`).join("");
   shell(titre, l.articles ? "Quantités proposées pour repasser au-dessus du seuil. Ajuste-les si besoin." : "Tous tes articles sont au-dessus de leur seuil.", "",
-    `${blocs}${l.articles ? `<p class="small cs-note">« C’est acheté » ouvre l’achat déjà rempli : corrige le prix réel, le stock monte tout seul.</p>
+    `${l.articles ? "" : emptyState("Rien à racheter", "Dès qu’un article passe sous son seuil, il arrive ici avec la quantité à racheter.", "", "")}${blocs}${l.articles ? `<p class="small cs-note">« C’est acheté » ouvre l’achat déjà rempli : corrige le prix réel, le stock monte tout seul.</p>
     <div class="op-pied cs-pied"><span><span class="small">Total estimé</span><b>${e(eur(l.total))}</b></span><button type="button" class="btn" data-act="cscopier">Copier tout</button></div>` : ""}`, "Liste de courses");
   document.querySelector(".wrap")?.classList.add("op-ecran");
   ES.retour("go", "materiel", "‹ Matériel");

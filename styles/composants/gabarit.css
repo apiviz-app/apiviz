@@ -49,3 +49,32 @@
 .ag-outils .g-puce .g-n{min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--pine);color:#fff;font-size:var(--t-xs);display:inline-flex;align-items:center;justify-content:center}
 .g-barre>.g-plus-bas{flex:none;width:52px;min-width:52px;padding:0;font-size:24px;font-weight:500;background:var(--card);color:var(--ink);border:1.5px solid var(--ink)}
 .g-autres[hidden]{display:none!important}
+
+/* ---------- Écran-sujet à onglets : rien ne bouge d'un onglet à l'autre (v5.48, maquettes du 16 nov. 2026) ----------
+   L'en-tête a une hauteur fixe : titre sur une ligne, une seule ligne d'état (coupée par « … »), ⋯ et bouton principal
+   à droite. Les onglets suivent, puis la barre d'outils (année, choix de vue, recherche, puces) : mêmes places sur
+   chaque onglet. Seul le contenu change. Test : etapes_ar. */
+.wrap>.head.g-sujet{display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:12px;height:var(--g-tete);min-height:var(--g-tete);margin:0;padding:0;background:none;color:var(--ink);border-radius:0;overflow:visible}
+.wrap>.head.g-sujet::after{display:none}
+.wrap>.head.g-sujet>div:first-child{flex:1;min-width:0}
+.wrap>.head.g-sujet h1{margin:0;font-size:var(--g-h1);line-height:var(--g-h1-l);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none}
+.wrap>.head.g-sujet .sub{margin:2px 0 0;font-size:15px;line-height:22px;height:22px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrap>.head.g-sujet .actions{flex:none;width:auto;align-self:flex-start}
+.wrap>.head.g-sujet .actions .btn{flex:none}
+.wrap>.g-onglets{margin:6px 0 0}
+.g-outils{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 0}
+.g-outils>.op-barre,.g-outils>.op-puces{flex:1 1 100%;margin:0}
+.g-outils>.op-puces{padding:2px 0}
+.g-outils>.subtabs.g-segment{flex:0 1 auto;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.g-outils>.subtabs.g-segment::-webkit-scrollbar{display:none}
+.g-outils>.subtabs.g-segment button{flex:none;white-space:nowrap}
+.g-outils>.op-barre{min-width:0;width:100%}
+.g-outils>.er-onglets{flex:0 1 auto;max-width:100%;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.g-outils>.er-onglets::-webkit-scrollbar{display:none}
+.g-outils>.er-onglets button{flex:none;white-space:nowrap}
+.wrap>.head.g-sujet.g-long h1{font-size:var(--g-h1-long)}
+.wrap>.g-onglets+*:not(.g-outils),.g-outils+*{margin-top:14px}
+:root{--g-tete:62px;--g-h1:30px;--g-h1-l:38px;--g-h1-long:25px}
+@media (min-width:801px){
+  :root{--g-tete:72px;--g-h1:34px;--g-h1-l:44px;--g-h1-long:34px}
+}

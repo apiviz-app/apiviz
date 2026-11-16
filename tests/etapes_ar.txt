@@ -1,0 +1,51 @@
+    # v5.48 — En-tête de rubrique aligné (maquettes du 16 nov. 2026) : dans un écran-sujet à onglets (Finances,
+    # Matériel, Registre et déclaration, Réglages), passer d'un onglet à l'autre ne fait rien bouger au-dessus du
+    # contenu : le titre, la ligne d'état, les onglets et la barre d'outils (recherche, puces) gardent leur place, au
+    # pixel près, à 390 et à 1 280 px. Courses sans article : carte « Rien à racheter ». Avec CAPTURES=<dossier>,
+    # captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    DATA["fournisseurs"] = []
+    DATA["articles"] = [{"id": A1, "nom": "Candy", "type": "Consommable", "famille": "alimentation", "unite": "kg", "stock": 5, "seuil": 2, "valeur": 3},
+                        {"id": str(uuid.uuid4()), "nom": "Pots 500 g vides", "type": "Consommable", "famille": "emballage", "contenance_g": 500, "unite": "unité", "stock": 250, "seuil": 50, "valeur": 0.45},
+                        {"id": str(uuid.uuid4()), "nom": "Combinaison", "type": "Équipement", "famille": "equipement", "unite": "unité", "stock": 2, "seuil": 0}]
+    DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    MESURE = """() => {
+      const r = (el) => el && el.getClientRects().length ? Math.round(el.getBoundingClientRect().top) : null;
+      const w = document.querySelector('.wrap');
+      const h = w && w.querySelector(':scope > .head');
+      const o = w && w.querySelector(':scope > .g-onglets');
+      const outils = w && w.querySelector(':scope > .g-outils');
+      return { titre: r(h && h.querySelector('h1')), etat: r(h && h.querySelector('.sub')), onglets: r(o), basOnglets: o ? Math.round(o.getBoundingClientRect().bottom) : null,
+               outils: r(outils), puces: r(outils && outils.querySelector('.op-puces')), basTete: h ? Math.round(h.getBoundingClientRect().bottom) : null,
+               lignes: h && h.querySelector('.sub') ? Math.round(h.querySelector('.sub').getBoundingClientRect().height) : 0 };
+    }"""
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.evaluate("try{localStorage.setItem('apiviz-materiel-affichage','liste')}catch(e){}; S.mt=null")
+    SUJETS_TEST = [("Matériel", ["materiel", "courses", "fournisseurs"]), ("Finances", ["pilotage", "compta", "previsions", "associes"]),
+                   ("Registre", ["registre", "declaration"]), ("Réglages", ["reglages", "membres"])]
+    for largeur in (390, 1280):
+        page.set_viewport_size({"width": largeur, "height": 844 if largeur == 390 else 900})
+        for sujet, routes in SUJETS_TEST:
+            vues = {}
+            for rt in routes:
+                page.evaluate("(r) => { window.scrollTo(0, 0); ACT.go(r); }", rt); page.wait_for_function("(r) => S.route === r && document.querySelector('.wrap > .g-onglets')", arg=rt)
+                page.wait_for_timeout(250)
+                vues[rt] = page.evaluate(MESURE)
+                if cap and largeur == 390: page.screenshot(path=f"{cap}/ar-{rt}-390.png")
+            print(largeur, sujet, json.dumps(vues))
+            for cle in ("titre", "etat", "basTete", "onglets", "basOnglets"):
+                valeurs = {rt: v[cle] for rt, v in vues.items()}
+                verif(len(set(valeurs.values())) == 1 and None not in valeurs.values(), f"{largeur} px, {sujet} : {cle} au même endroit sur chaque onglet {valeurs}")
+            avec = {rt: v["outils"] for rt, v in vues.items() if v["outils"] is not None}
+            verif(len(set(avec.values())) <= 1, f"{largeur} px, {sujet} : barre d'outils au même endroit {avec}")
+            verif(all(v["lignes"] <= 24 for v in vues.values()), f"{largeur} px, {sujet} : ligne d'état sur une ligne")
+    page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
