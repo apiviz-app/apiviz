@@ -55,3 +55,15 @@ test("v5.48 : barre d'outils d'un écran-sujet — année, choix de vue, recherc
   for (const r of ["materiel", "courses", "fournisseurs", "pilotage", "compta", "previsions", "associes", "registre", "declaration", "reglages", "membres"])
     assert.ok(G.sujetDe(r), r);
 });
+
+test("v5.50 : Ruchers et Miel sont des écrans-sujets ; l'onglet allumé suit l'onglet interne de Miel", () => {
+  assert.equal(G.sujetDe("carte").titre, "Ruchers");
+  assert.equal(G.sujetDe("clients").titre, "Miel");
+  const miel = G.SUJETS.miel;
+  assert.equal(G.ongletActif(miel, "clients", "clients"), 1);
+  assert.equal(G.ongletActif(miel, "clients", "ventes"), 0);
+  assert.equal(G.ongletActif(miel, "clients", "livrer"), 0, "« à livrer » reste sous Ventes");
+  assert.equal(G.ongletActif(miel, "miel", undefined), 2);
+  assert.equal(G.ongletActif(G.SUJETS.materiel, "courses"), 1);
+  assert.equal(G.ongletActif(G.SUJETS.materiel, "agenda"), -1);
+});

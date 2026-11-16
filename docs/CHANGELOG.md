@@ -5,6 +5,47 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.50 · à publier en recette · Standards d'écran : le titre au même endroit partout, Ruchers et Miel alignés
+Aucune migration. Maquettes du 16 nov. 2026 (canvas « apiviz — Standards d'écran »), validées par Pierre-Louis.
+Correctif de la v5.48 : le titre des écrans à onglets passe de 30 à 27 px sur téléphone, comme sur les autres écrans.
+
+Mesuré avant sur 28 écrans à 390 px : titre à 82, 96, 120 ou 180 px (aucun titre sur Ruchers › Liste), titres
+d'écran en 24 à 30 px, onglets de Ruchers qui descendaient de 67 px entre Liste et Carte, onglets de Miel sous les
+chiffres et les pots (de ≈ 232 à ≈ 440 px selon l'onglet), titres de section en 7 tailles, demi-pixels sur l'Accueil.
+
+- **Le titre est au même endroit sur tous les écrans** (82 px sur téléphone), à la même taille (27 px), sauf l'Accueil.
+  - Sur téléphone, le retour « ‹ Parent » monte dans la barre du haut, à la place du logo (fiche ruche, rucher, lot,
+    météo, Mon profil, Rappels, Activité, Rechercher, Ce mois-ci). Sur ordinateur, il reste au-dessus du titre.
+  - Les flèches « ‹ › » de la fiche ruche passent à droite du titre, à côté de ⋯ (le « 2 sur 3 » reste pour les
+    lecteurs d'écran).
+  - ⋯ toujours à droite du titre, sur la même rangée ; la ligne d'état tient sur une ligne (texte entier au survol).
+  - Saisies (visite, vente, récolte) : « Annuler » reste à droite, mais le titre ne descend plus de 14 px.
+- **Ruchers et Miel deviennent des écrans à onglets comme Matériel et Finances** :
+  - Ruchers : titre « Ruchers » et ⋯ revenus sur téléphone ; Liste, Carte, Santé au même endroit.
+  - Miel : titre, ligne d'état commune (« 29 pots en stock · 28 € à encaisser ») et onglets Ventes, Clients, Stock et
+    récoltes juste dessous ; les chiffres et les pots passent dans l'onglet ; la recherche des clients remonte dans la
+    barre d'outils.
+- **Échelle** : titres de section à 17 px (étiquettes de groupe 13 px, titre d'un état vide 20 px) ; plus de
+  demi-pixel (12,5 → 13, 14,5 → 15, 15,5 → 15) ; même espacement entre en-tête, onglets et contenu sur Ruchers.
+
+Garde-fous :
+- `etapes_sd` (nouveau) : sur 31 écrans à 390 px, titre au même endroit et à 27 px, retour dans la barre du haut au
+  2e niveau, boutons à 36, 44 ou 52 px, titres de section à 17 / 13 / 20 px, pas de demi-pixel, arrondis des jetons.
+- `etapes_ar` couvre aussi Ruchers et Miel (onglets touchés un à un, positions dans la page).
+- `changelog.test.mjs` : chaque version une seule fois et sans trou depuis la v5.40 (aurait détecté la rubrique
+  effacée par la fusion de #73, rétablie dans la section v5.48).
+
+Technique : `src/noyau/gabarit.js` (sujets `ruchers` et `miel`, onglets par action, `ongletActif()`, en-tête `g-tete`
+pour tous les écrans, `retourEnHaut()`, flèches), `styles/composants/gabarit.css`, `vue-tableau.js` (⋯ du téléphone
+dans l'en-tête, `data-g-menu`), `nav4.js` (ligne d'état de Miel), `ux.js` (`UX.ongletMiel`), `51-ruches-tableau.css`.
+
+### À vérifier
+- Téléphone : ouvrir Ruchers, une ruche, Météo, Mon profil, Miel, Matériel, une nouvelle visite : le titre ne bouge
+  pas d'un écran à l'autre ; sur une ruche, « ‹ Verger » en haut à gauche, « ‹ › » et ⋯ à droite du titre.
+- Ruchers : Liste, Carte, Santé : titre et onglets fixes ; ⋯ ouvre le menu (Nouveau rucher, Sélectionner, Exporter…).
+- Miel : Ventes, Clients, Stock et récoltes : titre, ligne d'état et onglets fixes ; « à encaisser » filtre toujours.
+- Ordinateur : rien ne change de place, le retour reste au-dessus du titre.
+
 ## v5.49 · à publier en recette · visite rapide (IT-08 réduite)
 **Migration 023** (`023-visite-rapide.sql`) : à appliquer sur `apidoo-test` (la mise en ligne en recette le fait), puis sur
 `apidoo` avec l'accord de Pierre-Louis. Additive, **ne casse pas l'ancienne version**. Maquette validée le 15 nov. 2026 ;
@@ -51,7 +92,12 @@ Technique :
 - Tournée Standard au doigt : tout tient sur l'écran, « Force, œufs, cellules royales » replié.
 - Ancienne version de l'app ouverte en parallèle : une visite s'enregistre toujours (champs vides).
 
-## v5.48 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
+## v5.48 · à publier en recette · En-têtes de rubrique alignés ; calendrier stable au doigt, « Qui s’en occupe » en liste
+Deux PR fusionnées sous ce numéro : #72 (agenda) et #73 (en-têtes). La fusion de #73 avait effacé la rubrique de
+l'agenda : elle est rétablie à la fin de cette section (« Agenda »). Correctif dans la v5.50 : titre des écrans à
+onglets à 27 px sur téléphone (il était à 30 px).
+
+### En-têtes de rubrique alignés
 Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis.
 
 Dans les écrans à onglets (Matériel, Finances, Registre et déclaration, Réglages), passer d'un onglet à l'autre faisait
@@ -82,6 +128,24 @@ d'outils sur chaque onglet des 4 sujets, à 390 et 1 280 px (aucun pixel d'écar
 - Finances : la puce « 2026 » et Financier / Opérationnel sous les onglets, au même endroit sur Bilan, Dépenses, Budget.
 - Registre : Traitements, Mouvements, Interventions, Exploitation sur une ligne (glisser pour voir la suite).
 - Ordinateur : mêmes vérifications ; le bouton principal reste à droite de l'en-tête.
+
+### Agenda : calendrier stable au doigt, « Qui s’en occupe » en liste des personnes
+Aucune migration.
+
+- **Calendrier qui s’ouvrait et se refermait aussitôt sur téléphone** (signalé par Pierre-Louis le 15 nov., fiche
+  « Ajouter une tâche »). Le calendrier s’ouvre dès que le doigt se pose ; au relâché, le navigateur envoie un clic à
+  l’endroit touché, qui tombait sur le fond du calendrier tout juste ouvert et le refermait (ou choisissait un jour s’il
+  tombait sur la grille). Ce clic est désormais avalé (`calendrier.js`), et toucher à côté ne ferme que si le doigt
+  s’est posé à côté. Souris et clavier inchangés.
+- **« Qui s’en occupe » (tâches) : liste des personnes de l’exploitation** au lieu d’une saisie libre : membres ayant
+  un prénom, puis personnes sans compte (Réglages › Membres et associés), comme « Acheté par ». Choix « Personne en
+  particulier » par défaut ; un nom déjà saisi qui n’est plus dans la liste reste proposé. Sans personne connue (base
+  sans 021, hors ligne au premier chargement) : saisie libre comme avant.
+
+#### À vérifier (agenda)
+- Téléphone : toucher un champ date (Échéance d'une tâche, date d'une visite…) : le calendrier reste ouvert ; toucher
+  à côté le ferme ; un jour se choisit normalement.
+- « Ajouter une tâche » : « Qui s’en occupe » propose les membres et les personnes sans compte.
 
 ## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
 Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :

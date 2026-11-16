@@ -29,11 +29,24 @@ export const PARENTS = {
  * des onglets. Le titre est celui du sujet ; l'onglet allumé dit où l'on est.
  */
 export const SUJETS = {
+  // v5.50 (standards d'écran du 16 nov. 2026) : Ruchers et Miel suivent la même règle. Un onglet peut lancer une action de
+  // l'écran au lieu d'une adresse : [adresse, libellé, action, valeur] (Ventes et Clients partagent l'adresse « clients »).
+  ruchers: { titre: "Ruchers", onglets: [["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]] },
+  miel: { titre: "Miel", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
   finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["previsions", "Budget"], ["associes", "Associés"]] },
   materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
   registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },
   reglages: { titre: "Réglages", onglets: [["reglages", "Réglages"], ["membres", "Équipe"]] },
 };
+/**
+ * Index de l'onglet allumé : celui de l'adresse ; si plusieurs onglets partagent l'adresse, celui dont la valeur est
+ * l'onglet interne de l'écran (« livrer » compte pour Ventes), sinon le premier.
+ */
+export function ongletActif(sujet, route, interne) {
+  const l = sujet.onglets.map((o, i) => [o, i]).filter(([o]) => o[0] === route);
+  if (l.length < 2) return l.length ? l[0][1] : -1;
+  return (l.find(([o]) => o[3] === interne) || l[0])[1];
+}
 /** Le sujet d'une adresse, ou null. */
 export function sujetDe(route) {
   for (const [cle, s] of Object.entries(SUJETS)) if (s.onglets.some(([r]) => r === route)) return { cle, titre: s.titre, onglets: s.onglets, actif: route };
@@ -129,6 +142,20 @@ function choisirAnnee(a) {
   sel.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+/**
+ * Retour dans la barre du haut (téléphone) : une copie du bouton de l'en-tête, à la place du logo (gabarit.css). La
+ * copie ne porte pas les classes du retour de l'en-tête (.g-retour, .u-retour), qui reste celui des ordinateurs.
+ */
+function retourEnHaut(head) {
+  const barre = document.querySelector(".shell > .topbar");
+  const r = head.querySelector(".g-retour");
+  document.body.toggleAttribute("data-g-retour", !!r);
+  if (!barre || !r || barre.querySelector(".g-retour-haut")) return;
+  const c = r.cloneNode(true);
+  c.className = "g-retour-haut";
+  barre.prepend(c);
+}
+
 /** Ce qui va dans la barre d'outils d'un écran-sujet, dans l'ordre (v5.48). */
 export const OUTILS = ["label.yr", ".g-annee", ".subtabs.g-segment", ".er-onglets", ".op-barre", ".op-puces"];
 
@@ -155,6 +182,9 @@ export function appliquer() {
   const wrap = document.querySelector(".shell > main .wrap");
   const head = wrap?.querySelector(":scope > .head");
   document.body.dataset.gabarit = FLUX.has(route) ? "flux" : "liste";
+  // Saisies pas à pas (v5.50) : elles gardent leur en-tête (« Annuler », étapes), mais le titre est à la même place
+  // que sur les autres écrans (il descendait de 14 px, aligné sur le bas du bouton « Annuler »).
+  if (head && FLUX.has(route)) head.classList.add("g-tete");
   if (!wrap || !head || FLUX.has(route)) return;
 
   // 1. Titre : un nom, la phrase en résumé.
@@ -170,26 +200,40 @@ export function appliquer() {
     }
   }
 
+  // 1 ter (v5.50). Tous les écrans (sauf l'Accueil) : titre et ligne d'état à gauche, ⋯ et flèches à droite, sur la même
+  // rangée ; la ligne d'état tient sur une ligne. Le titre est ainsi au même endroit partout.
+  if (route !== "dash") head.classList.add("g-tete");
+
   // 1 bis. Écran-sujet : titre du sujet, onglets sous l'en-tête.
   // v5.48 (maquettes du 16 nov. 2026) : l'en-tête a la même forme et la même hauteur sur chaque onglet (titre, une
   // seule ligne d'état, ⋯ à droite ; ni surtitre ni bandeau foncé), pour que rien ne saute d'un onglet à l'autre.
-  const sujet = sujetDe(route);
+  let sujet = sujetDe(route);
+  // Ruchers sans colonie : l'accueil « Crée ton premier rucher », sans onglets.
+  if (sujet?.cle === "ruchers" && !S.d.ruches?.length) sujet = null;
   if (sujet && h1 && !head.dataset.gs) {
     head.dataset.gs = "1";
     h1.textContent = sujet.titre;
     head.classList.remove("hero-head");
     head.classList.add("g-sujet");
-    head.classList.toggle("g-long", sujet.titre.length > 16);
     head.querySelectorAll(".eyebrow").forEach((x) => x.remove());
     let etat = head.querySelector(".sub");
     if (!etat) { h1.insertAdjacentHTML("afterend", `<p class="sub"></p>`); etat = head.querySelector(".sub"); }
-    etat.title = etat.textContent.trim();
     wrap.querySelectorAll(":scope > .subtabs.g-onglets").forEach((x) => x.remove());
+    // Onglets que l'écran dessinait lui-même pour le même sujet (Ruchers, Miel) : remplacés par ceux du gabarit.
+    const cles = new Set(sujet.onglets.map((o) => o[3] || o[0]));
+    wrap.querySelectorAll(".subtabs:not(.g-onglets)").forEach((x) => {
+      const v = [...x.querySelectorAll("button[data-v]")].map((b) => b.dataset.v);
+      if (v.length && v.every((k) => cles.has(k))) x.remove();
+    });
     // Les onglets propres à l'écran (Financier / Opérationnel…) deviennent un choix de vue (segment) : un seul rang d'onglets.
     wrap.querySelectorAll(".subtabs:not(.g-onglets)").forEach((x) => x.classList.add("g-segment"));
-    head.insertAdjacentHTML("afterend", `<div class="subtabs g-onglets" role="tablist" aria-label="${echap(sujet.titre)}">${sujet.onglets.map(([r, t]) =>
-      `<button type="button" role="tab" class="${r === route ? "on" : ""}" aria-selected="${r === route}" data-act="go" data-v="${r}">${echap(t)}</button>`).join("")}</div>`);
+    const actif = ongletActif(sujet, route, typeof UX != "undefined" ? UX.ongletMiel?.() : undefined);
+    head.insertAdjacentHTML("afterend", `<div class="subtabs g-onglets" role="tablist" aria-label="${echap(sujet.titre)}">${sujet.onglets.map(([r, t, act, v], i) =>
+      `<button type="button" role="tab" class="${i === actif ? "on" : ""}" aria-selected="${i === actif}" data-act="${act || "go"}" data-v="${echap(v || r)}">${echap(t)}</button>`).join("")}</div>`);
   }
+
+  // La ligne d'état peut être coupée par « … » : son texte entier reste au survol et pour les lecteurs d'écran.
+  head.querySelectorAll(".sub").forEach((x) => { if (!x.title) x.title = x.textContent.trim(); });
 
   // 2. Retour : un seul, en tête, « ‹ Parent ».
   if (!head.querySelector(".g-retour")) {
@@ -201,6 +245,15 @@ export function appliquer() {
     if (cible) {
       (head.firstElementChild || head).insertAdjacentHTML("afterbegin", `<button type="button" class="g-retour u-retour" data-act="${echap(cible.act)}" data-v="${echap(cible.v)}"${cible.k ? ` data-k="${echap(cible.k)}"` : ""}>${ICONE(RETOUR, 18)}<span>${echap(cible.texte)}</span></button>`);
     }
+  }
+  // 2 bis (v5.50). Sur téléphone, le retour monte dans la barre du haut, à la place du logo : le titre est au même
+  // endroit sur tous les écrans. Les flèches « ‹ › » d'une fiche passent à droite du titre, à côté de ⋯.
+  retourEnHaut(head);
+  const fleches = wrap.querySelector(".n4-rnav .n4-fleches");
+  if (fleches) {
+    const zoneF = head.querySelector(":scope > .actions") || head.appendChild(Object.assign(document.createElement("div"), { className: "actions" }));
+    zoneF.prepend(fleches);
+    wrap.querySelectorAll(".n4-rnav").forEach((n) => { if (!n.querySelector("button")) n.remove(); });
   }
 
   // 3. Puce d'année.
@@ -236,7 +289,8 @@ export function appliquer() {
   else if (autres.length) {
     autres.forEach((b) => b.remove());
     const garde = autres;
-    zone.insertAdjacentHTML("beforeend", `<button type="button" class="g-plus" data-act="gactions" aria-label="Plus d’actions">${ICONE(PLUS, 24)}</button>`);
+    // Un écran qui a son propre menu ⋯ sur téléphone le marque data-g-menu (Ruchers) : celui du gabarit sert sur ordinateur.
+    zone.insertAdjacentHTML("beforeend", `<button type="button" class="g-plus${zone.querySelector("[data-g-menu]") ? " g-ordi" : ""}" data-act="gactions" aria-label="Plus d’actions">${ICONE(PLUS, 24)}</button>`);
     zone.querySelector(".g-plus")._g = garde;
   }
   const principal = tri.principal >= 0 ? boutons[tri.principal] : null;

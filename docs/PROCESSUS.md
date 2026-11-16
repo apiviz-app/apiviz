@@ -77,6 +77,8 @@ Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations q
 3. Un seul bouton principal (`main` ou `honey`) ; pas de second « Ajouter » ailleurs dans l'écran.
 4. Textes de 12 px minimum, cibles de 44 px, couleurs et rayons par les jetons (`styles/jetons.css`).
 5. Captures jointes : téléphone (390 px) et ordinateur (1 280 px).
+6. Standards d'écran (v5.50) : `etapes_sd` vert ; un nouvel écran est ajouté à sa liste `ECRANS` ; un écran à onglets
+   est déclaré dans `SUJETS` (`src/noyau/gabarit.js`) au lieu de dessiner ses propres onglets.
 
 ## Règles de contenu
 
