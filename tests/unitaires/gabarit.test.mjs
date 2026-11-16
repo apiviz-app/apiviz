@@ -47,7 +47,7 @@ test("écrans-sujets : une adresse donne son sujet, ses onglets et l'onglet allu
   assert.equal(G.retourDe("courses", { act: "go", v: "materiel", texte: "‹ Matériel" }), null);
 });
 
-test("v5.48 : barre d'outils d'un écran-sujet — année, choix de vue, recherche, puces, dans cet ordre", () => {
+test("v5.49 : barre d'outils d'un écran-sujet — année, choix de vue, recherche, puces, dans cet ordre", () => {
   const i = (s) => G.OUTILS.indexOf(s);
   assert.ok(i(".g-annee") < i(".subtabs.g-segment") && i(".subtabs.g-segment") < i(".op-barre") && i(".op-barre") < i(".op-puces"));
   assert.ok(G.OUTILS.includes(".er-onglets"));

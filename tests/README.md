@@ -43,7 +43,7 @@ filtres de l'agenda en feuille, ordinateur). Avec `CAPTURES=<dossier>` : capture
 Scénario v5.44 : `etapes_ra` (rationalisation : volet à 5 entrées, Finances, Matériel, Registre et déclaration et
 Réglages à onglets, feuille Rappels, 8 entrées sur ordinateur). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
 
-Scénario v5.48 : `etapes_ar` (écrans à onglets : titre, ligne d'état, en-tête, onglets et barre d'outils au même
+Scénario v5.49 : `etapes_ar` (écrans à onglets : titre, ligne d'état, en-tête, onglets et barre d'outils au même
 endroit sur chaque onglet de Matériel, Finances, Registre et déclaration, Réglages, à 390 et 1 280 px ; Courses vide).
 Avec `CAPTURES=<dossier>` : captures à 390 px.
 

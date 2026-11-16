@@ -1,4 +1,4 @@
-    # v5.48 — En-tête de rubrique aligné (maquettes du 16 nov. 2026) : dans un écran-sujet à onglets (Finances,
+    # v5.49 — En-tête de rubrique aligné (maquettes du 16 nov. 2026) : dans un écran-sujet à onglets (Finances,
     # Matériel, Registre et déclaration, Réglages), passer d'un onglet à l'autre ne fait rien bouger au-dessus du
     # contenu : le titre, la ligne d'état, les onglets et la barre d'outils (recherche, puces) gardent leur place, au
     # pixel près, à 390 et à 1 280 px. Courses sans article : carte « Rien à racheter ». Avec CAPTURES=<dossier>,

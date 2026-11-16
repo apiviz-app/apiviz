@@ -5,8 +5,10 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.48 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
-Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis.
+## v5.49 · à publier en recette · En-têtes de rubrique alignés : rien ne saute d'un onglet à l'autre
+Aucune migration. Maquettes du 16 nov. 2026, validées par Pierre-Louis. Fusionnée sous le numéro v5.48 (PR #73), en même
+temps que la v5.48 de l'agenda (PR #72) : renumérotée v5.49, et la rubrique v5.48 de l'agenda, effacée par la fusion, est
+rétablie ci-dessous. Correctif dans la PR suivante : titre à 27 px sur téléphone (il était à 30 px).
 
 Dans les écrans à onglets (Matériel, Finances, Registre et déclaration, Réglages), passer d'un onglet à l'autre faisait
 sauter l'écran : le titre, la phrase dessous, les onglets et les filtres changeaient de place (mesuré sur `main` à
@@ -36,6 +38,24 @@ d'outils sur chaque onglet des 4 sujets, à 390 et 1 280 px (aucun pixel d'écar
 - Finances : la puce « 2026 » et Financier / Opérationnel sous les onglets, au même endroit sur Bilan, Dépenses, Budget.
 - Registre : Traitements, Mouvements, Interventions, Exploitation sur une ligne (glisser pour voir la suite).
 - Ordinateur : mêmes vérifications ; le bouton principal reste à droite de l'en-tête.
+
+## v5.48 · à publier en recette · calendrier stable au doigt, « Qui s’en occupe » en liste
+Aucune migration.
+
+- **Calendrier qui s’ouvrait et se refermait aussitôt sur téléphone** (signalé par Pierre-Louis le 15 nov., fiche
+  « Ajouter une tâche »). Le calendrier s’ouvre dès que le doigt se pose ; au relâché, le navigateur envoie un clic à
+  l’endroit touché, qui tombait sur le fond du calendrier tout juste ouvert et le refermait (ou choisissait un jour s’il
+  tombait sur la grille). Ce clic est désormais avalé (`calendrier.js`), et toucher à côté ne ferme que si le doigt
+  s’est posé à côté. Souris et clavier inchangés.
+- **« Qui s’en occupe » (tâches) : liste des personnes de l’exploitation** au lieu d’une saisie libre : membres ayant
+  un prénom, puis personnes sans compte (Réglages › Membres et associés), comme « Acheté par ». Choix « Personne en
+  particulier » par défaut ; un nom déjà saisi qui n’est plus dans la liste reste proposé. Sans personne connue (base
+  sans 021, hors ligne au premier chargement) : saisie libre comme avant.
+
+### À vérifier
+- Téléphone : toucher un champ date (Échéance d'une tâche, date d'une visite…) : le calendrier reste ouvert ; toucher
+  à côté le ferme ; un jour se choisit normalement.
+- « Ajouter une tâche » : « Qui s’en occupe » propose les membres et les personnes sans compte.
 
 ## v5.47 · à publier en recette · correctif : une seule cloche sur téléphone
 Aucune migration. Sur téléphone, une deuxième cloche apparaissait sous la barre du haut (Agenda et tous les écrans) :

@@ -50,7 +50,7 @@
 .g-barre>.g-plus-bas{flex:none;width:52px;min-width:52px;padding:0;font-size:24px;font-weight:500;background:var(--card);color:var(--ink);border:1.5px solid var(--ink)}
 .g-autres[hidden]{display:none!important}
 
-/* ---------- Écran-sujet à onglets : rien ne bouge d'un onglet à l'autre (v5.48, maquettes du 16 nov. 2026) ----------
+/* ---------- Écran-sujet à onglets : rien ne bouge d'un onglet à l'autre (v5.49, maquettes du 16 nov. 2026) ----------
    L'en-tête a une hauteur fixe : titre sur une ligne, une seule ligne d'état (coupée par « … »), ⋯ et bouton principal
    à droite. Les onglets suivent, puis la barre d'outils (année, choix de vue, recherche, puces) : mêmes places sur
    chaque onglet. Seul le contenu change. Test : etapes_ar. */

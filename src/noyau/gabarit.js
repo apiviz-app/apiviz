@@ -129,7 +129,7 @@ function choisirAnnee(a) {
   sel.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-/** Ce qui va dans la barre d'outils d'un écran-sujet, dans l'ordre (v5.48). */
+/** Ce qui va dans la barre d'outils d'un écran-sujet, dans l'ordre (v5.49). */
 export const OUTILS = ["label.yr", ".g-annee", ".subtabs.g-segment", ".er-onglets", ".op-barre", ".op-puces"];
 
 /** Barre d'outils sous les onglets d'un écran-sujet. Idempotent ; sans outil, pas de barre. */
@@ -171,7 +171,7 @@ export function appliquer() {
   }
 
   // 1 bis. Écran-sujet : titre du sujet, onglets sous l'en-tête.
-  // v5.48 (maquettes du 16 nov. 2026) : l'en-tête a la même forme et la même hauteur sur chaque onglet (titre, une
+  // v5.49 (maquettes du 16 nov. 2026) : l'en-tête a la même forme et la même hauteur sur chaque onglet (titre, une
   // seule ligne d'état, ⋯ à droite ; ni surtitre ni bandeau foncé), pour que rien ne saute d'un onglet à l'autre.
   const sujet = sujetDe(route);
   if (sujet && h1 && !head.dataset.gs) {
@@ -205,7 +205,7 @@ export function appliquer() {
   // 3. Puce d'année.
   wrap.querySelectorAll("label.yr").forEach(puceAnnee);
 
-  // 3 bis. Écran-sujet : une barre d'outils juste sous les onglets (v5.48). L'année, le choix de vue (segment), la
+  // 3 bis. Écran-sujet : une barre d'outils juste sous les onglets (v5.49). L'année, le choix de vue (segment), la
   // recherche et les puces de filtre y sont rangés dans cet ordre : ils commencent au même endroit sur chaque onglet.
   if (sujet) barreOutils(wrap, head);
 
