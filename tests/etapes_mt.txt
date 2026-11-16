@@ -32,9 +32,10 @@
     ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.alrucher('Verger')")  # v5.52 : la frise courte est sur la fiche du rucher, plus sur l'accueil
     page.wait_for_selector(".mt-frise-c", timeout=8000)
     c = page.locator(".mt-frise-c").first
-    verif(c.locator("i").count() == 6 and c.locator("i.n2").count() == 2 and c.locator("i.passee").count() == 1, "carte du rucher : frise courte de 10 h à 16 h, 2 h bonnes, 10 h passée")
+    verif(c.locator("i").count() == 6 and c.locator("i.n2").count() == 2 and c.locator("i.passee").count() == 1, "fiche du rucher : frise courte de 10 h à 16 h, 2 h bonnes, 10 h passée")
     verif("12 h, on peut ouvrir" in c.get_attribute("aria-label") and "14 h, trop de vent (31 km/h)" in c.get_attribute("aria-label"), "frise courte décrite pour les lecteurs d'écran")
 
     # v5.45 — Météo en un écran (piste A du 15 nov. 2026) : maintenant, 5 jours, verdict du jour, heures en lignes,
@@ -112,7 +113,7 @@
     if cap:
         page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.ermeteo('Verger')"); page.wait_for_selector(".mj-now"); page.wait_for_timeout(900)
         page.screenshot(path=f"{cap}/meteo-1280.png", full_page=True)
-        page.evaluate("ACT.go('dash')"); page.wait_for_selector(".mt-frise-c"); page.wait_for_timeout(600)
+        page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-wx-t"); page.wait_for_timeout(600)
         page.screenshot(path=f"{cap}/accueil-1280.png")
-        page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("ACT.go('dash')"); page.wait_for_selector(".mt-frise-c"); page.wait_for_timeout(600)
+        page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-wx-t"); page.wait_for_timeout(600)
         page.screenshot(path=f"{cap}/accueil-390.png", full_page=True)

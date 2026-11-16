@@ -1,6 +1,8 @@
 // Apiviz — accueil sur téléphone d'après les maquettes du 10 nov. 2026 (chantier des écrans, étape 4, v5.24).
-// Ordre : bonjour et deux actions, la priorité dite par API, quatre chiffres, l'état des ruches (alvéoles par rucher,
-// avec leur météo), le prochain créneau de visite sur 5 jours, À faire étiqueté, les dernières actions.
+// Ordre : bonjour et deux actions, la priorité dite par API, quatre chiffres, « Mes ruchers » (v5.52 : une ligne par
+// rucher, les 3 premiers, avec la météo de chacun en face, puisqu'ils ne sont pas au même endroit), À faire étiqueté,
+// les dernières actions. Le plan des alvéoles, ses onglets État / Provisions / Varroa et le bloc « Prochain créneau »
+// ont quitté l'accueil (maquette du 16 nov. 2026) : le détail est dans Ruchers et sur la fiche de chaque rucher.
 // Complément de l'écran « dash », appelé après AL et DM (src/domaines/accueil/ecrans.js). Téléphone et ordinateur
 // (v5.25 : sur ordinateur, deux colonnes). Dès la première ruche, même sans visite ; sans ruche, la prise en main reste.
 const AC = (() => {
@@ -31,11 +33,11 @@ const AC = (() => {
   function priorite() {
     const d = S.d;
     if (!d.visites.length) {
+      // Sans visite : une bannière d'une ligne (v5.52), le bouton à droite.
       const premiere = d.ruches.find((x) => x.statut !== "orpheline") || d.ruches[0];
-      return `<section class="ac-api">${AL.compagnon("bonjour", 44)}
-      <div class="ac-api-t"><b id="acPhrase">${esc(U.pluriel(d.ruches.length, "ruche"))} en place. Note ta première visite : je pourrai ensuite te dire où en est chaque colonie.</b>
-      <span class="small">Une visite se note en une minute, au rucher, même sans réseau.</span>
-      <div class="ac-api-a"><button type="button" class="btn main" data-act="newvisite" data-v="${premiere.id}">Noter une visite</button></div></div></section>`;
+      return `<section class="ac-api court">${AL.compagnon("bonjour", 36)}
+      <div class="ac-api-t"><b id="acPhrase">Note ta première visite pour que je suive chaque colonie.</b></div>
+      <button type="button" class="btn main" data-act="newvisite" data-v="${premiere.id}">Noter</button></section>`;
     }
     const r = prioritaire();
     const pesees = r ? d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg).length : 0;
@@ -61,26 +63,37 @@ const AC = (() => {
     </section>`;
   }
 
-  // 5. Prochain créneau de visite : le rucher prioritaire (ou le seul), ses 5 jours, le meilleur jour en avant.
-  function creneau() {
-    const rs = U.ruchers(), r = prioritaire();
-    const cle = r ? rs.find(([, l]) => l.includes(r))?.[0] : rs[0]?.[0];
-    if (cle === undefined) return "";
-    const l = AL.ruchesDe(cle), m = MT.parHeure(cle, l);
-    const titre = `<div class="u-entete"><h2>Prochain créneau de visite</h2>${rs.length > 1 ? `<span class="small">${esc(U.nomRucher(cle))}</span>` : ""}</div>`;
-    if (!m) return `<section class="card ac-creneau" id="acCreneau">${titre}<p class="small">Météo en cours de chargement…</p></section>`;
-    if (m.sansLieu) return `<section class="card ac-creneau" id="acCreneau">${titre}<p class="small">Place ce rucher sur la carte pour connaître le bon moment.</p><button type="button" class="btn" data-act="go" data-v="carte">Ouvrir la carte</button></section>`;
-    const jour = (t) => (t === m.auj ? "aujourd’hui" : new Date(t + "T12:00").toLocaleDateString("fr-FR", { weekday: "long" }));
-    const cherche = (k) => m.jours.map((x) => ({ x, p: x.plages.find((q) => q.n === k) })).find((o) => o.p);
-    const pro = cherche(2) || cherche(1);
-    const phrase = pro ? `Meilleur créneau : ${jour(pro.x.t)} de ${pro.p.debut} h à ${pro.p.fin} h${pro.p.n === 1 ? ", visite courte" : ""}` : "Pas de créneau pour ouvrir ces 5 jours";
-    const etiquette = (x) => (x.bonnes ? `${x.bonnes} h` : x.rapides ? "Rapide" : x.heures.some((h) => h.raison.startsWith("Pluie") || h.raison === "Il pleut") ? "Pluie" : x.heures.some((h) => h.raison.startsWith("Trop de vent")) ? "Vent" : x.heures.some((h) => h.raison.startsWith("Trop frais")) ? "Frais" : "Non");
-    const jours = m.jours.map((x, i) => `<button type="button" class="ac-jour${pro && x.t === pro.x.t ? " on" : ""}${x.bonnes ? " bon" : x.rapides ? " rapide" : ""}" style="--i:${i}" data-act="acmeteo" data-v="${esc(cle)}|${x.t}" aria-label="${esc(maj(jour(x.t)))} : ${x.max}°, ${esc(x.bonnes ? `${x.bonnes} heures pour ouvrir` : x.rapides ? "visite rapide possible" : "pas de créneau")}">
-      <span>${i === 0 && x.t === m.auj ? "Auj." : esc(maj(new Date(x.t + "T12:00").toLocaleDateString("fr-FR", { weekday: "short" })))}</span><b>${x.max}°</b><small>${esc(etiquette(x))}</small></button>`).join("");
-    return `<section class="card ac-creneau" id="acCreneau">${titre}<p class="small">${esc(phrase)}</p><div class="ac-jours">${jours}</div>
-      <button type="button" class="link" data-act="ermeteo" data-v="${esc(cle)}">Voir heure par heure</button></section>`;
+  // 4. Mes ruchers (v5.52) : une ligne par rucher, les plus urgents d'abord, les 3 premiers. En face de chacun, sa
+  // météo (temps, température, prochain créneau pour ouvrir) : les ruchers ne sont pas forcément au même endroit.
+  const MAX_RUCHERS = 3;
+  const gravite = (rs) => rs.filter((r) => r.etat === "Critique").length * 100 + rs.filter((r) => r.etat !== "Bonne").length;
+  function etatRucher(rs) {
+    const crit = rs.filter((r) => r.etat === "Critique").length, bien = rs.filter((r) => r.etat === "Bonne").length, surv = rs.length - crit - bien;
+    const ton = crit ? "crit" : surv ? "watch" : "good";
+    const mots = [[crit, "critique"], [surv, "à surveiller"]].filter(([c]) => c).map(([c, m]) => `${c} ${m}`);
+    return { ton, texte: mots.length ? mots.join(" · ") : `${bien} en forme` };
   }
-  ACT.acmeteo = (v) => { const [k, t] = String(v).split("|"); S.meteoRucher = k; S.meteoJour = t; S.meteoHeure = null; go("meteo"); };
+  function meteoRucher(k, rs) {
+    const m = MT.parHeure(k, rs);
+    if (!m) return '<span class="ac-wx-c">Météo…</span>';
+    if (m.sansLieu) return '<span class="ac-wx-c">Pas placé sur la carte</span>';
+    const c = m.creneau, jour = c ? (c.jour === m.auj ? "auj." : MT.nomJour(c.jour)) : "";
+    const [txt, ton] = !c ? ["Pas de créneau", "non"] : [`${c.n === 2 ? "Créneau" : "Rapide"} ${jour} ${c.h} h`, c.n === 2 ? "oui" : "rapide"];
+    return `<span class="ac-wx-t">${MT.icone(m.code)}<b>${m.temp}°</b></span><span class="ac-wx-c ${ton}">${esc(txt)}</span>`;
+  }
+  function ruchers() {
+    const tous = U.ruchers().map((x, i) => [...x, i]).sort((a, b) => gravite(b[1]) - gravite(a[1]) || a[2] - b[2]);
+    if (!tous.length) return "";
+    const lignes = tous.slice(0, MAX_RUCHERS).map(([k, rs]) => {
+      const e = etatRucher(rs);
+      return `<button type="button" class="ac-rucher" data-act="alrucher" data-v="${esc(k)}">
+        <span class="ac-rhex ${e.ton}" aria-hidden="true"><span>${rs.length}</span></span>
+        <span class="ac-rnom"><b>${esc(U.nomRucher(k))}</b><small><i class="${e.ton}" aria-hidden="true"></i>${esc(U.pluriel(rs.length, "ruche"))} · ${esc(e.texte)}</small></span>
+        <span class="ac-wx">${meteoRucher(k, rs)}</span><span class="u-chev" aria-hidden="true">›</span></button>`;
+    }).join("");
+    const plus = tous.length > MAX_RUCHERS ? `<button type="button" class="ac-plus" data-act="go" data-v="ruches">Voir les ${tous.length} ruchers <span aria-hidden="true">›</span></button>` : "";
+    return `<section class="card ac-ruchers" id="acRuchers"><div class="u-entete"><h2>Mes ruchers</h2><button type="button" class="link" data-act="go" data-v="ruches">Tout voir</button></div>${lignes}${plus}</section>`;
+  }
 
   // 6. À faire : une étiquette (la ruche, « Stock bas », « À encaisser »…) et ce qu'il y a à faire.
   // « Voir les autres » garde son action d'origine (utout, ux.js), qui redessine l'accueil.
@@ -132,17 +145,14 @@ const AC = (() => {
     if (!d?.ruches.length || !tete) return;
     wrap.classList.add("ac");
     const carte = wrap.querySelector(".al-carte"), liste = wrap.querySelector(".u-liste"), guide = wrap.querySelector(".dm-guide");
-    const haut = priorite() + chiffres(); // avant bonjour() : la proposition de tournée est encore dans l'en-tête
+    const haut = priorite() + chiffres() + ruchers(); // avant bonjour() : la proposition de tournée est encore dans l'en-tête
     bonjour(tete);
     tete.insertAdjacentHTML("afterend", haut);
-    if (carte) {
-      carte.insertAdjacentHTML("afterbegin", `<div class="u-entete ac-etat"><h2>État des ruches</h2><button type="button" class="link" data-act="go" data-v="ruches">Tout voir</button></div>`);
-      wrap.querySelector(".ac-chiffres").after(carte);
-    }
-    (carte || wrap.querySelector(".ac-chiffres")).insertAdjacentHTML("afterend", creneau());
-    if (liste) { afaire(liste); (wrap.querySelector(".ac-creneau") || carte || wrap.querySelector(".ac-chiffres")).after(liste); }
+    carte?.remove(); // le plan des alvéoles reste dans Ruchers (v5.52)
+    const avant = wrap.querySelector(".ac-ruchers") || wrap.querySelector(".ac-chiffres");
+    if (liste) { afaire(liste); avant.after(liste); }
     wrap.querySelector(".al-deux")?.remove(); // l'ancien bloc « Saison » : remplacé par les quatre chiffres
-    (liste || wrap.querySelector(".ac-chiffres")).insertAdjacentHTML("afterend", dernieres());
+    (liste || avant).insertAdjacentHTML("afterend", dernieres());
     if (guide) {
       // Sans visite, le guide de prise en main reste en vue, juste sous la priorité ; ensuite il passe en bas.
       if (!d.visites.length) wrap.querySelector(".ac-api").after(guide); else wrap.append(guide);
@@ -150,7 +160,7 @@ const AC = (() => {
     if (!telephone.matches) colonnes(wrap);
   }
   // Ordinateur : bonjour et priorité côte à côte, les quatre chiffres sur une ligne, puis deux colonnes :
-  // l'état des ruches et le créneau à gauche, À faire et les dernières actions à droite.
+  // Mes ruchers et les dernières actions à gauche, À faire à droite (v5.52 : pas de vide sous les ruchers).
   function colonnes(wrap) {
     const pris = (sel) => [...wrap.querySelectorAll(`:scope > ${sel}`)];
     const haut = document.createElement("div"), g = document.createElement("div"), dr = document.createElement("div"), cols = document.createElement("div");
@@ -158,19 +168,19 @@ const AC = (() => {
     const tete = wrap.querySelector(":scope > .ac-hero"), api = wrap.querySelector(":scope > .ac-api");
     if (!tete || !api) return;
     tete.before(haut); haut.append(tete, api);
-    g.append(...pris(".al-carte, .ac-creneau")); dr.append(...pris(".u-liste, .ac-dernieres"));
+    g.append(...pris(".ac-ruchers, .ac-dernieres")); dr.append(...pris(".u-liste"));
     cols.append(g, dr);
     (wrap.querySelector(":scope > .ac-chiffres") || haut).after(cols);
   }
   telephone.addEventListener("change", () => { if (S.route === "dash") redessiner("dash"); });
 
-  // Quand la météo arrive : la phrase d'API (AL) et le bloc du créneau se mettent à jour, sans redessiner l'écran.
+  // Quand la météo arrive : la phrase d'API (AL) et la météo de chaque rucher se mettent à jour, sans redessiner l'écran.
   const meteoAvant = window.AL_meteoPrete;
   window.AL_meteoPrete = () => {
     if (!document.querySelector(".wrap.ac")) return meteoAvant?.(); // sinon AL réécrirait « Bonsoir » en phrase
-    const bloc = document.getElementById("acCreneau");
+    const bloc = document.getElementById("acRuchers");
     if (S.route !== "dash" || !bloc) return;
-    bloc.outerHTML = creneau();
+    bloc.outerHTML = ruchers();
     const p = document.getElementById("acPhrase");
     if (p && S.d.visites.length) p.textContent = AL.phrase(); // sans visite, la phrase reste « Note ta première visite »
   };
