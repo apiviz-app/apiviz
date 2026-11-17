@@ -93,6 +93,14 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 - **Finances** *(v5.44 : un écran, quatre onglets ; cinq depuis la v5.55)* : Bilan, Dépenses, **Factures**, Budget,
   **Associés** (qui a avancé quoi, et qui doit combien à qui pour être à égalité).
+- **Étiquettes QR et Scanner une ruche** *(v5.56)* : Ruchers › ⋯ › Étiquettes QR imprime une planche A4 (3 × 7) ;
+  colle une étiquette sur chaque ruche. Viser l'étiquette avec l'appareil photo ouvre Apiviz sur la ruche (état,
+  Visite express, Visite complète, fiche). Depuis Apiviz : Ruchers › ⋯ ou bouton API › Scanner une ruche.
+- **Caisse du marché** *(v5.56)* : Miel › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
+  Marche sans réseau (la vente part au retour du réseau) ; client « Vente au marché ».
+- **Commandes** *(v5.56, Miel)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
+  clients réservent les miels en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
+  s'enregistre), Prévenir (SMS prêt), Annuler.
 - **Factures** *(v5.55)* : une facture par achat, rangées par mois : fournisseur, date, numéro, qui a acheté, avec quel
   argent, montant, et un trombone quand le fichier est joint. Recherche (fournisseur, numéro, article) et puces (Avancées
   par un associé, Par <prénom>, Sans fichier). Toucher une facture ouvre son détail : le fichier (Voir, Joindre,

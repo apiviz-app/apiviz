@@ -5,6 +5,53 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.56 · à publier en recette · outils de terrain : QR des ruches, caisse, commandes en ligne
+**Migration 026 (additive, ne casse pas l'ancienne version).** Maquettes « Nouveautés » 1 à 4 validées par Pierre-Louis
+le 17 nov. 2026 (« implémente la 1, 2, 3 et 4 »). Branche montée sur la v5.55 (PR #89) : fusionner #89 d'abord.
+
+Pour l'apiculteur :
+1. **Scanner une ruche** : chaque ruche a une étiquette QR. Viser l'étiquette avec l'appareil photo du téléphone ouvre
+   Apiviz sur la feuille de la ruche : état, ce qui l'a mise à surveiller, Visite express (ou Nouvelle visite), Visite
+   complète, Ouvrir la fiche. Depuis Apiviz (Ruchers › ⋯, ou le bouton API), « Scanner une ruche » lit le QR sans
+   quitter l'application quand le téléphone le permet (Chrome sur Android) ; ailleurs (iPhone), la feuille dit
+   d'utiliser l'appareil photo. Une ruche d'une autre exploitation est signalée.
+2. **Étiquettes QR** (Ruchers › ⋯) : planche A4 de 3 × 7 étiquettes (QR, nom, code, rucher), filtrable par rucher,
+   « Imprimer ». Seule la planche sort à l'impression.
+3. **Caisse du marché** (Miel › ⋯, ou le bouton API) : un bouton par miel, format et prix avec le stock ; on touche
+   les pots, « − » pour en retirer, le total se fait, le mode de paiement se choisit, « Encaisser ». La vente est payée
+   et livrée, au client « Vente au marché » (créé à la première vente, avec le réseau), vendu et encaissé par la
+   personne connectée. Sans réseau, la vente est gardée sur le téléphone et part au retour du réseau.
+4. **Page de commande pour les clients** : Miel › Commandes › « Créer ma page » (mot d'accueil, lieux de retrait).
+   Un lien à partager ; le client voit les miels en stock au prix des lots, moins ce qui est déjà réservé, choisit ses
+   pots, laisse nom et téléphone, choisit le retrait. Paiement au retrait. Page ouverte ou fermée d'un toucher.
+5. **Commandes reçues** (Miel › Commandes) : à préparer, les plus anciennes d'abord. « Livrée » enregistre la vente
+   (client retrouvé par son téléphone, sinon créé ; pots pris dans les lots les plus anciens), « Prévenir » prépare le
+   SMS, « Annuler » libère les pots.
+
+Sécurité de la page publique : sans compte, elle ne lit que `boutique_publique` (nom, mot d'accueil, retraits, miels
+disponibles plafonnés à 50) et n'écrit que par `passer_commande`, qui contrôle tout (boutique ouverte, nom,
+téléphone, retrait de la liste, 1 à 20 pots par miel, 40 au plus, stock, prix du serveur) et limite à 30 commandes par
+heure. Aucun droit d'`anon` sur les tables. Politique de confidentialité complétée (« Si vous commandez du miel en
+ligne »).
+
+Technique : `src/domaines/ruchers/qr.js` (lien `?ruche=&ex=`, feuille, scanner `BarcodeDetector`, écran
+`etiquettesqr`), `qrcode.js` (qrcode-generator 1.4.4, licence MIT, chargé seulement sur l'écran des étiquettes),
+`src/domaines/ventes/caisse.js` (écran `caisse`), `src/domaines/ventes/commandes.js` (écran `commandes`, onglet de
+Miel), `src/domaines/ventes/terrain-regles.js` (règles pures), `commande.html` (page publique, vouvoiement),
+`styles/59-terrain.css`. Migration `026-commandes-en-ligne.sql` (tables `boutiques` et `commandes`, fonctions
+`boutique_publique`, `passer_commande`, `livrer_commande`) et `tests/sql/test_026.mjs` (33 vérifications). Tests :
+`terrain.test.mjs`, `etapes_te` (nouveau), `etapes_sd` (Caisse, Commandes, Étiquettes QR), `etapes_nk`, `etapes_n4`,
+`gabarit.test.mjs`, `ton.test.mjs` (exceptions de vouvoiement pour les messages aux clients).
+
+### À vérifier
+- Recette : Ruchers › ⋯ › Étiquettes QR › Imprimer (aperçu) ; viser une étiquette avec l'appareil photo du téléphone :
+  Apiviz s'ouvre sur la bonne ruche.
+- Bouton API › Scanner une ruche sur Android (caméra, lecture) et sur iPhone (message d'aide).
+- Caisse : 3 pots, Encaisser ; la vente apparaît dans Miel › Ventes, le stock a baissé. Refaire en mode avion.
+- Miel › Commandes › Créer ma page ; ouvrir le lien partagé en navigation privée, commander 2 pots ; la commande
+  arrive ; Livrée ; la vente et le client existent ; Prévenir ouvre le SMS.
+- Compte en lecture seule : Commandes consultables, ni caisse ni livraison.
+
 ## v5.55 · à publier en recette · corrections du 17 novembre et écran Factures
 **Migration 025 (additive, ne casse pas l'ancienne version).** Retours de Pierre-Louis du 17 nov. 2026 sur téléphone,
 maquettes validées le jour même (« implémente toutes les modifications »).

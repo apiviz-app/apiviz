@@ -1,0 +1,83 @@
+/* Apiviz — outils de terrain (v5.56, maquettes « Nouveautés » du 17 nov. 2026) : étiquettes QR et feuille d'une
+   ruche scannée (src/domaines/ruchers/qr.js), caisse du marché (src/domaines/ventes/caisse.js), commandes en ligne
+   (src/domaines/ventes/commandes.js). La page publique de commande a ses propres styles (commande.html). */
+
+/* Feuille d'une ruche scannée */
+.qr-feuille{display:flex;flex-direction:column;gap:12px}
+.qr-sous{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+.qr-raison{margin:0;padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft);font-size:15px;line-height:1.38}
+.qr-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.qr-actions .btn:only-child{grid-column:1 / -1}
+.qr-feuille .btn,.qr-actions .btn{min-height:52px;justify-content:center}
+.qr-autre{align-self:center;min-height:44px}
+.qr-visee{position:relative;overflow:hidden;border-radius:var(--r-m);background:var(--pine);aspect-ratio:1 / 1;max-height:56vh;margin:0 auto 10px;width:100%}
+.qr-video{width:100%;height:100%;object-fit:cover;display:block}
+.qr-cadre{position:absolute;inset:18%;border:3px solid var(--honey-light);border-radius:var(--r-m);box-shadow:0 0 0 999px rgba(30,43,36,.35)}
+.qr-aide{text-align:center;margin:0 0 12px}
+
+/* Étiquettes QR (aperçu à l'écran, puis planche A4) */
+.qr-planche{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.qr-etiquette{display:flex;gap:10px;align-items:center;padding:10px;background:#fff;border:1px dashed var(--line2);border-radius:var(--r-s);break-inside:avoid}
+.qr-code{flex:none;width:72px;height:72px;display:block}
+.qr-code svg{width:100%;height:100%;display:block}
+.qr-attente{background:#E9ECE4;border-radius:var(--r-s)}
+.qr-texte{display:flex;flex-direction:column;min-width:0;font-size:12px;color:var(--muted)}
+.qr-texte b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:17px;color:var(--ink);overflow-wrap:anywhere}
+.qr-marque{margin-top:2px;font-weight:700;color:var(--pine)}
+/* Impression : seulement sur l'écran Étiquettes QR, pour ne rien changer aux autres impressions (étiquettes de pots…). */
+@media print{
+  body:has(.qr-ecran) *{visibility:hidden}
+  body:has(.qr-ecran) .qr-planche,body:has(.qr-ecran) .qr-planche *{visibility:visible}
+  .qr-planche{position:absolute;left:0;top:0;width:189mm;display:grid;grid-template-columns:repeat(3,63mm);grid-auto-rows:39mm;gap:0;padding:0}
+  .qr-etiquette{box-sizing:border-box;width:63mm;height:39mm;padding:3mm;gap:3mm;border:0;border-radius:0;background:#fff}
+  .qr-code{width:28mm;height:28mm}
+  .qr-texte{font-size:9pt;color:#000}
+  .qr-texte b{font-size:14pt;color:#000}
+}
+
+/* Caisse du marché */
+.cs-pots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cs-pot{display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:8px;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff;color:var(--ink);text-align:left;font:inherit;cursor:pointer;transition:transform var(--duree-rapide)}
+.cs-pot:active{transform:scale(.97)}
+.cs-pot.pris{border:2px solid var(--pine)}
+.cs-pot:disabled{opacity:.55;border-style:dashed;cursor:default;background:var(--ground)}
+.cs-pot b{font-size:16px}
+.cs-pot-h{display:flex;justify-content:space-between;align-items:flex-start}
+.cs-alv{width:34px;height:30px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.cs-n{min-width:32px;height:32px;padding:0 8px;border-radius:var(--r-pill);background:var(--pine);color:#fff;font-weight:700;line-height:32px;text-align:center}
+.cs-pot-b{display:flex;justify-content:space-between;gap:6px;font-size:14px;color:var(--muted)}
+.cs-panier{display:flex;flex-direction:column;gap:10px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.cs-ptete{display:flex;justify-content:space-between;align-items:center}
+.cs-ptete h2{margin:0;font-size:17px}
+.cs-panier ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cs-panier li{display:flex;align-items:center;gap:10px}
+.cs-panier li > span{flex:1}
+.cs-panier li > b{min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.cs-moins{width:36px;height:36px;border:1px solid var(--line2);border-radius:var(--r-s);background:#fff;color:var(--ink);font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+.cs-total{display:flex;justify-content:space-between;align-items:baseline;margin:0;padding-top:10px;border-top:1px solid var(--line)}
+.cs-total b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:32px;font-variant-numeric:tabular-nums}
+.cs-modes .op-radio span{min-height:44px}
+@media (min-width:1024px){.cs-pots{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Commandes en ligne */
+.cm-page{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.cm-page.ouverte{border-color:var(--honey)}
+.cm-ic{flex:none;width:44px;height:44px;border-radius:var(--r-s);background:var(--pine);color:var(--honey-light);display:inline-flex;align-items:center;justify-content:center}
+.cm-page-t{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cm-page-a{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%;justify-content:flex-end}
+.cm-liste{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.cm-liste > li + li{border-top:1px solid var(--line)}
+.cm-c{display:flex;flex-direction:column;gap:8px;padding:14px}
+.cm-c1{display:flex;justify-content:space-between;gap:8px;font-size:16px}
+.cm-m{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cm-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cm-note{margin:0;padding:8px 10px;border-radius:var(--r-s);background:var(--ground);font-size:14px}
+.cm-a{display:flex;flex-wrap:wrap;gap:8px}
+.cm-a .btn{min-height:44px;justify-content:center}
+.cm-a a.btn{color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;padding:0 14px}
+.cm-livrer{flex:1 1 120px;background:var(--pine);border-color:var(--pine);color:#fff}
+.cm-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px}
+.cm-f > span:first-child{display:flex;flex-direction:column;min-width:0}
+
+/* Feuille d'API : outils de terrain */
+.fa-terrain .btn{min-height:44px}
