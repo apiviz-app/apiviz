@@ -8,7 +8,7 @@
 | Phase | Phase 2 — Expérience terrain |
 | Taille | L |
 | Hypothèse de taille | Généralisation de la file existante aux modifications et suppressions, avec quarantaine et conflits. |
-| Migration | `019` |
+| Migration | `026` (le numéro `019` prévu à la génération a été pris par IT-07 : `019-reines-liens.sql`) |
 
 ## 1. Objectif
 
@@ -96,7 +96,7 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 ## 13. Livrables
 
 - Code sur une branche `claude/…` et pull request vers `main`.
-- Migration `migrations/019-….sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
+- Migration `migrations/026-hors-ligne-v2.sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
 - Entrée du CHANGELOG avec rubrique « À vérifier ».
 - Statuts mis à jour dans le backlog master.
 - Version publiée en recette.

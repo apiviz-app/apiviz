@@ -149,6 +149,13 @@ vouvoient *(v5.17)*. Voir `docs/CHARTE_DE_TON.md`.
 - Visites, ventes, récoltes, dépenses, tâches et photos sont gardées sur le téléphone et envoyées au retour du réseau.
 - Une saisie que le serveur refuse au retour (par exemple plus assez de pots) n'est plus perdue : elle passe
   **« à corriger »**, avec le motif, une pastille sur le bandeau et une fiche Modifier, Renvoyer ou Abandonner *(v5.16)*.
+- On peut aussi **corriger et supprimer** sans réseau *(v5.56)* : « Corriger » sous une visite, cocher une tâche,
+  ajouter une hausse, corriger une récolte ou une dépense, supprimer une visite, une vente… La correction s'affiche
+  tout de suite, « en attente ». Une colonie créée sans réseau peut être visitée aussitôt : la visite part après elle.
+- Si un autre membre a changé **la même saisie** entre-temps, rien n'est écrasé : la fiche « Choisis la version à
+  garder » montre les deux versions champ par champ *(v5.56)*.
+- **Synchronisation** (menu du compte, ou « Voir » sur le bandeau) : en une phrase, si tout est parti, puis le détail.
+  Les saisies d'une autre exploitation y sont signalées (« 2 saisies en attente dans … », bouton « Y passer ») *(v5.56)*.
 - **Se déconnecter** efface ce qui est gardé sur l'appareil. Si des saisies attendent encore, l'app le dit et propose de
   les envoyer d'abord *(v5.16)*.
 

@@ -31,7 +31,7 @@ Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
 Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
 Registre et déclaration : onglets Registre · Déclaration
-Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications)
+Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne)
 Cloche : feuille Rappels · Loupe : recherche plein écran · Avatar : exploitations, plein soleil, aide, déconnexion
 API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche)
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés

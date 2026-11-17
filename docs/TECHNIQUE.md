@@ -80,6 +80,23 @@
   d'être supprimée ; elle n'est plus appliquée aux chiffres, les suivantes partent. `HL.nbCorriger()`, pastille du
   bandeau et fiche « À corriger » (`HL.ficheCorriger`, actions `hlmodifier`, `hlrenvoyer`, `hlabandonner`). Une vente
   ou une visite corrigée garde son identifiant : `HL.rpc` remplace la saisie d'origine.
+- **File hors ligne v2** (IT-09, v5.56, migration 026) : les règles de la file sont dans `src/donnees/file.js`
+  (`window.Regles.file`, fonctions pures testées par `tests/unitaires/file.test.mjs`) ; `offline.js` garde le stockage
+  (IndexedDB `apidoo-hors-ligne[-recette]`, magasins `kv` et `file`), l'envoi et l'affichage. Format d'une opération :
+  `{ id, v: 2, type: "rpc" | "insert", nom/args ou table/lignes, op: creer | modifier | supprimer, table, cible,
+  depend_de, ex, cree, statut, resume }`. Une correction d'une ligne déjà envoyée part par `modifier_saisie({ table, id,
+  champs, avant, version })`, une suppression par `supprimer_saisie({ table, id, version })` ; une correction d'une
+  saisie pas encore envoyée est fusionnée dans sa création (`corrigerCreation`), deux corrections de la même ligne en une
+  (`modification` avec `existante`). Ordre d'envoi : `cree`, et une opération ne part pas tant qu'une opération dont
+  elle dépend (`depend_de`, calculé d'après les identifiants cités) est dans la file. Réponse `{ statut: "conflit" }` :
+  `statut: "conflit"` et `reponse` gardés, fiche `HL.ficheConflit` (`Regles.file.versions` / `resoudre`), actions
+  `hlconflit`, `hlgarder`, `hlforcer`. Listes blanches identiques des deux côtés (`MODIFIABLES`, `SUPPRIMABLES` /
+  `colonnes_modifiables()`), vérifiées par un test. Au démarrage, les opérations sans `v` (file v1) sont reprises au
+  format 2 (`reprendre`). Retour arrière par téléphone : `localStorage["apidoo-file-v1"] = "1"`. Une saisie ne part que
+  dans son exploitation (`ex`) ; `HL.nbIci()` pour l'exploitation ouverte, `HL.nb()` pour toutes (déconnexion).
+  Écran `synchronisation` (`src/domaines/compte/synchronisation.js`, lit `HL.etat()`), bloc du menu du compte
+  `HL.blocCompte()`. La file des photos reste dans `photos.js` (base `apidoo-photos`) : une photo attend que sa visite
+  soit partie (`HL.enAttente`, créations seulement).
 - **Déconnexion** (IT-01) : `ACT.logout` → `ficheDeconnexion()` si `HL.nb() > 0`, sinon `deconnecter()` :
   `signOut` (repli `scope: "local"`), `purgerLocal()` (ferme puis supprime les bases du téléphone, retire les clés
   `apidoo-*` de l'environnement, vide `S`), rechargement. Jamais sur un `SIGNED_OUT` automatique (session expirée).
