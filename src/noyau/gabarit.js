@@ -13,7 +13,7 @@
 export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "deplacer", "inventaire"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
-export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta", "factures",
+export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta", "factures", "commandes",
   "previsions", "associes", "materiel", "courses", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus"]);
 
 /** Parent d'un écran de 2e niveau quand l'écran ne le donne pas lui-même : [route, libellé]. */
@@ -24,6 +24,8 @@ export const PARENTS = {
   rappels: ["reglages", "Réglages"],
   // Factures (17 nov. 2026) : le détail d'une facture d'achat revient à la liste des factures.
   achatfacture: ["factures", "Factures"],
+  // Outils de terrain (v5.56).
+  etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Miel"],
 };
 
 /**
@@ -34,7 +36,7 @@ export const SUJETS = {
   // v5.50 (standards d'écran du 16 nov. 2026) : Ruchers et Miel suivent la même règle. Un onglet peut lancer une action de
   // l'écran au lieu d'une adresse : [adresse, libellé, action, valeur] (Ventes et Clients partagent l'adresse « clients »).
   ruchers: { titre: "Ruchers", onglets: [["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]] },
-  miel: { titre: "Miel", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
+  miel: { titre: "Miel", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["commandes", "Commandes"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
   finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["factures", "Factures"], ["previsions", "Budget"], ["associes", "Associés"]] },
   materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
   registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },

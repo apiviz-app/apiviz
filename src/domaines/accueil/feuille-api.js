@@ -40,6 +40,12 @@ export function installer() {
     tuiles?.querySelectorAll(".n4-tuile").forEach((t, i) => t.style.setProperty("--i", i));
     tuiles?.classList.add("fa-tuiles");
     if (s && tuiles) tuiles.insertAdjacentHTML("afterend", s);
+    // v5.56 : outils de terrain, à portée de pouce depuis le bouton API (pas pour un compte en lecture seule).
+    if (tuiles && !document.documentElement.classList.contains("lecteur") && !$sheetForm.querySelector(".fa-terrain")) {
+      ($sheetForm.querySelector(".u-deux") || tuiles).insertAdjacentHTML("afterend", `<div class="u-deux fa-terrain">
+        <button type="button" class="btn" data-act="n4q" data-v="qrscanner">Scanner une ruche</button>
+        ${(S.d?.lots || []).length ? '<button type="button" class="btn" data-act="n4q" data-v="cscaisse">Caisse du marché</button>' : ""}</div>`);
+    }
     // Disponibilité déjà connue : tout de suite ; sinon dès la réponse du serveur, si la feuille est encore ouverte.
     ajouterFacture();
     // 17 nov. 2026 : affichée d'après la réponse gardée sur l'appareil, puis confirmée (ou retirée) par le serveur.

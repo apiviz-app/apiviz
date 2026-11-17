@@ -11,6 +11,8 @@ const EXCEPTIONS = [
   ["registre.js", "Gardez les ordonnances et factures des médicaments"], // registre : document émis
   ["ux.js", "merci pour votre achat du"], // reçu envoyé au client
   ["ux.js", '"Votre miel · "'], // objet de l'e-mail envoyé au client
+  ["src/domaines/ventes/terrain-regles.js", "votre commande de miel"],
+  ["src/domaines/ventes/commandes.js", "Réservez votre miel en ligne"], // texte du lien partagé aux clients (v5.56) // SMS envoyé au client quand sa commande en ligne est prête (v5.56)
 ];
 const FORMES = /\b(vous|votre|vos|[a-zà-ÿ]{3,}ez)\b/gi;
 const PAS_DES_VERBES = new Set(["chez", "assez"]);
@@ -33,7 +35,7 @@ test("aucun vouvoiement dans l'application, hors documents émis", () => {
     fs.readFileSync(f, "utf8").split("\n").forEach((brut, i) => {
       const l = decoder(brut);
       if (/^\s*(\/\/|\*|\/\*)/.test(l)) return; // commentaires
-      if (EXCEPTIONS.some(([fe, frag]) => path.basename(f) === fe && l.includes(frag))) return;
+      if (EXCEPTIONS.some(([fe, frag]) => path.basename(f) === path.basename(fe) && l.includes(frag))) return;
       const formes = [...l.matchAll(FORMES)].map((m) => m[0]).filter((m) => !PAS_DES_VERBES.has(m.toLowerCase()));
       if (formes.length) trouves.push(`${f}:${i + 1} ${formes.join(", ")}`);
     });
