@@ -42,7 +42,8 @@ export function installer() {
     if (s && tuiles) tuiles.insertAdjacentHTML("afterend", s);
     // Disponibilité déjà connue : tout de suite ; sinon dès la réponse du serveur, si la feuille est encore ouverte.
     ajouterFacture();
-    if (!$sheetForm.querySelector(".fx-entree")) disponible().then((ok) => ok && ajouterFacture());
+    // 17 nov. 2026 : affichée d'après la réponse gardée sur l'appareil, puis confirmée (ou retirée) par le serveur.
+    disponible().then((ok) => (ok ? ajouterFacture() : $sheetForm.querySelector(".fx-entree")?.remove()));
   };
   feuille.faApi = true;
   window.quickSheet = feuille;

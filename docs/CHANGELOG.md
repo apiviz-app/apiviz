@@ -27,11 +27,16 @@ Pour l'apiculteur :
 5. **Joindre la facture** : nouveau champ « Joindre la facture (photo ou PDF) » dans « Ajouter un achat » ; une facture
    lue par API (une seule pièce) est gardée d'office avec l'achat. Sans réseau, l'achat part plus tard et le fichier
    se joint depuis Factures.
+6. **Une seule croix** dans les fenêtres du bas qui ont leur propre en-tête (Rappels, Année, Filtrer) : la croix
+   générale d'`ergonomie.js` s'y superposait.
+7. **« Donner une facture à API » tout de suite** : la réponse du serveur est gardée sur l'appareil (par exploitation)
+   et la ligne s'affiche sans attendre ; elle est revérifiée derrière et retirée si le serveur dit non.
 
 Technique : `vue-tableau.js` (groupes et phrase de synthèse sur téléphone, plus de hauteur imposée), `exploitations.js`
 et `profil.js` (lignes de membres, `mbnommer`), `regles-profil.js` (`nomsDonnes`, `nomMembre`, `associesMembres`,
 réglage `noms_membres`), `factures-regles.js` et `factures.js` (écrans `factures` et `achatfacture`), `achat.js` et
-`facture.js` (fichier joint), `gabarit.js` et `navigation.js` (onglet, parent), `styles/58-corrections.css`.
+`facture.js` (fichier joint, disponibilité gardée sur l'appareil), `feuille-api.js` et `catalogue.js` (redessin si le
+serveur contredit l'appareil), `gabarit.js` et `navigation.js` (onglet, parent), `styles/58-corrections.css`.
 Migration `025-factures-fichiers.sql` (colonne `depenses.fichier`, espace privé `factures`, règles d'accès ; test
 `tests/sql/test_025.mjs`). Tests : `factures.test.mjs`, `operationnel.test.mjs`, `etapes_tb`, `etapes_ex`,
 `etapes_sd` (Factures et Facture ajoutés), `etapes_nk`, `etapes_ra`. Arborescence : `05_UX_UI_ET_NAVIGATION.md` et
@@ -46,6 +51,8 @@ Migration `025-factures-fichiers.sql` (colonne `depenses.fichier`, espace privé
   enregistrer, puis Finances › Factures : la facture a son trombone, « Voir » ouvre le PDF.
 - Factures › une facture : lignes, stock, « Refaire cet achat » ouvre la feuille préremplie.
 - Compte en lecture seule : la liste et le fichier se consultent, aucun bouton pour joindre ni ajouter.
+- Cloche › feuille Rappels : une seule croix. Bouton API : « Donner une facture à API » apparaît d'emblée dès la
+  deuxième ouverture.
 
 ## v5.54 · fonction serveur seulement · API lit enfin la photo de la facture
 **Aucune migration, rien à publier côté application.** Correctif de la fonction `lire-facture`, déployé le 16 nov. 2026
