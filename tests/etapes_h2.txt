@@ -1,0 +1,130 @@
+    # IT-09 — Hors ligne v2 (AP-FEAT-043, AP-US-047, AP-US-048, AP-FEAT-045) : 20 opérations mixtes sans réseau
+    # (créations, corrections, suppressions, colonie puis sa visite), rechargement, écran Synchronisation, puis retour
+    # du réseau : tout part dans l'ordre, sans doublon, et l'état du serveur est le bon. Avec CAPTURES=<dossier>,
+    # captures de l'écran Synchronisation à 375 et 1280 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    V0, V1, REC0, D0, T1, T2, VE0 = (str(uuid.uuid4()) for _ in range(7))
+    t0 = "2026-11-16T10:00:00+00:00"
+    base_v = {"ruche_id": R1, "activite": "Normale", "provisions": "Bonnes", "reine": "Vue", "couvain": "", "varroa": None,
+              "force": None, "oeufs_vus": None, "cellules_royales": None, "traitement": "", "modifie_le": t0}
+    DATA["visites"] += [{**base_v, "id": V0, "date_visite": "2026-11-16", "poids_kg": 30, "note": "vue"},
+                        {**base_v, "id": V1, "date_visite": "2026-11-10", "poids_kg": 28, "note": "avec candy"}]
+    DATA["visite_intrants"].append({"id": str(uuid.uuid4()), "visite_id": V1, "article_id": A1, "quantite": 1})
+    DATA["recoltes"].append({"id": REC0, "ruche_id": R1, "date_recolte": "2026-07-01", "kg": 18, "modifie_le": t0})
+    DATA["depenses"].append({"id": D0, "date_depense": "2026-11-01", "categorie": "Autre", "libelle": "Cadres", "montant": 40, "modifie_le": t0})
+    DATA["taches"] += [{"id": T1, "titre": "Nourrir", "echeance": None, "faite": False, "modifie_le": t0},
+                       {"id": T2, "titre": "Peindre", "echeance": None, "faite": False, "modifie_le": t0}]
+    DATA["ventes"].append({"id": VE0, "client_id": C1, "date_vente": "2026-11-02", "paye": True, "mode": "Espèces", "livre": True, "modifie_le": t0})
+    DATA["vente_lignes"].append({"id": str(uuid.uuid4()), "vente_id": VE0, "lot_id": L1, "quantite": 2, "prix_unitaire": 12})
+    DATA["lots_stock"][0]["pots_restants"] = 8
+    DATA["ruches"][0].update({"hausses": 1, "equipement": [], "modifie_le": t0})
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.wait_for_timeout(300)
+    file = lambda: page.evaluate("HL.etat().file")
+    ecrire = lambda js: page.evaluate("async () => { await write(%s, ''); }" % js)
+    def corriger_visite(vid, champs):
+        page.evaluate(f"ACT.modvisite('{vid}')"); page.wait_for_selector("#sheet[open] [name=poids_kg]")
+        for k, v in champs.items():
+            sel = f"#sheet [name={k}]"
+            if page.locator(sel).evaluate("e => e.tagName") == "SELECT": page.select_option(sel, v)
+            else: page.fill(sel, v)
+        page.click("#sheet .btn.main"); page.wait_for_timeout(500)
+
+    # 1. AP-US-047 : correction du poids d'une visite d'hier déjà envoyée.
+    corriger_visite(V0, {"poids_kg": "31.5"})
+    v0 = page.evaluate(f"byId(S.d.visites, '{V0}')")
+    verif(v0["poids_kg"] == 31.5 and v0.get("_attente"), "correction affichée tout de suite et marquée « en attente »")
+    verif(page.locator(".toast >> text=Correction gardée").count() >= 1, "toast : correction gardée sur le téléphone")
+    # 2-3. AP-US-048 : colonie créée sans réseau, puis visitée aussitôt.
+    page.evaluate("ACT.newruches()"); page.wait_for_selector("#sheet[open] [name=prefixe]")
+    page.fill("#sheet [name=prefixe]", "Essaim du saule"); page.click("#sheet .btn.main"); page.wait_for_timeout(500)
+    NC = page.evaluate("S.d.ruches.find((r) => r.nom === 'Essaim du saule')?.id")
+    verif(bool(NC), "colonie « Essaim du saule » affichée sans réseau")
+    page.evaluate(f"ACT.newvisite('{NC}')"); page.wait_for_selector("form[data-form=visite]")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true"); page.fill("#v_note", "Essaim capturé")
+    page.click("form[data-form=visite] .btn.main"); page.wait_for_selector(".toast >> text=Visite gardée sur le téléphone", timeout=10000)
+    VN = page.evaluate(f"S.d.visites.find((v) => v.ruche_id === '{NC}')?.id")
+    attend = [x for x in file() if x["statut"] == "bloquee"]
+    verif(len(attend) == 1 and "Colonie" in attend[0]["apres"], "la visite de la colonie attend la création de la colonie")
+    # 4. Correction de cette visite pas encore envoyée : elle part avec la création (pas d'opération en plus).
+    n_avant = len(file())
+    corriger_visite(VN, {"note": "Essaim capturé dans le saule"})
+    verif(len(file()) == n_avant, "correction d'une visite pas encore envoyée : fusionnée avec sa création")
+    # 5-8. Quatre tâches créées.
+    for t in ("Poser une hausse", "Récupérer le cadre", "Tâche à oublier", "Commander du sirop"):
+        page.evaluate("ACT.addsug(%s)" % json.dumps(t)); page.wait_for_timeout(200)
+    TN = page.evaluate("S.d.taches.find((t) => t.titre === 'Poser une hausse').id")
+    TX = page.evaluate("S.d.taches.find((t) => t.titre === 'Tâche à oublier').id")
+    # 9. Tâche existante cochée ; 10. tâche nouvelle cochée (fusionnée) ; 11. tâche nouvelle supprimée (oubliée).
+    page.evaluate(f"ACT.toggletache('{T1}')"); page.wait_for_timeout(200)
+    page.evaluate(f"ACT.toggletache('{TN}')"); page.wait_for_timeout(200)
+    ecrire(f"sb.from('taches').delete().eq('id', '{TX}')"); page.wait_for_timeout(200)
+    # 12. Tâche existante supprimée.
+    ecrire(f"sb.from('taches').delete().eq('id', '{T2}')")
+    # 13. Récolte corrigée ; 14. dépense supprimée ; 15-16. deux hausses en plus (une seule correction de la ruche).
+    ecrire(f"sb.from('recoltes').update({{ kg: 20 }}).eq('id', '{REC0}')")
+    ecrire(f"sb.from('depenses').delete().eq('id', '{D0}')")
+    page.evaluate(f"ACT.v3hausse('1', '{R1}')"); page.wait_for_timeout(200)
+    page.evaluate(f"ACT.v3hausse('1', '{R1}')"); page.wait_for_timeout(200)
+    # 17. Récolte créée ; 18. visite supprimée (stock rendu à l'affichage) ; 19. vente supprimée ; 20. 2e correction de V0.
+    ecrire("sb.from('recoltes').insert({ kg: 4, date_recolte: '2026-11-17' })")
+    stock = page.evaluate(f"byId(S.d.articles, '{A1}').stock")
+    page.evaluate(f"(async () => {{ await write(sb.from('visites').delete().eq('id', '{V1}'), ''); }})()"); page.wait_for_timeout(400)
+    verif(page.evaluate(f"!byId(S.d.visites, '{V1}')") and page.evaluate(f"byId(S.d.articles, '{A1}').stock") == float(stock) + 1, "visite supprimée sans réseau : retirée, stock rendu à l'affichage")
+    ecrire(f"sb.from('ventes').delete().eq('id', '{VE0}')")
+    corriger_visite(V0, {"note": "Reine vue, calme"})
+    f = file()
+    verif(page.evaluate(f"byId(S.d.ruches, '{R1}').hausses") == 3, "deux hausses en plus affichées")
+    ops = sorted(x["op"] for x in f)
+    verif(len(f) == 14 and ops.count("modifier") == 4 and ops.count("supprimer") == 4 and ops.count("creer") == 6,
+          "20 gestes → 14 opérations (fusions et oubli) : %s" % ops)
+    verif(page.evaluate("HL.nbIci()") == 14 and "14 saisies en attente" in page.locator(".hl-band").inner_text(), "bandeau : 14 saisies en attente")
+
+    # Rechargement sans réseau : tout est encore là.
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    verif(len(file()) == 14 and page.evaluate(f"byId(S.d.visites, '{V0}').poids_kg") == 31.5, "après rechargement : 14 opérations, correction toujours affichée")
+
+    # Écran Synchronisation (AP-TECH-154).
+    page.evaluate("go('synchronisation')"); page.wait_for_selector(".sy-tete")
+    verif("14 saisies en attente" in page.locator(".sy-tete").inner_text() and "fermer l’app" in page.locator(".sy-tete").inner_text(),
+          "Synchronisation : « 14 saisies en attente », on peut fermer l'app")
+    verif(page.locator(".sy .hl-row >> text=part après").count() == 1, "Synchronisation : la visite part après la colonie")
+    if cap:
+        page.set_viewport_size({"width": 375, "height": 812}); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/synchro-375.png", full_page=True)
+        page.set_viewport_size({"width": 1280, "height": 800}); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/synchro-1280.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+    verif(page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "Synchronisation : pas de défilement horizontal")
+
+    # Retour du réseau : tout part, dans l'ordre.
+    del envois[:]
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_function("HL.nb() === 0", timeout=30000)
+    page.wait_for_timeout(800)
+    i_col = next(i for i, e in enumerate(envois) if e[0] == "insert" and e[1] == "ruches")
+    i_vis = next(i for i, e in enumerate(envois) if e[1] == "creer_visite" and e[2] == VN)
+    verif(i_col < i_vis, "la colonie part avant sa visite (AP-US-048)")
+    verif(any(v["id"] == VN and v["note"] == "Essaim capturé dans le saule" for v in DATA["visites"]), "visite de l'essaim reçue, avec sa correction")
+    v0 = next(v for v in DATA["visites"] if v["id"] == V0)
+    verif(v0["poids_kg"] == 31.5 and v0["note"] == "Reine vue, calme", "V0 corrigée sur le serveur (poids et note, une seule opération)")
+    verif(len([n for n, b in recu["rpc"] if n == "modifier_saisie" and b["p"]["id"] == V0]) == 1, "les deux corrections de V0 sont parties ensemble")
+    verif(next(t for t in DATA["taches"] if t["id"] == T1)["faite"] is True, "tâche existante cochée")
+    verif(not any(t["id"] == T2 for t in DATA["taches"]) and not any(t["titre"] == "Tâche à oublier" for t in DATA["taches"]), "tâche supprimée ; tâche oubliée jamais envoyée")
+    verif(next(t for t in DATA["taches"] if t["titre"] == "Poser une hausse")["faite"] is True, "tâche nouvelle partie déjà cochée")
+    verif(next(r for r in DATA["recoltes"] if r["id"] == REC0)["kg"] == 20 and any(r.get("kg") == 4 for r in DATA["recoltes"]), "récolte corrigée et récolte créée")
+    verif(not any(d["id"] == D0 for d in DATA["depenses"]) and not any(v["id"] == VE0 for v in DATA["ventes"]) and not any(v["id"] == V1 for v in DATA["visites"]),
+          "dépense, vente et visite supprimées")
+    verif(DATA["ruches"][0]["hausses"] == 3 and len([1 for n, b in recu["rpc"] if n == "modifier_saisie" and b["p"]["table"] == "ruches"]) == 1, "ruche : 3 hausses, une seule correction envoyée")
+    verif(float(DATA["articles"][0]["stock"]) == 6 and DATA["lots_stock"][0]["pots_restants"] == 10, "stock et pots rétablis sur le serveur")
+    verif(len([1 for t, u, rows in recu["upsert"] if t == "ruches"]) == 1, "colonie envoyée une seule fois")
+    verif(page.locator(".hl-band").count() == 0, "bandeau disparu une fois tout envoyé")
+    page.evaluate("go('synchronisation')"); page.wait_for_selector(".sy-tete")
+    verif("Tout est envoyé" in page.locator(".sy-tete").inner_text(), "Synchronisation : « Tout est envoyé »")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

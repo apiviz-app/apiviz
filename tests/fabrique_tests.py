@@ -11,14 +11,26 @@ base = base.replace(avant, '''        if req.method == "PATCH":
             from urllib.parse import parse_qsl
             filtres = [(k, v[3:]) for k, v in parse_qsl(urlparse(req.url).query) if v.startswith("eq.")]
             for x in DATA.get(t, []):
-                if all(str(x.get(k)) == v for k, v in filtres): x.update(corps)
+                if all(str(x.get(k)) == v for k, v in filtres): x.update(corps); x["modifie_le"] = horloge()
             return route.fulfill(status=204, headers=hdr, body="")
 ''' + avant)
-base = base.replace('recu = {"rpc": [], "upsert": []}', 'recu = {"rpc": [], "upsert": []}\npatchs = []', 1)
+base = base.replace('recu = {"rpc": [], "upsert": []}', '''recu = {"rpc": [], "upsert": []}
+patchs = []
+envois = []  # IT-09 : ordre réel des écritures reçues (rpc et insertions), pour vérifier les dépendances
+_tic = [0]
+def horloge():
+    """modifie_le simulée (migration 026) : une valeur nouvelle à chaque modification."""
+    _tic[0] += 1
+    return "2026-11-17T08:%02d:%02d+00:00" % divmod(_tic[0], 60)''', 1)
+# Ordre des envois : chaque appel de fonction et chaque insertion.
+base = base.replace('''        recu["rpc"].append((nom, body))''', '''        recu["rpc"].append((nom, body)); envois.append(("rpc", nom, (body.get("p") or {}).get("id") if isinstance(body.get("p"), dict) else None))''', 1)
+base = base.replace('''            recu["upsert"].append((t, req.url, rows))
+            for r in rows:''', '''            recu["upsert"].append((t, req.url, rows)); envois.append(("insert", t, rows[0].get("id") if rows else None))
+            for r in rows:''', 1)
 
 # Ruchers (IT-05) : comme la migration 015, renommer ou placer un rucher se reporte sur ses colonies, et les deux
 # fonctions creer_rucher / placer_rucher sont idempotentes par l'identifiant fourni.
-maj = "                if all(str(x.get(k)) == v for k, v in filtres): x.update(corps)\n"
+maj = "                if all(str(x.get(k)) == v for k, v in filtres): x.update(corps); x[\"modifie_le\"] = horloge()\n"
 assert base.count(maj) == 1
 base = base.replace(maj, maj + """            if t == "ruchers":
                 for rc in DATA["ruchers"]:
@@ -109,6 +121,37 @@ base = base.replace(rpc_fin, """        if nom == "creer_rucher":
                 c = next(x for x in DATA["ruches"] if x["id"] == q["colonie_id"])
                 c.update({"annee_reine": q["annee_naissance"], "reine_origine": q["origine"], "reine_introduite": q["en_place_du"]})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        # IT-09 (migration 026) : correction et suppression gardées sur le téléphone, avec version et conflit champ par champ.
+        if nom in ("modifier_saisie", "supprimer_saisie"):
+            p = body["p"]; t = p["table"]
+            if t in DATA.get("refuser", []):
+                return route.fulfill(status=400, headers=hdr, body=json.dumps({"code": "P0001", "message": "Refusé par le serveur (test)."}))
+            lignes = DATA.get(t, []); ligne = next((x for x in lignes if x["id"] == p["id"]), None)
+            if ligne is not None and "modifie_le" not in ligne: ligne["modifie_le"] = "2026-11-01T00:00:00+00:00"
+            change = ligne is not None and not p.get("forcer") and p.get("version") and ligne.get("modifie_le") != p["version"]
+            if nom == "supprimer_saisie":
+                if ligne is None: return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "ok", "deja": True}))
+                if change: return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "conflit", "champs": [], "serveur": ligne, "version": ligne["modifie_le"]}))
+                lignes.remove(ligne)
+                if t == "visites":
+                    for i in [x for x in DATA["visite_intrants"] if x["visite_id"] == p["id"]]:
+                        for a in DATA["articles"]:
+                            if a["id"] == i["article_id"]: a["stock"] = float(a["stock"]) + float(i["quantite"])
+                        DATA["visite_intrants"].remove(i)
+                if t == "ventes":
+                    for l in [x for x in DATA["vente_lignes"] if x["vente_id"] == p["id"]]:
+                        for lot in DATA["lots_stock"]:
+                            if lot["id"] == l["lot_id"]: lot["pots_restants"] += l["quantite"]
+                        DATA["vente_lignes"].remove(l)
+                return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "ok"}))
+            if ligne is None:
+                return route.fulfill(status=400, headers=hdr, body=json.dumps({"code": "P0001", "message": "Cette saisie n’existe plus : un autre membre l’a peut-être supprimée."}))
+            champs, av = p.get("champs") or {}, p.get("avant")
+            if change:
+                conf = [k for k in champs if ligne.get(k) != champs[k] and (av is None or ligne.get(k) != av.get(k))]
+                if conf: return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "conflit", "champs": conf, "serveur": ligne, "version": ligne["modifie_le"]}))
+            ligne.update(champs); ligne["modifie_le"] = horloge()
+            return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "ok", "version": ligne["modifie_le"]}))
 """ + rpc_fin)
 v = '"varroa": None, "note": p.get("note", "")})'
 assert base.count(v) == 1
