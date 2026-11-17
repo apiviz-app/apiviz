@@ -10,10 +10,16 @@ import { stockSuivi } from "../materiel/catalogue.js";
 import { champsAchatAssocies } from "./entre-associes.js";
 import { MAX_PUCES, plat } from "../../noyau/choisir.js";
 import { ouvrirFacture, ouvrirOuSaisir } from "./facture.js";
+import { joindre } from "./factures.js";
+import { controleFichier } from "./factures-regles.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
 const nouvelId = () => crypto.randomUUID();
+
+/** « Joindre la facture (photo ou PDF) » (17 nov. 2026, migration 025) : gardée avec l'achat, lisible dans Factures. */
+const champFichier = () => `<label class="st-fichier"><span class="st-fichier-b"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg><span class="st-fichier-t">Joindre la facture (photo ou PDF)</span></span>
+  <input type="file" name="st_fichier" accept="application/pdf,image/jpeg,image/png,image/webp" class="tb-cache"></label>`;
 
 /** État de la feuille (gardé pendant qu'elle est ouverte). */
 const etat = () => S.achat;
@@ -32,10 +38,16 @@ export function ouvrir(prerempli = {}) {
     label: "Enregistrer l’achat",
     submit: enregistrer,
   });
-  $sheetForm.querySelector(".actions")?.insertAdjacentHTML("beforebegin", `<div class="st-achat-corps"></div><div class="st-associes">${champsAchatAssocies(null)}</div>`);
+  $sheetForm.querySelector(".actions")?.insertAdjacentHTML("beforebegin", `<div class="st-achat-corps"></div><div class="st-associes">${champsAchatAssocies(null)}</div>${champFichier()}`);
   const corps = $sheetForm.querySelector(".st-achat-corps");
   corps?.addEventListener("input", majChiffres);
   corps?.addEventListener("change", (ev) => rattacherSiExistant(ev.target));
+  $sheetForm.querySelector("[name=st_fichier]")?.addEventListener("change", (ev) => {
+    const x = ev.target.files?.[0], t = $sheetForm.querySelector(".st-fichier-t"), msg = x ? controleFichier(x) : "";
+    if (t) t.textContent = !x ? "Joindre la facture (photo ou PDF)" : msg || `Facture : ${x.name}`;
+    $sheetForm.querySelector(".st-fichier")?.classList.toggle("choisi", !!x && !msg);
+    if (msg) ev.target.value = "";
+  });
   // S.achat reste après fermeture : le brouillon d'ergonomie.js (clic à côté, Échap) peut reprendre la saisie.
   $sheet.addEventListener("close", () => corps?.removeEventListener("input", majChiffres), { once: true });
   dessiner();
@@ -236,8 +248,10 @@ async function enregistrer() {
   };
   const err = R.controleAchat(p);
   if (err) { const z = $sheetForm.querySelector(".st-erreur"); if (z) z.textContent = err; throw new Error(err); }
+  const fichier = $sheetForm.querySelector("[name=st_fichier]")?.files?.[0] || null;
   const { error, local } = await appel("enregistrer_achat", { p });
   if (error) throw error;
+  if (local && fichier) setTimeout(() => toast("Sans réseau, la facture n’est pas jointe : ajoute-la depuis Finances › Factures"), 2500);
   const entrees = p.lignes.filter((l) => l.quantite).length;
   if (local) {
     R.appliquerAchat(S.d, p, { _attente: true });
@@ -246,6 +260,7 @@ async function enregistrer() {
   } else {
     await refresh();
     toast(entrees ? `Achat enregistré, ${entrees} article${entrees > 1 ? "s" : ""} en stock` : "Achat enregistré");
+    if (fichier) joindre({ cle: p.id, ids: p.lignes.map((l) => l.id), fichier: "" }, fichier).catch((err) => toast(`Achat enregistré, mais la facture n’a pas été jointe : ${err.message}`));
   }
 }
 

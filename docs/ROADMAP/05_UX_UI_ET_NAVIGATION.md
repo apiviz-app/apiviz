@@ -28,7 +28,7 @@ Miel
  ├─ Ventes · Clients · Stock et récoltes (détail : Lot, Facture)
  └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots
 Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
-Finances : onglets Bilan · Dépenses · Budget · Associés
+Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
 Registre et déclaration : onglets Registre · Déclaration
 Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications)
@@ -37,6 +37,12 @@ API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, 
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.55 (17 nov. 2026)** : onglet **Factures** dans Finances, entre Dépenses et Budget, et son détail « Facture »
+(retour « ‹ Factures »). Une facture = un achat (lignes d'un même `achat_id`), rangées par mois, avec le fichier de la
+facture (photo ou PDF). Pas de nouvelle rubrique : Finances garde sa place. Décision de Pierre-Louis (17 nov. 2026,
+« je dois pouvoir accéder aux factures passées dans une interface dédiée », maquettes validées, « implémente toutes
+les modifications »).
 
 **v5.44 (15 nov. 2026)** : **rationalisation des écrans**. Un sujet = un écran, avec des onglets ; chaque écran est
 une **liste** (sujet, vues, onglets), une **fiche** (un objet) ou un **flux** (saisie pas à pas) ; le reste devient

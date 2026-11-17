@@ -75,6 +75,14 @@ test("Profil : tout est facultatif, seules les réponses de la liste sont gardé
   assert.equal(P.libelle(P.AGES, ""), "");
   assert.deepEqual(P.sansCompte({ associes: [" Jean ", "Société", ""] }), ["Jean"]);
   assert.deepEqual(P.sansCompte({}), []);
+  // 17 nov. 2026 : tous les membres sont proposés, même sans prénom (nom donné, sinon début de l'e-mail).
+  const noms = [{ email: "pl@x.fr", prenom: "Pierre-Louis", nom: "G" }, { email: "johan@x.fr", prenom: "", nom: "" }, { email: "jc29@x.fr", prenom: "", nom: "" }];
+  const r = { associes: ["Christian"], noms_membres: { "johan@x.fr": "Johan" } };
+  assert.deepEqual(P.associesMembres(noms, r), ["Pierre-Louis", "Johan", "jc29", "Christian"]);
+  assert.equal(P.nomMembre(noms[0], r), "Pierre-Louis G");
+  assert.equal(P.nomMembre(noms[1], r), "Johan");
+  assert.equal(P.nomMembre(noms[2], r), "");
+  assert.deepEqual(P.nomsDonnes({ noms_membres: [] }), {});
 });
 
 const D = {

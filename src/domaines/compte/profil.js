@@ -176,16 +176,19 @@ function ecranProfil() {
 function completerMembres() {
   chargerNoms();
   const noms = st.noms || [];
+  const ecrire = !document.documentElement.classList.contains("lecteur");
   for (const row of document.querySelectorAll(".wrap .ex-row")) {
     const b = row.querySelector(":scope > span > b");
     const mail = b?.textContent?.trim().toLowerCase();
     if (!b || !mail || !mail.includes("@")) continue;
-    const n = noms.find((x) => x.email === mail), nom = n ? [n.prenom, n.nom].filter(Boolean).join(" ") : "";
-    row.classList.toggle("mb-moi", mail === email());
-    b.outerHTML = `<span class="mb-nom"><span class="mb-av" aria-hidden="true">${e(((nom || mail)[0] || "?").toUpperCase())}</span><span><b>${e(nom || mail)}</b>${nom ? `<br><span class="small">${e(mail)}</span>` : ""}</span></span>`;
+    const n = noms.find((x) => x.email === mail), nom = R.nomMembre(n || { email: mail }, cfg());
+    const soi = mail === email(), propre = !!(n && (n.prenom || n.nom));
+    row.classList.toggle("mb-moi", soi);
+    // 17 nov. 2026 : un membre sans prénom peut recevoir un nom, pour toute l'exploitation (proposé dans « Acheté par »).
+    const nommer = ecrire && !soi && !propre ? `<button type="button" class="link mb-nommer" data-act="mbnommer" data-v="${e(mail)}">${nom ? "Changer le nom" : "Ajouter un nom"}</button>` : "";
+    b.outerHTML = `<span class="mb-nom"><span class="mb-av" aria-hidden="true">${e(((nom || mail)[0] || "?").toUpperCase())}</span><span class="mb-id"><b>${e(nom || mail)}</b>${nom ? `<span class="small mb-mail">${e(mail)}</span>` : ""}${nommer}</span></span>`;
   }
   const sans = R.sansCompte(cfg());
-  const ecrire = !document.documentElement.classList.contains("lecteur");
   const bloc = `<section class="card mb-sans-c"><h2>Sans compte</h2><p class="small">Des personnes qui t’aident sans utiliser Apiviz : elles sont proposées dans « Acheté par » et « Vendu par ».</p>
     ${sans.length ? sans.map((x) => `<div class="ex-row mb-sans"><span class="mb-nom"><span class="mb-av" aria-hidden="true">${e(x[0].toUpperCase())}</span><b>${e(x)}</b></span>${ecrire ? `<span class="actions"><button type="button" class="btn sm" data-act="mbretirer" data-v="${e(x)}">Retirer</button></span>` : ""}</div>`).join("") : '<p class="small">Personne pour l’instant.</p>'}
     ${ecrire ? '<button type="button" class="btn" data-act="mbajouter">Ajouter une personne sans compte</button>' : ""}
@@ -194,10 +197,10 @@ function completerMembres() {
   if (premiere && !document.querySelector(".mb-sans-c")) premiere.insertAdjacentHTML("afterend", bloc);
 }
 
-/** Prénoms à proposer dans « Acheté par », « Vendu par » : les membres (avec un prénom) puis les personnes sans compte. */
+/** Prénoms à proposer dans « Acheté par », « Vendu par » : tous les membres (prénom, nom donné ou début de l'e-mail),
+ *  puis les personnes sans compte (17 nov. 2026 : les membres sans prénom n'apparaissaient pas). */
 export function associes() {
-  const membres = (st.noms || []).map((x) => x.prenom).filter(Boolean);
-  return [...new Set([...membres, ...R.sansCompte(cfg())])];
+  return R.associesMembres(st.noms || [], cfg());
 }
 export const moi = () => st.ligne || null;
 export const prenom = () => st.ligne?.prenom || String(memo(clePrenom()) || "").trim();
@@ -300,6 +303,12 @@ export const actions = {
   },
   mbajouter: () => sheet({ title: "Personne sans compte", intro: "Elle sera proposée dans « Acheté par » et « Vendu par », pour toute l’exploitation.", fields: [{ name: "prenom", label: "Prénom", required: !0 }],
     submit: (v) => { const nom = String(v.prenom || "").trim().slice(0, 40); if (!nom) throw new Error("Écris un prénom"); return saveCfg({ associes: [...new Set([...R.sansCompte(cfg()), nom])].slice(0, 12) }, `${nom} ajouté`); } }),
+  mbnommer: (mail) => {
+    const donnes = R.nomsDonnes(cfg());
+    sheet({ title: "Nom du membre", intro: `${mail} n’a pas encore donné son prénom. Ce nom sera montré à toute l’exploitation, dans l’équipe, « Acheté par » et « Vendu par ».`,
+      fields: [{ name: "prenom", label: "Prénom", value: donnes[mail] || "", required: !0 }],
+      submit: (v) => { const nom = String(v.prenom || "").trim().slice(0, 40); if (!nom) throw new Error("Écris un prénom"); return saveCfg({ noms_membres: { ...donnes, [mail]: nom } }, `${nom} enregistré`); } });
+  },
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),
 };
 

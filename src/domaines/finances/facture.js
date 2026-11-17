@@ -14,6 +14,7 @@ import * as R from "../materiel/regles.js";
 import * as V from "./facture-regles.js";
 import { champsAchatAssocies } from "./entre-associes.js";
 import { SOCIETE } from "./associes.js";
+import { joindre } from "./factures.js";
 
 const e = (t) => esc(t);
 const nouvelId = () => crypto.randomUUID();
@@ -391,6 +392,14 @@ async function integrer() {
     f.etape = "fait";
     dessiner();
     if (local) render(); else await refresh();
+    // 17 nov. 2026 : la facture lue par API est gardée avec l'achat (Finances › Factures, migration 025). Une seule
+    // pièce : jointe telle quelle ; plusieurs pages photographiées : à joindre depuis la facture.
+    if (!local && f.pieces?.length === 1) {
+      const pc = f.pieces[0];
+      const octets = Uint8Array.from(atob(pc.donnees), (c) => c.charCodeAt(0));
+      const fic = new File([octets], pc.nom || "facture", { type: pc.type });
+      joindre({ cle: p.id, ids: p.lignes.map((l) => l.id), fichier: "" }, fic).catch(() => { /* migration 025 absente ou réseau : à joindre plus tard */ });
+    }
   } catch (e2) {
     if (bouton) { bouton.disabled = false; bouton.textContent = "Valider et intégrer au stock"; bouton.removeAttribute("aria-busy"); }
     dire(typeof messageErreur == "function" ? messageErreur(e2) : e2.message || "L'intégration n'a pas abouti. Réessaie.");
