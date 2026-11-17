@@ -28,7 +28,7 @@ export const ACTIONS_LECTEUR = Object.freeze([
   // Impression et exports (rien n'est modifié)
   "exp", "rgcomptable", "ckvue", "ckfiltre", "djfiltre", "csenvoyer", "cscopier", "erimprimer", "rgprint", "etiq", "v3copierdecla",
   // Compte, exploitation, affichage
-  "authmode", "logout", "decoforcer", "decoenvoyer", "n4compte", "n4expl", "n4q", "n4soleil", "n4installer", "n4plustard",
+  "authmode", "logout", "decoforcer", "decoenvoyer", "n4compte", "n4expl", "hlsynchro", "n4q", "n4soleil", "n4installer", "n4plustard",
   "v3soleil", "exouvrir", "exquitter", "excopier",
   // Son propre profil et l'inscription (v5.38, migration 021) : chacun écrit sa ligne, même en lecture seule
   "obsuite", "obretour", "obpasser", "obfinir", "obannuler", "pfnom", "pfreponses", "pfbascule", "pfeffacer", "pftelecharger", "pfmdp", "pfsupprimer",
@@ -54,6 +54,6 @@ export function styleLecteur() {
   return `html.lecteur [data-act]${pas}{pointer-events:none;cursor:default;text-decoration:none}
 html.lecteur :is(.btn,.fab,.chips button,.check,.ph-x,.stepper .ctl button,.seg button,.dm-choix,.n4-ligne,.u-trois button)[data-act]${pas},
 html.lecteur [data-act="n4q"]${ACTIONS_LECTEUR.map((a) => `:not([data-v="${a}"])`).join("")},
-html.lecteur .bottom [data-v="saisir"],html.lecteur :is([data-act^="new"],[data-act^="del"],[data-act$="suppr"],[data-act="sheetdel"]),
+html.lecteur .bottom [data-v="saisir"],html.lecteur :is([data-act^="new"],[data-act^="del"],[data-act="modvisite"],[data-act$="suppr"],[data-act="sheetdel"]),
 html.lecteur .fab,html.lecteur .ph-add,html.lecteur [data-v3d],html.lecteur .u-trois{display:none!important}`;
 }

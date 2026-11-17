@@ -44,7 +44,7 @@ const NL = (() => {
     miel: "clients", recolte: "clients", lot: "clients", miseenpots: "clients", ventes: "clients", vente: "clients", facture: "clients",
     compta: "pilotage", factures: "pilotage", achatfacture: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
     courses: "materiel", inventaire: "materiel", fournisseurs: "materiel", declaration: "registre",
-    membres: "reglages", profil: "reglages", rappels: "reglages",
+    membres: "reglages", profil: "reglages", rappels: "reglages", synchronisation: "reglages",
     activite: "dash", saison: "agenda", recherche: "dash" };
   const actif = (route) => PARENT[route] || route;
   const categorieDe = (route) => CATEGORIES.find(([, l]) => l.some(([r]) => r === actif(route)))?.[0] || "";
@@ -56,7 +56,7 @@ const NL = (() => {
   const i = BOTTOM.findIndex(([k]) => k === "plus");
   if (i >= 0) BOTTOM[i] = ["menu", "Menu"];
   // Écrans rangés derrière « Menu » dans la barre du bas.
-  ["pilotage", "compta", "factures", "achatfacture", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "agenda", "saison"]
+  ["pilotage", "compta", "factures", "achatfacture", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "synchronisation", "agenda", "saison"]
     .forEach((r) => (GROUP[r] = "menu"));
 
   const goAvant = ACT.go;

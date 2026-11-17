@@ -196,7 +196,7 @@ const UX = (() => {
       ${v.note ? `<p class="u-note">${esc(v.note)}</p>` : ""}
       ${intr ? `<p class="small">Utilisé : ${esc(intr)}</p>` : ""}${trt ? `<p class="small">Traitement : ${esc(trt)}</p>` : ""}
       ${typeof PH != "undefined" ? PH.vignettes(v.id) : ""}
-      <div class="u-visite-f">${v._attente ? '<span class="tag watch">en attente</span>' : "<span></span>"}<button type="button" class="link u-discret" data-act="delvisite" data-v="${v.id}">Supprimer</button></div>
+      <div class="u-visite-f">${v._attente ? '<span class="tag watch">en attente</span>' : "<span></span>"}<span><button type="button" class="link u-discret" data-act="modvisite" data-v="${v.id}">Corriger</button><button type="button" class="link u-discret" data-act="delvisite" data-v="${v.id}">Supprimer</button></span></div>
     </article>`;
   }
 
