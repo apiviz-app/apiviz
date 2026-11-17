@@ -13,7 +13,7 @@
 export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "deplacer", "inventaire"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
-export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta",
+export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta", "factures",
   "previsions", "associes", "materiel", "courses", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus"]);
 
 /** Parent d'un écran de 2e niveau quand l'écran ne le donne pas lui-même : [route, libellé]. */
@@ -22,6 +22,8 @@ export const PARENTS = {
   lot: ["miel", "Miel"], facture: ["clients", "Miel"], inventaire: ["materiel", "Matériel"],
   saison: ["agenda", "Agenda"], activite: ["dash", "Accueil"], recherche: ["dash", "Accueil"], profil: ["reglages", "Réglages"],
   rappels: ["reglages", "Réglages"],
+  // Factures (17 nov. 2026) : le détail d'une facture d'achat revient à la liste des factures.
+  achatfacture: ["factures", "Factures"],
 };
 
 /**
@@ -33,7 +35,7 @@ export const SUJETS = {
   // l'écran au lieu d'une adresse : [adresse, libellé, action, valeur] (Ventes et Clients partagent l'adresse « clients »).
   ruchers: { titre: "Ruchers", onglets: [["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]] },
   miel: { titre: "Miel", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
-  finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["previsions", "Budget"], ["associes", "Associés"]] },
+  finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["factures", "Factures"], ["previsions", "Budget"], ["associes", "Associés"]] },
   materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
   registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },
   reglages: { titre: "Réglages", onglets: [["reglages", "Réglages"], ["membres", "Équipe"]] },

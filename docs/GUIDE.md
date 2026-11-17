@@ -12,7 +12,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Réglages. Sur ordinateur, ces 8 entrées sont toujours visibles à gauche, avec **Nouvelle visite** et **API** en tête.
   Sur téléphone, la barre du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet
   avec la recherche et les 5 autres entrées. Un sujet qui a plusieurs parties les range en **onglets** sous le titre
-  (Finances : Bilan, Dépenses, Budget, Associés ; Matériel : Stock, Courses, Fournisseurs ; Registre et déclaration ;
+  (Finances : Bilan, Dépenses, Factures, Budget, Associés ; Matériel : Stock, Courses, Fournisseurs ; Registre et déclaration ;
   Réglages : Réglages, Équipe).
 - **Chaque écran se lit de la même façon** *(v5.43)* : en haut à gauche « ‹ » pour revenir (seulement dans un détail :
   une ruche, un lot, la météo…), le titre et une phrase de résumé ; en haut à droite **⋯** pour les actions moins
@@ -91,8 +91,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Finances, Matériel, Registre et déclaration *(v5.44, anciennement Gestion, puis Finances et Administration)*
 
-- **Finances** *(v5.44 : un écran, quatre onglets)* : Bilan, Dépenses, Budget, **Associés** (qui a avancé quoi, et qui
-  doit combien à qui pour être à égalité).
+- **Finances** *(v5.44 : un écran, quatre onglets ; cinq depuis la v5.55)* : Bilan, Dépenses, **Factures**, Budget,
+  **Associés** (qui a avancé quoi, et qui doit combien à qui pour être à égalité).
+- **Factures** *(v5.55)* : une facture par achat, rangées par mois : fournisseur, date, numéro, qui a acheté, avec quel
+  argent, montant, et un trombone quand le fichier est joint. Recherche (fournisseur, numéro, article) et puces (Avancées
+  par un associé, Par <prénom>, Sans fichier). Toucher une facture ouvre son détail : le fichier (Voir, Joindre,
+  Remplacer), les lignes, le stock qui a bougé avec elle, « Refaire cet achat ». Le fichier se joint aussi en
+  enregistrant l'achat (« Joindre la facture (photo ou PDF) »), et une facture lue par API est gardée d'office.
 - **Matériel** *(v5.44)* : onglets Stock, Courses (liste de courses), Fournisseurs ; l'inventaire est dans ⋯.
 - **Registre et déclaration** *(v5.44)* : onglets Registre et Déclaration.
 - L'ancien écran en blocs (Bilan, Dépenses, Budget, Stock matériel, Fournisseurs, Registre, Équipe) n'est plus dans les

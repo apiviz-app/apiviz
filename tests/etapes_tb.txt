@@ -105,14 +105,18 @@
 
     # 3. Tableau (v5.37) : colonne fixe, synthèse en bas, colonnes depuis la feuille, fiche rapide.
     page.click("[data-act=tbaff][data-v=tableau]"); page.wait_for_selector(".tb-boite", timeout=5000)
-    verif(noms()[:2] == ["Bruyère", "Thym"], "tableau : urgentes d'abord")
+    n_ = noms(); verif(n_[0] == "Thym" and n_.index("Bruyère") == 2, f"tableau : l'urgente d'abord dans chaque rucher ({n_})")
+    # Téléphone (17 nov. 2026) : rangé par rucher, synthèse en une phrase au-dessus, tableau à la hauteur de ses lignes.
+    verif(page.locator(".tb-gligne").count() == 2 and page.locator(".tb-gligne", has_text="Les Chênes").count() == 1, "tableau : un en-tête par rucher")
+    verif(page.locator(".tb-synthese").count() == 0 and page.locator(".tb-resume").count() == 1 and "6 colonies" in page.locator(".tb-resume").inner_text(), "tableau : synthèse en une phrase au-dessus")
+    g = page.evaluate("() => { const b = document.querySelector('.tb-boite'); return [b.scrollHeight, b.clientHeight]; }")
+    verif(abs(g[0] - g[1]) <= 2, f"tableau : toutes les lignes visibles, sans défilement dans la boîte ({g})")
     page.locator(".tb-boite").evaluate("b => b.scrollLeft = 250"); page.wait_for_timeout(100)
     g = page.evaluate("""() => { const b = document.querySelector('.tb-boite').getBoundingClientRect();
         const n = document.querySelector('.tb-ligne:not(.tb-tete) .tb-c-nom').getBoundingClientRect(); return [b.left, n.left, document.querySelector('.tb-boite').scrollLeft]; }""")
     verif(g[2] > 0 and abs(g[1] - g[0]) <= 2, f"défilement à droite : la colonne Colonie reste collée au bord ({g})")
     page.click(".tb-puce[data-v=absente]"); page.wait_for_timeout(200)
-    g = page.evaluate("() => [document.querySelector('.tb-boite').getBoundingClientRect().bottom, document.querySelector('.tb-synthese').getBoundingClientRect().bottom]")
-    verif(noms() == ["Bruyère"] and abs(g[0] - g[1]) <= 3, f"une seule colonie : la synthèse reste en bas du tableau ({g})")
+    verif(noms() == ["Bruyère"] and "1 colonie" in page.locator(".tb-resume").inner_text(), "une seule colonie : la phrase de synthèse suit le filtre")
     page.click(".tb-puce[data-act=tbeffacer]"); page.wait_for_timeout(200)
     page.click(".tb-bfiltres"); page.locator(".tb-filtres details.tb-tel summary").click()
     page.click(".tb-filtres [data-act=tbcol][data-v=rucher]"); page.keyboard.press("Escape"); page.wait_for_timeout(200)

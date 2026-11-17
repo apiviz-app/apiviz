@@ -5,6 +5,48 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.55 · à publier en recette · corrections du 17 novembre et écran Factures
+**Migration 025 (additive, ne casse pas l'ancienne version).** Retours de Pierre-Louis du 17 nov. 2026 sur téléphone,
+maquettes validées le jour même (« implémente toutes les modifications »).
+
+Pour l'apiculteur :
+1. **Ruchers › Tableau** (téléphone) : le tableau prend toute la hauteur et toute la largeur ; il n'est plus coupé à
+   quatre lignes avec un vide dessous. Les colonies sont rangées par rucher, sous un en-tête (nom, nombre) : le rucher
+   n'est plus répété sous chaque nom. La synthèse passe en une phrase au-dessus (« Tout va bien : 12 colonies OK,
+   aucune faible. »). Sur ordinateur, rien ne change.
+2. **Réglages › Équipe** : plus rien ne dépasse de l'écran. Les e-mails longs passent à la ligne, « Changer le rôle » et
+   « Retirer » descendent sous le membre, « (toi) » devient une pastille « Toi ». Un membre qui n'a pas donné son prénom
+   peut recevoir un nom (« Ajouter un nom ») : il vaut pour toute l'exploitation.
+3. **Acheté par** : tous les membres de l'équipe sont proposés, même ceux qui n'ont pas encore rempli leur profil
+   (auparavant seul le compte avec un prénom apparaissait). Sans prénom ni nom donné : le début de l'e-mail. « Ma
+   poche » devient « Poche de … » quand c'est un associé qui avance l'argent (déjà en place).
+4. **Finances › Factures** (nouvel onglet, entre Dépenses et Budget) : une facture par achat, rangées par mois, avec
+   recherche et puces (Avancées par un associé, Par <prénom>, Sans fichier), le total de l'année et ce qu'ont avancé
+   les associés. Le détail montre le fichier (Voir, Joindre, Remplacer), les lignes (toucher une ligne ouvre la
+   dépense), le stock qui a bougé avec la facture et « Refaire cet achat ».
+5. **Joindre la facture** : nouveau champ « Joindre la facture (photo ou PDF) » dans « Ajouter un achat » ; une facture
+   lue par API (une seule pièce) est gardée d'office avec l'achat. Sans réseau, l'achat part plus tard et le fichier
+   se joint depuis Factures.
+
+Technique : `vue-tableau.js` (groupes et phrase de synthèse sur téléphone, plus de hauteur imposée), `exploitations.js`
+et `profil.js` (lignes de membres, `mbnommer`), `regles-profil.js` (`nomsDonnes`, `nomMembre`, `associesMembres`,
+réglage `noms_membres`), `factures-regles.js` et `factures.js` (écrans `factures` et `achatfacture`), `achat.js` et
+`facture.js` (fichier joint), `gabarit.js` et `navigation.js` (onglet, parent), `styles/58-corrections.css`.
+Migration `025-factures-fichiers.sql` (colonne `depenses.fichier`, espace privé `factures`, règles d'accès ; test
+`tests/sql/test_025.mjs`). Tests : `factures.test.mjs`, `operationnel.test.mjs`, `etapes_tb`, `etapes_ex`,
+`etapes_sd` (Factures et Facture ajoutés), `etapes_nk`, `etapes_ra`. Arborescence : `05_UX_UI_ET_NAVIGATION.md` et
+`GUIDE.md` mis à jour.
+
+### À vérifier
+- Recette, téléphone : Ruchers › Tableau : toutes les colonies se voient en faisant défiler la page, rangées par
+  rucher, avec la phrase de synthèse au-dessus.
+- Réglages › Équipe : aucun bouton ni e-mail ne dépasse à droite ; « Ajouter un nom » pour Johan, puis le nom apparaît
+  dans l'équipe et dans « Acheté par ».
+- Ajouter un achat : « Acheté par » propose les trois membres ; choisir Johan et « Poche de Johan » ; joindre un PDF ;
+  enregistrer, puis Finances › Factures : la facture a son trombone, « Voir » ouvre le PDF.
+- Factures › une facture : lignes, stock, « Refaire cet achat » ouvre la feuille préremplie.
+- Compte en lecture seule : la liste et le fichier se consultent, aucun bouton pour joindre ni ajouter.
+
 ## v5.54 · fonction serveur seulement · API lit enfin la photo de la facture
 **Aucune migration, rien à publier côté application.** Correctif de la fonction `lire-facture`, déployé le 16 nov. 2026
 sur `apidoo-test` puis `apidoo` à la demande de Pierre-Louis.

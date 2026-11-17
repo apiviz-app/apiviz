@@ -61,3 +61,32 @@ export function reponses(b) {
 
 /** Personnes sans compte de l'exploitation (réglage « associes », gardé depuis 017). */
 export const sansCompte = (reglages) => (Array.isArray(reglages?.associes) ? reglages.associes : []).map((x) => String(x || "").trim()).filter((x) => x && x.toLowerCase() !== "société");
+
+/**
+ * Noms donnés aux membres sans prénom (corrections du 17 nov. 2026), par un responsable, pour toute l'exploitation :
+ * réglage « noms_membres » = { "<e-mail>": "Johan" }. Le prénom choisi par la personne elle-même passe avant.
+ */
+export const nomsDonnes = (reglages) => {
+  const m = reglages?.noms_membres;
+  return m && typeof m === "object" && !Array.isArray(m) ? m : {};
+};
+
+/** Nom à afficher d'un membre : son prénom et nom, sinon le nom donné par l'exploitation, sinon "". */
+export function nomMembre(n, reglages) {
+  const propre = [n?.prenom, n?.nom].map((x) => String(x || "").trim()).filter(Boolean).join(" ");
+  if (propre) return propre;
+  return String(nomsDonnes(reglages)[String(n?.email || "").toLowerCase()] || "").trim();
+}
+
+/**
+ * Prénoms proposés dans « Acheté par » et « Vendu par » : chaque membre, même sans prénom (avant le 17 nov., seul
+ * celui qui avait rempli son profil apparaissait), puis les personnes sans compte. Un membre sans prénom ni nom donné
+ * apparaît sous le début de son e-mail (« cochardjohan29 »).
+ */
+export function associesMembres(noms, reglages) {
+  const donnes = nomsDonnes(reglages);
+  const membres = (noms || []).map((n) => String(n?.prenom || "").trim()
+    || String(donnes[String(n?.email || "").toLowerCase()] || "").trim()
+    || String(n?.email || "").split("@")[0].trim()).filter(Boolean);
+  return [...new Set([...membres, ...sansCompte(reglages)])];
+}

@@ -1,0 +1,109 @@
+/* Apiviz — corrections du 17 nov. 2026 (maquettes validées par Pierre-Louis).
+   1. Ruchers › Tableau sur téléphone : la liste prend toute la hauteur et toute la largeur, rangée par rucher, la
+      synthèse en une phrase au-dessus (src/domaines/ruchers/vue-tableau.js).
+   2. Réglages › Équipe : plus rien ne dépasse (e-mails longs, « Changer le rôle », « Retirer »), « Toi » en pastille.
+   3. Achat : « Joindre la facture (photo ou PDF) ».
+   4. Finances › Factures : liste par mois et détail d'une facture (src/domaines/finances/factures.js). */
+
+/* 1. Ruchers › Tableau, téléphone */
+.tb-resume{margin:0;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r-m);font-size:15px;font-weight:600;line-height:1.35}
+.tb-resume.ok{background:var(--goodbg);color:#1F5239}
+.tb-resume.avoir{background:var(--watchbg);color:var(--watch)}
+.tb-resume-a{flex:none;width:18px;height:16px;background:currentColor;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.tb-gligne .tb-gcell{position:sticky;left:0;z-index:2;width:100vw;max-width:100%;height:40px;justify-content:space-between;gap:8px;padding:0 16px;background:var(--ground);border-top:1px solid var(--line)}
+.tb-gcell b{font-size:14px}
+.tb-gcell span{font-size:13px;color:var(--muted)}
+@media (max-width:1023px){
+  .tb[data-aff=tableau] .tb-boite{min-height:0;overflow-x:auto;overflow-y:hidden;margin-inline:calc((100% - 100vw) / 2);border-radius:0;border-left:0;border-right:0;box-shadow:none}
+  .tb[data-aff=tableau] .tb-table{min-height:0}
+  .tb[data-aff=tableau] .tb-reste{display:none}
+  .tb[data-aff=tableau] .tb-c-nom{width:clamp(168px,46vw,220px);padding-left:16px}
+  .tb[data-aff=tableau] .tb-tete .tb-c-nom{padding-left:16px}
+  .tb[data-aff=tableau] .tb-nom-t b{font-size:16px}
+  .tb-gligne .tb-gcell{width:100vw}
+}
+
+/* 2. Réglages › Équipe */
+.ex-row{flex-wrap:wrap}
+.ex-row > span:first-child{flex:1 1 220px;min-width:0}
+.ex-row b{overflow-wrap:anywhere}
+.ex-row .actions{flex-wrap:wrap;gap:8px;margin-left:auto}
+.ex-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.ex-qui .mb-nom{min-width:0;max-width:100%}
+.ex-qui .mb-nom > span:last-child{min-width:0}
+.ex-role{flex-basis:100%}
+.ex-qui:has(.mb-nom) .ex-role{padding-left:50px}
+.ex-toi{background:#E9ECE4;color:#3F4A44}
+.mb-id{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.mb-mail{overflow-wrap:anywhere}
+.ex-row .mb-nommer{min-height:36px;margin:0;padding:0;border:0;background:none;color:var(--good);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.mb-sans-c .btn{width:100%;white-space:normal}
+@media (max-width:640px){
+  .ex-membre .actions{flex-basis:100%;justify-content:flex-end}
+  .ex-membre .actions .btn{min-height:44px}
+}
+
+/* 3. Achat : joindre la facture */
+.st-fichier{display:block;margin:4px 0 12px;font-weight:600}
+.st-fichier-b{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:8px 14px;border:1.5px dashed var(--line2);border-radius:var(--r-m);background:var(--ground);color:var(--ink);font-size:15px;text-align:center;cursor:pointer}
+.st-fichier.choisi .st-fichier-b{border-style:solid;border-color:var(--good);background:var(--goodbg);color:#1F5239}
+.st-fichier:focus-within .st-fichier-b{outline:3px solid var(--honey-light);outline-offset:2px}
+
+/* 4. Finances › Factures */
+.fa-cherche{display:flex;flex-direction:row;align-items:center;gap:10px;height:48px;padding:0 14px;background:#fff;border:1px solid var(--line2);border-radius:var(--r-pill);color:var(--muted);font-weight:400}
+.fa-cherche input{flex:1;min-width:0;width:auto;min-height:0;height:100%;padding:0;border:0;outline:0;background:transparent;font-size:16px;color:var(--ink)}
+.fa-cherche:focus-within{border-color:var(--pine)}
+.fa-tuiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fa-tuile{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fa-tuile span{font-size:13px;color:var(--muted)}
+.fa-tuile b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-variant-numeric:tabular-nums}
+.fa-tuile.avance{background:var(--watchbg);border-color:var(--watchbg)}
+.fa-tuile.avance span{color:var(--watch)}
+.fa-tuile .link{align-self:flex-start;min-height:36px;padding:0;font-size:13px;text-align:left}
+.fa-mois{display:flex;flex-direction:column}
+.fa-mt{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 8px;font-size:17px}
+.fa-mt-n{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.fa-liste,.fa-lignes{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.fa-liste li + li,.fa-lignes li + li{border-top:1px solid var(--line)}
+.fa-l{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px;border:0;background:none;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.fa-l:hover{background:#FAFBF7}
+.fa-ic{position:relative;flex:none;width:40px;height:40px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;display:inline-flex;align-items:center;justify-content:center}
+.fa-ic.grand{width:56px;height:72px}
+.fa-pj{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:var(--good);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.fa-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fa-l1{display:flex;justify-content:space-between;gap:8px}
+.fa-l1 b{font-size:16px;overflow-wrap:anywhere}
+.fa-m{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fa-l2{font-size:13px;color:var(--muted)}
+.fa-l3{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.fa-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;font-size:13px;font-weight:600}
+.fa-chip.ok{background:var(--goodbg);color:#1F5239}
+.fa-chip.avance{background:var(--watchbg);color:var(--watch)}
+.fa-vide{padding:20px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);text-align:center}
+.fa-vide p{margin:0 0 6px}
+.fa-detail{display:flex;flex-direction:column;gap:16px}
+.fa-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0}
+.fa-total b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:36px;letter-spacing:-.018em;font-variant-numeric:tabular-nums}
+.fa-infos{margin:0;padding:0 16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fa-i{display:flex;justify-content:space-between;gap:12px;padding:14px 0}
+.fa-i + .fa-i{border-top:1px solid var(--line)}
+.fa-i dt{color:var(--muted)}
+.fa-i dd{margin:0;font-weight:600;text-align:right;overflow-wrap:anywhere}
+.fa-bloc{display:flex;flex-direction:column;gap:10px}
+.fa-bloc .u-titre{margin:0}
+.fa-fichier{display:flex;gap:14px;align-items:center;padding:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fa-fnom{display:block;overflow-wrap:anywhere}
+.fa-fact{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.fa-joindre{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-style:dashed}
+.fa-ligne{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.fa-ligne span{display:flex;flex-direction:column;min-width:0}
+.fa-ligne:disabled{cursor:default;color:var(--ink)}
+.fa-somme{display:flex;justify-content:space-between;margin:0;padding:0 14px;font-weight:700;font-size:16px}
+.fa-stock{padding:14px 16px;background:var(--watchbg);border-radius:var(--r-m)}
+.fa-stock ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fa-actions{display:flex;flex-direction:column;gap:10px}
+.fa-actions .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px}
+@media (min-width:1024px){
+  .fa-ecran .fa-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .fa-detail{max-width:720px}
+}

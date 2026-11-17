@@ -96,6 +96,14 @@ function enTete(id, libelle, t) {
   return `<button type="button" class="tb-tri" data-act="tbtri" data-v="${id}" aria-label="Trier par ${e(libelle.toLowerCase())}">${e(libelle)}<span class="tb-fl ${actif ? "on" : ""}" aria-hidden="true">${actif ? (t.sens === 1 ? "↓" : "↑") : "↕"}</span></button>`;
 }
 
+/** Synthèse en une phrase (téléphone) : « Tout va bien : 12 colonies OK, aucune faible. » */
+function phraseSynthese(s, ls) {
+  const urg = ls.filter((l) => l.niveau === "urg").length, voir = ls.filter((l) => l.niveau === "watch").length;
+  if (!urg && !voir) return `Tout va bien : ${plur(ls.length, "colonie")} OK, ${s.force}.`;
+  const parts = [urg ? plur(urg, "urgente") : "", voir ? `${voir} à voir` : ""].filter(Boolean).join(" et ");
+  return `${parts} sur ${plur(ls.length, "colonie")}, ${s.force} en force.`.replace(/^./, (c) => c.toUpperCase());
+}
+
 function tableau(ls, cols, t, sel) {
   const tous = ls.length > 0 && ls.every((l) => sel.has(l.id));
   const sortDe = (id) => (t.tri === id ? (t.sens === 1 ? "descending" : "ascending") : "none");
@@ -103,21 +111,30 @@ function tableau(ls, cols, t, sel) {
       <div class="tb-c tb-c-nom" role="columnheader" aria-sort="${sortDe("nom")}"><input type="checkbox" class="tb-coche" data-act="tbtout" aria-label="Tout sélectionner" ${tous ? "checked" : ""}>${enTete("nom", "Colonie", t)}</div>
       ${cols.map((c) => `<div class="tb-c tb-c-${c.id}" role="columnheader" aria-sort="${sortDe(c.id)}">${enTete(c.id, c.libelle, t)}</div>`).join("")}
       <div class="tb-c tb-fin" aria-hidden="true"></div></div>`;
-  const lignes = ls.map((l) => {
+  // Téléphone (corrections du 17 nov. 2026) : lignes rangées par rucher sous un en-tête, le rucher n'est plus répété
+  // sous chaque nom ; la synthèse passe en une phrase au-dessus du tableau.
+  const tel = !ordinateur();
+  const ligne = (l, groupe) => {
     const coche = sel.has(l.id);
+    const sous = groupe ? l.code : [l.code, l.rucher].filter(Boolean).join(" · ");
     return `<div class="tb-ligne${coche ? " coche" : ""}${t.fiche === l.id ? " ouverte" : ""}" role="row">
       <div class="tb-c tb-c-nom" role="rowheader"><input type="checkbox" class="tb-coche" data-act="tbcoche" data-v="${e(l.id)}" aria-label="Sélectionner ${e(l.nom)}" ${coche ? "checked" : ""}>
-        <button type="button" class="tb-nom" data-act="tbouvrir" data-v="${e(l.id)}">${pastille(l)}<span class="tb-nom-t"><b>${e(l.nom)}</b><span class="tb-sous">${e([l.code, l.rucher].filter(Boolean).join(" · "))}</span></span><span class="tb-code">${e(l.code)}</span></button></div>
+        <button type="button" class="tb-nom" data-act="tbouvrir" data-v="${e(l.id)}">${pastille(l)}<span class="tb-nom-t"><b>${e(l.nom)}</b>${sous ? `<span class="tb-sous">${e(sous)}</span>` : ""}</span><span class="tb-code">${e(l.code)}</span></button></div>
       ${cols.map((c) => { const x = cellule(c.id, l); return `<div class="tb-c tb-c-${c.id}${x.alerte ? " alerte" : ""}${x.rien ? " rien" : ""}${x.ton ? " t-" + x.ton : ""}" role="cell">${x.html}</div>`; }).join("")}
       <div class="tb-c tb-fin" aria-hidden="true"></div></div>`;
-  }).join("");
+  };
+  const gs = tel && ls.length ? groupes(t, ls).filter((g) => g.lignes.length) : [{ cle: null, lignes: ls }];
+  const lignes = gs.map((g) => g.cle === null ? g.lignes.map((l) => ligne(l, false)).join("")
+    : `<div class="tb-ligne tb-gligne" role="row"><div class="tb-c tb-gcell" role="rowheader"><b>${e(g.nom)}</b><span>${plur(g.lignes.length, "colonie")}</span></div></div>`
+      + g.lignes.map((l) => ligne(l, true)).join("")).join("");
   const s = T.synthese(ls);
-  const synth = ls.length ? `<div class="tb-ligne tb-synthese" role="row">
+  const synth = ls.length && !tel ? `<div class="tb-ligne tb-synthese" role="row">
       <div class="tb-c tb-c-nom" role="rowheader"><b>Synthèse</b><span>${plur(ls.length, "colonie")}</span></div>
       ${cols.map((c) => `<div class="tb-c tb-c-${c.id}" role="cell">${e(s[c.id])}</div>`).join("")}
       <div class="tb-c tb-fin" aria-hidden="true"></div></div>` : "";
   const vide = ls.length ? "" : `<div class="tb-vide"><p>Aucune colonie ne correspond à ces filtres.</p><button type="button" class="btn" data-act="tbeffacer">Effacer les filtres</button></div>`;
-  return `<div class="tb-boite" tabindex="0" aria-label="Tableau des colonies : fais défiler pour voir toutes les colonnes">
+  const resume = ls.length && tel ? `<p class="tb-resume ${s.niveau === "Tout va bien" ? "ok" : "avoir"}"><span class="tb-resume-a" aria-hidden="true"></span>${e(phraseSynthese(s, ls))}</p>` : "";
+  return `${resume}<div class="tb-boite" tabindex="0" aria-label="Tableau des colonies : fais défiler pour voir toutes les colonnes">
     <div class="tb-table" role="table" aria-label="Colonies" aria-rowcount="${ls.length + 1}">${tete}${lignes}${vide}
       <div class="tb-reste" aria-hidden="true"><div class="tb-c tb-c-nom"></div></div>${synth}</div></div>`;
 }
@@ -320,6 +337,9 @@ export function ecran() {
 function ajuster() {
   const b = document.querySelector(".tb-boite");
   if (!b) return;
+  // Téléphone (17 nov. 2026) : le tableau prend la hauteur de ses lignes et la page défile ; plus de boîte coupée à
+  // quatre lignes avec un vide dessous.
+  if (!ordinateur()) { b.style.height = ""; return; }
   // Barres fixées en bas (barre du bas du téléphone, barre de sélection) : le tableau s'arrête au-dessus.
   let limite = window.innerHeight;
   for (const x of document.querySelectorAll(".bottom, .tb-selection")) {

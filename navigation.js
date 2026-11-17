@@ -33,7 +33,7 @@ const NL = (() => {
   // Volet du téléphone : les entrées qui ne sont pas dans la barre du bas, avec ce qu'elles contiennent.
   const VOLET = [
     ["agenda", "Agenda", "Tâches, visites prévues, idées de saison"],
-    ["pilotage", "Finances", "Bilan, dépenses, budget, entre associés"],
+    ["pilotage", "Finances", "Bilan, dépenses, factures, budget, entre associés"],
     ["materiel", "Matériel", "Stock, liste de courses, fournisseurs"],
     ["registre", "Registre et déclaration", "Traitements, ordonnances, déclaration annuelle"],
     ["reglages", "Réglages", "Toi, exploitation et équipe, rappels, appli"],
@@ -42,7 +42,7 @@ const NL = (() => {
   const PARENT = { ruche: "ruches", rucher: "ruches", visite: "ruches", deplacer: "ruches", tournee: "ruches", meteo: "ruches",
     carte: "ruches", varroa: "ruches", visiteexpress: "ruches",
     miel: "clients", recolte: "clients", lot: "clients", miseenpots: "clients", ventes: "clients", vente: "clients", facture: "clients",
-    compta: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
+    compta: "pilotage", factures: "pilotage", achatfacture: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
     courses: "materiel", inventaire: "materiel", fournisseurs: "materiel", declaration: "registre",
     membres: "reglages", profil: "reglages", rappels: "reglages",
     activite: "dash", saison: "agenda", recherche: "dash" };
@@ -56,7 +56,7 @@ const NL = (() => {
   const i = BOTTOM.findIndex(([k]) => k === "plus");
   if (i >= 0) BOTTOM[i] = ["menu", "Menu"];
   // Écrans rangés derrière « Menu » dans la barre du bas.
-  ["pilotage", "compta", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "agenda", "saison"]
+  ["pilotage", "compta", "factures", "achatfacture", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "agenda", "saison"]
     .forEach((r) => (GROUP[r] = "menu"));
 
   const goAvant = ACT.go;

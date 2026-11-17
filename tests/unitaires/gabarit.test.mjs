@@ -38,7 +38,7 @@ test("années de la puce : uniques, la plus récente d'abord", () => {
 
 test("écrans-sujets : une adresse donne son sujet, ses onglets et l'onglet allumé", () => {
   assert.equal(G.sujetDe("compta").titre, "Finances");
-  assert.deepEqual(G.sujetDe("compta").onglets.map(([r]) => r), ["pilotage", "compta", "previsions", "associes"]);
+  assert.deepEqual(G.sujetDe("compta").onglets.map(([r]) => r), ["pilotage", "compta", "factures", "previsions", "associes"]);
   assert.equal(G.sujetDe("courses").cle, "materiel");
   assert.equal(G.sujetDe("declaration").titre, "Registre et déclaration");
   assert.equal(G.sujetDe("membres").actif, "membres");

@@ -17,7 +17,7 @@
     # Finances : un écran, quatre onglets
     page.wait_for_selector(".g-onglets")
     verif(page.locator(".wrap > .head h1").inner_text() == "Finances", "Finances : titre du sujet")
-    verif(page.locator(".g-onglets button").all_inner_texts() == ["Bilan", "Dépenses", "Budget", "Associés"], "Finances : Bilan, Dépenses, Budget, Associés")
+    verif(page.locator(".g-onglets button").all_inner_texts() == ["Bilan", "Dépenses", "Factures", "Budget", "Associés"], "Finances : Bilan, Dépenses, Factures, Budget, Associés")
     verif(page.locator(".g-onglets button.on").inner_text() == "Bilan" and page.locator(".wrap .g-retour").count() == 0, "Finances : Bilan allumé, pas de retour")
     page.wait_for_timeout(500)
     if cap: page.screenshot(path=cap + "/ra-finances-390.png")
