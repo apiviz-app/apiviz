@@ -1727,7 +1727,7 @@ Aucune saisie perdue, toutes les saisies terrain possibles sans réseau.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-012 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | FAIT — à publier en recette (v5.56, IT-09, migration 026, branche `claude/it-09-hors-ligne-v2`) : corrections et suppressions gardées sans réseau (visites, colonies, récoltes, dépenses, tâches ; suppression des ventes), fusion avec les créations en attente, dépendances (colonie avant sa visite), reprise automatique de la file v1, drapeau de retour `apidoo-file-v1` ; « Corriger » une visite ; scénario etapes_h2. Intrants d'une visite non corrigeables (supprimer puis refaire) |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | L |
@@ -1766,7 +1766,7 @@ Aucune saisie perdue, toutes les saisies terrain possibles sans réseau.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-012 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | FAIT — à publier en recette (v5.56, IT-09, migration 026) : modifie_le et déclencheur, modifier_saisie() / supprimer_saisie() avec version attendue et conflit champ par champ, fiche « Choisis la version à garder », suppression en conflit ; scénario etapes_hc (deux membres simulés). Scénario sur deux vrais téléphones : à faire en recette |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | M |
@@ -1802,7 +1802,7 @@ Aucune saisie perdue, toutes les saisies terrain possibles sans réseau.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-012 |
-| Statut actuel | EXISTANT MAIS À AMÉLIORER |
+| Statut actuel | FAIT — à publier en recette (v5.56, IT-09) : écran Synchronisation (table des écrans), compteurs par exploitation, « N saisies en attente dans … » et « Y passer » dans le menu du compte, changement d'exploitation permis avec des saisies en attente ; scénario etapes_hc |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | XS |

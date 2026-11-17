@@ -5,6 +5,57 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.56 · à publier en recette · hors ligne v2 : corriger, supprimer, choisir (IT-09)
+**Migration 026 (additive, ne casse pas l'ancienne version).** Itération IT-09 (AP-FEAT-043, AP-FEAT-044,
+AP-FEAT-045 ; AP-US-047 à 050). Plan validé par Pierre-Louis le 17 nov. 2026.
+
+Pour l'apiculteur :
+1. **Sans réseau, on peut maintenant corriger et supprimer**, plus seulement créer : visites, colonies (hausses,
+   équipement, état, notes…), récoltes, dépenses, tâches ; suppression des visites, récoltes, dépenses, tâches et
+   ventes. La correction s'affiche tout de suite, marquée « en attente », et part au retour du réseau.
+2. **Corriger une visite** : nouveau lien « Corriger » sous chaque visite du journal (date, activité, provisions,
+   couvain, force, œufs, cellules royales, reine, poids, varroa, note), en ligne comme sans réseau. Les produits utilisés
+   ne se corrigent pas ici (le stock en dépend) : supprimer puis refaire la visite.
+3. **Colonie créée sans réseau, visitée aussitôt** : la visite attend la colonie et part après elle, sans erreur.
+4. **Conflit** : si un autre membre a changé la même saisie pendant que tu étais sans réseau, rien n'est écrasé.
+   Une fiche montre les deux versions champ par champ (« Ta version » / « Version enregistrée ») et demande laquelle
+   garder ; les champs changés d'un seul côté partent sans question. Une suppression d'une saisie modifiée entre-temps
+   demande « Garder la saisie » ou « Supprimer quand même ».
+5. **Écran Synchronisation** (Réglages, menu du compte, bandeau « Voir ») : en une phrase, si tout est parti ; la
+   liste de ce qui attend, ce qui est à corriger ou à choisir, ce qui part après une autre saisie, les photos.
+6. **Plusieurs exploitations** : on peut changer d'exploitation avec des saisies en attente (elles restent rangées
+   dans la leur). Le menu du compte affiche « 2 saisies en attente dans Rucher Pro » avec « Y passer ».
+7. Rien n'est jamais retiré de la file sans un geste : une saisie refusée ou en conflit reste « à corriger ».
+
+Technique : `src/donnees/file.js` (nouveau : format d'opération, dépendances, fusion, conflits, compteurs ; exposé
+sous `Regles.file`), `offline.js` (corrections et suppressions gardées, reprise automatique de la file v1, envoi
+ordonné, statut « conflit », fiche de choix, `HL.etat`, `HL.blocCompte`, `HL.nbIci`), `src/domaines/visites/corriger.js`
+(action `modvisite`), `src/domaines/compte/synchronisation.js` (écran `synchronisation`, enregistré dans la table des
+écrans), `ux.js` (lien « Corriger »), `nav4.js` (bloc Synchronisation du menu du compte), `exploitations.js`
+(changement d'exploitation permis avec des saisies en attente), `navigation.js` et `gabarit.js` (parent Réglages),
+`styles/04-hors-ligne.css`. La file des photos (`photos.js`) reste à part : ses photos partent après leur visite, et
+l'écran Synchronisation les compte avec le reste.
+Migration `026-hors-ligne-v2.sql` : colonne `modifie_le` et déclencheur sur visites, ruches, recoltes, depenses,
+taches, ventes, reines ; `colonnes_modifiables(table)` ; `modifier_saisie(p)` et `supprimer_saisie(p)` (version
+attendue, conflit champ par champ, idempotentes, security invoker). Test `tests/sql/test_026.mjs` (39 vérifications).
+Tests : `tests/unitaires/file.test.mjs` (10 tests, dont l'égalité des listes blanches application / migration),
+`tests/etapes_h2.txt` (20 opérations mixtes sans réseau puis renvoi), `tests/etapes_hc.txt` (conflit, suppression en
+conflit, quarantaine, reprise de la file v1, deux exploitations, drapeau de retour arrière).
+Retour arrière sans republier : `localStorage.setItem("apidoo-file-v1", "1")` sur un téléphone ramène au comportement
+v1 (sans réseau, créations seules) ; ce qui est déjà gardé part quand même.
+
+### À vérifier
+- Recette, téléphone, mode avion : corriger le poids d'une visite d'hier, cocher une tâche, supprimer une dépense ;
+  le bandeau compte les saisies ; rallumer le réseau : tout part, le bandeau disparaît, les valeurs sont celles saisies.
+- Mode avion : « Ajouter des ruches » (une), puis visiter cette colonie ; retour du réseau : la colonie puis la visite.
+- Deux téléphones (Pierre-Louis et Johan) : l'un corrige la note d'une visite en mode avion, l'autre la change en
+  ligne ; au retour du réseau, la fiche « Choisis la version à garder » s'ouvre depuis « À corriger ».
+- Réglages › menu du compte › Synchronisation : « Tout est envoyé » quand rien n'attend ; lisible à 375 px.
+- Saisies en attente dans une exploitation, passer dans une autre : le menu du compte dit « N saisies en attente
+  dans … » et « Y passer » les envoie.
+- Un téléphone qui avait des saisies gardées avec la version précédente : elles partent après la mise à jour.
+- Compte en lecture seule : pas de lien « Corriger ».
+
 ## v5.55 · à publier en recette · corrections du 17 novembre et écran Factures
 **Migration 025 (additive, ne casse pas l'ancienne version).** Retours de Pierre-Louis du 17 nov. 2026 sur téléphone,
 maquettes validées le jour même (« implémente toutes les modifications »).

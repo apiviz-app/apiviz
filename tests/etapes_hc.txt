@@ -1,0 +1,122 @@
+    # IT-09 — Conflits, quarantaine, reprise de la file v1 et plusieurs exploitations (AP-FEAT-044, AP-US-049,
+    # AP-US-050, AP-TECH-148). Deux membres modifient la même visite, l'un sans réseau : l'écran montre les deux
+    # versions champ par champ ; une suppression en conflit ; une correction refusée reste jusqu'au geste de
+    # l'utilisateur ; une saisie de la file v1 est reprise ; « 2 saisies en attente dans Rucher Pro » dans le menu du
+    # compte, avec « Y passer ». Avec CAPTURES=<dossier>, captures de l'écran de choix à 375 et 1280 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    V0, REC0, T1 = (str(uuid.uuid4()) for _ in range(3))
+    t0 = "2026-11-16T10:00:00+00:00"
+    DATA["visites"].append({"id": V0, "ruche_id": R1, "date_visite": "2026-11-16", "activite": "Normale", "provisions": "Bonnes", "reine": "Vue",
+        "couvain": "", "poids_kg": 30, "varroa": None, "force": None, "oeufs_vus": None, "cellules_royales": None, "note": "vue", "traitement": "", "modifie_le": t0})
+    DATA["recoltes"].append({"id": REC0, "ruche_id": R1, "date_recolte": "2026-07-01", "kg": 18, "modifie_le": t0})
+    DATA["taches"].append({"id": T1, "titre": "Nourrir", "echeance": None, "faite": False, "modifie_le": t0})
+    E2 = str(uuid.uuid4())
+    EXPL["miennes"].append({"id": E2, "nom": "Rucher Pro", "role": "responsable"})
+    BASE = "'apidoo-hors-ligne' + (window.APIDOO?.env === 'recette' ? '-recette' : '')"
+    file = lambda: page.evaluate("HL.etat().file")
+    def couper(): etat["coupe"] = True; ctx.set_offline(True); page.wait_for_timeout(300)
+    def retablir(): etat["coupe"] = False; ctx.set_offline(False)
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. AP-US-049 : je corrige la note et le poids sans réseau ; Johan change la note entre-temps.
+    couper()
+    page.evaluate(f"ACT.modvisite('{V0}')"); page.wait_for_selector("#sheet[open] [name=note]")
+    page.fill("#sheet [name=note]", "Ma note"); page.fill("#sheet [name=poids_kg]", "32"); page.click("#sheet .btn.main"); page.wait_for_timeout(400)
+    v = next(x for x in DATA["visites"] if x["id"] == V0); v.update({"note": "Note de Johan", "modifie_le": "2026-11-17T07:00:00+00:00"})
+    retablir()
+    page.wait_for_selector(".toast >> text=Un autre membre a modifié la même saisie", timeout=20000)
+    verif(v["note"] == "Note de Johan" and v["poids_kg"] == 30, "conflit : rien n'est écrit sur le serveur")
+    verif(file()[0]["statut"] == "conflit" and page.evaluate("HL.nb()") == 1, "la correction reste sur le téléphone, en conflit")
+    verif("1 à corriger" in page.locator(".hl-band").inner_text() and "modifiée par un autre membre" in page.locator(".hl-band").inner_text(), "bandeau : modifiée par un autre membre, 1 à corriger")
+    page.click(".hl-pastille"); page.wait_for_selector("#sheet[open] [data-act=hlconflit]"); page.click("#sheet [data-act=hlconflit]")
+    page.wait_for_selector("#sheet[open] .hl-choix")
+    txt = page.locator("#sheet").inner_text()
+    verif(page.locator("#sheet .hl-choix").count() == 1 and "Ma note" in txt and "Note de Johan" in txt and "Ta version" in txt and "Version enregistrée" in txt,
+          "écran de choix : la note, ta version et la version enregistrée")
+    verif("Poids (kg) 32" in txt, "le poids, changé d'un seul côté, partira sans question")
+    if cap:
+        page.set_viewport_size({"width": 375, "height": 812}); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/conflit-375.png")
+        page.set_viewport_size({"width": 1280, "height": 800}); page.wait_for_timeout(300); page.screenshot(path=f"{cap}/conflit-1280.png")
+        page.set_viewport_size({"width": 390, "height": 844})
+    page.check("#sheet input[name=note][value=serveur]"); page.click("#sheet .btn.main")
+    page.wait_for_function("HL.nb() === 0", timeout=15000)
+    verif(v["note"] == "Note de Johan" and v["poids_kg"] == 32, "choix appliqué : la note de Johan gardée, mon poids envoyé")
+
+    # 2. Suppression en conflit : je supprime la tâche, Johan la renomme ; je choisis de la garder.
+    couper()
+    page.evaluate(f"(async () => {{ await write(sb.from('taches').delete().eq('id', '{T1}'), ''); }})()"); page.wait_for_timeout(400)
+    tk = next(x for x in DATA["taches"] if x["id"] == T1); tk.update({"titre": "Nourrir au candy", "modifie_le": "2026-11-17T07:30:00+00:00"})
+    retablir()
+    page.wait_for_function("HL.etat().file.some((x) => x.statut === 'conflit')", timeout=20000)
+    verif(any(x["id"] == T1 for x in DATA["taches"]), "suppression en conflit : la tâche n'est pas supprimée")
+    page.evaluate("HL.ficheCorriger()"); page.click("#sheet [data-act=hlconflit]"); page.wait_for_selector("#sheet[open] [data-act=hlgarder]")
+    verif("Nourrir au candy" in page.locator("#sheet").inner_text(), "on voit la version modifiée par l'autre membre")
+    page.click("#sheet [data-act=hlgarder]"); page.wait_for_function("HL.nb() === 0", timeout=10000)
+    verif(any(x["id"] == T1 for x in DATA["taches"]) and not [1 for n, b in recu["rpc"] if n == "supprimer_saisie" and b["p"].get("forcer")], "« Garder la saisie » : rien n'est supprimé")
+
+    # 3. Quarantaine : le serveur refuse ; la correction reste, même après d'autres envois et un rechargement.
+    DATA["refuser"] = ["recoltes"]
+    couper()
+    page.evaluate(f"(async () => {{ await write(sb.from('recoltes').update({{ kg: 25 }}).eq('id', '{REC0}'), ''); }})()"); page.wait_for_timeout(400)
+    retablir()
+    page.wait_for_function("HL.etat().file.some((x) => x.statut === 'quarantaine')", timeout=20000)
+    page.evaluate("HL.envoyer()"); page.wait_for_timeout(800)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_timeout(800)
+    q = file()
+    verif(len(q) == 1 and q[0]["statut"] == "quarantaine" and "Refusé par le serveur" in q[0]["erreur"], "refusée : gardée « à corriger » après envois et rechargement")
+    page.evaluate("HL.ficheCorriger()"); page.wait_for_selector("#sheet[open] [data-act=hlabandonner]")
+    page.click("#sheet [data-act=hlabandonner]"); page.click("#sheet [data-act=hlabandonner]")  # deux temps : confirmer
+    page.wait_for_function("HL.nb() === 0", timeout=10000)
+    verif(True, "abandonnée seulement après le geste de l'utilisateur (deux temps)")
+    DATA["refuser"] = []
+
+    # 4. Reprise de la file v1 : une tâche gardée par l'ancienne version (sans « v ») passe au format 2, puis part.
+    couper()
+    TV1 = str(uuid.uuid4())
+    page.evaluate("""([base, id, ex]) => new Promise((ok) => { const r = indexedDB.open(eval(base)); r.onsuccess = () => {
+        const tx = r.result.transaction('file', 'readwrite');
+        tx.objectStore('file').put({ id: 'v1-' + id, type: 'insert', table: 'taches', lignes: [{ id, titre: 'Tâche de la file v1' }], cree: Date.now(), ex });
+        tx.oncomplete = () => { r.result.close(); ok(); }; }; })""", [BASE, TV1, page.evaluate("EX.courante()")])
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000); page.wait_for_timeout(500)
+    brut = page.evaluate("""(base) => new Promise((ok) => { const r = indexedDB.open(eval(base)); r.onsuccess = () => {
+        const q = r.result.transaction('file').objectStore('file').getAll(); q.onsuccess = () => { r.result.close(); ok(q.result); }; }; })""", BASE)
+    verif(len(brut) == 1 and brut[0].get("v") == 2 and brut[0].get("op") == "creer" and brut[0]["lignes"][0]["titre"] == "Tâche de la file v1",
+          "file v1 reprise au démarrage : format 2, contenu intact")
+    verif(page.evaluate(f"!!byId(S.d.taches, '{TV1}')"), "saisie v1 affichée")
+    retablir()
+    page.wait_for_function("HL.nb() === 0", timeout=20000)
+    verif(any(t["id"] == TV1 for t in DATA["taches"]), "saisie v1 envoyée au retour du réseau")
+
+    # 5. AP-US-050 : deux saisies dans « Rucher Pro », puis retour dans la première exploitation sans réseau.
+    E1n = page.evaluate("EX.courante()")
+    page.evaluate(f"EX.ouvrir('{E2}')"); page.wait_for_timeout(1500)
+    couper()
+    for t in ("Pro : traiter", "Pro : peser"):
+        page.evaluate("ACT.addsug(%s)" % json.dumps(t)); page.wait_for_timeout(250)
+    page.evaluate(f"EX.ouvrir('{E1n}')"); page.wait_for_timeout(1500)
+    verif(page.evaluate("EX.courante()") == E1n, "changement d'exploitation permis avec des saisies en attente")
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .hl-autre")
+    verif("2 saisies en attente dans Rucher Pro" in page.locator("#sheet .hl-autre").inner_text() and "Y passer" in page.locator("#sheet .hl-autre").inner_text(),
+          "menu du compte : « 2 saisies en attente dans Rucher Pro » et « Y passer »")
+    verif(not any(t["titre"].startswith("Pro :") for t in DATA["taches"]), "rien n'est parti dans la mauvaise exploitation")
+    page.click("#sheet [data-act=hlsynchro]")
+    page.wait_for_selector(".sy"); verif("Rucher Pro" in page.locator(".sy").inner_text(), "Synchronisation : les saisies de Rucher Pro sont signalées")
+    retablir()
+    page.evaluate("ACT.n4compte()"); page.wait_for_selector("#sheet[open] .hl-autre"); page.click("#sheet .hl-autre")
+    page.wait_for_function(f"EX.courante() === '{E2}'", timeout=10000)
+    page.wait_for_function("HL.nb() === 0", timeout=20000)
+    verif(len([t for t in DATA["taches"] if t["titre"].startswith("Pro :")]) == 2, "« Y passer » : les deux saisies de Rucher Pro sont parties")
+    # 6. Retour arrière (IT-09 §15) : drapeau « apidoo-file-v1 » → sans réseau, seules les créations, comme avant.
+    page.evaluate("localStorage.setItem('apidoo-file-v1', '1')")
+    couper()
+    msg = page.evaluate(f"write(sb.from('taches').update({{ faite: true }}).eq('id', '{T1}'), '').then(() => 'passé', (e) => e.message)")
+    verif("Pas de réseau" in msg and page.evaluate("HL.nb()") == 0, "drapeau v1 : correction sans réseau refusée, rien gardé (%s)" % msg)
+    page.evaluate("localStorage.removeItem('apidoo-file-v1')"); retablir()
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
