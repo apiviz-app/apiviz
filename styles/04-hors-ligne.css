@@ -24,7 +24,8 @@
 .hl-opt{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border:1px solid #DCE0D4;border-radius:var(--r-s);cursor:pointer;min-width:0}
 .hl-opt>span{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
 .hl-opt:has(input:checked){border-color:var(--accent,#9a6b00);background:var(--watchbg)}
-.hl-opt input{margin-top:3px;flex:none}
+#sheet .hl-opt input[type=radio],.hl-opt input[type=radio]{appearance:auto;-webkit-appearance:radio;width:20px;height:20px;min-height:0;padding:0;margin:2px 0 0;flex:none;border:0;box-shadow:none}
+#sheet .hl-opt,.hl-opt{flex-direction:row}
 .hl-versions{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:10px 0}
 .hl-v{display:flex;flex-direction:column;padding:8px 10px;border-radius:var(--r-s);background:var(--watchbg);overflow-wrap:anywhere}
 .hl-autre .btn{pointer-events:none}

@@ -382,7 +382,13 @@ const HL = (() => {
     const voir = n ? '<button type="button" class="hl-voir" data-act="hlvoir">Voir</button>' : "";
     if (st.hors) return `<div class="hl-band off" role="status">${ICO_OFF}<span>Hors ligne${st.depuis ? " · chiffres du " + esc(quand(st.depuis)) : ""}${n ? " · " + pluriel(n, "saisie") + " en attente" : ""}</span>${voir}${pastille}</div>`;
     if (n) return `<div class="hl-band sync" role="status">${ICO_SYNC}<span>${st.envoi ? "Envoi de " + pluriel(n, "saisie") + "…" : pluriel(n, "saisie") + " en attente d’envoi"}</span>${voir}${pastille}</div>`;
-    if (k) return `<div class="hl-band corr" role="status">${ICO_SYNC}<span>${k > 1 ? "Des saisies ont été refusées" : "Une saisie a été refusée"} par le serveur</span>${pastille}</div>`;
+    if (k) {
+      // Conflit (IT-09) : pas un refus du serveur, un autre membre a changé la même saisie.
+      const conf = aCorriger().every((x) => x.statut === CONFLIT);
+      const texte = conf ? (k > 1 ? "Des saisies ont été modifiées par un autre membre" : "Une saisie a été modifiée par un autre membre")
+        : (k > 1 ? "Des saisies ont été refusées" : "Une saisie a été refusée") + " par le serveur";
+      return `<div class="hl-band corr" role="status">${ICO_SYNC}<span>${texte}</span>${pastille}</div>`;
+    }
     return "";
   }
   function majBandeau() {

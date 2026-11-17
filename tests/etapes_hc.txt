@@ -34,7 +34,7 @@
     page.wait_for_selector(".toast >> text=Un autre membre a modifié la même saisie", timeout=20000)
     verif(v["note"] == "Note de Johan" and v["poids_kg"] == 30, "conflit : rien n'est écrit sur le serveur")
     verif(file()[0]["statut"] == "conflit" and page.evaluate("HL.nb()") == 1, "la correction reste sur le téléphone, en conflit")
-    verif("1 à corriger" in page.locator(".hl-band").inner_text(), "bandeau : 1 à corriger")
+    verif("1 à corriger" in page.locator(".hl-band").inner_text() and "modifiée par un autre membre" in page.locator(".hl-band").inner_text(), "bandeau : modifiée par un autre membre, 1 à corriger")
     page.click(".hl-pastille"); page.wait_for_selector("#sheet[open] [data-act=hlconflit]"); page.click("#sheet [data-act=hlconflit]")
     page.wait_for_selector("#sheet[open] .hl-choix")
     txt = page.locator("#sheet").inner_text()
