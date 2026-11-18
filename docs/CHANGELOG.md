@@ -38,7 +38,7 @@ Technique :
   et `livrer_commande` regroupent par catégorie, nom, format et prix (`is not distinct from` pour `format_g`).
 - `src/domaines/production/produits.js` (règles pures, `Regles.produits`) et `produit.js` (écran `produit`, flux ;
   `editlot` passe par lui pour un produit qui n'est pas du miel). Styles : `styles/64-produits.css`.
-- Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`, scénario `etapes_pr` (et `etapes_n4`,
+- Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`, scénario `etapes_pr` (et `etapes_n4`, `etapes_v3`,
   `etapes_nk`, `etapes_ra` mis à jour pour « Produits »).
 - 032 appliquée sur `apidoo-test` le 18 nov. 2026 (accès Supabase) ; `apidoo` : en attente de l'accord de Pierre-Louis.
 
