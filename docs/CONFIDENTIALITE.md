@@ -80,6 +80,16 @@ Pour fonctionner sans réseau, l'application garde sur votre téléphone ou votr
 l'exploitation ouverte, les saisies en attente d'envoi et les photos pas encore envoyées. Elles sont effacées à la
 déconnexion. Vos préférences d'affichage y sont aussi gardées.
 
+## Si vous commandez du miel en ligne
+
+Un apiculteur qui utilise Apiviz peut ouvrir une page de commande et vous en envoyer le lien. Quand vous réservez des
+pots sur cette page, Apiviz enregistre ce que vous saisissez : votre nom, votre numéro de téléphone, le lieu de retrait
+choisi, une note éventuelle et les pots réservés. Seuls les membres de l'exploitation de cet apiculteur les voient, pour
+préparer votre commande et vous prévenir (par SMS, depuis leur téléphone). Ces informations ne servent à rien d'autre,
+ne sont ni vendues ni transmises. Quand la commande est remise, vous devenez client de l'exploitation, comme pour une
+vente sur place. Pour les faire corriger ou effacer, adressez-vous à l'apiculteur, ou à nous (voir « Qui traite vos
+données »).
+
 ## Combien de temps
 
 | Donnée | Durée |
@@ -89,6 +99,7 @@ déconnexion. Vos préférences d'affichage y sont aussi gardées.
 | Journal des suppressions et modifications | 1 an, puis effacement automatique |
 | Journal des erreurs techniques | 90 jours, puis effacement automatique |
 | Questions posées à API | Non conservées : seul le nombre de questions du jour est gardé, pour le plafond d'usage |
+| Commande en ligne (nom, téléphone, pots) | Tant que l'exploitation existe, comme ses ventes et ses clients |
 | Données sur votre appareil | Jusqu'à la déconnexion |
 
 ## Vos droits

@@ -1,0 +1,80 @@
+    # v5.57 — Outils de terrain (maquettes « Nouveautés » du 17 nov. 2026) : étiquettes QR et ruche scannée, caisse du
+    # marché, commandes en ligne (écran Commandes de Miel). La page publique commande.html et ses fonctions SQL sont
+    # testées par tests/sql/test_027.mjs. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+
+    # 1. Une étiquette scannée avec l'appareil photo ouvre Apiviz sur la feuille de la ruche.
+    rid = R[1]; nom = next(r["nom"] for r in DATA["ruches"] if r["id"] == rid)
+    page.goto(url + "?ruche=" + rid + "&ex=" + E1); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_selector("#sheet .qr-feuille", timeout=5000)
+    verif(page.locator("#sheet .g-ftete h2").inner_text() == nom, f"lien scanné : la feuille de {nom} s'ouvre")
+    verif(page.locator("#sheet [data-act=qrfiche]").count() == 1 and page.locator("#sheet .qr-actions .btn").count() >= 1, "feuille : visite et fiche à portée de pouce")
+    verif("ruche=" not in page.url, "le lien est retiré de l'adresse après lecture")
+    verif(page.locator("#sheet .er-croix:visible").count() == 0, "une seule croix dans la feuille")
+    shot("te-ruche-scannee-390")
+    page.click("#sheet [data-act=qrfiche]"); page.wait_for_timeout(400)
+    verif(page.evaluate("S.route") == "ruche" and page.evaluate("S.ruche") == rid, "Ouvrir la fiche : la fiche de la ruche")
+
+    # 2. Étiquettes QR : une par ruche active, avec le lien de la ruche ; impression possible.
+    page.evaluate("ACT.go('etiquettesqr')"); page.wait_for_selector(".qr-planche .qr-etiquette svg", timeout=8000)
+    n = page.locator(".qr-etiquette").count()
+    verif(n >= 1 and n == page.locator(".qr-etiquette svg").count(), f"étiquettes : {n} QR dessinés")
+    verif(page.locator("[data-act=qrimprimer]").count() >= 1, "bouton Imprimer")
+    shot("te-etiquettes-390")
+
+    # 3. Ruchers › ⋯ propose Scanner et Étiquettes ; la feuille API aussi.
+    page.evaluate("ACT.go('ruches')"); page.wait_for_timeout(400)
+    page.evaluate("ACT.tbfeuille('menu')"); page.wait_for_timeout(200)
+    verif(page.locator(".tb-menu [data-act=qrscanner]").count() == 1 and page.locator(".tb-menu [data-act=qretiquettes]").count() == 1, "Ruchers › ⋯ : Scanner une ruche, Étiquettes QR")
+    page.evaluate("ACT.tbfermer && ACT.tbfermer()")
+    page.evaluate("ACT.quick()"); page.wait_for_selector("#sheet .fa-terrain", timeout=3000)
+    verif(page.locator("#sheet .fa-terrain [data-v=qrscanner]").count() == 1 and page.locator("#sheet .fa-terrain [data-v=cscaisse]").count() == 1, "bouton API : Scanner une ruche, Caisse du marché")
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
+
+    # 4. Caisse du marché : toucher les pots, total, vente enregistrée avec le client « Vente au marché ».
+    page.evaluate("ACT.go('caisse')"); page.wait_for_selector(".cs-pot", timeout=5000)
+    verif(page.locator(".cs-pot").count() == 2, "caisse : un bouton par miel et format (2)")
+    page.locator(".cs-pot").nth(1).click(); page.locator(".cs-pot").nth(1).click(); page.locator(".cs-pot").nth(0).click()
+    page.wait_for_timeout(200)
+    total = page.locator(".cs-total b").inner_text()
+    verif(total.replace(" ", " ").startswith("31"), f"caisse : 2 × 12 € + 1 × 7 € = 31 € ({total})")
+    page.locator(".cs-moins").first.click(); page.wait_for_timeout(150)
+    verif(page.locator(".cs-panier li").count() == 1, "caisse : « − » retire un pot")
+    page.locator(".cs-pot").nth(0).click(); page.wait_for_timeout(150)
+    shot("te-caisse-390")
+    avant = len([b for n_, b in recu["rpc"] if n_ == "creer_vente"])
+    page.locator("[data-act=csencaisser]:visible").first.click(); page.wait_for_timeout(800)
+    ventes = [b for n_, b in recu["rpc"] if n_ == "creer_vente"]
+    clients = [r for t, u, rows in recu["upsert"] if t == "clients" for r in rows]
+    verif(len(ventes) == avant + 1, "caisse : une vente envoyée")
+    p = ventes[-1]["p"] if ventes else {}
+    verif(any(c.get("nom") == "Vente au marché" and c.get("id") == p.get("client_id") for c in clients), "caisse : client « Vente au marché » créé et utilisé")
+    verif(sum(l["quantite"] for l in p.get("lignes", [])) == 3 and p.get("paye") is True and p.get("mode"), f"caisse : 3 pots, payée, mode choisi ({p.get('mode')})")
+    verif(page.locator(".cs-panier li").count() == 0, "caisse : panier vidé après encaissement")
+
+    # 5. Commandes : page de commande ouverte, commandes à préparer, livrer, prévenir.
+    CMD1 = str(uuid.uuid4())
+    DATA["boutiques"] = [{"exploitation_id": E1, "jeton": "a" * 32, "ouverte": True, "message": "", "retraits": [{"nom": "Chez Pierre-Louis", "quand": "samedi matin"}]}]
+    DATA["commandes"] = [{"id": CMD1, "nom": "Marie Le Goff", "telephone": "06 11 22 33 44", "retrait": "Chez Pierre-Louis", "note": "",
+                          "lignes": [{"miel": "Toutes fleurs", "format_g": 500, "prix": 12, "quantite": 2}], "total": 24, "statut": "nouvelle", "created_at": "2026-11-17T10:00:00Z"}]
+    page.evaluate("S.cmd = null; ACT.go('commandes')"); page.wait_for_selector(".cm-c", timeout=5000)
+    verif("ouverte" in page.locator(".cm-page").inner_text(), "commandes : page de commande ouverte")
+    verif(page.locator(".cm-c").count() == 1 and "2 × Toutes fleurs 500 g" in page.locator(".cm-c").inner_text(), "commandes : la commande à préparer, avec ses pots")
+    sms = page.locator(".cm-c a.btn").get_attribute("href")
+    verif(sms.startswith("sms:0611223344?body=") and "votre%20commande" in sms, "Prévenir : SMS prêt, au bon numéro")
+    verif(page.locator(".g-onglets button", has_text="Commandes").count() == 1, "Miel : onglet Commandes")
+    shot("te-commandes-390")
+    page.click("[data-act=cmlivrer]"); page.wait_for_selector("#sheet form, #sheet", timeout=3000); page.wait_for_timeout(200)
+    page.locator("#sheet .btn.main").click(); page.wait_for_timeout(800)
+    liv = [b for n_, b in recu["rpc"] if n_ == "livrer_commande"]
+    verif(len(liv) == 1 and liv[0]["p_id"] == CMD1 and liv[0]["p"]["paye"] is True, "Livrée : livrer_commande appelée, payée")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

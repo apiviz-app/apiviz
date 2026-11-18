@@ -50,60 +50,64 @@
 .st-fichier:focus-within .st-fichier-b{outline:3px solid var(--honey-light);outline-offset:2px}
 
 /* 4. Finances › Factures */
-.fa-cherche{display:flex;flex-direction:row;align-items:center;gap:10px;height:48px;padding:0 14px;background:#fff;border:1px solid var(--line2);border-radius:var(--r-pill);color:var(--muted);font-weight:400}
-.fa-cherche input{flex:1;min-width:0;width:auto;min-height:0;height:100%;padding:0;border:0;outline:0;background:transparent;font-size:16px;color:var(--ink)}
-.fa-cherche:focus-within{border-color:var(--pine)}
-.fa-tuiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.fa-tuile{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
-.fa-tuile span{font-size:13px;color:var(--muted)}
-.fa-tuile b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-variant-numeric:tabular-nums}
-.fa-tuile.avance{background:var(--watchbg);border-color:var(--watchbg)}
-.fa-tuile.avance span{color:var(--watch)}
-.fa-tuile .link{align-self:flex-start;min-height:36px;padding:0;font-size:13px;text-align:left}
-.fa-mois{display:flex;flex-direction:column}
-.fa-mt{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 8px;font-size:17px}
-.fa-mt-n{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
-.fa-liste,.fa-lignes{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
-.fa-liste li + li,.fa-lignes li + li{border-top:1px solid var(--line)}
-.fa-l{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px;border:0;background:none;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
-.fa-l:hover{background:#FAFBF7}
-.fa-ic{position:relative;flex:none;width:40px;height:40px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;display:inline-flex;align-items:center;justify-content:center}
-.fa-ic.grand{width:56px;height:72px}
-.fa-pj{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:var(--good);color:#fff;display:inline-flex;align-items:center;justify-content:center}
-.fa-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.fa-l1{display:flex;justify-content:space-between;gap:8px}
-.fa-l1 b{font-size:16px;overflow-wrap:anywhere}
-.fa-m{font-variant-numeric:tabular-nums;white-space:nowrap}
-.fa-l2{font-size:13px;color:var(--muted)}
-.fa-l3{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.fa-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;font-size:13px;font-weight:600}
-.fa-chip.ok{background:var(--goodbg);color:#1F5239}
-.fa-chip.avance{background:var(--watchbg);color:var(--watch)}
-.fa-vide{padding:20px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);text-align:center}
-.fa-vide p{margin:0 0 6px}
-.fa-detail{display:flex;flex-direction:column;gap:16px}
-.fa-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0}
-.fa-total b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:36px;letter-spacing:-.018em;font-variant-numeric:tabular-nums}
-.fa-infos{margin:0;padding:0 16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
-.fa-i{display:flex;justify-content:space-between;gap:12px;padding:14px 0}
-.fa-i + .fa-i{border-top:1px solid var(--line)}
-.fa-i dt{color:var(--muted)}
-.fa-i dd{margin:0;font-weight:600;text-align:right;overflow-wrap:anywhere}
-.fa-bloc{display:flex;flex-direction:column;gap:10px}
-.fa-bloc .u-titre{margin:0}
-.fa-fichier{display:flex;gap:14px;align-items:center;padding:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
-.fa-fnom{display:block;overflow-wrap:anywhere}
-.fa-fact{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.fa-joindre{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-style:dashed}
-.fa-ligne{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
-.fa-ligne span{display:flex;flex-direction:column;min-width:0}
-.fa-ligne:disabled{cursor:default;color:var(--ink)}
-.fa-somme{display:flex;justify-content:space-between;margin:0;padding:0 14px;font-weight:700;font-size:16px}
-.fa-stock{padding:14px 16px;background:var(--watchbg);border-radius:var(--r-m)}
-.fa-stock ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.fa-actions{display:flex;flex-direction:column;gap:10px}
-.fa-actions .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px}
+.fc-cherche{display:flex;flex-direction:row;align-items:center;gap:10px;height:48px;padding:0 14px;background:#fff;border:1px solid var(--line2);border-radius:var(--r-pill);color:var(--muted);font-weight:400}
+.fc-cherche input{flex:1;min-width:0;width:auto;min-height:0;height:100%;padding:0;border:0;outline:0;background:transparent;font-size:16px;color:var(--ink)}
+.fc-cherche:focus-within{border-color:var(--pine)}
+.fc-tuiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fc-tuile{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fc-tuile span{font-size:13px;color:var(--muted)}
+.fc-tuile b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-variant-numeric:tabular-nums}
+.fc-tuile.avance{background:var(--watchbg);border-color:var(--watchbg)}
+.fc-tuile.avance span{color:var(--watch)}
+.fc-tuile .link{align-self:flex-start;min-height:36px;padding:0;font-size:13px;text-align:left}
+.fc-mois{display:flex;flex-direction:column}
+.fc-mt{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 8px;font-size:17px}
+.fc-mt-n{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.fc-liste,.fc-lignes{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.fc-liste li + li,.fc-lignes li + li{border-top:1px solid var(--line)}
+.fc-l{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px;border:0;background:none;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.fc-l:hover{background:#FAFBF7}
+.fc-ic{position:relative;flex:none;width:40px;height:40px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;display:inline-flex;align-items:center;justify-content:center}
+.fc-ic.grand{width:56px;height:72px}
+.fc-pj{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:var(--good);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.fc-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fc-l1{display:flex;justify-content:space-between;gap:8px}
+.fc-l1 b{font-size:16px;overflow-wrap:anywhere}
+.fc-m{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fc-l2{font-size:13px;color:var(--muted)}
+.fc-l3{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.fc-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:var(--r-s);background:#E9ECE4;color:#3F4A44;font-size:13px;font-weight:600}
+.fc-chip.ok{background:var(--goodbg);color:#1F5239}
+.fc-chip.avance{background:var(--watchbg);color:var(--watch)}
+.fc-vide{padding:20px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);text-align:center}
+.fc-vide p{margin:0 0 6px}
+.fc-detail{display:flex;flex-direction:column;gap:16px}
+.fc-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0}
+.fc-total b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:36px;letter-spacing:-.018em;font-variant-numeric:tabular-nums}
+.fc-infos{margin:0;padding:0 16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fc-i{display:flex;justify-content:space-between;gap:12px;padding:14px 0}
+.fc-i + .fc-i{border-top:1px solid var(--line)}
+.fc-i dt{color:var(--muted)}
+.fc-i dd{margin:0;font-weight:600;text-align:right;overflow-wrap:anywhere}
+.fc-bloc{display:flex;flex-direction:column;gap:10px}
+.fc-bloc .u-titre{margin:0}
+.fc-fichier{display:flex;gap:14px;align-items:center;padding:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fc-fnom{display:block;overflow-wrap:anywhere}
+.fc-fact{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.fc-joindre{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-style:dashed}
+.fc-ligne{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.fc-ligne span{display:flex;flex-direction:column;min-width:0}
+.fc-ligne:disabled{cursor:default;color:var(--ink)}
+.fc-somme{display:flex;justify-content:space-between;margin:0;padding:0 14px;font-weight:700;font-size:16px}
+.fc-stock{padding:14px 16px;background:var(--watchbg);border-radius:var(--r-m)}
+.fc-stock ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fc-actions{display:flex;flex-direction:column;gap:10px}
+.fc-actions .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px}
 @media (min-width:1024px){
-  .fa-ecran .fa-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .fa-detail{max-width:720px}
+  .fc-ecran .fc-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .fc-detail{max-width:720px}
 }
+
+/* 5. Fenêtres du bas : une seule croix. Une feuille qui a son propre en-tête avec sa croix (Rappels, Année, Filtrer…)
+      masque la croix générale ajoutée par ergonomie.js ; les deux se superposaient. */
+#sheet:has(.g-fermer) > .er-croix{display:none}
