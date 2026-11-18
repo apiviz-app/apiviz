@@ -90,6 +90,9 @@ jobs:
     name: iOS (compilation, simulateur)
     runs-on: macos-latest
     timeout-minutes: 40
+    # 18 nov. 2026 : GitHub manquait de machines macOS (« not acquired by Runner », deux fois). Un iOS sans machine ne
+    # doit pas cacher l'APK Android : ce job prévient sans faire échouer l'action, en attendant TestFlight.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
