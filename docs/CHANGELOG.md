@@ -5,6 +5,53 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.65 · à publier en recette · d'autres produits que le miel
+**Migration 032 (ne casse pas l'ancienne version pour le miel, après 031).** Maquettes « Produits de la ruche » du
+18 nov. 2026 ; demande de Pierre-Louis : l'application doit pouvoir servir au plus grand nombre et ne pas parler que de
+miel. Ce socle couvre le catalogue, le stock et la vente ; les suivis spécialisés (cuvées d'hydromel, transformation de
+la cire, recettes) viendront ensuite.
+
+Pour l'apiculteur :
+1. **La rubrique Miel s'appelle maintenant Produits** (barre du bas, volet, menu de l'ordinateur). Ses onglets ne
+   changent pas : Ventes, Clients, Commandes, Stock et récoltes.
+2. **Ajouter un produit** (Stock et récoltes › Tes produits › « Ajouter un produit ») : « Que veux-tu vendre ? »,
+   douze modèles (miel, hydromel, cire, bougie, propolis, pollen, gelée royale, pain d'épices, essaim, reine, coffret,
+   cosmétique) ou un produit libre. Le miel ouvre la mise en pots, comme avant. Pour les autres : nom, unité (bouteille,
+   pièce, flacon…), format (« 75 cl », « Pain de 250 g »), prix, quantité en stock, numéro de lot proposé (« H26-01 »),
+   DDM et alerte de stock bas, tous facultatifs sauf le nom, la quantité et le numéro. Fonctionne sans réseau.
+3. **Tes produits** : en tête de Stock et récoltes, une ligne par catégorie avec ce qui reste et « Stock bas » sous le
+   seuil choisi. Le tableau des lots les montre tous.
+4. **Vendre** : la nouvelle vente, la caisse du marché et la page de commande en ligne proposent tous les produits ;
+   une même vente peut mélanger miel, hydromel et bougies. Les ventes, factures, commandes et messages aux clients
+   donnent le bon nom (« 3 × Hydromel sec 75 cl »).
+5. **Modifier un produit** : toucher son lot ouvre le même écran ; on peut le supprimer tant que rien n'est vendu.
+   La fiche du lot compte dans l'unité du produit (« 12 bouteilles en stock ») et n'affiche ni récolte, ni ruches
+   d'origine, ni contrôle de l'étiquette miel quand ce n'est pas du miel.
+6. Les chiffres en kilos (récolté, mis en pots, en stock, prix au kilo, rythme de vente) ne comptent que le miel ; la
+   valeur à vendre compte tout. Les étiquettes de pots restent réservées au miel. Pour l'hydromel, un rappel : boisson
+   alcoolisée, vérifier ses obligations auprès des douanes.
+
+Technique :
+- `migrations/032-produits.sql` : `lots.categorie`, `unite`, `format_libelle`, `seuil` ; `format_g` facultatif
+  (obligatoire pour le miel, contrainte `lots_miel_format`) ; `lots_stock` avec ces colonnes en fin de liste ;
+  `creer_produit(p)` (security invoker, `authenticated`) ; `boutique_disponibles`, `boutique_publique`, `passer_commande`
+  et `livrer_commande` regroupent par catégorie, nom, format et prix (`is not distinct from` pour `format_g`).
+- `src/domaines/production/produits.js` (règles pures, `Regles.produits`) et `produit.js` (écran `produit`, flux ;
+  `editlot` passe par lui pour un produit qui n'est pas du miel). Styles : `styles/64-produits.css`.
+- Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`, scénario `etapes_pr` (et `etapes_n4`, `etapes_v3`,
+  `etapes_nk`, `etapes_ra` mis à jour pour « Produits »).
+- 032 appliquée le 18 nov. 2026 (accès Supabase) sur `apidoo-test`, puis sur `apidoo` avec l'accord de Pierre-Louis ;
+  `controler-structure.mjs` : production identique aux fichiers. La mise en ligne en production n'aura rien à appliquer.
+
+À vérifier :
+- Produits › Stock et récoltes › « Ajouter un produit » › Hydromel : créer un lot de 12 bouteilles à 14 €.
+- Nouvelle vente : 2 pots de miel et 3 bouteilles ; le stock des deux baisse, la vente dit « 3 × Hydromel sec 75 cl ».
+- Caisse du marché et page de commande : l'hydromel apparaît à côté du miel.
+- Mode avion : créer une bougie, puis remettre le réseau ; elle part une seule fois.
+- Ancienne version installée : le miel s'affiche et se vend comme avant.
+
+Numérotation (18 nov. 2026) : le bouton retour (#101) a pris v5.64 ; cette PR passe en v5.65 et contient la #101.
+
 ## v5.64 · à publier en recette · bouton retour
 **Sans migration.** Maquette « Apiviz · Retour en arrière » du 18 nov. 2026 ; Pierre-Louis a demandé de l'implémenter
 directement (« je verrai à l'usage »).

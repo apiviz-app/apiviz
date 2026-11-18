@@ -31,11 +31,11 @@ export function ecran() {
   };
   const lignes = produits.filter((p) => st.q[p.cle]).map((p) => `<li><span>${st.q[p.cle]} × ${e(p.nom)}</span>
       <button type="button" class="cs-moins" data-act="csretire" data-v="${e(p.cle)}" aria-label="Retirer un ${e(p.nom)}">−</button><b>${e(eur(st.q[p.cle] * p.prix))}</b></li>`).join("");
-  shell("Caisse du marché", jour.nb ? `${jour.nb} vente${jour.nb > 1 ? "s" : ""} aujourd’hui, ${eur(jour.montant)}` : "Touche un pot pour l’ajouter", "",
-    !produits.length ? '<p class="small">Aucun pot en stock. Mets du miel en pots dans Miel › Stock et récoltes.</p>'
+  shell("Caisse du marché", jour.nb ? `${jour.nb} vente${jour.nb > 1 ? "s" : ""} aujourd’hui, ${eur(jour.montant)}` : "Touche un produit pour l’ajouter", "",
+    !produits.length ? '<p class="small">Rien en stock. Mets du miel en pots ou ajoute un produit dans Produits › Stock et récoltes.</p>'
       : `<div class="cs-pots">${produits.map(tuile).join("")}</div>
       <section class="cs-panier" aria-labelledby="cs_p"><div class="cs-ptete"><h2 id="cs_p">Panier</h2>${pots ? '<button type="button" class="link" data-act="csvider">Vider</button>' : ""}</div>
-        ${lignes ? `<ul>${lignes}</ul>` : '<p class="small">Aucun pot pour l’instant.</p>'}
+        ${lignes ? `<ul>${lignes}</ul>` : '<p class="small">Rien pour l’instant.</p>'}
         <p class="cs-total"><span>Total</span><b>${e(eur(total))}</b></p></section>
       <fieldset class="op-choix cs-modes"><legend>Payé en</legend><div>${modes().map((m) => `<label class="op-radio"><input type="radio" name="cs_mode" value="${e(m)}" ${m === st.mode ? "checked" : ""} data-act="csmode" data-v="${e(m)}"><span>${e(m)}</span></label>`).join("")}</div></fieldset>
       ${moi() ? `<p class="small">Vendu par ${e(moi())} · argent récolté par ${e(moi())}</p>` : ""}
@@ -60,7 +60,7 @@ async function encaisser() {
   if (enCours) return;
   const st = etat(), produits = T.produitsCaisse(S.d.lots || []);
   const { lignes, manque } = T.lignesVente(produits, st.q);
-  if (manque) return toast(`Plus assez de pots : ${manque}`);
+  if (manque) return toast(`Plus assez en stock : ${manque}`);
   if (!lignes.length) return;
   const total = T.totalPanier(produits, st.q);
   enCours = true;

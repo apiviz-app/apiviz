@@ -8,9 +8,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Se repérer
 
-- **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Miel, Agenda, Finances, Matériel, Registre et déclaration,
+- **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Produits (Miel avant la v5.65), Agenda, Finances, Matériel, Registre et déclaration,
   Réglages. Sur ordinateur, ces 8 entrées sont toujours visibles à gauche, avec **Nouvelle visite** et **API** en tête.
-  Sur téléphone, la barre du bas garde Accueil, Ruchers, **API** (au centre) et Miel ; la touche **Menu** ouvre un volet
+  Sur téléphone, la barre du bas garde Accueil, Ruchers, **API** (au centre) et Produits ; la touche **Menu** ouvre un volet
   avec la recherche et les 5 autres entrées. Un sujet qui a plusieurs parties les range en **onglets** sous le titre
   (Finances : Bilan, Dépenses, Factures, Budget, Associés ; Matériel : Stock, Courses, Fournisseurs ; Registre et déclaration ;
   Réglages : Réglages, Équipe).
@@ -75,7 +75,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   passer à … » ouvre la ruche suivante du rucher ; le journal dit ce qui a été repris.
 - Récolte, vente, dépense, tâche, note vocale, photo.
 
-## Miel
+## Produits *(v5.65, anciennement Miel)*
+
+- **D'autres produits que le miel** *(v5.65)* : Stock et récoltes › Tes produits › « Ajouter un produit ». Choisis un
+  modèle (hydromel, cire, bougie, propolis, pollen, gelée royale, pain d'épices, essaim, reine, coffret, cosmétique) ou
+  un produit libre, puis le nom, l'unité (bouteille, pièce, flacon…), le format, le prix, la quantité et, si tu veux,
+  une alerte de stock bas. Le miel passe toujours par la mise en pots. Une vente, la caisse et la page de commande
+  proposent tous tes produits ; une même vente peut les mélanger. Toucher le lot d'un produit le modifie.
 
 - Un pot par format, rempli selon le stock ; le toucher ouvre une vente.
 - Ventes (à encaisser, à livrer), clients, lots et récoltes. **Clients** *(v5.38)* : en tableau (étiquettes, dernier
@@ -96,7 +102,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Étiquettes QR et Scanner une ruche** *(v5.57)* : Ruchers › ⋯ › Étiquettes QR imprime une planche A4 (3 × 7) ;
   colle une étiquette sur chaque ruche. Viser l'étiquette avec l'appareil photo ouvre Apiviz sur la ruche (état,
   Visite express, Visite complète, fiche). Depuis Apiviz : Ruchers › ⋯ ou bouton API › Scanner une ruche.
-- **Caisse du marché** *(v5.57)* : Miel › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
+- **Caisse du marché** *(v5.57)* : Produits › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
   Marche sans réseau (la vente part au retour du réseau) ; client « Vente au marché ».
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
@@ -107,9 +113,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   « Je m'en occupe ». Rattache une note à une ruche avec « Sur une ruche ».
 - **Courbes** *(v5.61)* : fiche d'une ruche › Courbes. Poids, varroa ou force sur la saison, contre l'an dernier, avec
   les récoltes et les traitements ; compare à une autre ruche.
-- **Ma saison** *(v5.61)* : Menu › Ruchers et miel. Le bilan de l'année en un écran ; partage-le ou imprime-le en PDF.
-- **Commandes** *(v5.57, Miel)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
-  clients réservent les miels en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
+- **Ma saison** *(v5.61)* : Menu › Ruchers et produits. Le bilan de l'année en un écran ; partage-le ou imprime-le en PDF.
+- **Commandes** *(v5.57, Produits)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
+  clients réservent les produits en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
   s'enregistre), Prévenir (SMS prêt), Annuler.
 - **Factures** *(v5.55)* : une facture par achat, rangées par mois : fournisseur, date, numéro, qui a acheté, avec quel
   argent, montant, et un trombone quand le fichier est joint. Recherche (fournisseur, numéro, article) et puces (Avancées

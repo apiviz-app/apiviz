@@ -36,8 +36,12 @@ test("montant d'une vente et stock de miel", () => {
   const d = jeu();
   assert.equal(venteTotal(d, { id: "V1" }), 62);
   assert.equal(venteTotal(d, { id: "inconnue" }), 0);
-  assert.deepEqual(stock(d), { pots: 18, kg: 7, kgPots: 12, valeur: 176 });
-  assert.deepEqual(stock(vide()), { pots: 0, kg: 0, kgPots: 0, valeur: 0 });
+  assert.deepEqual(stock(d), { pots: 18, kg: 7, kgPots: 12, autres: 0, valeur: 176 });
+  assert.deepEqual(stock(vide()), { pots: 0, kg: 0, kgPots: 0, autres: 0, valeur: 0 });
+  // v5.65 : un autre produit compte dans la valeur à vendre, pas dans les kilos ni les pots de miel.
+  const h = jeu();
+  h.lots.push({ id: "h", categorie: "Hydromel", miel: "Hydromel sec", format_g: null, format_libelle: "75 cl", prix: 14, pots_initiaux: 4, pots_restants: 3 });
+  assert.deepEqual(stock(h), { pots: 18, kg: 7, kgPots: 12, autres: 3, valeur: 176 + 42 });
 });
 
 test("bilan d'une année", () => {

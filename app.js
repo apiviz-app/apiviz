@@ -510,7 +510,7 @@ const ICON = {
     ["agenda", "Agenda"],
     null,
     ["ruches", "Ruches"],
-    ["miel", "Miel"],
+    ["miel", "Produits"],
     ["materiel", "Mat\xE9riel"],
     null,
     ["clients", "Clients & ventes"],
@@ -840,7 +840,7 @@ function viewMiel() {
     rythmeVentes = rythme(),
     lignesLots = donnees.lots.map(
       (lot) =>
-        `<tr><td><button class="link" data-act="editlot" data-v="${lot.id}">${esc(lot.code)}</button></td><td>${esc(lot.miel)}</td><td>${n(lot.format_g, 0)} g</td><td class="num">${eur(lot.prix)}</td><td class="num">${lot.pots_restants} / ${lot.pots_initiaux}</td><td>${dfr(lot.ddm)}</td><td class="num">${typeof ET != "undefined" ? ET.bouton(lot) : ""}</td></tr>`,
+        `<tr><td><button class="link" data-act="editlot" data-v="${lot.id}">${esc(lot.code)}</button></td><td>${esc(Regles.produits.nomLot(lot))}</td><td>${esc(Regles.produits.formatLot(lot))}</td><td class="num">${eur(lot.prix)}</td><td class="num">${lot.pots_restants} / ${lot.pots_initiaux}</td><td>${dfr(lot.ddm)}</td><td class="num">${typeof ET != "undefined" ? ET.bouton(lot) : ""}</td></tr>`,
     ),
     contenu =
       donnees.lots.length || kgRecoltes
@@ -851,21 +851,21 @@ function viewMiel() {
       ${kpi("En stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
       ${kpi("Valeur \xE0 vendre", eur0(stockMiel.valeur), rythmeVentes.moisRestants !== null ? `Environ ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "")}
     </div>
-    <section class="card tbl">${table(["Lot", "Miel", "Format", "#Prix", "#Pots restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9e un lot par format de pot.")}</section>`
+    <section class="card tbl">${table(["Lot", "Produit", "Format", "#Prix", "#Restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9e un lot par format de pot ou ajoute un produit.")}</section>`
         : emptyState(
-            "Ton stock de miel est vide",
-            "Saisis une r\xE9colte, puis cr\xE9e un lot par format de pot.",
+            "Ton stock est vide",
+            "Saisis une r\xE9colte et mets ton miel en pots, ou ajoute un autre produit : hydromel, cire, bougies\u2026",
             "Saisir une r\xE9colte",
             "newrecolte",
-            '<button class="btn" data-act="newlot">Cr\xE9er un lot</button>',
+            '<button class="btn" data-act="newlot">Cr\xE9er un lot</button><button class="btn" data-act="newproduit">Ajouter un produit</button>',
           );
   shell(
     "Stocks",
-    "Miel et mat\xE9riel",
+    "Produits et mat\xE9riel",
     '<button class="btn main" data-act="newlot">Nouveau lot</button><button class="btn" data-act="newrecolte">R\xE9colte</button>',
     subtabs(
       [
-        ["miel", "Miel"],
+        ["miel", "Produits"],
         ["materiel", "Mat\xE9riel"],
       ],
       "miel",
@@ -893,11 +893,11 @@ function viewMateriel() {
     );
   shell(
     "Stocks",
-    "Miel et mat\xE9riel",
+    "Produits et mat\xE9riel",
     '<button class="btn main" data-act="newarticle">Ajouter un article</button>',
     subtabs(
       [
-        ["miel", "Miel"],
+        ["miel", "Produits"],
         ["materiel", "Mat\xE9riel"],
       ],
       "materiel",
@@ -917,7 +917,7 @@ function viewVente() {
     lignesLots = lotsDispo
       .map(
         (lot) =>
-          `<div class="stepper"><div><b>${n(lot.format_g, 0)} g \xB7 ${esc(lot.code)}</b><div class="small">${eur(lot.prix)} \xB7 ${lot.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="Retirer un pot ${lot.format_g} g" data-act="sstep" data-k="${lot.id}" data-v="-1">\u2212</button><span>${vente.q[lot.id] || 0}</span><button type="button" aria-label="Ajouter un pot ${lot.format_g} g" data-act="sstep" data-k="${lot.id}" data-v="1">+</button></div></div>`,
+          `<div class="stepper"><div><b>${esc(Regles.produits.estMiel(lot) ? Regles.produits.formatLot(lot) : Regles.produits.libelleLot(lot))} \xB7 ${esc(lot.code)}</b><div class="small">${eur(lot.prix)} \xB7 ${lot.pots_restants} en stock</div></div><div class="ctl"><button type="button" aria-label="En retirer un : ${esc(Regles.produits.libelleLot(lot))}" data-act="sstep" data-k="${lot.id}" data-v="-1">\u2212</button><span>${vente.q[lot.id] || 0}</span><button type="button" aria-label="En ajouter un : ${esc(Regles.produits.libelleLot(lot))}" data-act="sstep" data-k="${lot.id}" data-v="1">+</button></div></div>`,
       )
       .join(""),
     optionsClients = donnees.clients
@@ -1010,7 +1010,8 @@ function pilotFin() {
       .map(([poste, montant]) => [poste, montant, eur0(montant)]),
     parFormat = {};
   finances.lignes.forEach((ligne) => {
-    const format = n(byId(donnees.lots, ligne.lot_id)?.format_g, 0) + " g";
+    const lotVendu = byId(donnees.lots, ligne.lot_id),
+      format = lotVendu && !Regles.produits.estMiel(lotVendu) ? Regles.produits.libelleLot(lotVendu) : n(lotVendu?.format_g, 0) + " g";
     ((parFormat[format] = parFormat[format] || { v: 0, p: 0 }),
       (parFormat[format].v += ligne.quantite * ligne.prix_unitaire),
       (parFormat[format].p += ligne.quantite));
@@ -2011,7 +2012,7 @@ const EXP = {
             vente?.date_vente,
             byId(donnees.clients, vente?.client_id)?.nom,
             lot?.code,
-            lot?.format_g,
+            lot?.format_g ?? (lot ? Regles.produits.libelleLot(lot) : ""),
             ligne.quantite,
             ligne.prix_unitaire,
             ligne.quantite * ligne.prix_unitaire,

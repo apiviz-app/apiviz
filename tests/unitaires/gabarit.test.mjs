@@ -28,7 +28,7 @@ test("retour : jamais au 1er niveau ni dans un flux ; celui de l'écran, sinon l
   assert.equal(G.retourDe("visite", { act: "go", v: "ruches", texte: "‹ Ruchers" }), null);
   assert.deepEqual(G.retourDe("ruche", { act: "go", v: "ruches", texte: "‹ Le Verger" }), { act: "go", v: "ruches", k: "", texte: "Le Verger" });
   assert.deepEqual(G.retourDe("ruche", { act: "go", v: "ruches", texte: "‹ Ruches · Verger" }).texte, "Ruches");
-  assert.deepEqual(G.retourDe("lot"), { act: "go", v: "miel", k: "", texte: "Miel" });
+  assert.deepEqual(G.retourDe("lot"), { act: "go", v: "miel", k: "", texte: "Produits" });
   assert.equal(G.retourDe("inconnu"), null);
 });
 
@@ -56,9 +56,9 @@ test("v5.48 : barre d'outils d'un écran-sujet — année, choix de vue, recherc
     assert.ok(G.sujetDe(r), r);
 });
 
-test("v5.50 : Ruchers et Miel sont des écrans-sujets ; l'onglet allumé suit l'onglet interne de Miel", () => {
+test("v5.50 : Ruchers et Produits (ex-Miel) sont des écrans-sujets ; l'onglet allumé suit l'onglet interne de Miel", () => {
   assert.equal(G.sujetDe("carte").titre, "Ruchers");
-  assert.equal(G.sujetDe("clients").titre, "Miel");
+  assert.equal(G.sujetDe("clients").titre, "Produits");
   const miel = G.SUJETS.miel;
   assert.equal(G.ongletActif(miel, "clients", "clients"), 1);
   assert.equal(G.ongletActif(miel, "clients", "ventes"), 0);

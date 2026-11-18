@@ -1,0 +1,75 @@
+    # v5.65 — Produits de la ruche (migration 032, maquettes du 18 nov. 2026) : rubrique Produits, « Ajouter un produit »
+    # avec modèles (le miel ouvre la mise en pots), création d'un lot d'hydromel par creer_produit, catalogue par
+    # catégorie dans Stock et récoltes, vente qui mélange miel et hydromel, modification du produit.
+    # Avec CAPTURES=<dossier>, capture à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # La rubrique s'appelle Produits.
+    libs = [x.strip().split("\n")[-1].strip() for x in page.locator(".bottom button").all_inner_texts()]  # sans la pastille
+    verif("Produits" in libs and "Miel" not in libs, "barre du bas : Produits (%s)" % libs)
+
+    # Stock et récoltes : catalogue et bouton.
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
+    verif(page.locator(".head h1").inner_text() == "Produits", "titre de la rubrique : Produits")
+    verif("Miel" in page.locator(".pr-catalogue").inner_text(), "Tes produits : le miel y est")
+    page.click(".pr-ajout"); page.wait_for_selector(".pr-modeles")
+    verif(page.evaluate("S.route") == "produit" and page.locator(".pr-modele").count() == 13, "Que veux-tu vendre ? 12 modèles et un produit libre")
+    verif(page.locator(".head h1").inner_text() == "Que veux-tu vendre ?", "titre de l'étape 1")
+    shot("produits-modeles")
+
+    # Le miel ouvre la mise en pots.
+    page.click(".pr-modele[data-v='Miel']"); page.wait_for_timeout(300)
+    verif(page.evaluate("S.route") in ("miseenpots",) or page.locator("#sheet[open]").count() == 1, "modèle Miel : mise en pots (ou ancienne fiche)")
+    page.evaluate("S.mp = null; ACT.closesheet && document.querySelector('#sheet[open]') && ACT.closesheet(); ACT.newproduit()"); page.wait_for_selector(".pr-modeles")
+
+    # Hydromel : formulaire pré-rempli, création.
+    page.click(".pr-modele[data-v='Hydromel']"); page.wait_for_selector("#pr_nom")
+    verif(page.input_value("#pr_format") == "75 cl" and page.locator(".pr-unites button.on").inner_text() == "Bouteille", "hydromel : 75 cl, à la bouteille")
+    verif(page.input_value("#pr_code") == "H26-01", "numéro de lot proposé : H26-01")
+    verif(page.locator(".pr-note").count() == 1 and "douanes" in page.locator(".pr-note").inner_text(), "rappel des douanes pour l'hydromel")
+    verif(page.locator("[data-act=prvalider]").is_disabled(), "sans quantité : création bloquée")
+    page.fill("#pr_nom", "Hydromel sec"); page.fill("#pr_prix", "14"); page.fill("#pr_quantite", "12"); page.dispatch_event("#pr_quantite", "input")
+    page.fill("#pr_seuil", "5")
+    shot("produits-hydromel")
+    page.click("[data-act=prvalider]"); page.wait_for_function("S.route === 'lot'", timeout=5000)
+    h = next((x for x in DATA["lots_stock"] if x.get("categorie") == "Hydromel"), None)
+    verif(h and h["miel"] == "Hydromel sec" and h["pots_initiaux"] == 12 and h["format_libelle"] == "75 cl" and h["unite"] == "bouteille" and h["seuil"] == 5,
+          "creer_produit : 12 bouteilles d'hydromel sec 75 cl, seuil 5 (%s)" % h)
+    verif(len([x for x in recu["rpc"] if x[0] == "creer_produit"]) == 1, "un seul envoi")
+    page.wait_for_selector(".head:has-text('Hydromel sec 75 cl')", timeout=5000)
+    verif("12 bouteilles en stock" in page.locator(".head").inner_text(), "fiche du lot : nom, format et stock en bouteilles")
+
+    # Catalogue : une ligne Hydromel.
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue:has-text('Hydromel')", timeout=5000)
+    cat = page.locator(".pr-catalogue").inner_text()
+    verif("Hydromel" in cat and "12 bouteilles" in cat, "Tes produits : Hydromel, 12 bouteilles")
+    verif("Hydromel sec" in page.locator(".wrap .tbl").first.inner_text() or "Hydromel sec" in page.locator(".wrap").inner_text(), "tableau des lots : l'hydromel y est")
+
+    # Vente qui mélange miel et hydromel.
+    page.evaluate("ACT.newvente()"); page.wait_for_selector('form[data-form="vente"]')
+    verif(page.locator(".stepper", has_text="Hydromel sec 75 cl").count() == 1, "nouvelle vente : l'hydromel est proposé")
+    shot("produits-vente")
+
+    # Modifier le produit : même écran, prérempli.
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
+    page.evaluate(f"ACT.editlot('{h['id']}')"); page.wait_for_selector("#pr_nom")
+    verif(page.input_value("#pr_nom") == "Hydromel sec" and page.input_value("#pr_quantite") == "12", "modifier : nom et quantité repris")
+    page.fill("#pr_prix", "15"); page.click("[data-act=prvalider]"); page.wait_for_function("S.route === 'lot'", timeout=5000)
+    for _ in range(30):
+        if any(t == "lots" for t, c in patchs): break
+        page.wait_for_timeout(100)
+    verif(any(t == "lots" and float(c.get("prix", 0)) == 15 for t, c in patchs), "modifier : prix envoyé (%s)" % patchs[-1:])
+
+    # Un lot de miel garde l'ancienne fiche.
+    page.evaluate(f"ACT.editlot('{L1}')"); page.wait_for_timeout(300)
+    verif(page.evaluate("S.route") != "produit", "lot de miel : la fiche de lot habituelle")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

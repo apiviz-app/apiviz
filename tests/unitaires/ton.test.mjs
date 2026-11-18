@@ -11,7 +11,7 @@ const EXCEPTIONS = [
   ["registre.js", "Gardez les ordonnances et factures des médicaments"], // registre : document émis
   ["ux.js", "merci pour votre achat du"], // reçu envoyé au client
   ["ux.js", '"Votre miel · "'], // objet de l'e-mail envoyé au client
-  ["src/domaines/ventes/terrain-regles.js", "votre commande de miel"],
+  ["src/domaines/ventes/terrain-regles.js", "votre commande ("],
   ["src/domaines/ventes/commandes.js", "Réservez votre miel en ligne"], // texte du lien partagé aux clients (v5.57) // SMS envoyé au client quand sa commande en ligne est prête (v5.56)
 ];
 const FORMES = /\b(vous|votre|vos|[a-zà-ÿ]{3,}ez)\b/gi;

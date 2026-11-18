@@ -10,7 +10,7 @@
 // rendu (crochet « apresRendu » déclaré par le dernier module chargé), et ne change aucune donnée.
 
 /** Écrans de saisie pas à pas : leur en-tête (Annuler, étapes) n'est pas touché. */
-export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "deplacer", "inventaire"]);
+export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "produit", "deplacer", "inventaire"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
 export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta", "factures", "commandes",
@@ -19,13 +19,13 @@ export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", 
 /** Parent d'un écran de 2e niveau quand l'écran ne le donne pas lui-même : [route, libellé]. */
 export const PARENTS = {
   ruche: ["ruches", "Ruchers"], rucher: ["ruches", "Ruchers"], meteo: ["ruches", "Ruchers"],
-  lot: ["miel", "Miel"], facture: ["clients", "Miel"], inventaire: ["materiel", "Matériel"],
+  lot: ["miel", "Produits"], facture: ["clients", "Produits"], produit: ["miel", "Produits"], inventaire: ["materiel", "Matériel"],
   saison: ["agenda", "Agenda"], activite: ["dash", "Accueil"], recherche: ["dash", "Accueil"], profil: ["reglages", "Réglages"],
   rappels: ["reglages", "Réglages"], synchronisation: ["reglages", "Réglages"],
   // Factures (17 nov. 2026) : le détail d'une facture d'achat revient à la liste des factures.
   achatfacture: ["factures", "Factures"],
   // Outils de terrain (v5.57).
-  etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Miel"],
+  etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Produits"],
   // Offres et gouttes d'API (IT-27).
   offre: ["reglages", "Réglages"], offres: ["offre", "Mon offre"], recharge: ["offre", "Mon offre"],
 };
@@ -38,7 +38,7 @@ export const SUJETS = {
   // v5.50 (standards d'écran du 16 nov. 2026) : Ruchers et Miel suivent la même règle. Un onglet peut lancer une action de
   // l'écran au lieu d'une adresse : [adresse, libellé, action, valeur] (Ventes et Clients partagent l'adresse « clients »).
   ruchers: { titre: "Ruchers", onglets: [["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]] },
-  miel: { titre: "Miel", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["commandes", "Commandes"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
+  miel: { titre: "Produits", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["commandes", "Commandes"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
   finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["factures", "Factures"], ["previsions", "Budget"], ["associes", "Associés"]] },
   materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
   registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },

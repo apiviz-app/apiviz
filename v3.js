@@ -308,12 +308,17 @@ const V3 = (() => {
     const d = S.d, al = d.ventes.filter((v) => v.livre === false);
     if (!al.length) return '<p class="small">Aucune commande à livrer.</p>';
     const ids = new Set(al.map((v) => v.id)), parFormat = {};
-    d.lignes.filter((x) => ids.has(x.vente_id)).forEach((x) => { const g = byId(d.lots, x.lot_id)?.format_g || 0; parFormat[g] = (parFormat[g] || 0) + x.quantite; });
-    const prep = `<section class="card"><h2>À préparer</h2>${Object.entries(parFormat).sort((a, b) => b[0] - a[0]).map(([g, q]) => `<div class="u-lot"><span>Pots de ${n(g, 0)} g</span><b>${U.pluriel(q, "pot")}</b></div>`).join("")}
-      <p class="small">Ces pots sont déjà retirés du stock.</p></section>`;
+    const P = Regles.produits, autres = {};
+    d.lignes.filter((x) => ids.has(x.vente_id)).forEach((x) => {
+      const l = byId(d.lots, x.lot_id);
+      if (l && !P.estMiel(l)) { const k = P.libelleLot(l); autres[k] = autres[k] || { l, q: 0 }; autres[k].q += x.quantite; return; }
+      const g = l?.format_g || 0; parFormat[g] = (parFormat[g] || 0) + x.quantite;
+    });
+    const prep = `<section class="card"><h2>À préparer</h2>${Object.entries(parFormat).sort((a, b) => b[0] - a[0]).map(([g, q]) => `<div class="u-lot"><span>Pots de ${n(g, 0)} g</span><b>${U.pluriel(q, "pot")}</b></div>`).join("")}${Object.entries(autres).map(([k, x]) => `<div class="u-lot"><span>${esc(k)}</span><b>${esc(P.quantiteLot(x.l, x.q))}</b></div>`).join("")}
+      <p class="small">C’est déjà retiré du stock.</p></section>`;
     return prep + al.map((v) => {
       const c = byId(d.clients, v.client_id);
-      const pots = d.lignes.filter((x) => x.vente_id === v.id).map((x) => `${x.quantite} × ${n(byId(d.lots, x.lot_id)?.format_g, 0)} g`).join(", ");
+      const pots = d.lignes.filter((x) => x.vente_id === v.id).map((x) => { const l = byId(d.lots, x.lot_id); return `${x.quantite} × ${l && !Regles.produits.estMiel(l) ? Regles.produits.libelleLot(l) : n(l?.format_g, 0) + " g"}`; }).join(", ");
       return `<article class="card u-vente"><div class="u-vente-h"><button type="button" class="u-vente-c" data-act="uvente" data-v="${v.id}"><b>${esc(c?.nom || "?")}</b><span class="small">Commandé le ${esc(U.dateCourte(v.date_vente))} · ${esc(pots)}</span></button>
         <span class="u-vente-m"><b>${esc(eur(venteTotal(v)))}</b>${v.paye ? '<span class="u-chip good">payée</span>' : '<span class="u-chip watch">à encaisser</span>'}</span></div>
         ${v.livraison ? `<p class="small v3-livr">${esc(v.livraison)}</p>` : ""}
@@ -580,7 +585,7 @@ const V3 = (() => {
     return [
       ["Ruches", tousLesRuches().filter((r) => m(r.nom, r.rucher, r.notes, r.code)).map((r) => L(r.nom, sousRuche(r), "ruche", r.id))],
       ["Clients", d.clients.filter((c) => m(c.nom, c.telephone, c.email, c.notes)).map((c) => L(c.nom, [c.cercle, c.telephone].filter(Boolean).join(" · "), "editclient", c.id))],
-      ["Lots", d.lots.filter((l) => m(l.code, l.miel, l.extraction)).map((l) => L(`Lot ${l.code}`, `${l.miel} · ${n(l.format_g, 0)} g · ${l.pots_restants} en stock`, "editlot", l.id))],
+      ["Lots", d.lots.filter((l) => m(l.code, l.miel, l.extraction)).map((l) => L(`Lot ${l.code}`, `${Regles.produits.nomLot(l)} · ${Regles.produits.formatLot(l)} · ${l.pots_restants} en stock`, "editlot", l.id))],
       ["Matériel", d.articles.filter((a) => m(a.nom, a.type)).map((a) => L(a.nom, `${n(a.stock)} ${a.unite}${Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil) ? " · stock bas" : ""}`, "editarticle", a.id))],
       ["Fournisseurs", d.fournisseurs.filter((f) => m(f.nom, f.produits, f.contact, f.telephone)).map((f) => L(f.nom, f.produits || f.contact || "", "editfournisseur", f.id))],
       ["Dépenses", d.depenses.filter((x) => m(x.libelle, x.categorie)).slice(0, 15).map((x) => L(x.libelle, `${U.dateCourte(x.date_depense)} · ${eur(x.montant)}`, "editdepense", x.id))],

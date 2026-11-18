@@ -175,7 +175,7 @@ export function appliquerAchat(d, p, extra = {}) {
 
 /** Miel en vrac : récolté moins déjà mis en pots (kg). */
 export const mielEnVrac = (d) =>
-  sum(d.recoltes || [], (r) => r.kg) - sum(d.lots || [], (l) => (Number(l.pots_initiaux) * Number(l.format_g)) / 1e3);
+  sum(d.recoltes || [], (r) => r.kg) - sum((d.lots || []).filter((l) => (l.categorie || "Miel") === "Miel"), (l) => (Number(l.pots_initiaux) * Number(l.format_g)) / 1e3);
 
 /** Numéro de lot proposé : L26-01, L26-02… (le premier libre de l'année). */
 export function prochainCode(lots, annee) {
