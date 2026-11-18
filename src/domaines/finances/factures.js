@@ -41,25 +41,25 @@ export function ecran() {
   const puces = [{ k: "tout", t: "Toutes", n: annee.length }, { k: "avance", t: "Avancées par un associé", n: annee.filter(F.avancee).length },
     ...pers.map((p) => ({ k: "par:" + p, t: `Par ${p}`, n: annee.filter((x) => x.achete_par === p).length })),
     { k: "sansfichier", t: "Sans fichier", n: t.sansFichier }].filter((p) => p.n > 0 || p.k === "tout" || p.k === st.f);
-  const ligne = (f) => `<li><button type="button" class="fa-l" data-act="faouvrir" data-v="${e(f.cle)}">
-      <span class="fa-ic" aria-hidden="true">${svg(I.doc, 20)}${f.fichier ? `<span class="fa-pj">${svg(I.trombone, 12)}</span>` : ""}</span>
-      <span class="fa-t">
-        <span class="fa-l1"><b>${e(f.titre)}</b><b class="fa-m">${e(eur(f.montant))}</b></span>
-        <span class="fa-l2">${e([F.dateLettres(f.date), f.piece || "sans numéro", pluriel(f.lignes.length, "ligne")].join(" · "))}${f.attente ? ' <span class="tag watch">en attente</span>' : ""}</span>
-        <span class="fa-l3">${f.achete_par ? `<span class="fa-chip">${e(f.achete_par)}</span>` : ""}${f.paye_par ? `<span class="fa-chip ${F.avancee(f) ? "avance" : "ok"}">${e(quiPaye(f))}</span>` : ""}${f.fichier ? '<span class="tb-cache">Fichier joint</span>' : ""}</span>
+  const ligne = (f) => `<li><button type="button" class="fc-l" data-act="faouvrir" data-v="${e(f.cle)}">
+      <span class="fc-ic" aria-hidden="true">${svg(I.doc, 20)}${f.fichier ? `<span class="fc-pj">${svg(I.trombone, 12)}</span>` : ""}</span>
+      <span class="fc-t">
+        <span class="fc-l1"><b>${e(f.titre)}</b><b class="fc-m">${e(eur(f.montant))}</b></span>
+        <span class="fc-l2">${e([F.dateLettres(f.date), f.piece || "sans numéro", pluriel(f.lignes.length, "ligne")].join(" · "))}${f.attente ? ' <span class="tag watch">en attente</span>' : ""}</span>
+        <span class="fc-l3">${f.achete_par ? `<span class="fc-chip">${e(f.achete_par)}</span>` : ""}${f.paye_par ? `<span class="fc-chip ${F.avancee(f) ? "avance" : "ok"}">${e(quiPaye(f))}</span>` : ""}${f.fichier ? '<span class="tb-cache">Fichier joint</span>' : ""}</span>
       </span></button></li>`;
-  const mois = F.parMois(vues).map((m) => `<section class="fa-mois" aria-label="${e(m.nom)}"><h2 class="fa-mt"><span>${e(m.nom)}</span><span class="fa-mt-n">${e(eur(m.total))}</span></h2>
-      <ul class="fa-liste">${m.factures.map(ligne).join("")}</ul></section>`).join("");
-  const vide = !annee.length ? `<div class="fa-vide"><p>Aucune facture en ${e(an)}.</p><p class="small">Chaque achat enregistré apparaît ici, avec sa facture si tu la joins.</p></div>`
+  const mois = F.parMois(vues).map((m) => `<section class="fc-mois" aria-label="${e(m.nom)}"><h2 class="fc-mt"><span>${e(m.nom)}</span><span class="fc-mt-n">${e(eur(m.total))}</span></h2>
+      <ul class="fc-liste">${m.factures.map(ligne).join("")}</ul></section>`).join("");
+  const vide = !annee.length ? `<div class="fc-vide"><p>Aucune facture en ${e(an)}.</p><p class="small">Chaque achat enregistré apparaît ici, avec sa facture si tu la joins.</p></div>`
     : !vues.length ? `<p class="small op-vide">Aucune facture pour ce filtre.</p>` : "";
   shell("Factures", `${pluriel(t.nb, "facture")} · ${eur(t.total)} en ${an}`, yearSel(),
-    `<label class="fa-cherche">${svg(I.cherche, 20)}<span class="tb-cache">Chercher une facture</span><input id="fa_q" type="search" value="${e(st.q)}" placeholder="Fournisseur, numéro, article" autocomplete="off" enterkeyhint="search"></label>
+    `<label class="fc-cherche">${svg(I.cherche, 20)}<span class="tb-cache">Chercher une facture</span><input id="fa_q" type="search" value="${e(st.q)}" placeholder="Fournisseur, numéro, article" autocomplete="off" enterkeyhint="search"></label>
     ${annee.length ? `<div class="op-puces" role="group" aria-label="Filtrer">${puces.map((p) => `<button type="button" class="op-puce${st.f === p.k ? " on" : ""}" aria-pressed="${st.f === p.k}" data-act="fafiltre" data-v="${e(p.k)}">${e(p.t)} <span>${p.n}</span></button>`).join("")}</div>
-    <div class="fa-tuiles"><div class="fa-tuile"><span>Achats ${e(an)}</span><b>${e(eur(t.total))}</b></div>
-      <div class="fa-tuile${t.avance ? " avance" : ""}"><span>Avancé par les associés</span><b>${e(eur(t.avance))}</b>${t.avance ? '<button type="button" class="link" data-act="eadetail">Voir ce qu’il reste à régler</button>' : ""}</div></div>` : ""}
+    <div class="fc-tuiles"><div class="fc-tuile"><span>Achats ${e(an)}</span><b>${e(eur(t.total))}</b></div>
+      <div class="fc-tuile${t.avance ? " avance" : ""}"><span>Avancé par les associés</span><b>${e(eur(t.avance))}</b>${t.avance ? '<button type="button" class="link" data-act="eadetail">Voir ce qu’il reste à régler</button>' : ""}</div></div>` : ""}
     ${mois}${vide}
     ${lecteur() ? "" : '<div class="op-pied"><button type="button" class="btn main" data-act="newdepense">Ajouter un achat</button></div>'}`);
-  document.querySelector(".wrap")?.classList.add("op-ecran", "fa-ecran");
+  document.querySelector(".wrap")?.classList.add("op-ecran", "fc-ecran");
   const q = document.getElementById("fa_q");
   let minuterie = 0;
   q?.addEventListener("input", () => {
@@ -83,27 +83,27 @@ export function ecranDetail() {
   }
   const ecrire = !lecteur();
   const mvts = F.mouvementsDe(S.d, f);
-  const info = (k, v) => (v ? `<div class="fa-i"><dt>${k}</dt><dd>${e(v)}</dd></div>` : "");
+  const info = (k, v) => (v ? `<div class="fc-i"><dt>${k}</dt><dd>${e(v)}</dd></div>` : "");
   const fichier = f.fichier
-    ? `<div class="fa-fichier"><span class="fa-ic grand" aria-hidden="true">${svg(I.doc, 26)}</span><div><b class="fa-fnom">${e(F.nomFichier(f.fichier))}</b>
-        <div class="fa-fact"><button type="button" class="btn" data-act="favoir">Voir</button>${ecrire && enLigne() ? '<button type="button" class="btn" data-act="fajoindre">Remplacer</button>' : ""}</div></div></div>`
-    : ecrire && !f.attente && avec025() ? `<p class="small">Pas encore de fichier pour cette facture.</p><button type="button" class="btn fa-joindre" data-act="fajoindre" ${enLigne() ? "" : "disabled"}>${svg(I.photo, 20)}Joindre la facture (photo ou PDF)</button>${enLigne() ? "" : '<p class="small">Il faut le réseau pour envoyer un fichier.</p>'}`
+    ? `<div class="fc-fichier"><span class="fc-ic grand" aria-hidden="true">${svg(I.doc, 26)}</span><div><b class="fc-fnom">${e(F.nomFichier(f.fichier))}</b>
+        <div class="fc-fact"><button type="button" class="btn" data-act="favoir">Voir</button>${ecrire && enLigne() ? '<button type="button" class="btn" data-act="fajoindre">Remplacer</button>' : ""}</div></div></div>`
+    : ecrire && !f.attente && avec025() ? `<p class="small">Pas encore de fichier pour cette facture.</p><button type="button" class="btn fc-joindre" data-act="fajoindre" ${enLigne() ? "" : "disabled"}>${svg(I.photo, 20)}Joindre la facture (photo ou PDF)</button>${enLigne() ? "" : '<p class="small">Il faut le réseau pour envoyer un fichier.</p>'}`
       : `<p class="small">${f.attente ? "Le fichier pourra être joint une fois l’achat envoyé." : "Pas de fichier pour cette facture."}</p>`;
-  const lignes = f.lignes.map((l) => `<li><button type="button" class="fa-ligne" data-act="editdepense" data-v="${e(l.id)}"${ecrire ? "" : " disabled"}>
+  const lignes = f.lignes.map((l) => `<li><button type="button" class="fc-ligne" data-act="editdepense" data-v="${e(l.id)}"${ecrire ? "" : " disabled"}>
       <span><b>${e(l.libelle || "Ligne")}</b>${l.quantite ? `<span class="small">${e(String(l.quantite).replace(".", ","))} × ${e(eur(Number(l.montant || 0) / Number(l.quantite)))}</span>` : l.categorie ? `<span class="small">${e(l.categorie)}</span>` : ""}</span>
-      <b class="fa-m">${e(eur(l.montant))}</b></button></li>`).join("");
+      <b class="fc-m">${e(eur(l.montant))}</b></button></li>`).join("");
   shell(f.titre, [f.piece, F.dateLettres(f.date, true)].filter(Boolean).join(" · "), "",
-    `<div class="fa-detail">
-      <p class="fa-total"><b>${e(eur(f.montant))}</b>${f.attente ? '<span class="tag watch">en attente d’envoi</span>' : ""}</p>
-      <dl class="fa-infos">${info("Acheté par", f.achete_par)}${info("Payé avec", quiPaye(f))}${info("Fournisseur", f.fournisseur)}</dl>
-      <section class="fa-bloc" aria-labelledby="fa_pj"><h2 id="fa_pj" class="u-titre">Fichier de la facture</h2>${fichier}</section>
-      <section class="fa-bloc" aria-labelledby="fa_lg"><h2 id="fa_lg" class="u-titre">${pluriel(f.lignes.length, "ligne")}</h2>
-        <ul class="fa-lignes">${lignes}</ul><p class="fa-somme"><span>Total</span><b>${e(eur(f.montant))}</b></p></section>
-      ${mvts.length ? `<section class="fa-bloc fa-stock" aria-labelledby="fa_st"><h2 id="fa_st" class="u-titre">Le stock a bougé avec cette facture</h2>
+    `<div class="fc-detail">
+      <p class="fc-total"><b>${e(eur(f.montant))}</b>${f.attente ? '<span class="tag watch">en attente d’envoi</span>' : ""}</p>
+      <dl class="fc-infos">${info("Acheté par", f.achete_par)}${info("Payé avec", quiPaye(f))}${info("Fournisseur", f.fournisseur)}</dl>
+      <section class="fc-bloc" aria-labelledby="fa_pj"><h2 id="fa_pj" class="u-titre">Fichier de la facture</h2>${fichier}</section>
+      <section class="fc-bloc" aria-labelledby="fa_lg"><h2 id="fa_lg" class="u-titre">${pluriel(f.lignes.length, "ligne")}</h2>
+        <ul class="fc-lignes">${lignes}</ul><p class="fc-somme"><span>Total</span><b>${e(eur(f.montant))}</b></p></section>
+      ${mvts.length ? `<section class="fc-bloc fc-stock" aria-labelledby="fa_st"><h2 id="fa_st" class="u-titre">Le stock a bougé avec cette facture</h2>
         <ul>${mvts.map((m) => `<li><b>${m.quantite > 0 ? "+" : ""}${e(String(m.quantite).replace(".", ","))}${m.unite !== "unité" ? ` ${e(m.unite)}` : ""}</b> ${e(m.nom)}</li>`).join("")}</ul></section>` : ""}
-      ${ecrire ? `<div class="fa-actions"><button type="button" class="btn" data-act="farefaire">${svg(I.copie)}Refaire cet achat</button></div>` : ""}
+      ${ecrire ? `<div class="fc-actions"><button type="button" class="btn" data-act="farefaire">${svg(I.copie)}Refaire cet achat</button></div>` : ""}
     </div>`);
-  document.querySelector(".wrap")?.classList.add("fa-ecran");
+  document.querySelector(".wrap")?.classList.add("fc-ecran");
 }
 
 // ---------- Fichier ----------

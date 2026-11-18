@@ -63,7 +63,8 @@ test("v5.50 : Ruchers et Miel sont des écrans-sujets ; l'onglet allumé suit l'
   assert.equal(G.ongletActif(miel, "clients", "clients"), 1);
   assert.equal(G.ongletActif(miel, "clients", "ventes"), 0);
   assert.equal(G.ongletActif(miel, "clients", "livrer"), 0, "« à livrer » reste sous Ventes");
-  assert.equal(G.ongletActif(miel, "miel", undefined), 2);
+  assert.equal(G.ongletActif(miel, "miel", undefined), 3);
+  assert.equal(G.ongletActif(miel, "commandes", undefined), 2, "Commandes (v5.57) entre Clients et Stock");
   assert.equal(G.ongletActif(G.SUJETS.materiel, "courses"), 1);
   assert.equal(G.ongletActif(G.SUJETS.materiel, "agenda"), -1);
 });

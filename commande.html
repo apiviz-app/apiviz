@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FBEFC9">
+<meta name="robots" content="noindex">
+<title>Commander du miel</title>
+<link rel="icon" href="icone-apiviz.svg" type="image/svg+xml">
+<!-- Page publique de commande (v5.57, migration 027). Sans compte : elle ne lit que boutique_publique() et n'écrit que
+     par passer_commande(), deux fonctions qui ne travaillent que sur l'exploitation du jeton « b ». Page lue par les
+     clients : vouvoiement (docs/CHARTE_DE_TON.md). Polices du système, aucune bibliothèque. -->
+<script src="./config.js"></script>
+<style>
+:root{--ink:#1B2420;--muted:#55605A;--line:#EBD9A6;--line2:#C4CABD;--pine:#1E2B24;--honey:#E3A008;--soft:#FBEFC9;--cire:#FFF8E7;--good:#2F6B4F;--crit:#A61B1B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cire);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--soft);padding:28px 20px 22px}
+.wrap{max-width:560px;margin:0 auto}
+.oeil{margin:0;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#7D5200}
+h1{margin:6px 0 0;font-size:30px;line-height:1.1;letter-spacing:-.02em}
+.mot{margin:8px 0 0;color:#3F4A44;white-space:pre-line}
+main{padding:16px 20px 200px}
+.prod{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:10px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.alv{flex:none;width:40px;height:35px;background:var(--honey);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.prod-t{flex:1;min-width:0}.prod-t b{display:block}.prod-t span{font-size:14px;color:var(--muted)}
+.q{display:flex;align-items:center;gap:6px}
+.q button{width:44px;height:44px;border-radius:999px;font-family:inherit;font-size:20px;font-weight:700;line-height:1;cursor:pointer}
+.moins{border:1px solid var(--line2);background:#fff;color:var(--ink)}
+.plus{border:0;background:var(--pine);color:#fff}
+.q button:disabled{opacity:.35;cursor:default}
+.q output{min-width:22px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+form{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+label,legend{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+input,textarea{height:52px;padding:0 14px;border:1px solid var(--line2);border-radius:13px;background:#fff;font-family:inherit;font-size:16px;color:var(--ink)}
+textarea{height:80px;padding:12px 14px;resize:vertical}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.retrait{display:flex;flex-direction:row;align-items:center;gap:12px;min-height:60px;padding:8px 14px;border:1px solid var(--line2);border-radius:13px;background:#fff;font-weight:400;cursor:pointer}
+.retrait input{width:20px;height:20px;margin:0;accent-color:var(--pine)}
+.retrait b{display:block}.retrait span span{font-size:13px;color:var(--muted)}
+.retrait:has(input:checked){border:2px solid var(--pine)}
+.pied{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 20px calc(16px + env(safe-area-inset-bottom))}
+.pied .wrap{display:flex;flex-direction:column;gap:8px}
+.total{display:flex;justify-content:space-between;font-size:15px}.total b{font-variant-numeric:tabular-nums}
+.go{height:52px;border:0;border-radius:13px;background:var(--honey);color:var(--ink);font-family:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.go:disabled{opacity:.5;cursor:default}
+.erreur{margin:0;color:var(--crit);font-size:14px}
+.petit{margin:0;font-size:12px;color:var(--muted);text-align:center}.petit a{color:var(--good)}
+.etat{padding:28px 0;font-size:17px}
+.merci{margin-top:20px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.merci h2{margin:0 0 8px;font-size:22px}
+:focus-visible{outline:2px solid var(--pine);box-shadow:0 0 0 4px var(--honey)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><p class="oeil" id="nom">Miel</p><h1 id="titre">Réservez vos pots</h1><p class="mot" id="mot"></p></div></header>
+<main><div class="wrap" id="corps"><p class="etat" role="status">Chargement…</p></div></main>
+<div class="pied" id="pied" hidden><div class="wrap">
+  <div class="total"><span id="nb">Aucun pot</span><b id="somme">0 €</b></div>
+  <button type="submit" form="f" class="go" id="go" disabled>Réserver</button>
+  <p class="erreur" id="erreur" role="alert"></p>
+  <p class="petit">Paiement au retrait · vos coordonnées ne servent qu’à cette commande · <a href="confidentialite.html">confidentialité</a></p>
+</div></div>
+<script>
+(function () {
+  "use strict";
+  var jeton = new URLSearchParams(location.search).get("b") || "";
+  var cfg = window.APIDOO || {};
+  var $ = function (id) { return document.getElementById(id); };
+  var eur = function (x) { return (Math.round(x * 100) / 100).toLocaleString("fr-FR", { minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €"; };
+  var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "";
+  var produits = [], q = [];
+
+  function rpc(nom, corps) {
+    return fetch(cfg.url + "/rest/v1/rpc/" + nom, { method: "POST", headers: { "Content-Type": "application/json", apikey: cfg.key }, body: JSON.stringify(corps) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.message || "Le service ne répond pas. Réessayez dans un instant."); return j; }); });
+  }
+  function etat(texte) { $("corps").innerHTML = '<p class="etat" role="status">' + esc(texte) + "</p>"; $("pied").hidden = true; }
+
+  function maj() {
+    var nb = 0, total = 0;
+    produits.forEach(function (p, i) {
+      nb += q[i]; total += q[i] * p.prix;
+      $("q" + i).value = q[i];
+      $("m" + i).disabled = !q[i];
+      $("p" + i).disabled = q[i] >= Math.min(20, p.disponibles);
+    });
+    $("nb").textContent = nb ? nb + " pot" + (nb > 1 ? "s" : "") : "Aucun pot";
+    $("somme").textContent = eur(total);
+    $("go").disabled = !nb;
+  }
+
+  function afficher(b) {
+    if (!b.ouverte) return etat("Les commandes sont fermées pour le moment. Revenez un peu plus tard, ou contactez directement votre apiculteur.");
+    document.title = "Commander du miel · " + (b.nom || "");
+    $("nom").textContent = b.nom || "Miel";
+    $("mot").textContent = b.message || "Choisissez vos pots, puis le lieu de retrait. Vous payez au retrait.";
+    produits = b.produits || [];
+    q = produits.map(function () { return 0; });
+    if (!produits.length) return etat("Plus aucun pot disponible pour le moment. Revenez après la prochaine récolte.");
+    var html = produits.map(function (p, i) {
+      return '<div class="prod"><span class="alv" aria-hidden="true"></span><div class="prod-t"><b>' + esc(p.miel) + " " + p.format_g + " g</b><span>" + esc(eur(p.prix)) + " · encore " + p.disponibles + "</span></div>"
+        + '<div class="q"><button type="button" class="moins" id="m' + i + '" data-i="' + i + '" data-d="-1" aria-label="Un pot de ' + esc(p.miel) + " " + p.format_g + ' g de moins">−</button>'
+        + '<output id="q' + i + '" aria-live="polite">0</output>'
+        + '<button type="button" class="plus" id="p' + i + '" data-i="' + i + '" data-d="1" aria-label="Un pot de ' + esc(p.miel) + " " + p.format_g + ' g de plus">+</button></div></div>';
+    }).join("");
+    var retraits = (b.retraits || []).map(function (r, i) {
+      return '<label class="retrait"><input type="radio" name="retrait" value="' + esc(r.nom) + '"' + (i === 0 ? " checked" : "") + '><span><b>' + esc(r.nom) + "</b>" + (r.quand ? "<span>" + esc(r.quand) + "</span>" : "") + "</span></label>";
+    }).join("");
+    html += '<form id="f" novalidate>'
+      + '<label>Vos prénom et nom<input name="nom" autocomplete="name" maxlength="80" required></label>'
+      + '<label>Téléphone (pour vous prévenir)<input name="telephone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required></label>'
+      + (retraits ? '<fieldset><legend>Retrait</legend>' + retraits + "</fieldset>" : "")
+      + '<label>Une précision ? (facultatif)<textarea name="note" maxlength="300"></textarea></label></form>';
+    $("corps").innerHTML = html;
+    $("pied").hidden = false;
+    $("corps").addEventListener("click", function (ev) {
+      var b = ev.target.closest("button[data-i]");
+      if (!b) return;
+      var i = Number(b.dataset.i), p = produits[i];
+      q[i] = Math.max(0, Math.min(Math.min(20, p.disponibles), q[i] + Number(b.dataset.d)));
+      maj();
+    });
+    $("f").addEventListener("submit", envoyer);
+    maj();
+  }
+
+  function envoyer(ev) {
+    ev.preventDefault();
+    var f = ev.target, err = $("erreur");
+    err.textContent = "";
+    var nom = f.nom.value.trim(), tel = f.telephone.value.trim();
+    if (nom.length < 2) { err.textContent = "Indiquez votre nom."; return f.nom.focus(); }
+    if (!/^[0-9+ .()-]{6,20}$/.test(tel)) { err.textContent = "Indiquez un numéro de téléphone valide."; return f.telephone.focus(); }
+    var lignes = [];
+    produits.forEach(function (p, i) { if (q[i]) lignes.push({ miel: p.miel, format_g: p.format_g, prix: p.prix, quantite: q[i] }); });
+    var r = f.querySelector("input[name=retrait]:checked");
+    $("go").disabled = true; $("go").textContent = "Envoi…";
+    rpc("passer_commande", { p_jeton: jeton, p: { id: id, nom: nom, telephone: tel, retrait: r ? r.value : "", note: f.note.value.trim(), lignes: lignes } })
+      .then(function () {
+        var total = produits.reduce(function (t, p, i) { return t + q[i] * p.prix; }, 0);
+        $("pied").hidden = true;
+        $("corps").innerHTML = '<div class="merci" role="status"><h2>Merci ' + esc(nom.split(/\s+/)[0]) + "</h2><p>Votre commande est enregistrée : "
+          + esc(lignes.map(function (l) { return l.quantite + " × " + l.miel + " " + l.format_g + " g"; }).join(", ")) + ", " + esc(eur(total)) + ".</p>"
+          + (r ? "<p>Retrait : " + esc(r.value) + ".</p>" : "") + "<p>Vous serez prévenu par SMS quand elle sera prête. Paiement au retrait.</p></div>";
+      })
+      .catch(function (e) { err.textContent = e.message; $("go").disabled = false; $("go").textContent = "Réserver"; });
+  }
+
+  if (!jeton || !cfg.url) return etat("Ce lien de commande n’est pas complet. Demandez à votre apiculteur de vous le renvoyer.");
+  rpc("boutique_publique", { p_jeton: jeton }).then(afficher).catch(function () { etat("La page ne répond pas. Vérifiez votre connexion et réessayez."); });
+})();
+</script>
+</body>
+</html>

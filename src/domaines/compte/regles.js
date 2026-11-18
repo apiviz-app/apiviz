@@ -23,6 +23,8 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "go", "ruche", "cancel", "closesheet", "n4voisine", "uonglet", "utfiltre", "utout", "alrucher", "allent", "alclient",
   "erlot", "erposte", "ermois", "ermeteo", "ermjour", "ertoutvu", "uvente", "phvoir", "phfermer", "stfiltre", "mtvue", "mtfiltre", "invfiltre", "csqte",
   "eadetail", // écran « Entre associés » (v5.32) : consultation
+  "fafiltre", "faouvrir", "favoir", // Finances › Factures (v5.55) : consultation et fichier
+  "qrscanner", "qrfiche", "qretiquettes", "qrrucher", "qrimprimer", "cmpartager", // outils de terrain (v5.57) : lire, imprimer, partager
   // Ruchers (v5.37, v5.40) : présentation, regroupement, filtres, tri, colonnes, fiche rapide, export (pas la sélection)
   "tbaff", "tbgrouper", "tbfeuille", "tbfermer", "tbfiltre", "tbseuil", "tbsugg", "tbeffacer", "tbcol", "tbcompact", "tbtri", "tbouvrir", "tbexport",
   // Impression et exports (rien n'est modifié)
