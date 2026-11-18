@@ -11,7 +11,7 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     libs = page.locator(".bottom button span:not(.n4-badge)").all_inner_texts()
-    verif(libs == ["Accueil", "Ruchers", "API", "Miel", "Menu"], "barre du bas : %s" % libs)
+    verif(libs == ["Accueil", "Ruchers", "API", "Produits", "Menu"], "barre du bas (Produits, ex-Miel, v5.64) : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
     # Prochaine action
     # v5.24 : sur téléphone, la prochaine action (tournée) est proposée dans la carte d'API.

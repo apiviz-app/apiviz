@@ -14,7 +14,7 @@
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
 
     # La rubrique s'appelle Produits.
-    libs = [x.strip() for x in page.locator(".bottom button").all_inner_texts()]
+    libs = [x.strip().split("\n")[-1].strip() for x in page.locator(".bottom button").all_inner_texts()]  # sans la pastille
     verif("Produits" in libs and "Miel" not in libs, "barre du bas : Produits (%s)" % libs)
 
     # Stock et récoltes : catalogue et bouton.
@@ -45,10 +45,11 @@
     verif(h and h["miel"] == "Hydromel sec" and h["pots_initiaux"] == 12 and h["format_libelle"] == "75 cl" and h["unite"] == "bouteille" and h["seuil"] == 5,
           "creer_produit : 12 bouteilles d'hydromel sec 75 cl, seuil 5 (%s)" % h)
     verif(len([x for x in recu["rpc"] if x[0] == "creer_produit"]) == 1, "un seul envoi")
-    verif("Hydromel sec 75 cl" in page.locator(".head").inner_text(), "fiche du lot : nom et format")
+    page.wait_for_selector(".head:has-text('Hydromel sec 75 cl')", timeout=5000)
+    verif("12 bouteilles en stock" in page.locator(".head").inner_text(), "fiche du lot : nom, format et stock en bouteilles")
 
     # Catalogue : une ligne Hydromel.
-    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue:has-text('Hydromel')", timeout=5000)
     cat = page.locator(".pr-catalogue").inner_text()
     verif("Hydromel" in cat and "12 bouteilles" in cat, "Tes produits : Hydromel, 12 bouteilles")
     verif("Hydromel sec" in page.locator(".wrap .tbl").first.inner_text() or "Hydromel sec" in page.locator(".wrap").inner_text(), "tableau des lots : l'hydromel y est")
@@ -63,6 +64,9 @@
     page.evaluate(f"ACT.editlot('{h['id']}')"); page.wait_for_selector("#pr_nom")
     verif(page.input_value("#pr_nom") == "Hydromel sec" and page.input_value("#pr_quantite") == "12", "modifier : nom et quantité repris")
     page.fill("#pr_prix", "15"); page.click("[data-act=prvalider]"); page.wait_for_function("S.route === 'lot'", timeout=5000)
+    for _ in range(30):
+        if any(t == "lots" for t, c in patchs): break
+        page.wait_for_timeout(100)
     verif(any(t == "lots" and float(c.get("prix", 0)) == 15 for t, c in patchs), "modifier : prix envoyé (%s)" % patchs[-1:])
 
     # Un lot de miel garde l'ancienne fiche.

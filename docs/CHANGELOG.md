@@ -25,6 +25,8 @@ Pour l'apiculteur :
    une même vente peut mélanger miel, hydromel et bougies. Les ventes, factures, commandes et messages aux clients
    donnent le bon nom (« 3 × Hydromel sec 75 cl »).
 5. **Modifier un produit** : toucher son lot ouvre le même écran ; on peut le supprimer tant que rien n'est vendu.
+   La fiche du lot compte dans l'unité du produit (« 12 bouteilles en stock ») et n'affiche ni récolte, ni ruches
+   d'origine, ni contrôle de l'étiquette miel quand ce n'est pas du miel.
 6. Les chiffres en kilos (récolté, mis en pots, en stock, prix au kilo, rythme de vente) ne comptent que le miel ; la
    valeur à vendre compte tout. Les étiquettes de pots restent réservées au miel. Pour l'hydromel, un rappel : boisson
    alcoolisée, vérifier ses obligations auprès des douanes.
@@ -36,7 +38,9 @@ Technique :
   et `livrer_commande` regroupent par catégorie, nom, format et prix (`is not distinct from` pour `format_g`).
 - `src/domaines/production/produits.js` (règles pures, `Regles.produits`) et `produit.js` (écran `produit`, flux ;
   `editlot` passe par lui pour un produit qui n'est pas du miel). Styles : `styles/64-produits.css`.
-- Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`.
+- Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`, scénario `etapes_pr` (et `etapes_n4`,
+  `etapes_nk`, `etapes_ra` mis à jour pour « Produits »).
+- 032 appliquée sur `apidoo-test` le 18 nov. 2026 (accès Supabase) ; `apidoo` : en attente de l'accord de Pierre-Louis.
 
 À vérifier :
 - Produits › Stock et récoltes › « Ajouter un produit » › Hydromel : créer un lot de 12 bouteilles à 14 €.

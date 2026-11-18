@@ -373,17 +373,19 @@ const ES = (() => {
     const etape = (t, g, s) => `<div class="er-etape"><span class="small">${t}</span><b>${esc(g)}</b><span class="small">${esc(s)}</span></div>`;
     const ctl = [["Dénomination, poids net, origine", l.miel && l.format_g && c.origine !== ""], ["DDM et numéro de lot", l.ddm && l.code], ["Adresse de l’exploitation", c.adresse]];
     const clients = [...parClient.values()], mails = clients.map((x) => x.c?.email).filter(Boolean);
-    shell(`Lot ${l.code}`, Regles.produits.estMiel(l) ? `${l.miel}, ${n(l.format_g, 0)} g, ${c.origine || "France"}` : `${Regles.produits.libelleLot(l)}, ${Regles.produits.categorieDe(l).toLowerCase()}`, `<button type="button" class="btn" data-act="editlot" data-v="${l.id}">Modifier</button>${Regles.produits.estMiel(l) ? `<button type="button" class="btn main" data-act="etiq" data-v="${l.id}">Imprimer les étiquettes</button>` : ""}${mails.length ? `<a class="btn u-lienbtn" href="mailto:?bcc=${encodeURIComponent(mails.join(","))}&amp;subject=${encodeURIComponent("Lot de miel " + l.code)}">Prévenir les clients du lot</a>` : ""}`,
+    // v5.64 : un lot qui n'est pas du miel compte dans son unité (bouteilles, pièces…) et n'a ni récolte ni étiquette miel.
+    const miel = Regles.produits.estMiel(l), qte = (x) => miel ? U.pluriel(x, "pot") : Regles.produits.quantiteLot(l, x);
+    shell(`Lot ${l.code}`, Regles.produits.estMiel(l) ? `${l.miel}, ${n(l.format_g, 0)} g, ${c.origine || "France"}` : `${Regles.produits.libelleLot(l)}, ${Regles.produits.categorieDe(l).toLowerCase()}`, `<button type="button" class="btn" data-act="editlot" data-v="${l.id}">Modifier</button>${Regles.produits.estMiel(l) ? `<button type="button" class="btn main" data-act="etiq" data-v="${l.id}">Imprimer les étiquettes</button>` : ""}${mails.length ? `<a class="btn u-lienbtn" href="mailto:?bcc=${encodeURIComponent(mails.join(","))}&amp;subject=${encodeURIComponent((miel ? "Lot de miel " : "Lot ") + l.code)}">Prévenir les clients du lot</a>` : ""}`,
       `<section class="er-fil" aria-label="Du rucher au client">
-        ${etape("Récolte", recoltes.length ? `${n(kg)} kg` : "Non reliée", recoltes.length ? dfr(debut) : "Lot sans extraction")}
-        ${etape("Ruches d’origine", ruches.length ? ruches.join(", ") : "Toutes", soins.length ? U.pluriel(soins.length, "traitement") + " la même année" : "Aucun traitement noté")}
-        ${etape("Mise en pots", U.pluriel(l.pots_initiaux, "pot"), [l.date_mise_en_pot && dfr(l.date_mise_en_pot), l.ddm && "DDM " + dfr(l.ddm)].filter(Boolean).join(", ") || "Dates à renseigner")}
-        ${etape("Ventes", U.pluriel(vendus, "pot"), `${U.pluriel(clients.length, "client")}, ${eur(ca)}`)}
+        ${miel ? etape("Récolte", recoltes.length ? `${n(kg)} kg` : "Non reliée", recoltes.length ? dfr(debut) : "Lot sans extraction") +
+          etape("Ruches d’origine", ruches.length ? ruches.join(", ") : "Toutes", soins.length ? U.pluriel(soins.length, "traitement") + " la même année" : "Aucun traitement noté") : ""}
+        ${etape(miel ? "Mise en pots" : "Mise en stock", qte(l.pots_initiaux), [l.date_mise_en_pot && dfr(l.date_mise_en_pot), l.ddm && "DDM " + dfr(l.ddm)].filter(Boolean).join(", ") || "Dates à renseigner")}
+        ${etape("Ventes", qte(vendus), `${U.pluriel(clients.length, "client")}, ${eur(ca)}`)}
       </section>
-      <div class="er-deux2"><section class="card u-liste"><h2>Clients de ce lot</h2>${clients.map((x) => `<button type="button" class="u-todo" ${x.c ? `data-act="editclient" data-v="${x.c.id}"` : "disabled"}><span class="u-todo-t"><b>${esc(x.c?.nom || "?")}</b><span class="small">${esc(U.quand(x.date))}</span></span><b>${esc(U.pluriel(x.q, "pot"))}</b></button>`).join("") || '<p class="small">Aucune vente pour ce lot.</p>'}</section>
-      <section class="card u-liste"><h2>Étiquette du lot</h2>${ctl.map(([t, ok]) => `<div class="er-rang"><span class="u-todo-t"><b>${t}</b></span><span class="u-chip ${ok ? "good" : "watch"}">${ok ? "Complet" : "À renseigner"}</span></div>`).join("")}</section></div>`);
+      <div class="er-deux2"><section class="card u-liste"><h2>Clients de ce lot</h2>${clients.map((x) => `<button type="button" class="u-todo" ${x.c ? `data-act="editclient" data-v="${x.c.id}"` : "disabled"}><span class="u-todo-t"><b>${esc(x.c?.nom || "?")}</b><span class="small">${esc(U.quand(x.date))}</span></span><b>${esc(qte(x.q))}</b></button>`).join("") || '<p class="small">Aucune vente pour ce lot.</p>'}</section>
+      ${miel ? `<section class="card u-liste"><h2>Étiquette du lot</h2>${ctl.map(([t, ok]) => `<div class="er-rang"><span class="u-todo-t"><b>${t}</b></span><span class="u-chip ${ok ? "good" : "watch"}">${ok ? "Complet" : "À renseigner"}</span></div>`).join("")}</section>` : ""}</div>`);
     retour("go", "miel", "Produits");
-    phrase(`Lot ${l.code} : ${U.pluriel(l.pots_restants ?? l.pots_initiaux - vendus, "pot")} en stock, ${vendus} vendu${vendus > 1 ? "s" : ""}.`);
+    phrase(`Lot ${l.code} : ${qte(l.pots_restants ?? l.pots_initiaux - vendus)} en stock, ${vendus} vendu${vendus > 1 ? "s" : ""}.`);
   };
 
   // ---------- 6. Factures ----------

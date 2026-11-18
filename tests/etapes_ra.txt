@@ -66,7 +66,7 @@
     cloches = page.evaluate("[...document.querySelectorAll('.er-cloche')].filter((b) => b.getClientRects().length > 0).length")
     verif(cloches == 1 and page.locator(".nl-entete .er-cloche").is_visible(), "ordinateur : une seule cloche, dans le bandeau (%d visibles)" % cloches)
     side = page.locator(".side .nav[data-v]").all_inner_texts()
-    verif([x.strip() for x in side if x.strip() != "API"] == ["Accueil", "Agenda", "Fil de l’équipe", "Ruchers", "Miel", "Ma saison", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "ordinateur : 10 entrées (Fil de l’équipe et Ma saison, v5.61) (%s)" % side)
+    verif([x.strip() for x in side if x.strip() != "API"] == ["Accueil", "Agenda", "Fil de l’équipe", "Ruchers", "Produits", "Ma saison", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "ordinateur : 10 entrées (Fil de l’équipe et Ma saison, v5.61) (%s)" % side)
     if cap: page.screenshot(path=cap + "/ra-menu-1280.png")
     page.evaluate("ACT.go('pilotage')"); page.wait_for_selector(".g-onglets")
     page.wait_for_timeout(500)
