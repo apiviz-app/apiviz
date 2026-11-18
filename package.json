@@ -1,8 +1,15 @@
 {
   "name": "apidoo",
   "private": true,
-  "description": "Apiviz — outils de développement. Le site lui-même n'a pas de dépendance npm.",
+  "description": "Apiviz — outils de développement et applications mobiles (Capacitor). Le site lui-même n'a pas de dépendance npm.",
   "scripts": {
-    "test": "node --test \"tests/unitaires/*.test.mjs\""
+    "test": "node --test \"tests/unitaires/*.test.mjs\"",
+    "mobile": "sh scripts/preparer-mobile.sh"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/cli": "8.6.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/ios": "8.6.2"
   }
 }

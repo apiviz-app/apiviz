@@ -448,7 +448,7 @@ const AUTH_FR = {
   "User already registered": "Ce compte existe d\xE9j\xE0.",
 };
 async function submitAuth(formulaire) {
-  const retour = location.origin + location.pathname;
+  const retour = window.Plateforme?.adresseRetour() || location.origin + location.pathname;
   S.authMsg = "";
   S.authErr = false;
   try {
