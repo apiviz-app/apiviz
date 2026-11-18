@@ -12,7 +12,7 @@
   "plugins": {
     "CapacitorUpdater": {
       "autoUpdate": false,
-      "version": "natif-1",
+      "version": "natif-2",
       "statsUrl": "",
       "appReadyTimeout": 15000,
       "resetWhenUpdate": true

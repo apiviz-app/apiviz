@@ -51,7 +51,8 @@
     page.click("#mjBouton .btn.main[data-act=ervisite]"); page.wait_for_selector("#sheet[open]")
     verif("Visite du rucher Verger" in page.input_value("#sheet [name=titre]") and page.input_value("#sheet [name=echeance]") != "", "tâche préparée")
     page.click("#sheet [data-act=closesheet]")
-    page.click(".u-retour"); page.wait_for_function("S.route === 'rucher'")
+    # v5.64 : la météo ouverte depuis l'Accueil, « ‹ » ramène à l'Accueil (là d'où l'on vient).
+    page.click(".u-retour"); page.wait_for_function("S.route === 'dash'")
     page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-cols")
     page.click(".ac-rucher >> nth=0"); page.wait_for_function("S.route === 'rucher'")
     verif(True, "le rucher s'ouvre")

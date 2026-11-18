@@ -57,7 +57,8 @@
     e = ecran("materiel")
     verif(e["titre"] == "Matériel" and len(e["principaux"]) <= 1, "Matériel : titre « Matériel », un seul bouton principal (" + str(e) + ")")
     if cap: page.screenshot(path=cap + "/gb-materiel-390.png")
-    # Écran de 2e niveau : « ‹ Parent »
+    # Écran de 2e niveau : « ‹ » et le nom de l'écran d'où l'on vient (v5.64), ici l'Accueil
+    ecran("dash")
     e = ecran("activite")
     verif(e["retour"] == ["Accueil"], "Activité récente (2e niveau) : retour « ‹ Accueil » (" + str(e["retour"]) + ")")
     # Ordinateur : bouton principal dans l'en-tête, pas de barre du bas
