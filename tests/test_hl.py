@@ -119,6 +119,15 @@ def supabase(route):
                     mvs.append({"id": str(uuid.uuid4()), "article_id": a["id"], "type": "consommation", "origine": "mise_en_pots", "quantite": -float(i["quantite"]),
                                 "lot_id": p["id"], "date_mouvement": p["date"], "note": "", "created_at": "2026-11-11T10:00:00Z"})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        # v5.64 (migration 032) : lot d'un produit qui n'est pas du miel, idempotent par l'identifiant.
+        if nom == "creer_produit":
+            p = body["p"]; lots = DATA["lots_stock"]
+            if p.get("categorie") == "Miel": return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Le miel passe par la mise en pots"}))
+            if not any(x["id"] == p["id"] for x in lots):
+                lots.append({"id": p["id"], "code": p["code"], "categorie": p["categorie"], "miel": p["nom"], "unite": p["unite"], "format_libelle": p.get("format_libelle", ""),
+                             "format_g": None, "prix": p["prix"], "pots_initiaux": p["quantite"], "pots_restants": p["quantite"], "pots_vendus": 0,
+                             "date_mise_en_pot": p.get("date"), "ddm": p.get("ddm"), "seuil": p.get("seuil"), "extraction": ""})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
         return route.fulfill(status=200, headers=hdr, body="null")
     m = re.match(r"/rest/v1/(\w+)", path)
     if m:
