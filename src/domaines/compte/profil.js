@@ -261,7 +261,7 @@ export const actions = {
     toast("Ton profil et la sauvegarde de l’exploitation sont téléchargés");
   },
   pfmdp: async () => {
-    const r = await sb.auth.resetPasswordForEmail(S.session.user.email, { redirectTo: location.origin + location.pathname });
+    const r = await sb.auth.resetPasswordForEmail(S.session.user.email, { redirectTo: window.Plateforme?.adresseRetour() || location.origin + location.pathname });
     toast(r.error ? "Patiente un peu avant de redemander un lien" : "Lien envoyé par e-mail", !!r.error);
   },
   // Suppression du compte depuis l'app (migration 022) : aperçu de ce qui part, mot SUPPRIMER, photos effacées du

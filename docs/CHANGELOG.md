@@ -5,6 +5,39 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.59 · à fabriquer · applications Android et iOS de test (IT-30, première partie)
+**Aucune migration, aucune base touchée. Le site publié ne change presque pas** (un fichier `plateforme.js` en plus).
+Demande de Pierre-Louis du 18 nov. 2026 : avoir Apiviz en vraie application pour l'essayer en conditions réelles.
+Choix du jour : Android d'abord (gratuit, fichier à installer), iPhone préparé pour TestFlight ; applis branchées sur la
+recette (`apidoo-test`).
+
+Pour l'apiculteur :
+1. **Apiviz Android** : un fichier APK à installer sur le téléphone (voir `docs/MOBILE.md`, « Applis de test »). L'appli
+   contient tout le site : elle s'ouvre **sans réseau dès le premier lancement**, étiquette RECETTE comprise.
+2. **iPhone** : le projet est prêt et compilé par GitHub ; l'installation attend le compte Apple Developer (TestFlight).
+3. Dans l'appli, plus de proposition « Installer Apiviz » ; les liens envoyés par e-mail (mot de passe oublié, création
+   de compte) ouvrent le site de la recette, en attendant les liens d'application (AP-FEAT-124).
+
+Technique :
+- Capacitor 8.6.2 : `capacitor.config.json`, projets `android/` et `ios/` (identifiant `fr.apiviz.app`), icônes et
+  écran de lancement tirés du symbole Apiviz (`assets/`).
+- `scripts/preparer-mobile.sh` : site assemblé par `assembler-site.sh` (seule source), copié dans `_mobile/`,
+  bibliothèques jsdelivr (Supabase, Leaflet, QR) embarquées ; garde-fous recette / production.
+- `plateforme.js` (AP-TECH-387) : seul fichier qui sait si l'on est dans le site ou l'appli (`web`, `android`, `ios`).
+- Action **Applis mobiles** (à la main) : APK Android en téléchargement, compilation iOS sur simulateur.
+- Permissions déclarées : appareil photo, position (Android et iOS), micro et dictée (iOS).
+
+Limites connues (suite d'IT-30) :
+- Dictée : la reconnaissance vocale du navigateur n'existe pas dans l'appli Android ; module natif à ajouter.
+- Polices : chargées en ligne ; au tout premier lancement sans réseau, polices du téléphone.
+- Liens d'e-mail ouverts dans l'appli, version minimale, TestFlight et signature de publication : à venir.
+
+À vérifier :
+- Android : installer l'APK, ouvrir en mode avion au premier lancement → écran de connexion RECETTE.
+- Se connecter (réseau), faire une visite complète, couper le réseau, saisir, remettre le réseau → tout part.
+- Photo d'une facture, lecture d'un QR de ruche, position d'un rucher : l'autorisation est demandée, puis ça marche.
+- Haut et bas de l'écran : rien sous la barre d'état ni sous la barre de navigation du téléphone.
+- Site web (recette) inchangé ; « Installer Apiviz » toujours proposé dans le navigateur.
 ## v5.59 · à publier en recette · offres et gouttes d'API (IT-27, première partie)
 **Migration 029 (additive, ne casse pas l'ancienne version, après 028).** Maquette « Apiviz — Offres et IA » du 18 nov.
 2026, choix de Pierre-Louis : gouttes au coût réel, partagées par l'exploitation, forfaits tels que proposés, pas encore

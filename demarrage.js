@@ -112,7 +112,7 @@ const DM = (() => {
   };
 
   // ---------- Accueil de démarrage ----------
-  const installee = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const installee = () => window.Plateforme?.installee() ?? (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true);
   // « ton téléphone » ou « ton ordinateur », selon l'appareil (nav4.js).
   const surQuoi = () => (typeof N4 != "undefined" && N4.support ? N4.support() : "ton téléphone");
   function etapes() {

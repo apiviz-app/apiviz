@@ -5131,7 +5131,7 @@ Web sur domaine propre, applications iOS et Android, stores, autres pays (12).
 | Type | Fonctionnalité |
 | Domaine | D19 SaaS et distribution |
 | Epic parent | AP-EPIC-047 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS (v5.59 : projets Capacitor, APK Android de test, compilation iOS ; modules natifs, liens et TestFlight à venir) |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | L |

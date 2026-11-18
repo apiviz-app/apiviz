@@ -223,7 +223,7 @@ const N4 = (() => {
   let installer = null;
   addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installer = e; });
   addEventListener("appinstalled", () => { installer = null; });
-  const installee = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const installee = () => window.Plateforme?.installee() ?? (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true);
   const appareil = () => {
     const ua = navigator.userAgent;
     if (/iphone|ipod|ipad/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
