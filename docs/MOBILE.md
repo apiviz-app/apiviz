@@ -28,6 +28,30 @@ Gladoo est écrit en Expo depuis le début. Apiviz est du JavaScript sans framew
 
 La Trusted Web Activity (Chrome en plein écran sur Android) prévue dans la version précédente de ce document est abandonnée : elle ne couvrait qu'Android.
 
+## Applis de test (IT-30, depuis v5.60)
+
+Les applis embarquent la **recette** (base `apidoo-test`) : tous les fichiers du site sont dans l'appli, rien n'est
+chargé depuis le site, rien n'est publié sur les stores.
+
+**Fabriquer** : automatique sur une pull request qui touche aux applis ; sinon GitHub › Actions › **Applis mobiles** › Run workflow, avec la branche à essayer (`main` par défaut).
+Une dizaine de minutes. En local : `npm ci`, `sh scripts/preparer-mobile.sh`, puis `npx cap sync` et Android Studio / Xcode.
+
+**Installer sur Android** (aucun compte Google Play nécessaire) :
+1. Sur le téléphone, ouvrir le lancement de l'action dans GitHub, en bas « Artifacts », télécharger `Apiviz-recette-….zip`.
+2. Ouvrir le fichier `.apk` qu'il contient. Android demande d'autoriser l'installation depuis cette source (navigateur
+   ou Fichiers) : accepter, puis « Installer ». Play Protect peut prévenir qu'il ne connaît pas l'appli : « Installer quand même ».
+3. Une nouvelle version s'installe par-dessus l'ancienne, saisies en attente comprises, **tant que la clé de test est la
+   même** (voir ci-dessous).
+
+**Clé de test Android** : chaque APK est signé. L'action garde sa clé d'un lancement à l'autre (cache GitHub, effacé après
+7 jours sans lancement). Pour ne jamais en changer, ajouter un jour le secret `ANDROID_CLE_TEST` (le fichier
+`debug.keystore` en base64) ; ce n'est pas la clé de publication des stores (IT-28), qui reste à créer.
+Si la clé change : envoyer les saisies en attente, désinstaller, installer la nouvelle version.
+
+**iPhone** : le projet `ios/` est compilé à chaque lancement (simulateur). Pour l'installer sur un vrai iPhone :
+compte Apple Developer (99 $/an, à ouvrir par Pierre-Louis, D-13), puis TestFlight (prochaine étape d'IT-30 : certificats
+et profil dans les secrets GitHub, envoi automatique).
+
 ## Stores : coûts et obstacles
 
 | | Google Play | App Store |

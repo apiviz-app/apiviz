@@ -1,0 +1,8 @@
+{
+  "appId": "fr.apiviz.app",
+  "appName": "Apiviz",
+  "webDir": "_mobile",
+  "backgroundColor": "#1E2B24",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

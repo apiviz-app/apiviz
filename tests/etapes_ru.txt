@@ -35,7 +35,10 @@
     page.click("#sheet [data-act=closesheet]")
 
     # B. Doublon refusé, sans tenir compte de la casse ni des espaces.
-    page.evaluate("ACT.go('ruches')"); page.locator(".tb-plus:visible").first.click() if page.locator(".tb-plus:visible").count() else None; page.locator("[data-act=rcnouveau]:visible").first.click(); page.fill("#sheet input[name=nom]", " verger ")
+    page.evaluate("ACT.go('ruches')"); page.wait_for_selector(".tb", timeout=5000)
+    # v5.61 : le menu ⋯ s'est refermé au choix de « Nouveau rucher » ; on ne le retrouve pas ouvert en revenant.
+    verif(page.locator(".tb-menu, .tb-voile").count() == 0 and page.locator(".tb-plus[aria-expanded=true]").count() == 0, "retour sur Ruchers : le menu ⋯ est refermé")
+    page.locator(".tb-plus:visible").first.click() if page.locator(".tb-plus:visible").count() else None; page.locator("[data-act=rcnouveau]:visible").first.click(); page.fill("#sheet input[name=nom]", " verger ")
     page.click("#sheet .btn.main"); page.wait_for_selector(".toast.err >> text=Ce rucher existe déjà", timeout=5000)
     verif(len([1 for n, b in recu["rpc"] if n == "creer_rucher"]) == 1, "doublon « verger » refusé avant tout envoi")
     page.click("#sheet [data-act=closesheet]")

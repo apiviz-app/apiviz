@@ -1,4 +1,4 @@
-// Apiviz — onglet « Courbes » de la fiche d'une ruche (v5.59, maquette « Courbes d'une colonie » validée le 17 nov.
+// Apiviz — onglet « Courbes » de la fiche d'une ruche (v5.61, maquette « Courbes d'une colonie » validée le 17 nov.
 // 2026). Une mesure à la fois (Poids, Varroa, Force), sur la saison : l'année en cours en trait plein, l'an dernier en
 // pointillés, une autre ruche en option ; récoltes et traitements posés sur la courbe ; le seuil d'alerte pour le
 // varroa ; une phrase qui dit ce qui compte ; la liste de ce qui s'est passé.

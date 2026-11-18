@@ -1,5 +1,5 @@
-    # v5.59 — Fil de l'équipe, courbes d'une colonie, Ma saison (maquettes « Nouveautés » 5, 6 et 7 du 17 nov. 2026).
-    # La table messages et prendre_demande sont testées par tests/sql/test_029.mjs. Avec CAPTURES=<dossier>, captures à
+    # v5.61 — Fil de l'équipe, courbes d'une colonie, Ma saison (maquettes « Nouveautés » 5, 6 et 7 du 17 nov. 2026).
+    # La table messages et prendre_demande sont testées par tests/sql/test_030.mjs. Avec CAPTURES=<dossier>, captures à
     # 390 px.
     import pathlib as _pl, os, datetime
     _ici = _pl.Path(__file__).parent

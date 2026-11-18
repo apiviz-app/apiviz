@@ -19,8 +19,8 @@ const NL = (() => {
     declaration: "M9 11l3 3 8-8M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11",
     membres: "M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-4 3-6 7-6s7 2 7 6",
     recherche: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.3-4.3",
-    fil: "M4 5h16v11H9l-5 4zM8 9h8M8 12h5", // fil de l'équipe (v5.59)
-    masaison: "M4 20V10M10 20V4M16 20v-7M22 20H2", // Ma saison (v5.59)
+    fil: "M4 5h16v11H9l-5 4zM8 9h8M8 12h5", // fil de l'équipe (v5.61)
+    masaison: "M4 20V10M10 20V4M16 20v-7M22 20H2", // Ma saison (v5.61)
   });
 
   // Catégories : [titre, [[route, libellé, libellé court pour le volet]]]

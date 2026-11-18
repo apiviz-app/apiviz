@@ -1,6 +1,6 @@
-// Apiviz — fil de l'équipe (v5.59, maquette « Fil de l'équipe » validée le 17 nov. 2026).
+// Apiviz — fil de l'équipe (v5.61, maquette « Fil de l'équipe » validée le 17 nov. 2026).
 //   - Ce que chacun a saisi (visites, ventes, récoltes, événements, photos : V3.fil) et ce que les membres s'écrivent
-//     (migration 029) : notes, notes sur une ruche, demandes « @Prénom », réponses.
+//     (migration 030) : notes, notes sur une ruche, demandes « @Prénom », réponses.
 //   - Une demande adressée à moi passe en tête, encadrée : « Je m'en occupe » crée la tâche (titre et échéance tirés
 //     du texte, sur la ruche citée, pour moi) par prendre_demande ; « Répondre » ouvre la réponse.
 //   - Puces : Tout, Pour moi, Notes. Écrire demande le réseau ; un lecteur consulte seulement.

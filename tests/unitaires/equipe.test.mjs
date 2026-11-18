@@ -1,4 +1,4 @@
-// Fil de l'équipe, courbes d'une colonie, Ma saison (v5.59) : src/domaines/equipe/regles.js.
+// Fil de l'équipe, courbes d'une colonie, Ma saison (v5.61) : src/domaines/equipe/regles.js.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as Q from "../../src/domaines/equipe/regles.js";

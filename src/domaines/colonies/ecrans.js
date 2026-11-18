@@ -11,6 +11,6 @@ export default [
   // apercu.js (v5.25, maquettes : ce qu'en dit API, courbe de poids resserrée, journal qui entre), puis par lignee.js
   // (IT-07 : en-tête de la colonie, onglets « Santé » et « Reine & lignée » ; le journal unifié est dans ux.js), puis par
   // visites/express.js (v5.32 : bouton « Visite express » quand la ruche a déjà une visite), puis par courbes.js
-  // (v5.59 : onglet « Courbes », poids, varroa et force sur la saison).
+  // (v5.61 : onglet « Courbes », poids, varroa et force sur la saison).
   { id: "ruche", titre: "Ruche", rubrique: "ruches", rendu: () => { UX.ecrans.fiche(); AL.completerFiche(); completerFiche(); completerApercu(); completerLignee(); completerExpress(); completerCourbes(); }, actions: { ...actions, ...actionsLignee, ...actionsCourbes } },
 ];

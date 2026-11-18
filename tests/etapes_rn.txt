@@ -44,7 +44,7 @@
     ans = an - (A - 2)
     verif("Active" in t and f"Reine {A - 2}" in t and f"{ans} an" in t and "Force –" in t and f"Visitée le 5 mai{suf}" in t, f"en-tête : statut, reine (âge), force, dernière visite ({t!r})".replace("\n", " "))
     verif(page.locator(".rn-entete .v3-pastille").count() == 1 and "2 %" in page.locator(".u-quatre").inner_text(), "en-tête : pastille de couleur de la reine, varroa du dernier comptage (2 %)")
-    verif(page.locator(".subtabs button").all_inner_texts() == ["Journal", "Courbes", "Santé", "Reine & lignée", "Colonie", "Photos"], "six onglets : Journal, Courbes (v5.59), Santé, Reine & lignée, Colonie, Photos")
+    verif(page.locator(".subtabs button").all_inner_texts() == ["Journal", "Courbes", "Santé", "Reine & lignée", "Colonie", "Photos"], "six onglets : Journal, Courbes (v5.61), Santé, Reine & lignée, Colonie, Photos")
     verif(page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), "téléphone : pas de défilement horizontal de la page")
     # Journal unifié : visites et événements dans l'ordre des dates.
     ordre = page.evaluate("[...document.querySelectorAll('.u-visite, .cl-evt')].map(x => x.classList.contains('cl-evt') ? 'E:' + x.querySelector('b').textContent : 'V')")

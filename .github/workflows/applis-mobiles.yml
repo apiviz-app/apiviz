@@ -1,0 +1,113 @@
+# Applications Android et iOS de test (IT-30). Actions › Applis mobiles › Run workflow, ou automatiquement sur une pull request qui touche aux applis.
+# Elles embarquent la recette (base apidoo-test) d'une branche, fichiers compris : rien n'est publié, ni sur le site,
+# ni sur les stores. Android : un fichier APK à télécharger en bas du résumé de l'action, à installer sur le téléphone.
+# iOS : compilation vérifiée sur le simulateur ; l'installation sur iPhone attend le compte Apple Developer (TestFlight).
+name: Applis mobiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Branche à embarquer (recette)"
+        type: string
+        default: main
+  # Aussi à chaque pull request qui touche aux applis : l'APK se télécharge depuis la pull request, avant fusion.
+  pull_request:
+    paths:
+      - "android/**"
+      - "ios/**"
+      - "capacitor.config.json"
+      - "scripts/preparer-mobile.sh"
+      - ".github/workflows/applis-mobiles.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: applis-mobiles
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Android (APK de test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Fichiers de l'application (recette)
+        run: |
+          npm ci --silent
+          sh scripts/preparer-mobile.sh recette
+          npx cap sync android
+      # Clé de test : la même d'un lancement à l'autre, sinon le téléphone refuse la mise à jour et il faudrait
+      # désinstaller (ce qui effacerait les saisies en attente). Ordre : secret ANDROID_CLE_TEST s'il existe
+      # (docs/MOBILE.md), sinon la clé gardée par GitHub (cache, effacé après 7 jours sans lancement), sinon une nouvelle.
+      - name: Clé de test (cache)
+        id: cle
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: cle-android-test-v1
+      - name: Clé de test
+        env:
+          ANDROID_CLE_TEST: ${{ secrets.ANDROID_CLE_TEST }}
+          CACHE: ${{ steps.cle.outputs.cache-hit }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$ANDROID_CLE_TEST" ]; then
+            echo "$ANDROID_CLE_TEST" | base64 -d > ~/.android/debug.keystore; echo "Clé : secret ANDROID_CLE_TEST."
+          elif [ "$CACHE" = true ]; then
+            echo "Clé : celle des lancements précédents."
+          else
+            keytool -genkeypair -v -keystore ~/.android/debug.keystore -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Apiviz test,O=Apiviz,C=FR"
+            echo "::warning::Nouvelle clé de test : si une ancienne appli de test est installée, la mettre à jour échouera. Envoyer d'abord les saisies en attente, puis la désinstaller."
+          fi
+      - name: Construire l'APK
+        working-directory: android
+        run: |
+          version="recette-$(git log -1 --format=%cs)-$(git rev-parse --short HEAD)"
+          ./gradlew --no-daemon assembleDebug -PapivizVersionCode=${{ github.run_number }} -PapivizVersionName="$version"
+          mkdir -p ../_apk && cp app/build/outputs/apk/debug/app-debug.apk "../_apk/Apiviz-$version.apk"
+          echo "nom=Apiviz-$version" >> "$GITHUB_ENV"
+          printf '### Android\n\n`Apiviz-%s.apk` : à télécharger plus bas (« Artifacts »), puis à ouvrir sur le téléphone (docs/MOBILE.md).\n' "$version" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.nom }}
+          path: _apk/*.apk
+          retention-days: 30
+
+  ios:
+    name: iOS (compilation, simulateur)
+    runs-on: macos-latest
+    timeout-minutes: 40
+    # 18 nov. 2026 : GitHub manquait de machines macOS (« not acquired by Runner », deux fois). Un iOS sans machine ne
+    # doit pas cacher l'APK Android : ce job prévient sans faire échouer l'action, en attendant TestFlight.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Fichiers de l'application (recette)
+        run: |
+          npm ci --silent
+          sh scripts/preparer-mobile.sh recette
+          npx cap sync ios
+      - name: Compiler pour le simulateur (sans signature)
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -20
+          printf '### iOS\n\nCompilation réussie (simulateur). Installation sur iPhone : TestFlight, quand le compte Apple Developer sera ouvert.\n' >> "$GITHUB_STEP_SUMMARY"

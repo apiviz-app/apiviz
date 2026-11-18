@@ -25,7 +25,7 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "eadetail", // écran « Entre associés » (v5.32) : consultation
   "fafiltre", "faouvrir", "favoir", // Finances › Factures (v5.55) : consultation et fichier
   "qrscanner", "qrfiche", "qretiquettes", "qrrucher", "qrimprimer", "cmpartager", // outils de terrain (v5.57) : lire, imprimer, partager
-  "fefiltre", "cbmesure", "mspartager", "msimprimer", // fil de l'équipe, courbes, Ma saison (v5.59) : consultation
+  "fefiltre", "cbmesure", "mspartager", "msimprimer", // fil de l'équipe, courbes, Ma saison (v5.61) : consultation
   // Ruchers (v5.37, v5.40) : présentation, regroupement, filtres, tri, colonnes, fiche rapide, export (pas la sélection)
   "tbaff", "tbgrouper", "tbfeuille", "tbfermer", "tbfiltre", "tbseuil", "tbsugg", "tbeffacer", "tbcol", "tbcompact", "tbtri", "tbouvrir", "tbexport",
   // Impression et exports (rien n'est modifié)

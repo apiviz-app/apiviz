@@ -1,4 +1,4 @@
-// Apiviz — règles pures du fil de l'équipe, des courbes d'une colonie et de « Ma saison » (v5.59, maquettes
+// Apiviz — règles pures du fil de l'équipe, des courbes d'une colonie et de « Ma saison » (v5.61, maquettes
 // « Nouveautés » 5, 6 et 7 validées le 17 nov. 2026). Testées par tests/unitaires/equipe.test.mjs.
 
 const plat = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();

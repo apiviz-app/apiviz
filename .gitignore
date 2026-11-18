@@ -5,3 +5,4 @@ tests/test_*.py
 __pycache__/
 _cloudflare/
 .wrangler/
+_mobile/

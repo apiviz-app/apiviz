@@ -5,11 +5,15 @@
 //   ASSISTANT_MODELE    modèle Claude, « claude-sonnet-5-5 » par défaut
 //   ASSISTANT_PLAFOND   questions par personne et par jour, 30 par défaut
 //   ASSISTANT_ACTIF     « non » coupe l'assistant : l'application revient à « Bientôt » (retour arrière d'IT-24)
+//   ASSISTANT_MODELE_RAPIDE  modèle des réponses rapides, « claude-haiku-5-5 » par défaut (IT-27)
+//   GOUTTES_EUR_PAR_USD conversion du coût en dollars vers les gouttes (1 goutte = 1 centime d'euro), 0,91 par défaut
 // SUPABASE_URL (et SUPABASE_ANON_KEY, clé publique de secours) sont fournis par Supabase.
 //
 // Requête : POST, en-têtes Authorization (jeton de l'utilisateur) et x-exploitation (exploitation choisie).
 //   { "etat": true }                       → { actif, plafond, restant }  (rien n'est compté)
-//   { "question": "…", "historique": [] }  → { reponse, restant }  ; réponse en quatre blocs (regles.js)
+//   { "question": "…", "historique": [], "mode": "rapide"|"approfondi" } → { reponse, restant, gouttes }
+//   Gouttes (migration 029) : sans gouttes, refus 402 « gouttes » avant tout appel ; après une réponse, son coût réel
+//   est retiré (gouttes_debiter) et renvoyé : { cout, restant }. Une réponse en échec ne retire rien. Sans 029 : comme avant.
 // Toutes les lectures passent par le jeton de l'utilisateur : RLS, exploitation_courante(). Aucune écriture.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -17,9 +21,12 @@ import { CONSIGNES, messageInitial } from "./consignes.js";
 import { boucle } from "./boucle.js";
 import { definitions, instantane } from "./outils.js";
 import { aujourdhui, historiqueSur, reponseSansAcces } from "./regles.js";
+import { gouttes, MESSAGE_EPUISE } from "./gouttes.js";
 
 const MODELE = Deno.env.get("ASSISTANT_MODELE") || "claude-sonnet-5-5";
 const PLAFOND = Math.max(1, Number(Deno.env.get("ASSISTANT_PLAFOND")) || 30);
+const MODELE_RAPIDE = Deno.env.get("ASSISTANT_MODELE_RAPIDE") || "claude-haiku-5-5";
+const EUR_PAR_USD = Number(Deno.env.get("GOUTTES_EUR_PAR_USD")) || undefined;
 const ACTIF = (Deno.env.get("ASSISTANT_ACTIF") || "oui").toLowerCase() !== "non";
 const CLE = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,14 +41,14 @@ const json = (corps: unknown, status = 200) =>
 const erreur = (message: string, status: number, code: string) => json({ erreur: message, code }, status);
 
 /** Un appel à l'API Messages de Claude. Consignes et outils sont mis en cache (ils ne changent pas d'une question à l'autre). */
-async function claude(messages: unknown[], forcerReponse: boolean) {
+async function claude(messages: unknown[], forcerReponse: boolean, modele = MODELE) {
   const outils = definitions();
   outils[outils.length - 1] = { ...outils[outils.length - 1], cache_control: { type: "ephemeral" } } as typeof outils[number];
   const rep = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": CLE, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
-      model: MODELE,
+      model: modele,
       max_tokens: 2000,
       system: [{ type: "text", text: CONSIGNES, cache_control: { type: "ephemeral" } }],
       tools: outils,
@@ -68,7 +75,7 @@ Deno.serve(async (req) => {
   const auth = req.headers.get("Authorization") || "";
   const jeton = auth.replace(/^Bearer\s+/i, "");
   const exploitation = req.headers.get("x-exploitation") || "";
-  let corps: { etat?: boolean; question?: string; historique?: unknown } = {};
+  let corps: { etat?: boolean; question?: string; historique?: unknown; mode?: string } = {};
   try { corps = await req.json(); } catch { return erreur("Requête illisible.", 400, "requete"); }
 
   // Clé publique : celle envoyée par l'application (sb_publishable_…), à défaut celle fournie par Supabase.
@@ -85,7 +92,8 @@ Deno.serve(async (req) => {
     if (!disponible) return json({ actif: false, plafond: PLAFOND, restant: 0 });
     const { data: restant, error } = await db.rpc("assistant_restant", { p_plafond: PLAFOND });
     if (error) return json({ actif: false, plafond: PLAFOND, restant: 0, raison: "migration 024 absente" });
-    return json({ actif: true, plafond: PLAFOND, restant });
+    const { data: g, error: eg } = await db.rpc("gouttes_disponibles");
+    return json({ actif: true, plafond: PLAFOND, restant, gouttes: eg || g === null || g === undefined ? null : Number(g) });
   }
   if (!disponible) return erreur("API se repose pour le moment. Réessaie plus tard.", 503, "inactif");
 
@@ -96,6 +104,13 @@ Deno.serve(async (req) => {
   if (!UUID.test(exploitation)) return json({ reponse: reponseSansAcces(), restant: null });
   const { data: membre } = await db.rpc("est_membre", { e: exploitation });
   if (membre !== true) return json({ reponse: reponseSansAcces(), restant: null });
+
+  // Gouttes (migration 029) : vérifiées avant le plafond du jour, pour ne pas le consommer pour rien.
+  const { data: dispo, error: eg } = await db.rpc("gouttes_disponibles");
+  const avecGouttes = !eg && dispo !== null && dispo !== undefined;
+  if (avecGouttes && Number(dispo) <= 0) return json({ erreur: MESSAGE_EPUISE, code: "gouttes", gouttes: { restant: Number(dispo) } }, 402);
+  const rapide = corps.mode === "rapide";
+  const modele = rapide ? MODELE_RAPIDE : MODELE;
 
   // Plafond d'usage (AP-TECH-336), compté avant l'appel au modèle.
   const { data: restant, error: ep } = await db.rpc("assistant_consommer", { p_plafond: PLAFOND });
@@ -113,9 +128,16 @@ Deno.serve(async (req) => {
     { role: "user", content: messageInitial(instant, historiqueSur(corps.historique), question) },
   ];
   try {
-    const r = await boucle({ messages, appel: claude, db, ids, ctx });
-    console.log("assistant:", JSON.stringify({ modele: MODELE, tours: r.tours, lus: r.lus, retraits: r.retraits, echec: r.echec, usage: r.usage }));
-    if (r.reponse) return json({ reponse: r.reponse, restant, lus: r.lus });
+    const r = await boucle({ messages, appel: (m: unknown[], f: boolean) => claude(m, f, modele), db, ids, ctx });
+    let g = null;
+    if (r.reponse && avecGouttes) {
+      const cout = gouttes(modele, r.usage, EUR_PAR_USD);
+      const { data: reste, error: ed } = await db.rpc("gouttes_debiter", { p_quantite: cout, p_nature: "question", p_detail: { modele, mode: rapide ? "rapide" : "approfondi", usage: r.usage } });
+      if (ed) console.error("assistant: gouttes", ed.message);
+      else g = { cout, restant: Number(reste), mode: rapide ? "rapide" : "approfondi" };
+    }
+    console.log("assistant:", JSON.stringify({ modele, gouttes: g?.cout, tours: r.tours, lus: r.lus, retraits: r.retraits, echec: r.echec, usage: r.usage }));
+    if (r.reponse) return json({ reponse: r.reponse, restant, lus: r.lus, gouttes: g });
   } catch (e) {
     const s = (e as { status?: number }).status;
     if (s === 429 || s === 529) return erreur("API est très demandé en ce moment. Réessaie dans une minute.", 503, "occupe");

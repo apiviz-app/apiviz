@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Apiviz</string>
+    <string name="title_activity_main">Apiviz</string>
+    <string name="package_name">fr.apiviz.app</string>
+    <string name="custom_url_scheme">fr.apiviz.app</string>
+</resources>

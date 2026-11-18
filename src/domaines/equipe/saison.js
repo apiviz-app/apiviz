@@ -1,4 +1,4 @@
-// Apiviz — « Ma saison » (v5.59, maquette validée le 17 nov. 2026). La saison en un écran : kilos récoltés et
+// Apiviz — « Ma saison » (v5.61, maquette validée le 17 nov. 2026). La saison en un écran : kilos récoltés et
 // l'écart avec l'an dernier, pots vendus et clients, stock et combien de semaines il tient, argent rentré et dépensé,
 // kilos par ruche, et ce qu'API en retient (constats tirés des chiffres, rien d'inventé). « Partager » envoie le
 // résumé en texte (ou le copie) ; « Imprimer » donne une page propre, à enregistrer en PDF.

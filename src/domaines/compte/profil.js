@@ -203,7 +203,7 @@ export function associes() {
   return R.associesMembres(st.noms || [], cfg());
 }
 export const moi = () => st.ligne || null;
-/** Membres de l'exploitation, pour le fil de l'équipe (v5.59) : [{ email, nom }] (prénom et nom, nom donné, ou début de l'e-mail). */
+/** Membres de l'exploitation, pour le fil de l'équipe (v5.61) : [{ email, nom }] (prénom et nom, nom donné, ou début de l'e-mail). */
 export const membres = () => (st.noms || []).map((n) => ({ email: String(n.email || "").toLowerCase(), nom: R.nomMembre(n, cfg()) || String(n.email || "").split("@")[0] }));
 export const prenom = () => st.ligne?.prenom || String(memo(clePrenom()) || "").trim();
 export const nbPersonnes = () => (st.noms ? st.noms.length : 0) + R.sansCompte(cfg()).length;
@@ -263,7 +263,7 @@ export const actions = {
     toast("Ton profil et la sauvegarde de l’exploitation sont téléchargés");
   },
   pfmdp: async () => {
-    const r = await sb.auth.resetPasswordForEmail(S.session.user.email, { redirectTo: location.origin + location.pathname });
+    const r = await sb.auth.resetPasswordForEmail(S.session.user.email, { redirectTo: window.Plateforme?.adresseRetour() || location.origin + location.pathname });
     toast(r.error ? "Patiente un peu avant de redemander un lien" : "Lien envoyé par e-mail", !!r.error);
   },
   // Suppression du compte depuis l'app (migration 022) : aperçu de ce qui part, mot SUPPRIMER, photos effacées du

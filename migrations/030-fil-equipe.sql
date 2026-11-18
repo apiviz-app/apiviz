@@ -1,4 +1,4 @@
--- Apiviz — migration 029 : fil de l'équipe (v5.59, maquette « Fil de l'équipe » validée par Pierre-Louis le 17 nov.
+-- Apiviz — migration 030 : fil de l'équipe (v5.61, maquette « Fil de l'équipe » validée par Pierre-Louis le 17 nov.
 -- 2026, « implémente les propositions 5, 6 et 7 » le 18 nov.).
 --
 -- Contenu :

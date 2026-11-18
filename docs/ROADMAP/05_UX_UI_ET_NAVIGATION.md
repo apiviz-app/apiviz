@@ -44,7 +44,7 @@ Ruchers, ouvert depuis Ruchers › ⋯). « Scanner une ruche » est une feuille
 feuille d'une ruche scannée. Pas de nouvelle rubrique. Décision de Pierre-Louis (17 nov. 2026, maquettes
 « Nouveautés » 1 à 4 validées, « implémente la 1, 2, 3 et 4 »).
 
-**v5.59 (18 nov. 2026)** : écran **Fil de l'équipe** (niveau 1, Menu › Au quotidien) avec une zone d'écriture fixe
+**v5.61 (18 nov. 2026)** : écran **Fil de l'équipe** (niveau 1, Menu › Au quotidien) avec une zone d'écriture fixe
 au-dessus de la barre du bas ; écran **Ma saison** (Menu › Ruchers et miel, rubrique Miel) ; onglet **Courbes** dans la
 fiche d'une ruche, après Journal. Pas de nouvelle rubrique. Maquettes « Nouveautés » 5, 6 et 7 validées par
 Pierre-Louis.

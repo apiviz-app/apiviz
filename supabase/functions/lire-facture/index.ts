@@ -6,13 +6,17 @@
 //   FACTURE_MODELE      modèle Claude ; à défaut ASSISTANT_MODELE, puis « claude-sonnet-5-5 »
 //   ASSISTANT_PLAFOND   demandes à API par personne et par jour, 30 par défaut : une facture lue compte pour une
 //   FACTURE_ACTIF       « non » coupe la lecture : l'application revient à la saisie à la main (retour arrière)
+//   GOUTTES_EUR_PAR_USD conversion du coût en gouttes (1 goutte = 1 centime d'euro), 0,91 par défaut (IT-27)
+// Gouttes (migration 029) : sans gouttes, refus 402 « gouttes » ; une facture lue retire son coût réel (nature
+// « facture ») ; une lecture en échec ne retire rien. Sans 029 : comme avant.
 //
 // Requête : POST, en-têtes Authorization (jeton de l'utilisateur) et x-exploitation (exploitation choisie).
 //   { "etat": true }                                   → { actif, plafond, restant }  (rien n'est compté)
-//   { "pieces": [{ "type": "application/pdf"|"image/jpeg"|…, "donnees": base64 }] } → { facture, restant }
+//   { "pieces": [{ "type": "application/pdf"|"image/jpeg"|…, "donnees": base64 }] } → { facture, restant, gouttes }
 // Les lectures (catalogue, fournisseurs) passent par le jeton de l'utilisateur : RLS, exploitation_courante().
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { gouttes, MESSAGE_EPUISE } from "./gouttes.js";
 import { CONSIGNES, OUTIL_FACTURE, blocsPieces, controlePieces, extraireReleve, messageFacture, normaliser } from "./regles.js";
 
 const MODELE = Deno.env.get("FACTURE_MODELE") || Deno.env.get("ASSISTANT_MODELE") || "claude-sonnet-5-5";
@@ -20,6 +24,7 @@ const PLAFOND = Math.max(1, Number(Deno.env.get("ASSISTANT_PLAFOND")) || 30);
 const ACTIF = (Deno.env.get("FACTURE_ACTIF") || "oui").toLowerCase() !== "non"
   && (Deno.env.get("ASSISTANT_ACTIF") || "oui").toLowerCase() !== "non";
 const CLE = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const EUR_PAR_USD = Number(Deno.env.get("GOUTTES_EUR_PAR_USD")) || undefined;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const CORS = {
@@ -81,7 +86,8 @@ Deno.serve(async (req) => {
     if (!disponible) return json({ actif: false, plafond: PLAFOND, restant: 0 });
     const { data: restant, error } = await db.rpc("assistant_restant", { p_plafond: PLAFOND });
     if (error) return json({ actif: false, plafond: PLAFOND, restant: 0, raison: "migration 024 absente" });
-    return json({ actif: true, plafond: PLAFOND, restant });
+    const { data: g, error: eg } = await db.rpc("gouttes_disponibles");
+    return json({ actif: true, plafond: PLAFOND, restant, gouttes: eg || g === null || g === undefined ? null : Number(g) });
   }
   if (!disponible) return erreur("API se repose pour le moment. Saisis l'achat toi-même.", 503, "inactif");
 
@@ -93,6 +99,11 @@ Deno.serve(async (req) => {
   if (!UUID.test(exploitation)) return erreur("Choisis d'abord ton exploitation.", 403, "exploitation");
   const { data: membre } = await db.rpc("est_membre", { e: exploitation });
   if (membre !== true) return erreur("Tu n'es pas membre de cette exploitation.", 403, "exploitation");
+
+  // Gouttes (migration 029), vérifiées avant le plafond du jour.
+  const { data: dispo, error: eg } = await db.rpc("gouttes_disponibles");
+  const avecGouttes = !eg && dispo !== null && dispo !== undefined;
+  if (avecGouttes && Number(dispo) <= 0) return json({ erreur: MESSAGE_EPUISE, code: "gouttes", gouttes: { restant: Number(dispo) } }, 402);
 
   const { data: restant, error: ep } = await db.rpc("assistant_consommer", { p_plafond: PLAFOND });
   if (ep) { console.error("lire-facture: plafond", ep.message); return erreur("API n'est pas encore prêt sur cette base.", 503, "migration"); }
@@ -112,9 +123,16 @@ Deno.serve(async (req) => {
   try {
     const r = await claude(messageFacture(catalogue, blocsPieces(pieces), jour));
     const releve = extraireReleve(r.content) as { lignes?: unknown[] } | null;
-    console.log("lire-facture:", JSON.stringify({ modele: MODELE, pages: pieces.length, type: pieces[0].type, outil: r.content.some((c) => c.type === "tool_use"), lignes: releve?.lignes?.length ?? 0, usage: r.usage }));
+    let g = null;
+    if (releve && avecGouttes) {
+      const cout = gouttes(MODELE, r.usage, EUR_PAR_USD);
+      const { data: reste, error: ed } = await db.rpc("gouttes_debiter", { p_quantite: cout, p_nature: "facture", p_detail: { modele: MODELE, pages: pieces.length, usage: r.usage } });
+      if (ed) console.error("lire-facture: gouttes", ed.message);
+      else g = { cout, restant: Number(reste) };
+    }
+    console.log("lire-facture:", JSON.stringify({ modele: MODELE, gouttes: g?.cout, pages: pieces.length, type: pieces[0].type, outil: r.content.some((c) => c.type === "tool_use"), lignes: releve?.lignes?.length ?? 0, usage: r.usage }));
     if (!releve) return erreur("API n'a pas réussi à lire cette facture. Réessaie, ou saisis l'achat toi-même.", 502, "format");
-    return json({ facture: normaliser(releve, catalogue, jour), restant });
+    return json({ facture: normaliser(releve, catalogue, jour), restant, gouttes: g });
   } catch (e) {
     const s = (e as { status?: number }).status;
     if (s === 429 || s === 529) return erreur("API est très demandé en ce moment. Réessaie dans une minute.", 503, "occupe");
