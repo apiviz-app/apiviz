@@ -40,7 +40,8 @@ Technique :
   `editlot` passe par lui pour un produit qui n'est pas du miel). Styles : `styles/64-produits.css`.
 - Tests : `tests/unitaires/produits.test.mjs`, `tests/sql/test_032.mjs`, scénario `etapes_pr` (et `etapes_n4`, `etapes_v3`,
   `etapes_nk`, `etapes_ra` mis à jour pour « Produits »).
-- 032 appliquée sur `apidoo-test` le 18 nov. 2026 (accès Supabase) ; `apidoo` : en attente de l'accord de Pierre-Louis.
+- 032 appliquée le 18 nov. 2026 (accès Supabase) sur `apidoo-test`, puis sur `apidoo` avec l'accord de Pierre-Louis ;
+  `controler-structure.mjs` : production identique aux fichiers. La mise en ligne en production n'aura rien à appliquer.
 
 À vérifier :
 - Produits › Stock et récoltes › « Ajouter un produit » › Hydromel : créer un lot de 12 bouteilles à 14 €.
