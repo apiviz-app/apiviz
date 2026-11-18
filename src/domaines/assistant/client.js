@@ -17,11 +17,14 @@ async function appeler(corps) {
     body: JSON.stringify(corps),
   });
   const j = await rep.json().catch(() => ({}));
-  if (!rep.ok) throw Object.assign(new Error(j.erreur || "API n'a pas pu répondre. Réessaie dans un instant."), { code: j.code || String(rep.status) });
+  if (!rep.ok) {
+    if (j.code === "gouttes" && cache) cache.gouttes = Number(j.gouttes?.restant ?? 0);
+    throw Object.assign(new Error(j.erreur || "API n'a pas pu répondre. Réessaie dans un instant."), { code: j.code || String(rep.status) });
+  }
   return j;
 }
 
-/** État connu ({ actif, restant, plafond }) ou null tant qu'il n'a pas été demandé pour cette exploitation. */
+/** État connu ({ actif, restant, plafond, gouttes }) ou null tant qu'il n'a pas été demandé pour cette exploitation. */
 export const connu = () => (cache && cleCache === exploitation() ? cache : null);
 
 /**
@@ -35,19 +38,23 @@ export function etat() {
   const cle = exploitation();
   enVol = appeler({ etat: true })
     .then((r) => {
-      const st = { actif: r.actif === true, restant: Number.isInteger(r.restant) ? r.restant : null, plafond: Number.isInteger(r.plafond) ? r.plafond : null };
+      // gouttes (migration 029) : gouttes restantes de l'exploitation, null sur une base sans offres.
+      const st = { actif: r.actif === true, restant: Number.isInteger(r.restant) ? r.restant : null, plafond: Number.isInteger(r.plafond) ? r.plafond : null,
+        gouttes: typeof r.gouttes === "number" ? r.gouttes : null };
       cache = st; cleCache = cle;
       return st;
     })
-    .catch(() => ({ actif: false, restant: null, plafond: null }))
+    .catch(() => ({ actif: false, restant: null, plafond: null, gouttes: null }))
     .finally(() => { enVol = null; });
   return enVol;
 }
 
-/** Pose une question. Renvoie { reponse, restant } ; lève une erreur au message en français. */
-export async function demander(question, historique) {
-  const r = await appeler({ question, historique });
+/** Pose une question. Renvoie { reponse, restant, gouttes } ; lève une erreur au message en français (code « gouttes » :
+ * plus de gouttes). mode : « rapide » ou « approfondi » (IT-27). */
+export async function demander(question, historique, mode) {
+  const r = await appeler({ question, historique, ...(mode ? { mode } : {}) });
   if (cache && Number.isInteger(r.restant)) cache.restant = r.restant;
+  if (cache && r.gouttes && Number.isFinite(Number(r.gouttes.restant))) cache.gouttes = Number(r.gouttes.restant);
   return r;
 }
 

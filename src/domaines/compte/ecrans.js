@@ -4,6 +4,7 @@ import { actions as actionsDonnees } from "./donnees.js";
 import { ecranProfil, completerMembres, actions as actionsProfil } from "./profil.js";
 import { completerGestion, actions as actionsAssocies } from "../finances/entre-associes.js";
 import { ecranSynchronisation } from "./synchronisation.js";
+import { ecrans as ecransOffre } from "./offre.js";
 export default [
   // Gestion (route « plus ») : ergonomie.js (blocs), complétée par la carte « Entre associés » (v5.29). Les actions
   // déclarées ici servent aussi à l'écran « Entre associés » (src/domaines/finances/ecrans.js).
@@ -22,4 +23,6 @@ export default [
   // Synchronisation (IT-09, AP-FEAT-045) : ce qui attend sur ce téléphone, par exploitation. Ouvert depuis le bandeau
   // hors ligne, la fiche « En attente d'envoi » et le menu du compte.
   { id: "synchronisation", titre: "Synchronisation", rubrique: "plus", rendu: () => ecranSynchronisation() },
+  // Offres et gouttes d'API (IT-27, migration 029) : Mon offre, Choisir une offre, Recharger (offre.js).
+  ...ecransOffre,
 ];

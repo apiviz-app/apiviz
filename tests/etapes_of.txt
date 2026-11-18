@@ -1,0 +1,153 @@
+    # IT-27 (première partie, migration 029) — Offres et gouttes d'API. Fonctions de la base et fonction « assistant »
+    # simulées : Réglages › Offre et gouttes d'API, Mon offre (jauge, détail du mois, réponse par défaut), Choisir une offre
+    # (au mois / à l'année, essai de 30 jours), Recharger (où va l'argent, pas encore de paiement), bloc Équipe Apiviz,
+    # écran API (gouttes en tête, réponse rapide envoyée, coût sous la réponse, gouttes épuisées), base sans 029.
+    # Avec CAPTURES=<dossier> : captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    H = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+    CAT = [
+        {"id": "decouverte", "nom": "Découverte", "ordre": 1, "prix_mois_cts": 0, "prix_an_cts": 0, "gouttes_mois": 30, "ruches_max": 10, "membres_max": 2, "essai_jours": 0, "avantages": ["Visites, stock de miel, ventes, comptes"], "active": True},
+        {"id": "rucher", "nom": "Rucher", "ordre": 2, "prix_mois_cts": 390, "prix_an_cts": 3900, "gouttes_mois": 200, "ruches_max": 50, "membres_max": 5, "essai_jours": 30, "avantages": ["API lit tes factures et remplit tes achats"], "active": True},
+        {"id": "exploitation", "nom": "Exploitation", "ordre": 3, "prix_mois_cts": 1190, "prix_an_cts": 11900, "gouttes_mois": 600, "ruches_max": None, "membres_max": None, "essai_jours": 30, "avantages": ["Plusieurs exploitations"], "active": True}]
+    OF = {"base": True, "offre": "decouverte", "ab": None, "depense": 10.0, "recharge": 0.0, "admin": False, "appels": [], "mois": [{"nature": "question", "nb": 4, "gouttes": 9.5}],
+          "membres": [{"email": "test@apidoo.fr", "gouttes": 6}, {"email": "ami@apidoo.fr", "gouttes": 3.5}]}
+    def forfait(): return next(o for o in CAT if o["id"] == OF["offre"])["gouttes_mois"]
+    def mon_offre():
+        f = forfait(); fr = max(0, f - OF["depense"])
+        return {"offre": OF["offre"], "abonnement": OF["ab"], "admin": OF["admin"], "responsable": True,
+                "gouttes": {"forfait": f, "forfait_restant": fr, "recharge": OF["recharge"], "total": fr + OF["recharge"], "renouvellement": "2026-12-01"},
+                "mois": {"par_nature": OF["mois"], "par_membre": OF["membres"]}, "usage": {"ruches": len(DATA["ruches"]), "membres": 2}}
+    def rpc_offre(route):
+        req = route.request
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**H, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        nom = req.url.split("/rpc/")[1].split("?")[0]; corps = req.post_data_json or {}
+        OF["appels"].append((nom, corps))
+        if not OF["base"]: return route.fulfill(status=404, headers=H, body=json.dumps({"code": "PGRST202", "message": f"Could not find the function public.{nom}"}))
+        if nom == "demarrer_essai":
+            OF["offre"] = corps["p_offre"]; OF["ab"] = {"offre": corps["p_offre"], "statut": "essai", "canal": "manuel", "debut": "2026-11-18T10:00:00+01:00", "fin": "2026-12-18T10:00:00+01:00", "essai_utilise": True}
+        if nom == "resilier_abonnement":
+            OF["offre"] = "decouverte"; OF["ab"] = {**OF["ab"], "statut": "resilie", "fin": "2026-11-18T10:05:00+01:00"}
+        if nom == "admin_definir_offre":
+            if not OF["admin"]: return route.fulfill(status=403, headers=H, body=json.dumps({"code": "42501", "message": "Réservé à l'équipe Apiviz."}))
+            OF["offre"] = corps["p_offre"]; OF["ab"] = {"offre": corps["p_offre"], "statut": "actif", "canal": "manuel", "debut": "2026-11-18", "fin": None, "essai_utilise": True}
+        if nom == "admin_crediter_gouttes":
+            OF["recharge"] += float(corps["p_quantite"]); m = mon_offre()
+            return route.fulfill(status=200, headers=H, body=json.dumps(m["gouttes"]["total"]))
+        return route.fulfill(status=200, headers=H, body=json.dumps(mon_offre()))
+    for n in ["mon_offre", "demarrer_essai", "resilier_abonnement", "admin_definir_offre", "admin_crediter_gouttes"]:
+        ctx.route(f"https://{REF}.supabase.co/rest/v1/rpc/{n}", rpc_offre)
+    def table_offres(route):
+        if route.request.method == "OPTIONS": return route.fulfill(status=204, headers={**H, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        if not OF["base"]: return route.fulfill(status=404, headers=H, body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.offres'"}))
+        return route.fulfill(status=200, headers=H, body=json.dumps(CAT))
+    ctx.route(re.compile(rf"https://{REF}\.supabase\.co/rest/v1/offres.*"), table_offres)
+    IA = {"recus": [], "mode": "ok"}
+    def fonction_ia(route):
+        req = route.request
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**H, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}; IA["recus"].append(corps); m = mon_offre()
+        if corps.get("etat"): return route.fulfill(status=200, headers=H, body=json.dumps({"actif": True, "plafond": 30, "restant": 30, "gouttes": m["gouttes"]["total"]}))
+        if IA["mode"] == "epuise": return route.fulfill(status=402, headers=H, body=json.dumps({"erreur": "Tes gouttes du mois sont épuisées. Le reste d'Apiviz fonctionne normalement ; recharge ou change d'offre pour reparler à API.", "code": "gouttes", "gouttes": {"restant": 0}}))
+        cout = 0.2 if corps.get("mode") == "rapide" else 3.1
+        OF["depense"] += cout; m = mon_offre()
+        return route.fulfill(status=200, headers=H, body=json.dumps({"reponse": {"resume": "Il te reste 42 pots de 250 g.", "faits": [], "hypotheses": [], "recommandations": [], "manques": []},
+            "restant": 29, "lus": ["lots"], "gouttes": {"cout": cout, "restant": m["gouttes"]["total"], "mode": corps.get("mode") or "approfondi"}}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/assistant", fonction_ia)
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Réglages : la ligne « Offre et gouttes d'API » donne l'offre et les gouttes restantes.
+    page.evaluate("ACT.go('reglages')"); page.wait_for_timeout(800)
+    l = page.locator(".rg-l[data-v=offre]")
+    verif(l.count() == 1 and "Découverte" in l.inner_text() and "20 gouttes" in l.inner_text(), "Réglages : Découverte, 20 gouttes restantes : " + (l.inner_text().replace("\n", " ") if l.count() else "absente"))
+
+    # 2. Mon offre : carte, jauge, détail du mois, réponse par défaut ; pas de bloc équipe.
+    l.click(); page.wait_for_selector(".of-carte")
+    t = page.locator(".of-carte").inner_text()
+    verif(page.evaluate("S.route") == "offre" and "Découverte" in t and "20 sur 30" in t and "gratuite" in t, "Mon offre : Découverte, 20 sur 30, gratuite")
+    verif(page.locator(".of-jauge i").get_attribute("style").replace(" ", "") == "width:67%", "jauge aux deux tiers")
+    verif("4 questions à API" in page.locator(".of").inner_text() and "Par membre" in page.locator(".of").inner_text(), "détail du mois : nature et membres")
+    verif(page.locator(".of-equipe").count() == 0, "pas de bloc « Équipe Apiviz » pour un responsable ordinaire")
+    verif(page.locator(".g-retour-haut").count() == 1, "écran de 2e niveau : retour vers Réglages")
+    page.click(".of-mode[data-v=rapide]"); page.wait_for_timeout(200)
+    verif(page.evaluate("localStorage.getItem('apiviz.api.mode')") == "rapide" and page.locator(".of-mode.on").get_attribute("data-v") == "rapide", "réponse rapide par défaut, gardée sur l'appareil")
+    if cap: page.screenshot(path=f"{cap}/of-mon-offre-390.png", full_page=True)
+
+    # 3. Choisir une offre : trois offres, au mois ou à l'année, essai de 30 jours.
+    page.click(".of-gestes [data-v=offres]"); page.wait_for_selector(".of-offre")
+    verif(page.locator(".of-offre").count() == 3 and page.locator(".of-offre.courante h2").inner_text() == "Découverte", "trois offres, Découverte marquée")
+    verif("39 €" in page.locator(".of-offre").nth(1).inner_text() and "3,25 €" in page.locator(".of-offre").nth(1).inner_text(), "à l'année par défaut : 39 € soit 3,25 € par mois")
+    verif("environ 70 questions" in page.locator(".of-offre").nth(1).inner_text(), "200 gouttes : environ 70 questions")
+    page.click(".of-periode [data-v=mois]"); page.wait_for_timeout(200)
+    verif("3,90 €" in page.locator(".of-offre").nth(1).inner_text() and "11,90 €" in page.locator(".of-offre").nth(2).inner_text(), "au mois : 3,90 € et 11,90 €")
+    if cap: page.screenshot(path=f"{cap}/of-offres-390.png", full_page=True)
+    page.locator(".of-offre").nth(1).locator("[data-act=ofessai]").click(); page.wait_for_selector(".of-carte")
+    verif(("demarrer_essai", {"p_offre": "rucher"}) in OF["appels"], "essai demandé pour Rucher")
+    t = page.locator(".of-carte").inner_text()
+    verif(page.evaluate("S.route") == "offre" and "Rucher" in t and "essai jusqu'au 18 déc." in t and "sur 200" in t, "Mon offre : Rucher en essai jusqu'au 18 déc., 200 gouttes")
+    page.evaluate("ACT.go('offres')"); page.wait_for_timeout(300)
+    verif(page.locator("[data-act=ofessai]").count() == 0 and "paiement arrive bientôt" in page.locator(".of").inner_text(), "essai utilisé : plus d'essai proposé, paiement annoncé")
+
+    # 4. Recharger : choix, où va l'argent, pas encore de paiement.
+    page.evaluate("ACT.go('recharge')"); page.wait_for_selector(".of-pack")
+    page.click(".of-pack[data-v='1']"); page.wait_for_timeout(200)
+    s = page.locator(".of section.card").inner_text()
+    verif(page.locator(".of-pack.on").get_attribute("aria-checked") == "true" and "Où vont tes 12 €" in s and "8,50 €" in s and "2 €" in s, "Pot de 850 gouttes : 12 € dont 8,50 € d'IA et 2 € de TVA")
+    if cap: page.screenshot(path=f"{cap}/of-recharge-390.png", full_page=True)
+    page.click("[data-act=ofpayer]"); page.wait_for_timeout(300)
+    verif("bientôt" in page.locator("#toast, .toast").first.inner_text(), "« Payer » : le paiement arrive bientôt")
+
+    # 5. Arrêter l'essai : feuille de confirmation, retour à Découverte.
+    page.evaluate("ACT.go('offre')"); page.wait_for_selector(".of-carte")
+    page.click("[data-act=ofresilier]"); page.wait_for_selector("#sheet[open]")
+    page.click("#sheet .btn.main"); page.wait_for_timeout(500)
+    verif(("resilier_abonnement", {}) in OF["appels"] and "Découverte" in page.locator(".of-carte").inner_text(), "essai arrêté : Découverte")
+
+    # 6. Équipe Apiviz : poser une offre, créditer des gouttes.
+    OF["admin"] = True
+    page.evaluate("window.Noyau.offre.charger(true).then(() => render())"); page.wait_for_selector(".of-equipe")
+    page.click(".of-equipe [data-act=ofadmin][data-v=exploitation]"); page.wait_for_timeout(400)
+    page.click(".of-equipe [data-act=ofcrediter][data-v='400']"); page.wait_for_timeout(400)
+    t = page.locator(".of-carte").inner_text()
+    verif("Exploitation" in t and "400 gouttes rechargées" in t, "équipe : Exploitation posée, 400 gouttes créditées")
+    if cap: page.screenshot(path=f"{cap}/of-equipe-390.png", full_page=True)
+
+    # 7. Écran API : gouttes en tête, réponse rapide, coût sous la réponse, jauge à jour.
+    page.evaluate("ACT.go('api')"); page.wait_for_selector(".as-gouttes")
+    avant = int(page.locator(".as-gouttes").inner_text())
+    verif(page.locator(".as-mode.on").get_attribute("data-v") == "rapide", "réponse rapide choisie par défaut (réglage de Mon offre)")
+    page.fill("#asTexte", "Combien de pots de 250 g me reste-t-il ?"); page.locator("#asTexte").press("Enter")
+    page.wait_for_selector(".as-cout", timeout=8000)
+    verif(IA["recus"][-1].get("mode") == "rapide", "mode rapide envoyé à la fonction")
+    verif("Réponse rapide" in page.locator(".as-cout").inner_text() and "0,2 goutte" in page.locator(".as-cout").inner_text(), "coût sous la réponse : 0,2 goutte")
+    page.click(".as-mode[data-v=approfondi]"); page.fill("#asTexte", "Et l'an dernier ?"); page.locator("#asTexte").press("Enter")
+    page.wait_for_function("document.querySelectorAll('.as-cout').length === 2", timeout=8000)
+    verif(IA["recus"][-1].get("mode") == "approfondi" and "3 gouttes" in page.locator(".as-cout").last.inner_text(), "réponse approfondie : 3 gouttes")
+    verif(int(page.locator(".as-gouttes").inner_text()) == round(avant - 3.3), "gouttes de l'en-tête à jour")
+    if cap: page.screenshot(path=f"{cap}/of-api-390.png", full_page=True)
+    IA["mode"] = "epuise"
+    page.fill("#asTexte", "Encore une ?"); page.locator("#asTexte").press("Enter")
+    page.wait_for_selector(".as-epuise", timeout=8000)
+    verif(page.locator(".as-epuise [data-v=recharge]").count() == 1 and page.locator(".as-epuise [data-v=offres]").count() == 1, "gouttes épuisées : Recharger ou Voir les offres")
+    if cap: page.screenshot(path=f"{cap}/of-api-epuise-390.png", full_page=True)
+    page.click(".as-epuise [data-v=recharge]"); page.wait_for_timeout(300)
+    verif(page.evaluate("S.route") == "recharge", "« Recharger » ouvre la recharge")
+
+    # 8. Base sans 029 : rien n'est bloqué, on le dit.
+    OF["base"] = False
+    page.evaluate("window.Noyau.offre.charger(true).then(() => ACT.go('offre'))"); page.wait_for_selector(".of-vide")
+    verif("arrivent bientôt" in page.locator(".of-vide").inner_text(), "base sans 029 : « Les offres arrivent bientôt »")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_timeout(400)
+    verif("Ton offre, tes gouttes" in page.locator(".rg-l[data-v=offre]").inner_text(), "Réglages : ligne neutre sans 029")
+
+    page.set_viewport_size({"width": 1280, "height": 900}); OF["base"] = True
+    page.evaluate("window.Noyau.offre.charger(true).then(() => ACT.go('offres'))"); page.wait_for_selector(".of-offre")
+    if cap: page.screenshot(path=f"{cap}/of-offres-1280.png", full_page=True)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

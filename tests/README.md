@@ -57,6 +57,11 @@ recherche Ctrl K en fenêtre — le clic dans le champ ne la ferme plus, filtre 
 « Filtrer et trier » fermé par défaut, entier sans défilement à 1 440 × 842 et 1 366 × 650, épinglé et gardé ; téléphone
 inchangé). Avec `CAPTURES=<dossier>` : captures à 1 440 et 1 366 px.
 
+Scénario v5.59 (IT-27, première partie) : `etapes_of` (offres et gouttes d'API, fonctions simulées : Réglages, Mon offre
+et sa jauge, au mois / à l'année, essai de 30 jours puis arrêt, recharge et répartition du prix, bloc Équipe Apiviz,
+écran API en Rapide puis Approfondie avec le coût sous chaque réponse, gouttes épuisées, base sans 029). Avec
+`CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
 Scénario v5.52 : `etapes_fx` (facture lue par API, fonction « lire-facture » simulée : accès par le bouton API et Matériel (v5.53), feuille Source, PDF envoyé avec
 jeton et exploitation, lecture, validation avec ligne à vérifier qui bloque, nouvel article, frais sans stock, écart de
 total, intégration par enregistrer_achat, photo en deux pages envoyées en JPEG, document illisible, plafond, ordinateur,

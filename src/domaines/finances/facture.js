@@ -313,6 +313,8 @@ async function lire() {
   try {
     const r = await appeler({ pieces: f.pieces.map((p) => ({ type: p.type, donnees: p.donnees })) });
     if (S.facture !== f || f.jeton !== jeton) return; // abandonnée entre-temps
+    // Gouttes d'API (IT-27) : la jauge de Mon offre suit, et le coût de la lecture est dit une fois.
+    if (r.gouttes) { window.Noyau?.offre?.maj?.(r.gouttes.restant); toast(`Facture lue par API : ${window.Noyau?.offre?.gouttes?.(r.gouttes.cout) || r.gouttes.cout + " gouttes"}.`); }
     if (!r.facture?.lisible) {
       f.etape = "erreur";
       f.erreur = { titre: "Je n'arrive pas à lire cette facture.", texte: r.facture?.raison || "Essaie avec une photo plus nette, ou le PDF.", reessayer: false };
