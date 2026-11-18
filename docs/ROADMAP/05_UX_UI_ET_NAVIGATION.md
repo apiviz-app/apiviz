@@ -24,9 +24,9 @@ Ruchers
  ├─ Fiche rucher : colonies · météo 5 j (détail : Météo heure par heure) · tâches · historique · infos
  ├─ Fiche colonie : en-tête, onglets Journal · Santé · Reine & lignée · Colonie · Photos ; bouton principal + « + »
  └─ Saisies (flux) : Visite (Express / Complète) · Tournée · Déplacer (écran, ou feuille après une sélection)
-Miel
- ├─ Ventes · Clients · Stock et récoltes (détail : Lot, Facture)
- └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots
+Produits (ex-Miel, v5.64)
+ ├─ Ventes · Clients · Commandes · Stock et récoltes (Tes produits ; détail : Lot, Facture)
+ └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots · Ajouter un produit (modèles, puis le produit)
 Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
 Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
@@ -43,6 +43,12 @@ marché** (niveau 2 sous Miel, ouvert depuis Miel › ⋯ et le bouton API) ; é
 Ruchers, ouvert depuis Ruchers › ⋯). « Scanner une ruche » est une feuille (Ruchers › ⋯ et bouton API), comme la
 feuille d'une ruche scannée. Pas de nouvelle rubrique. Décision de Pierre-Louis (17 nov. 2026, maquettes
 « Nouveautés » 1 à 4 validées, « implémente la 1, 2, 3 et 4 »).
+
+**v5.64 (18 nov. 2026)** : la rubrique **Miel devient Produits** (barre du bas, volet « Ruchers et produits », menu de
+l'ordinateur), même place et mêmes onglets. Nouvel écran **Ajouter un produit** (flux de niveau 2 sous Produits, ouvert
+depuis Stock et récoltes › Tes produits ; il sert aussi à modifier un produit qui n'est pas du miel). Pas de nouvelle
+rubrique. Décision de Pierre-Louis (18 nov. 2026, maquettes « Produits de la ruche » : « l'application doit être
+accessible au plus grand nombre et ne doit pas parler que de miel »).
 
 **v5.62 (18 nov. 2026)** : écran **API** en deux temps, « Tes échanges » (historique, conseils à faire, recherche)
 puis la conversation (zone pour écrire fixée en bas, qui s'agrandit au toucher) ; feuille d'API contextuelle sur une
