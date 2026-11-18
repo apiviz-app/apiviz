@@ -98,6 +98,10 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Visite express, Visite complète, fiche). Depuis Apiviz : Ruchers › ⋯ ou bouton API › Scanner une ruche.
 - **Caisse du marché** *(v5.57)* : Miel › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
   Marche sans réseau (la vente part au retour du réseau) ; client « Vente au marché ».
+- **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
+  par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
+  conversation ou tout l'historique quand tu veux.
+- **Agenda en semaine** *(v5.62)* : sur téléphone, chaque jour en ligne ; touche un jour de la bande pour y descendre.
 - **Fil de l'équipe** *(v5.61)* : Menu › Au quotidien. Ce que chacun a saisi, les notes et les demandes. Écris
   « @Prénom » pour demander quelque chose à un membre ; il voit la demande en tête et la transforme en tâche avec
   « Je m'en occupe ». Rattache une note à une ruche avec « Sur une ruche ».

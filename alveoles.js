@@ -299,7 +299,11 @@ const AL = (() => {
     });
     // Deux navigations rapprochées : la première transition est abandonnée (l'écran s'affiche quand même) ;
     // sans ces captures, le navigateur signale une erreur non traitée (« Transition was skipped »).
-    t?.ready?.catch(() => {}); t?.finished?.catch(() => {});
+    t?.ready?.catch(() => {});
+    // v5.62 : une fois la transition finie, l'alvéole perd son nom. Sinon, à la transition suivante (ouvrir la feuille
+    // d'API depuis la fiche…), elle était capturée à part et restait peinte par-dessus la feuille quelques instants.
+    const nettoyer = () => document.querySelectorAll(".u-gros-hex").forEach((x) => x.style.removeProperty("view-transition-name"));
+    t?.finished?.then(nettoyer, nettoyer);
   }
   const versRuche = ACT.ruche;
   ACT.ruche = (id) => {
@@ -307,7 +311,9 @@ const AL = (() => {
     transition(() => versRuche(id), document.querySelector(".u-gros-hex") || b?.querySelector(".n4-hex") || (b?.classList.contains("u-hex") ? b : null));
   };
   const allerA = ACT.go;
-  ACT.go = (v) => (S.route === "ruche" || S.route === "rucher" ? transition(() => allerA(v)) : allerA(v));
+  // « saisir » ouvre la feuille d'API sans changer d'écran : pas de transition (v5.62). Sinon la fiche, son alvéole en
+  // tête, restait peinte par-dessus la feuille le temps du fondu.
+  ACT.go = (v) => (v !== "saisir" && (S.route === "ruche" || S.route === "rucher") ? transition(() => allerA(v)) : allerA(v));
 
   // ---------- Miel : des pots qui se vident, des chiffres qui bougent ----------
   const nbFr = (x) => x.toLocaleString("fr-FR");

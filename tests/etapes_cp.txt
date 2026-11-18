@@ -54,7 +54,8 @@
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "pas de défilement horizontal")
 
     # 4. Téléphone : pas de bouton en double dans le menu caché ; l'agenda reste lisible.
-    page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-case")
+    page.set_viewport_size({"width": 390, "height": 844}); page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-sliste")
+    verif(page.locator(".ag-sliste > li").count() == 7, "téléphone, vue Semaine : en liste, un jour par ligne (v5.62)")
     verif(page.locator(".side .cp-actions").count() == 0, "téléphone : pas de « Nouvelle visite » dans le menu caché")
     verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "téléphone : pas de défilement horizontal")
     verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

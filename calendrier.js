@@ -3,7 +3,7 @@
 // ordinateur, en feuille du bas sur téléphone, aux couleurs d'Apiviz. Raccourcis (« Aujourd’hui », « Hier »… ou
 // « Demain »… pour une échéance), grille lundi → dimanche, choix rapide du mois et de l'année.
 // Le champ reste un input type=date : sa valeur (AAAA-MM-JJ), sa saisie au clavier et les formulaires ne changent pas.
-// Bornes min / max respectées. Un clic sur le champ, ou Entrée / Espace / Alt+↓ au clavier, ouvre le calendrier.
+// Bornes min / max respectées. Un clic sur le champ (au doigt : un toucher franc, sans glisser), ou Entrée / Espace / Alt+↓ au clavier, ouvre le calendrier.
 const CAL = (() => {
   const telephone = matchMedia("(max-width:800px)");
   const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -121,11 +121,24 @@ const CAL = (() => {
   const estDate = (el) => el?.matches?.("input[type=date]:not([data-cal-natif])");
   // Au doigt (téléphone), le navigateur envoie un clic juste après le relâché, à l'endroit touché ; le calendrier vient
   // de s'ouvrir par-dessus : ce clic tombait sur son fond (et le refermait aussitôt) ou sur un jour. On l'avale.
+  // v5.62 : au doigt, le calendrier ne s'ouvre qu'au toucher franc (doigt posé puis levé sans bouger de plus de 10 px).
+  // Faire défiler un formulaire en passant sur le champ ne l'ouvre plus (le navigateur annule alors le toucher).
+  let toucher = null;
   document.addEventListener("pointerdown", (e) => {
     if (!estDate(e.target) || e.button > 0) return;
+    if (e.pointerType === "mouse") { e.preventDefault(); avaler = 0; ouvrir(e.target); return; }
+    toucher = { champ: e.target, x: e.clientX, y: e.clientY, id: e.pointerId };
+  }, true);
+  document.addEventListener("pointermove", (e) => {
+    if (toucher && e.pointerId === toucher.id && Math.hypot(e.clientX - toucher.x, e.clientY - toucher.y) > 10) toucher = null;
+  }, true);
+  document.addEventListener("pointercancel", () => { toucher = null; }, true);
+  document.addEventListener("pointerup", (e) => {
+    const t = toucher; toucher = null;
+    if (!t || e.pointerId !== t.id || Math.hypot(e.clientX - t.x, e.clientY - t.y) > 10) return;
     e.preventDefault();
-    avaler = e.pointerType === "mouse" ? 0 : Date.now();
-    ouvrir(e.target);
+    avaler = Date.now();
+    ouvrir(t.champ);
   }, true);
   document.addEventListener("click", (e) => {
     if (avaler && Date.now() - avaler < 1000) {

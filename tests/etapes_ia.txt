@@ -48,7 +48,7 @@
     f = page.locator("#sheet")
     verif(f.locator(".as-champ input").get_attribute("placeholder") == "Demande à API…", "champ « Demande à API… » dans la feuille")
     pos = page.evaluate("[...document.querySelectorAll('#sheetForm > *')].map(e => e.className)")
-    verif(pos.index("as-champ") < pos.index("n4-tuiles fa-tuiles"), "le champ est au-dessus des saisies rapides : " + ", ".join(pos))
+    verif(pos.index("as-champ-bloc") < pos.index("n4-tuiles fa-tuiles"), "le champ est au-dessus des saisies rapides : " + ", ".join(pos))
     verif("factures" in f.locator(".al-bientot").inner_text() and "répondra" not in f.locator(".al-bientot").inner_text(), "« Bientôt » ne parle plus que des factures")
     verif(f.locator(".fa-tuiles .n4-tuile").count() == 6 and f.locator(".fa-sugg").count() == 1, "saisies rapides et suggestion du jour intactes")
     if cap: page.wait_for_timeout(600); page.screenshot(path=f"{cap}/ia-feuille-375.png")
@@ -111,11 +111,29 @@
     verif("30 questions du jour" in page.locator(".as-erreur").inner_text(), "plafond atteint : expliqué")
     IA["mode"] = "ok"
 
-    # 6. Nouvelle conversation : suggestions de questions.
-    cliquer(page, "[data-act=apinouveau]"); page.wait_for_selector(".as-sugg")
-    verif(page.locator(".as-ech").count() == 0 and page.locator(".as-sugg .as-puce").count() == 5, "conversation effacée, cinq suggestions")
-    page.locator(".as-puce").first.click(); page.wait_for_selector(".as-resume", timeout=8000)
-    verif(IA["recus"][-1]["corps"]["question"] == "Quelles colonies dois-je visiter cette semaine ?", "une suggestion pose sa question")
+    # 6. Historique (v5.62, migration 031) : chaque échange répondu est gardé, dans la même conversation.
+    gardes = [r for t, u, rows in recu["upsert"] if t == "api_echanges" for r in rows]
+    verif(len(gardes) == 3 and len({r["conversation_id"] for r in gardes}) == 1 and gardes[0]["question"].startswith("Quelles colonies"), f"3 échanges gardés dans une conversation ({len(gardes)})")
+    verif(all(r.get("reponse", {}).get("resume") for r in gardes), "la réponse est gardée avec la question")
+    # Nouvelle conversation : retour à « Tes échanges », la conversation y est rangée sous « Aujourd'hui ».
+    cliquer(page, "[data-act=apinouveau]"); page.wait_for_selector(".as-accueil")
+    verif(page.locator(".as-ech").count() == 0 and page.locator(".as-hist button").count() == 1, "Tes échanges : la conversation est dans l'historique")
+    verif(page.locator(".as-periode").first.inner_text().lower().startswith("aujourd") and "3 questions" in page.locator(".as-hist button").first.inner_text(), "rangée sous Aujourd'hui, 3 questions")
+    # La zone pour écrire s'agrandit quand on la touche.
+    h0 = page.locator("#asTexte").bounding_box()["height"]
+    page.click("#asTexte"); page.wait_for_timeout(200)
+    h1 = page.locator("#asTexte").bounding_box()["height"]
+    verif(h1 >= 130 and h1 > h0 * 2, f"zone pour écrire agrandie au toucher ({round(h0)} → {round(h1)} px)")
+    # Rouvrir la conversation : ses trois échanges, puis revenir.
+    page.click(".as-hist button"); page.wait_for_selector(".as-conv")
+    verif(page.locator(".as-ech").count() == 3 and page.locator(".as-titre").inner_text().startswith("Quelles colonies"), "conversation rouverte : ses 3 échanges, son titre")
+    page.click("[data-act=apiretour]"); page.wait_for_selector(".as-accueil")
+    page.fill("#asTexte", "Quelles colonies dois-je visiter cette semaine ?"); page.click(".as-form button[type=submit]")
+    page.wait_for_selector(".as-resume", timeout=8000)
+    verif(IA["recus"][-1]["corps"]["question"] == "Quelles colonies dois-je visiter cette semaine ?", "nouvelle question depuis Tes échanges")
+    page.wait_for_timeout(300)
+    gardes = [r for t, u, rows in recu["upsert"] if t == "api_echanges" for r in rows]
+    verif(len(gardes) == 4 and gardes[-1]["conversation_id"] != gardes[0]["conversation_id"], "nouvelle conversation, rangée à part")
 
     # 7. Sans réseau : le champ est désactivé, aucune requête.
     n = len(IA["recus"])
@@ -126,8 +144,9 @@
     verif(len(IA["recus"]) == n and "Sans réseau" in page.locator(".toast").last.inner_text(), "sans réseau : rien n'est envoyé, message clair")
     ctx.set_offline(False); page.evaluate("render()")
 
-    # 8. Lecture seule : aucune écriture en base pendant tout l'échange.
-    verif(len(recu["rpc"]) + len(recu["upsert"]) + len(patchs) == ecritures, "aucune écriture en base depuis l'écran API")
+    # 8. API ne modifie rien : en dehors de son historique (api_echanges), aucune écriture en base pendant tout l'échange.
+    autres = len(recu["rpc"]) + len([1 for t, u, rows in recu["upsert"] if t != "api_echanges"]) + len([p_ for p_ in patchs if "api_echanges" not in str(p_)])
+    verif(autres == ecritures, "aucune écriture en base depuis l'écran API, hors historique")
 
     # 9. Ordinateur : « Demander à API » de la barre du haut ouvre la feuille avec le champ ; écran lisible.
     page.set_viewport_size({"width": 1280, "height": 860}); page.evaluate("render()"); page.wait_for_timeout(300)

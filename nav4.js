@@ -197,17 +197,8 @@ const N4 = (() => {
       ${l.length > 1 ? `<span class="n4-fleches"><button type="button" class="btn" data-act="n4voisine" data-v="${prec.id}" aria-label="Ruche précédente : ${esc(prec.nom)}">‹</button><span class="small">${i + 1} sur ${l.length}</span><button type="button" class="btn" data-act="n4voisine" data-v="${suiv.id}" aria-label="Ruche suivante : ${esc(suiv.nom)}">›</button></span>` : ""}</div>`;
   }
   ACT.n4voisine = (id) => { S.ruche = id; window.scrollTo?.(0, 0); render(); };
-  let tx0 = null, ty0 = null;
-  document.addEventListener("touchstart", (e) => { if (S.route !== "ruche" || e.touches.length !== 1 || e.target.closest(".leaflet-container,svg,input,textarea")) { tx0 = null; return; } tx0 = e.touches[0].clientX; ty0 = e.touches[0].clientY; }, { passive: true });
-  document.addEventListener("touchend", (e) => {
-    if (tx0 === null || S.route !== "ruche" || $sheet.open) return;
-    const dx = e.changedTouches[0].clientX - tx0, dy = e.changedTouches[0].clientY - ty0; tx0 = null;
-    if (Math.abs(dx) < 80 || Math.abs(dy) > 50) return;
-    const r = byId(S.d.ruches, S.ruche); if (!r) return;
-    const l = voisines(r); if (l.length < 2) return;
-    const i = l.findIndex((x) => x.id === r.id);
-    ACT.n4voisine(l[(i + (dx < 0 ? 1 : -1) + l.length) % l.length].id);
-  }, { passive: true });
+  // v5.62 : plus de balayage gauche-droite pour changer de ruche (il se déclenchait en faisant défiler les onglets) ;
+  // on change de ruche avec les flèches du haut seulement.
 
   // ---------- Miel : récoltes dans l'onglet Stock ----------
   // Écran « miel » : complément de l'écran, appelé par src/domaines/ (IT-03).

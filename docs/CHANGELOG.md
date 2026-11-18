@@ -5,6 +5,44 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.62 · à publier en recette · échanges avec API, agenda en semaine, corrections de la fiche ruche
+**Migration 031 (additive, ne casse pas l'ancienne version, après 030).** Maquettes « Corrections et échanges avec API »
+validées par Pierre-Louis le 18 nov. 2026 (« Implémente le tout », flèches simples, zone pour écrire qui s'agrandit,
+historique gardé).
+
+Pour l'apiculteur :
+1. **Tes échanges avec API** (bouton API › « Tes échanges avec API », ou l'écran API) : poser une question, les
+   conseils d'API pas encore faits (« Créer la tâche » ouvre la tâche pré-remplie, sur la bonne ruche ; la croix
+   l'écarte), une recherche dans les échanges passés, et l'historique rangé par jour (Aujourd'hui, Hier, Cette
+   semaine, puis par mois). On rouvre une conversation pour la continuer, on l'efface, ou on efface tout
+   l'historique. Les échanges ne sont visibles que de leur auteur.
+2. **La zone pour écrire à API s'agrandit** quand on la touche (et suit la longueur du texte) ; dans une
+   conversation, elle reste en bas de l'écran, au-dessus de la barre.
+3. **Depuis une ruche**, la feuille d'API propose des questions sur cette ruche (« Comment va Ruche 1 ? »…) ; la
+   question part avec le nom de la ruche et l'échange est rangé sur elle.
+4. **Le « 1 » de la ruche ne reste plus par-dessus la feuille d'API** : ouvrir la feuille ne lance plus de transition.
+5. **Fiche ruche** : glisser à gauche ou à droite ne change plus de ruche (cela arrivait en faisant défiler les
+   onglets) ; on change avec les flèches du haut seulement. Le type de ruche s'affiche en entier.
+6. **Calendrier** : il ne s'ouvre plus quand le doigt passe sur un champ date en faisant défiler ; il faut toucher le
+   champ et lever le doigt sans glisser.
+7. **Agenda, vue Semaine sur téléphone** : une bande des 7 jours, puis chaque jour en ligne avec ses éléments écrits
+   en entier ; les jours vides tiennent sur une ligne. Sur ordinateur, les 7 colonnes restent.
+
+Technique : table `api_echanges` (migration 031, RLS par exploitation et par auteur, testée par
+`tests/sql/test_031.mjs`) ; règles `src/domaines/assistant/historique.js` (tests `assistant-historique.test.mjs`) ;
+scénario navigateur `tests/etapes_ae.txt` ; `etapes_ia` suit l'historique. Confidentialité : les questions à API sont
+désormais gardées jusqu'à leur effacement (page mise à jour).
+
+À vérifier :
+- Sur téléphone : écran API, toucher la zone pour écrire (elle s'agrandit), poser une question, revenir à « Tes
+  échanges » : la conversation est sous « Aujourd'hui ». La rouvrir, continuer, l'effacer.
+- Une réponse avec un conseil : « Créer la tâche », enregistrer ; le conseil disparaît de « Conseillé par API ».
+- Depuis la fiche d'une ruche : bouton API, plus de « 1 » par-dessus la feuille ; une question proposée sur la ruche.
+- Fiche ruche : faire défiler les onglets au doigt ne change pas de ruche ; les flèches oui.
+- Un formulaire avec une date (ajouter une ruche) : faire défiler en passant sur le champ, le calendrier ne s'ouvre pas.
+- Agenda › Semaine sur téléphone.
+- Avec un autre membre de l'exploitation : il ne voit pas tes échanges avec API.
+
 ## v5.61 · à publier en recette · fil de l'équipe, courbes d'une colonie, Ma saison
 **Migration 030 (additive, ne casse pas l'ancienne version, après 029).** Maquettes « Nouveautés » 5, 6 et 7 validées
 par Pierre-Louis le 18 nov. 2026 (« implémenter les propositions 5, 6 et 7 »).

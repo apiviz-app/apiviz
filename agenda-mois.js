@@ -1,5 +1,5 @@
 // Apiviz — agenda en calendrier (v5.35, maquettes du 13 nov. 2026).
-// Vue Mois ou Semaine : tâches (à leur échéance), visites, ventes et récoltes, chacune à sa date et à sa couleur.
+// Vue Mois ou Semaine (en liste sur téléphone, v5.62) : tâches (à leur échéance), visites, ventes et récoltes, chacune à sa date et à sa couleur.
 // À droite (en dessous sur téléphone) : le jour choisi, puis les listes d'origine de l'écran (À faire, idées, terminées).
 // Complète l'écran « agenda » d'app.js (viewAgenda) après son rendu ; ne change aucune donnée.
 // Les gestes de navigation (mois, jour, filtres) passent par data-cp, permis à tous les rôles ; ouvrir une tâche,
@@ -15,6 +15,7 @@ const AG = (() => {
     late: { nom: "En retard", court: "En retard" },
   };
   const etat = { mois: null, jour: null, vue: "mois", caches: new Set() };
+  const enListe = () => etat.vue === "semaine" && !ordinateur.matches;
   const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const deIso = (t) => new Date(t + "T12:00:00");
   const maj = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -78,17 +79,38 @@ const AG = (() => {
         <div class="ag-outils"><button type="button" class="g-puce" data-cp="agfeuille" aria-label="Filtrer ce qui s’affiche${etat.caches.size ? `, ${etat.caches.size} masqué${etat.caches.size > 1 ? "s" : ""}` : ""}">${ic("M4 6h16M7 12h10M10 18h4", 16)}Filtrer${etat.caches.size ? `<span class="g-n">${etat.caches.size}</span>` : ""}</button>
         <div class="cp-bascule" role="tablist" aria-label="Vue"><button type="button" role="tab" data-cp="agvue" data-v="mois" aria-selected="${etat.vue === "mois"}">Mois</button><button type="button" role="tab" data-cp="agvue" data-v="semaine" aria-selected="${etat.vue === "semaine"}">Semaine</button></div></div>
       </div>
-      <div class="ag-grille ag-${etat.vue}" role="grid"><div class="ag-entetes" aria-hidden="true">${entetes}</div><div class="ag-cases">${cases}</div></div>`;
+      ${enListe() ? semaineListe(ev, vus, auj) : `<div class="ag-grille ag-${etat.vue}" role="grid"><div class="ag-entetes" aria-hidden="true">${entetes}</div><div class="ag-cases">${cases}</div></div>`}`;
+  }
+
+  const ligne = (e) => `<div class="ag-ligne ag-${e.type}${e.faite ? " fait" : ""}">
+        <i aria-hidden="true"></i>
+        <button type="button" class="ag-ouvrir" data-act="${e.act}" data-v="${esc(e.v)}"><b>${esc(e.titre)}</b><span>${esc([TYPES[e.type].court, e.sous].filter(Boolean).join(" · "))}</span></button>
+        ${e.tache ? `<button type="button" class="check" role="checkbox" aria-checked="${e.faite}" aria-label="Marquer ${esc(e.titre)}" data-act="toggletache" data-v="${e.tache.id}">${e.faite ? "✓" : ""}</button>` : ""}
+      </div>`;
+
+  // v5.62 : sur téléphone, la semaine en liste (maquette du 18 nov. 2026). Sept colonnes de 50 px coupaient tout
+  // (« Vis… · Ru… ») : une bande des 7 jours en haut, puis chaque jour en ligne, ses éléments écrits en entier.
+  // Les jours vides tiennent sur une ligne fine. Toucher un jour de la bande descend à ce jour.
+  function semaineListe(ev, vus, auj) {
+    const l = jours();
+    const bande = l.map((d) => {
+      const t = iso(d), n = vus(ev.get(t) || []).length;
+      const lib = `${d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric" })}${t === auj ? ", aujourd’hui" : ""}${n ? `, ${n} élément${n > 1 ? "s" : ""}` : ", rien"}`;
+      return `<button type="button" class="ag-bj${t === auj ? " auj" : ""}${t === etat.jour ? " choisi" : ""}" data-cp="agjour" data-v="${t}" aria-label="${esc(lib)}"${t === etat.jour ? ' aria-current="date"' : ""}>
+        <small>${esc(d.toLocaleDateString("fr-FR", { weekday: "short" }))}</small><b>${d.getDate()}</b><span class="ag-bpts" aria-hidden="true">${"<i></i>".repeat(Math.min(n, 3))}</span></button>`;
+    }).join("");
+    const liste = l.map((d) => {
+      const t = iso(d), x = vus(ev.get(t) || []);
+      if (!x.length) return `<li class="ag-sv" id="agS-${t}"><span>${esc(maj(d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" })))}</span><span>Rien de prévu</span></li>`;
+      return `<li class="ag-sj${t === auj ? " auj" : ""}" id="agS-${t}"><div class="ag-sj-t"><h3>${esc(maj(d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })))}</h3>${t === auj ? '<span class="ag-sj-auj">Aujourd’hui</span>' : ""}</div>${x.map(ligne).join("")}</li>`;
+    }).join("");
+    return `<div class="ag-bande" role="group" aria-label="Jours de la semaine">${bande}</div><ol class="ag-sliste">${liste}</ol>`;
   }
 
   function jourChoisi() {
     const l = evenements().get(etat.jour) || [], d = deIso(etat.jour), auj = today();
     const surTitre = etat.jour === auj ? "Aujourd’hui" : etat.jour < auj ? `Il y a ${days(etat.jour)} jour${days(etat.jour) > 1 ? "s" : ""}` : "À venir";
-    const lignes = l.map((e) => `<div class="ag-ligne ag-${e.type}${e.faite ? " fait" : ""}">
-        <i aria-hidden="true"></i>
-        <button type="button" class="ag-ouvrir" data-act="${e.act}" data-v="${esc(e.v)}"><b>${esc(e.titre)}</b><span>${esc([TYPES[e.type].court, e.sous].filter(Boolean).join(" · "))}</span></button>
-        ${e.tache ? `<button type="button" class="check" role="checkbox" aria-checked="${e.faite}" aria-label="Marquer ${esc(e.titre)}" data-act="toggletache" data-v="${e.tache.id}">${e.faite ? "✓" : ""}</button>` : ""}
-      </div>`).join("");
+    const lignes = l.map(ligne).join("");
     return `<section class="card ag-jour"><p class="ag-sur">${esc(surTitre)}</p><h2>${esc(maj(d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })))}</h2>
       ${lignes || '<p class="small">Rien de prévu ce jour-là.</p>'}
       <button type="button" class="ag-ajout" data-cp="agajout">${ic("M12 5v14M5 12h14", 15)}Ajouter une tâche ce jour</button></section>`;
@@ -98,6 +120,7 @@ const AG = (() => {
     const cal = document.getElementById("agCal"), jour = document.getElementById("agJour");
     if (cal) cal.innerHTML = calendrier();
     if (jour) jour.outerHTML = jourChoisi().replace('class="card ag-jour"', 'class="card ag-jour" id="agJour"');
+    document.querySelector(".ag-page")?.classList.toggle("ag-en-liste", enListe());
     ajuster();
   }
   function ajuster() {
@@ -106,6 +129,7 @@ const AG = (() => {
     g.style.height = ordinateur.matches ? `${Math.max(460, window.innerHeight - (g.getBoundingClientRect().top + window.scrollY) - 20)}px` : "";
   }
   addEventListener("resize", () => { if (S.route === "agenda") ajuster(); });
+  ordinateur.addEventListener?.("change", () => { if (S.route === "agenda" && etat.vue === "semaine") dessiner(); });
 
   function completer() {
     const wrap = document.querySelector(".wrap");
@@ -144,7 +168,8 @@ const AG = (() => {
       etat.jour = v;
       if (v.slice(0, 7) !== etat.mois) etat.mois = v.slice(0, 7);
       dessiner();
-      if (!ordinateur.matches) document.getElementById("agJour")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (enListe()) document.getElementById(`agS-${v}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      else if (!ordinateur.matches) document.getElementById("agJour")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } else if (a === "agpas") {
       const k = Number(v);
       if (etat.vue === "semaine") { const d = deIso(etat.jour); d.setDate(d.getDate() + 7 * k); etat.jour = iso(d); etat.mois = etat.jour.slice(0, 7); }
