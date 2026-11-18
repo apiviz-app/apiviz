@@ -45,7 +45,8 @@
     page.wait_for_timeout(400)
     if cap: page.screenshot(path=cap + "/ra-rappels-390.png")
     page.click("#sheet [data-act=errgrappels]"); page.wait_for_function("S.route === 'rappels'")
-    verif(page.locator(".wrap .g-retour").inner_text() == "Réglages", "réglages des rappels : retour « ‹ Réglages »")
+    # v5.64 : le retour ramène là d'où l'on vient, ici l'Accueil (la feuille Rappels s'ouvre sur l'Accueil).
+    verif(page.locator(".wrap .g-retour").inner_text() == "Accueil", "réglages des rappels : retour « ‹ Accueil », l'écran d'où l'on vient")
     # Visite : une bascule Express / Complète, pour la même ruche
     page.evaluate(f"ACT.ruche('{R1}')"); page.wait_for_selector(".n4-rbarre [data-act=veruche]")
     page.click(".n4-rbarre [data-act=veruche]"); page.wait_for_selector(".ve-mode")

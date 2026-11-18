@@ -1,0 +1,57 @@
+    # v5.64 — Retour en arrière : le retour du navigateur (comme celui du téléphone) et le lien « ‹ » ramènent à
+    # l'écran d'avant ; une fenêtre se ferme d'abord ; un onglet n'a derrière lui que l'Accueil ; à l'Accueil, on prévient.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    def route(): return page.evaluate("S.route")
+    def pile(): return [x["route"] for x in page.evaluate("Noyau.historique.etat().pile")]
+    def ouvrir(js): page.evaluate(js); page.wait_for_timeout(350)
+    def retour(): page.go_back(); page.wait_for_timeout(450)
+    verif(pile() == ["dash"], "au départ, l'Accueil seul (" + str(pile()) + ")")
+    # 1. Ruchers › ruche, puis retour deux fois
+    ouvrir("ACT.go('ruches')"); ouvrir("S.ruche = S.d.ruches[0].id; ACT.go('ruche')")
+    verif(pile() == ["dash", "ruches", "ruche"], "Ruchers puis la ruche : trois écrans (" + str(pile()) + ")")
+    haut = page.locator(".topbar .g-retour-haut")
+    verif(haut.count() == 1 and "Ruchers" in haut.inner_text(), "lien « ‹ Ruchers » en haut de la fiche")
+    if cap: page.screenshot(path=cap + "/rt-fiche-390.png")
+    retour()
+    verif(route() == "ruches", "retour : les Ruchers (" + route() + ")")
+    retour()
+    verif(route() == "dash", "second retour : l'Accueil (" + route() + ")")
+    # 2. La ruche ouverte depuis l'Accueil : le lien dit « Accueil » et y ramène
+    ouvrir("S.ruche = S.d.ruches[0].id; ACT.go('ruche')")
+    haut = page.locator(".topbar .g-retour-haut")
+    verif("Accueil" in haut.inner_text(), "fiche ouverte depuis l'Accueil : « ‹ Accueil » (" + haut.inner_text() + ")")
+    haut.click(); page.wait_for_timeout(400)
+    verif(route() == "dash" and pile() == ["dash"], "le lien « ‹ » ramène à l'Accueil (" + route() + ")")
+    # 3. Un onglet n'a derrière lui que l'Accueil
+    ouvrir("ACT.go('ruches')"); ouvrir("S.ruche = S.d.ruches[0].id; ACT.go('ruche')"); ouvrir("ACT.go('miel')")
+    verif(pile() == ["dash", "miel"], "Miel après une fiche : l'Accueil derrière (" + str(pile()) + ")")
+    retour()
+    verif(route() == "dash", "retour depuis Miel : l'Accueil (" + route() + ")")
+    # 4. Une fenêtre se ferme d'abord, l'écran ne bouge pas
+    ouvrir("ACT.go('ruches')"); ouvrir("ACT.go('menu')")
+    verif(page.locator("#nlVolet[open]").count() == 1, "le volet Menu est ouvert")
+    retour()
+    verif(page.locator("#nlVolet[open]").count() == 0 and route() == "ruches", "retour : le volet se ferme, on reste sur Ruchers (" + route() + ")")
+    # 5. Une saisie commencée n'est pas perdue : gardée en brouillon
+    ouvrir("ACT.newdepense()")
+    champ = page.locator("#sheetForm input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=date]):not([type=file])").first
+    champ.fill("Candy 12 kg")
+    retour()
+    verif(page.locator("#sheet[open]").count() == 0 and route() == "ruches", "retour : la feuille se ferme, l'écran reste")
+    verif(page.locator(".er-brouillon").is_visible() and "brouillon" in page.locator(".er-brouillon").inner_text(), "la saisie est gardée en brouillon")
+    page.locator("[data-act=eroublier]").click()
+    # 6. À l'Accueil : un premier appui prévient seulement
+    retour()
+    verif(route() == "dash", "Ruchers › retour : l'Accueil")
+    retour()
+    verif(route() == "dash" and page.get_by_text("Appuie encore sur retour pour quitter Apiviz").count() >= 1, "à l'Accueil, un premier retour prévient sans quitter")
+    if cap: page.screenshot(path=cap + "/rt-quitter-390.png")
+    verif("/" in page.url and page.locator(".bottom").count() == 1, "on est toujours dans Apiviz après le premier appui")
+    # 7. Après le message, on peut naviguer et revenir normalement
+    page.wait_for_timeout(3200)
+    ouvrir("ACT.go('ruches')")
+    retour()
+    verif(route() == "dash", "après le message, le retour marche à nouveau (" + route() + ")")

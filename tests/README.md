@@ -62,6 +62,10 @@ et sa jauge, au mois / à l'année, essai de 30 jours puis arrêt, recharge et r
 écran API en Rapide puis Approfondie avec le coût sous chaque réponse, gouttes épuisées, base sans 029). Avec
 `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
 
+Scénario v5.64 : `etapes_rt` (bouton retour : retour du navigateur et lien « ‹ » vers l'écran d'avant, « ‹ Accueil » pour
+une fiche ouverte depuis l'Accueil, onglet → Accueil, volet et feuille fermés d'abord, saisie gardée en brouillon,
+message avant de quitter). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.52 : `etapes_fx` (facture lue par API, fonction « lire-facture » simulée : accès par le bouton API et Matériel (v5.53), feuille Source, PDF envoyé avec
 jeton et exploitation, lecture, validation avec ligne à vérifier qui bloque, nouvel article, frais sans stock, écart de
 total, intégration par enregistrer_achat, photo en deux pages envoyées en JPEG, document illisible, plafond, ordinateur,
