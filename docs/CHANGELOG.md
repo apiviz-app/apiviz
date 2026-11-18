@@ -5,7 +5,7 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.59 · à fabriquer · applications Android et iOS de test (IT-30, première partie)
+## v5.60 · à fabriquer · applications Android et iOS de test (IT-30, première partie)
 **Aucune migration, aucune base touchée. Le site publié ne change presque pas** (un fichier `plateforme.js` en plus).
 Demande de Pierre-Louis du 18 nov. 2026 : avoir Apiviz en vraie application pour l'essayer en conditions réelles.
 Choix du jour : Android d'abord (gratuit, fichier à installer), iPhone préparé pour TestFlight ; applis branchées sur la
@@ -38,6 +38,7 @@ Limites connues (suite d'IT-30) :
 - Photo d'une facture, lecture d'un QR de ruche, position d'un rucher : l'autorisation est demandée, puis ça marche.
 - Haut et bas de l'écran : rien sous la barre d'état ni sous la barre de navigation du téléphone.
 - Site web (recette) inchangé ; « Installer Apiviz » toujours proposé dans le navigateur.
+
 ## v5.59 · à publier en recette · offres et gouttes d'API (IT-27, première partie)
 **Migration 029 (additive, ne casse pas l'ancienne version, après 028).** Maquette « Apiviz — Offres et IA » du 18 nov.
 2026, choix de Pierre-Louis : gouttes au coût réel, partagées par l'exploitation, forfaits tels que proposés, pas encore
