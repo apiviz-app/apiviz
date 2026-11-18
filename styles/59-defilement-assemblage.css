@@ -1,0 +1,35 @@
+/* Apiviz — 18 nov. 2026, maquettes validées par Pierre-Louis.
+   1. Liste des ruches en tableau, sur téléphone : le tableau défile vers le bas ET sur les côtés, sa hauteur s'arrête
+      au-dessus de la barre du bas (vue-tableau.js, ajuster()). La ligne d'en-têtes reste collée en haut, le nom du
+      rucher juste dessous, la colonne Colonie à gauche. Avant : défilement vertical bloqué dans le tableau
+      (overflow-y hidden + overscroll contain), en-têtes jamais collés.
+   2. Ajout de ruches physiques : section « Pièces prises dans le stock » (src/domaines/colonies/contenants.js). */
+
+/* 1. Défilement du tableau */
+.tb-gligne{position:sticky;top:46px;z-index:2;background:var(--ground)}
+@media (max-width:1023px){
+  .tb[data-aff=tableau] .tb-boite{overflow:auto;overscroll-behavior-x:contain;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}
+  .tb[data-aff=tableau] .tb-tete{box-shadow:0 2px 6px rgba(30,43,36,.08)}
+}
+
+/* 2. Pièces prises dans le stock */
+.ct-liens{display:flex;gap:16px;align-items:center}
+.asm-pieces{display:flex;flex-direction:column;gap:10px;margin:4px 0 14px;padding:14px 12px;border-radius:16px;background:var(--ground)}
+.asm-tete{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.asm-tete h3{margin:0;font-size:16px}
+.asm-aide{margin:-4px 0 0}
+.asm-alerte{margin:0;padding:10px 12px;border-radius:12px;background:var(--watchbg);color:var(--watch);font-size:14px;font-weight:600;line-height:1.35}
+.asm-lignes{display:flex;flex-direction:column;gap:8px}
+.asm-l{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.asm-l.manque{border-color:#E0A33A}
+.asm-l.manque .asm-info{color:var(--watch);font-weight:600}
+.asm-l-t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.asm-l-t b{font-size:15px;overflow-wrap:anywhere}
+.asm-pas{flex:none;display:flex;align-items:center;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:#fff}
+.asm-pas button{width:40px;height:44px;border:0;background:#fff;font:inherit;font-size:20px;color:var(--ink);cursor:pointer}
+.asm-pas input{width:44px;height:44px;min-height:0;border:0;border-radius:0;padding:0;text-align:center;font:inherit;font-weight:700;font-size:16px;background:#fff;-moz-appearance:textfield}
+.asm-pas input::-webkit-outer-spin-button,.asm-pas input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.asm-ajout,.asm-garder{margin:0}
+.asm-pieces label.asm-garder{flex-direction:row;align-items:center;gap:10px;font-size:14px;font-weight:500;min-height:44px}
+.asm-pieces .asm-garder input{width:22px;height:22px;min-height:0;flex:none;margin:0;padding:0}
+.asm-vide{margin:0}

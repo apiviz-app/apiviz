@@ -5,6 +5,29 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.56 · à publier en recette · liste des ruches qui défile, ruches physiques montées avec le stock
+**Migration 026 (additive, ne casse pas l'ancienne version).** Demandes de Pierre-Louis du 17 nov. 2026, maquettes
+validées le soir même (« implémente-le »).
+
+Pour l'apiculteur :
+1. **Ruchers › Tableau** (téléphone) : le tableau défile vers le bas et sur les côtés ; il s'arrête au-dessus de la
+   barre du bas. La ligne d'en-têtes (Colonie, État, Force…) reste collée en haut, le nom du rucher juste dessous, la
+   colonne Colonie à gauche. Avant, on ne pouvait glisser que sur les côtés.
+2. **Matériel › Ruches physiques › Ajouter** : nouvelle section « Pièces prises dans le stock ». Le type choisi
+   pré-remplit ses pièces (plancher, corps, cadres, cire…), quantités pour une ruche, multipliées par le nombre de
+   ruches. On ajuste avec − et +, on ajoute une pièce du stock. Le stock après création s'affiche ; une pièce qui manque
+   est signalée en orange, mais la création reste possible (le stock passe en négatif). À la création, les pièces sont
+   retirées du stock (mouvement « Assemblage » dans l'historique de l'article).
+3. **Compositions** (lien à côté de « Ajouter ») : la liste des pièces de chaque type de ruche. Elle se règle aussi
+   depuis l'ajout (« Garder ces pièces comme composition »).
+
+À vérifier :
+- Ruchers › Tableau sur téléphone, avec les 12 colonies : glisser vers le bas jusqu'au dernier rucher, puis sur le côté ;
+  les en-têtes et le nom du rucher restent visibles.
+- Matériel › Ruches physiques › Compositions : régler « Dadant 10 cadres ».
+- Ajouter deux ruches physiques de ce type : pièces pré-remplies, alerte si une pièce manque, stock baissé ensuite.
+- Sans réseau : l'ajout est gardé, la caisse et le stock suivent, puis tout part au retour du réseau.
+
 ## v5.55 · à publier en recette · corrections du 17 novembre et écran Factures
 **Migration 025 (additive, ne casse pas l'ancienne version).** Retours de Pierre-Louis du 17 nov. 2026 sur téléphone,
 maquettes validées le jour même (« implémente toutes les modifications »).

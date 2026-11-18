@@ -13,3 +13,6 @@
 # 025-factures-fichiers.sql (PR claude/corrections-17-nov, v5.55) : fichier de la facture d'un achat (colonne
 #   depenses.fichier, espace privé « factures »). Additive. À appliquer sur apidoo-test par la mise en ligne en recette,
 #   puis sur apidoo avec l'accord de Pierre-Louis.
+# 026-assemblage-ruches.sql (PR claude/liste-et-assemblage, v5.56) : compositions des types de ruche, assemblage des
+#   ruches physiques avec les pièces du stock. Additive. À appliquer sur apidoo-test par la mise en ligne en recette,
+#   puis sur apidoo avec l'accord de Pierre-Louis.
