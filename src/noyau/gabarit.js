@@ -26,6 +26,8 @@ export const PARENTS = {
   achatfacture: ["factures", "Factures"],
   // Outils de terrain (v5.57).
   etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Miel"],
+  // Offres et gouttes d'API (IT-27).
+  offre: ["reglages", "Réglages"], offres: ["offre", "Mon offre"], recharge: ["offre", "Mon offre"],
 };
 
 /**

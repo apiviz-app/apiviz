@@ -5,6 +5,37 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.59 · à publier en recette · offres et gouttes d'API (IT-27, première partie)
+**Migration 029 (additive, ne casse pas l'ancienne version, après 028).** Maquette « Apiviz — Offres et IA » du 18 nov.
+2026, choix de Pierre-Louis : gouttes au coût réel, partagées par l'exploitation, forfaits tels que proposés, pas encore
+de vrai paiement.
+
+Pour l'apiculteur :
+1. **Réglages › Offre et gouttes d'API** : l'offre de l'exploitation (Découverte, Rucher, Exploitation), la jauge des
+   gouttes du mois, les recharges, ce que chaque question et chaque facture a coûté ce mois-ci, par membre.
+2. **1 goutte = 1 centime** de ce que l'IA coûte vraiment. Découverte : 30 gouttes par mois ; Rucher (39 € par an) : 200 ;
+   Exploitation (119 € par an) : 600. Les gouttes du forfait reviennent le 1er du mois ; les recharges ne se perdent pas.
+3. **Choisir une offre** : au mois ou à l'année ; un responsable peut **essayer Rucher ou Exploitation 30 jours**, une fois.
+4. **Recharger** : sachet (6 €, 400 gouttes), pot (12 €, 850), seau (25 €, 1 800), avec ce que devient chaque euro. Le
+   paiement n'est pas encore branché : « Payer » l'annonce.
+5. **API** : les gouttes restantes en haut de l'écran ; « Rapide » (moins d'1 goutte, Claude Haiku) ou « Approfondie »
+   (2 à 4 gouttes, Claude Sonnet) au moment de poser la question, réglable par défaut dans Mon offre ; **le coût de
+   chaque réponse est écrit dessous**. Une réponse en échec ne coûte rien. Sans gouttes : « Recharger » ou « Voir les
+   offres » ; tout le reste d'Apiviz fonctionne normalement. Une facture lue par API dit aussi ce qu'elle a coûté.
+6. **Équipe Apiviz** (bloc visible des seules adresses de la table `administrateurs_apiviz`) : poser une offre, créditer
+   ou retirer des gouttes, sans payer. C'est ce qui permet de tout essayer en recette et en production.
+
+Technique : fonctions serveur `assistant` et `lire-facture` (coût réel calculé sur les jetons, `gouttes.js`, tarifs
+relevés le 18 nov. 2026), à redéployer sur chaque base avec la migration. Sans 029, elles se comportent comme avant.
+
+À vérifier :
+- Réglages › Offre et gouttes d'API : Découverte, 30 gouttes.
+- Poser une question en Rapide puis en Approfondie : coût sous chaque réponse, jauge de Mon offre qui baisse.
+- Choisir une offre › Rucher › Essayer 30 jours : Rucher en essai, 200 gouttes ; puis « Arrêter l'essai ».
+- Avec une adresse de l'équipe : poser Exploitation, créditer 400 gouttes ; retirer des gouttes jusqu'à zéro, puis poser
+  une question : message « gouttes épuisées », boutons Recharger et Voir les offres.
+- Lire une facture : le message dit combien de gouttes elle a coûté.
+
 ## v5.58 · à publier en recette · liste des ruches qui défile, ruches physiques montées avec le stock
 **Migration 028 (additive, ne casse pas l'ancienne version).** Demandes de Pierre-Louis du 17 nov. 2026, maquettes
 validées le soir même (« implémente-le »).
