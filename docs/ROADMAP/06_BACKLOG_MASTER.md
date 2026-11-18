@@ -9,7 +9,7 @@ Statuts de départ : ceux de l'audit (`01_AUDIT_EXISTANT.md`). Valeur métier 1�
 Conventions de mise à jour : voir `README.md` §3.
 
 
-**Totaux :** 19 domaines · 47 epics · 125 fonctionnalités · 8 anomalies · 141 user stories · 408 tâches techniques (révision du 6 nov. 2026 « application web et stores » : AP-FEAT-122 à 125, AP-US-136 à 141, AP-TECH-380 à 408 ; voir `12_DISTRIBUTION_ET_MONETISATION.md`).
+**Totaux :** 19 domaines · 47 epics · 125 fonctionnalités · 8 anomalies · 141 user stories · 409 tâches techniques (révision du 6 nov. 2026 « application web et stores » : AP-FEAT-122 à 125, AP-US-136 à 141, AP-TECH-380 à 408, puis AP-TECH-409 le 18 nov. 2026 ; voir `12_DISTRIBUTION_ET_MONETISATION.md`).
 
 
 ## Sommaire
@@ -5165,6 +5165,7 @@ Web sur domaine propre, applications iOS et Android, stores, autres pays (12).
 - AP-TECH-391 — Builds signés par GitHub Actions ; secrets uniquement.
 - AP-TECH-392 — Comptes développeur (D-13) ; TestFlight et test interne.
 - AP-TECH-393 — Icônes, écran de lancement, zones sûres.
+- AP-TECH-409 — Mise à jour du contenu sans nouvel APK : paquet publié par « Mise en ligne » (mobile/version.json), téléchargé à l'ouverture, appliqué au lancement suivant, retour automatique si la version ne démarre pas ; nouvel APK seulement quand le niveau natif change (v5.63).
 - Définition de terminé globale (`09_STRATEGIE_TESTS.md` §6) respectée.
 
 ### AP-FEAT-124 — Liens de connexion et d'invitation ouverts dans l'application

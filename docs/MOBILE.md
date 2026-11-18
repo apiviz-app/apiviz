@@ -43,6 +43,13 @@ Une dizaine de minutes. En local : `npm ci`, `sh scripts/preparer-mobile.sh`, pu
 3. Une nouvelle version s'installe par-dessus l'ancienne, saisies en attente comprises, **tant que la clé de test est la
    même** (voir ci-dessous).
 
+**Mises à jour (depuis v5.63)** : plus besoin de réinstaller l'APK à chaque changement. « Mise en ligne » publie aussi
+un paquet de l'appli (`mobile/version.json` et `mobile/<version>.zip` sur le site de l'environnement). À l'ouverture,
+l'appli le télécharge s'il est nouveau et l'applique quand on la ferme complètement puis la rouvre. Si la nouvelle
+version ne démarre pas, retour automatique à la précédente. Un nouvel APK n'est nécessaire que si le **niveau natif**
+change (`plugins.CapacitorUpdater.version` dans `capacitor.config.json`, à augmenter à chaque nouveau module,
+permission ou réglage Android / iOS) ; l'appli le signale alors elle-même.
+
 **Clé de test Android** : chaque APK est signé. L'action garde sa clé d'un lancement à l'autre (cache GitHub, effacé après
 7 jours sans lancement). Pour ne jamais en changer, ajouter un jour le secret `ANDROID_CLE_TEST` (le fichier
 `debug.keystore` en base64) ; ce n'est pas la clé de publication des stores (IT-28), qui reste à créer.

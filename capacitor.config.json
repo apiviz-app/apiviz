@@ -3,6 +3,19 @@
   "appName": "Apiviz",
   "webDir": "_mobile",
   "backgroundColor": "#1E2B24",
-  "android": { "allowMixedContent": false },
-  "ios": { "contentInset": "never" }
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "version": "natif-1",
+      "statsUrl": "",
+      "appReadyTimeout": 15000,
+      "resetWhenUpdate": true
+    }
+  }
 }
