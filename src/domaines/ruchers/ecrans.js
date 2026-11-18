@@ -2,6 +2,7 @@
 import { completerFiche, actions } from "./fiche.js";
 import { ecran as ecranDeplacer, actions as actionsDeplacer } from "./deplacer.js";
 import * as Tableau from "./vue-tableau.js";
+import { ecranEtiquettes, actions as actionsQr } from "./qr.js";
 
 export default [
   // Liste des ruchers : nav4.js (un bloc par rucher de la table, y compris sans colonie, IT-05), complétée par
@@ -23,4 +24,6 @@ export default [
   // Déplacer des colonies (IT-06, transhumance) : deplacer.js, seule implémentation. L'ancienne fenêtre de la v5.10
   // (essentiels.js, ACT.erdeplacer) reste derrière le drapeau « apidoo-deplacement-v510 » pour le retour arrière.
   { id: "deplacer", titre: "Déplacer des colonies", rubrique: "ruches", rendu: ecranDeplacer, actions: actionsDeplacer },
+  // Étiquettes QR des ruches (v5.57) : planche à imprimer ; scanner une ruche et sa feuille sont des actions de qr.js.
+  { id: "etiquettesqr", titre: "Étiquettes QR", rubrique: "ruches", rendu: ecranEtiquettes, actions: actionsQr },
 ];

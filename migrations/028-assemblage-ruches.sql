@@ -1,4 +1,4 @@
--- Apiviz — migration 027 : assembler des ruches physiques avec les pièces du stock (demande du 17 nov. 2026, maquettes
+-- Apiviz — migration 028 : assembler des ruches physiques avec les pièces du stock (demande du 17 nov. 2026, maquettes
 -- validées par Pierre-Louis : « quand je crée une ruche physique, j'assemble des éléments : il faut puiser dans mon
 -- stock »).
 --
@@ -10,7 +10,7 @@
 --      par l'identifiant de la première ruche (file d'envoi hors ligne). Une pièce qui manque n'empêche rien : le stock
 --      passe en négatif (choix de Pierre-Louis : « avertir et laisser créer »), l'écran prévient avant.
 --   4. enregistrer_composition(p) : remplace la composition d'un type, en une transaction.
--- Dépendances : 000 à 026 (contenants de 016, mouvements_stock de 018, exiger_ecriture(), exploitation_courante(),
+-- Dépendances : 000 à 027 (contenants de 016, mouvements_stock de 018, exiger_ecriture(), exploitation_courante(),
 --   exploitation_ecriture(), auditer() de 014).
 -- Casse l'ancienne version : NON.
 --   - Une table et deux fonctions nouvelles ; une valeur de plus permise pour mouvements_stock.origine. L'ancienne

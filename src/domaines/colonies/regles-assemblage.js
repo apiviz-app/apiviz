@@ -1,4 +1,4 @@
-// Apiviz — règles de l'assemblage des ruches physiques (migration 027, demande du 17 nov. 2026). Fonctions pures,
+// Apiviz — règles de l'assemblage des ruches physiques (migration 028, demande du 17 nov. 2026). Fonctions pures,
 // testées par tests/unitaires/assemblage-ruches.test.mjs. `d` a la forme de S.d : { articles, compositions, contenants }.
 
 const plat = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();

@@ -91,7 +91,8 @@ export function ecran() {
       <p><button type="button" class="link" data-act="newarticle">Autre article…</button></p></details>` : ""}
     ${ecrire ? `<div class="op-pied"><button type="button" class="btn" data-act="go" data-v="inventaire"${arts.length ? "" : " disabled"}>Faire l’inventaire</button><button type="button" class="btn main" data-act="newdepense">${factureProposee() ? "+ Ajouter un achat ou une facture" : "+ Ajouter un achat"}</button></div>` : ""}`);
   // v5.53 : disponibilité de la lecture des factures pas encore connue → redessiner dès la réponse.
-  if (ecrire && !factureProposee()) disponible().then((ok) => ok && S.route === "materiel" && factureProposee() && render());
+  // 17 nov. 2026 : la réponse gardée sur l'appareil s'affiche tout de suite ; si le serveur dit autre chose, on redessine.
+  if (ecrire) { const avant = factureProposee(); disponible().then(() => S.route === "materiel" && factureProposee() !== avant && render()); }
   const h = document.querySelector(".wrap .head h1");
   if (h) { h.textContent = R.phrase(arts); h.closest(".head")?.classList.add("g-tete"); }
   document.querySelector(".wrap")?.classList.add("op-ecran");

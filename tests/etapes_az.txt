@@ -1,4 +1,4 @@
-    # v5.57 (migration 027) — ruches physiques montées avec les pièces du stock : composition par type pré-remplie,
+    # v5.58 (migration 028) — ruches physiques montées avec les pièces du stock : composition par type pré-remplie,
     # quantités × nombre de ruches, alerte si une pièce manque (création permise), assembler_ruches envoyé ; réglage
     # d'une composition.
     import os

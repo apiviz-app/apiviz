@@ -65,7 +65,7 @@
     verif(any(m == "DELETE" and "/visites?" in u for m, u, b in requetes), "sans Annuler : suppression après 5 s")
     # Miel
     page.click(".bottom button[data-v=ventes]"); page.wait_for_selector(".u-tuiles")
-    verif(page.locator(".subtabs button").all_inner_texts() == ["Ventes", "Clients", "Stock et récoltes"], "Miel : 3 onglets")
+    verif(page.locator(".subtabs button").all_inner_texts() == ["Ventes", "Clients", "Commandes", "Stock et récoltes"], "Miel : 4 onglets (Commandes, v5.57)")
     page.click("[data-act=uafiltre]")
     verif(page.locator(".u-vente").count() == 1 and "À encaisser" in page.locator(".u-filtre-t").inner_text(), "tuile « à encaisser » : filtre")
     shot("miel")

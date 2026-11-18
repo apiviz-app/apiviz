@@ -61,7 +61,7 @@ export const enAttente = (it) => it.statut !== QUARANTAINE && it.statut !== CONF
 export function crees(it) {
   if (!it) return [];
   if (it.type === "insert") return (it.lignes || []).map((l) => l.id).filter(Boolean);
-  // Assemblage (migration 027) : les ruches physiques créées, qu'une affectation hors ligne peut ensuite citer.
+  // Assemblage (migration 028) : les ruches physiques créées, qu'une affectation hors ligne peut ensuite citer.
   if (estRpc(it, "assembler_ruches")) return (it.args?.p?.ruches || []).map((r) => r.id).filter(Boolean);
   if (it.type === "rpc" && !estModif(it) && !estSuppr(it) && /^creer_|^enregistrer_|^changer_reine$|^mettre_en_pots$/.test(it.nom || "")) {
     return it.args?.p?.id ? [it.args.p.id] : [];

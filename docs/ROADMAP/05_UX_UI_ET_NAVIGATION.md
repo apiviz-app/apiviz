@@ -38,6 +38,12 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.57 (17 nov. 2026)** : onglet **Commandes** dans Miel (entre Clients et Stock et récoltes) ; écran **Caisse du
+marché** (niveau 2 sous Miel, ouvert depuis Miel › ⋯ et le bouton API) ; écran **Étiquettes QR** (niveau 2 sous
+Ruchers, ouvert depuis Ruchers › ⋯). « Scanner une ruche » est une feuille (Ruchers › ⋯ et bouton API), comme la
+feuille d'une ruche scannée. Pas de nouvelle rubrique. Décision de Pierre-Louis (17 nov. 2026, maquettes
+« Nouveautés » 1 à 4 validées, « implémente la 1, 2, 3 et 4 »).
+
 **v5.55 (17 nov. 2026)** : onglet **Factures** dans Finances, entre Dépenses et Budget, et son détail « Facture »
 (retour « ‹ Factures »). Une facture = un achat (lignes d'un même `achat_id`), rangées par mois, avec le fichier de la
 facture (photo ou PDF). Pas de nouvelle rubrique : Finances garde sa place. Décision de Pierre-Louis (17 nov. 2026,

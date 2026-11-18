@@ -73,7 +73,7 @@ export const actions = {
   ctmodifier: (id) => formulaire((S.d.contenants || []).find((c) => c.id === id)),
 };
 
-// ---------- Assemblage : pièces prises dans le stock (migration 027, maquettes du 17 nov. 2026) ----------
+// ---------- Assemblage : pièces prises dans le stock (migration 028, maquettes du 17 nov. 2026) ----------
 // Chaque type de ruche a une composition par défaut (plancher, corps, cadres…) qui pré-remplit l'ajout ; les pièces
 // sont retirées du stock à la création. Une pièce qui manque est signalée, mais n'empêche pas de créer (choix de
 // Pierre-Louis) : le stock passe en négatif.
@@ -81,7 +81,7 @@ export const actions = {
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
 const nb = (v) => Number(v || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 
-/** L'assemblage demande le journal du stock (018) et les compositions (027). */
+/** L'assemblage demande le journal du stock (018) et les compositions (028). */
 export const assemblageDispo = () => contenantsSuivis() && stockSuivi() && !S.absentes?.has("compositions");
 
 const AS = { mode: "ajout", type: "", pieces: [] };
@@ -197,7 +197,7 @@ function surChoix(ev) {
 
 const piecesAEnvoyer = () => AS.pieces.filter((p) => Number(p.quantite) > 0).map((p) => ({ article_id: p.article_id, quantite: Number(p.quantite) }));
 
-/** Création des ruches physiques et sortie de leurs pièces, en une seule écriture (assembler_ruches, 027). */
+/** Création des ruches physiques et sortie de leurs pièces, en une seule écriture (assembler_ruches, 028). */
 async function assembler(codes, champs, garder) {
   const pieces = piecesAEnvoyer();
   const p = { ruches: codes.map((code) => ({ id: crypto.randomUUID(), code })), ...champs, date: today(), pieces };

@@ -1,4 +1,4 @@
-// Règles de l'assemblage des ruches physiques (migration 027) : composition d'un type, bilan du stock, application
+// Règles de l'assemblage des ruches physiques (migration 028) : composition d'un type, bilan du stock, application
 // hors ligne. Lancer : npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";

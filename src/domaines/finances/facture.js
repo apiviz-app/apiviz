@@ -52,14 +52,19 @@ export function disponible() {
   if (enVol) return enVol;
   const cle = exploitation();
   enVol = appeler({ etat: true })
-    .then((r) => { dispo = r.actif === true; cleDispo = cle; return dispo; })
+    .then((r) => { dispo = r.actif === true; cleDispo = cle; memoriser(dispo); return dispo; })
     // Réponse du serveur (fonction absente, refus) : gardée pour la session. Panne réseau : redemandée la prochaine fois.
-    .catch((err) => { if (err?.code && err.code !== "connexion") { dispo = false; cleDispo = cle; } return false; })
+    .catch((err) => { if (err?.code && err.code !== "connexion") { dispo = false; cleDispo = cle; memoriser(false); } return false; })
     .finally(() => { enVol = null; });
   return enVol;
 }
 /** Disponibilité déjà connue et positive (sans appel) : pour les écrans dessinés d'un coup (Matériel, feuille d'API). */
-export const dispoConnue = () => dispo === true && cleDispo === exploitation();
+// 17 nov. 2026 : la réponse est aussi gardée sur l'appareil, par exploitation, pour que « Donner une facture à API »
+// s'affiche tout de suite au lieu d'attendre l'aller-retour vers la fonction serveur ; elle est revérifiée derrière.
+const cleMemo = () => `apiviz-facture-dispo-${exploitation()}`;
+const memo = () => { try { return localStorage.getItem(cleMemo()) === "1"; } catch { return false; } };
+const memoriser = (ok) => { try { ok ? localStorage.setItem(cleMemo(), "1") : localStorage.removeItem(cleMemo()); } catch { /* navigation privée */ } };
+export const dispoConnue = () => (cleDispo === exploitation() && dispo !== null ? dispo === true : memo());
 /** Pour les tests : oublie la disponibilité. */
 export function _oublier() { dispo = null; cleDispo = ""; enVol = null; }
 

@@ -138,7 +138,7 @@ const HL = (() => {
       } else if (it.type === "rpc" && it.nom === "mettre_en_pots") {
         Regles.stock.appliquerMiseEnPots(d, it.args.p, { _attente: true });
       } else if (it.type === "rpc" && it.nom === "assembler_ruches") {
-        // Ruches physiques assemblées sans réseau (migration 027) : caisses ajoutées, pièces retirées du stock.
+        // Ruches physiques assemblées sans réseau (migration 028) : caisses ajoutées, pièces retirées du stock.
         Regles.assemblage.appliquer(d, it.args.p, { _attente: true });
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
