@@ -1,6 +1,6 @@
     # v5.65 — Produits de la ruche (migration 032, maquettes du 18 nov. 2026) : rubrique Produits, « Ajouter un produit »
     # avec modèles (le miel ouvre la mise en pots), création d'un lot d'hydromel par creer_produit, catalogue par
-    # catégorie dans Stock et récoltes, vente qui mélange miel et hydromel, modification du produit.
+    # catégorie dans Stock (ex-« Stock et récoltes »), vente qui mélange miel et hydromel, modification du produit.
     # Avec CAPTURES=<dossier>, capture à 390 px.
     import pathlib as _pl, os
     _ici = _pl.Path(__file__).parent
@@ -17,7 +17,7 @@
     libs = [x.strip().split("\n")[-1].strip() for x in page.locator(".bottom button").all_inner_texts()]  # sans la pastille
     verif("Produits" in libs and "Miel" not in libs, "barre du bas : Produits (%s)" % libs)
 
-    # Stock et récoltes : catalogue et bouton.
+    # Stock : catalogue et bouton.
     page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
     verif(page.locator(".head h1").inner_text() == "Produits", "titre de la rubrique : Produits")
     verif("Miel" in page.locator(".pr-catalogue").inner_text(), "Tes produits : le miel y est")

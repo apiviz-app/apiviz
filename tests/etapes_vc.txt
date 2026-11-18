@@ -1,0 +1,155 @@
+    # v5.66 — Ventes, clients et récolte (maquettes du 18 nov. 2026, validées) : vitrine des produits sans aucun client,
+    # onglet Récoltes, vente sans client, feuille « Pour qui ? » avec recherche, fiche client (initiales, adresses
+    # proposées : clients et service de l'IGN simulé, goûts, « prévenir »), clients à prévenir, feuille d'API, récolte en
+    # deux étapes. Avec CAPTURES=<dossier> : captures à 390 px (et l'onglet Ventes à 1 280 px).
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    # Aucun client, aucune vente : la vitrine doit s'afficher quand même (demande du 18 nov. 2026).
+    CLIENTS_PLUS_TARD = DATA["clients"]; DATA["clients"] = []; DATA["ventes"] = []; DATA["vente_lignes"] = []
+    L3, L4 = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["lots_stock"][1]["prix"] = 0  # pot de 250 g sans prix : « Prix à fixer »
+    DATA["lots_stock"] += [{"id": L3, "code": "H26-01", "categorie": "Hydromel", "miel": "Hydromel", "unite": "bouteille", "format_libelle": "75 cl", "format_g": None,
+                            "prix": 12, "pots_initiaux": 10, "pots_restants": 10, "ddm": None},
+                           {"id": L4, "code": "L25-04", "miel": "Printemps", "format_g": 1000, "prix": 20, "pots_initiaux": 6, "pots_restants": 0, "ddm": "2027-06-30"}]
+    # Création d'un client : la base renvoie la ligne créée (insert().select().single()).
+    def clients_post(route):
+        if route.request.method != "POST": return route.fallback()
+        r = route.request.post_data_json; r = r[0] if isinstance(r, list) else r
+        r = {"id": r.get("id") or str(uuid.uuid4()), **r}
+        recu["upsert"].append(("clients", route.request.url, [r])); DATA["clients"].append(r)
+        return route.fulfill(status=201, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=json.dumps(r if "single" in (route.request.headers.get("accept") or "") or "vnd.pgrst.object" in (route.request.headers.get("accept") or "") else [r]))
+    ctx.route("**/rest/v1/clients*", clients_post)
+    # Service de géocodage de l'IGN simulé.
+    ADR = []
+    def geo(route):
+        ADR.append(route.request.url)
+        f = lambda nom, cp, ville: {"type": "Feature", "properties": {"type": "housenumber", "name": nom, "postcode": cp, "city": ville, "label": f"{nom} {cp} {ville}"}}
+        corps = {"type": "FeatureCollection", "features": [f("12 Rue de la Poste", "49100", "Angers"), f("12 Rue de la Prairie", "49240", "Avrillé"), f("12 Rue de la Paix", "49000", "Angers")]}
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=json.dumps(corps))
+    ctx.route("https://data.geopf.fr/**", geo)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Ventes sans aucun client : la vitrine, pas l'écran « Ajoute ton premier client ».
+    page.evaluate("ACT.go('clients')"); page.wait_for_selector(".vt-vitrine")
+    verif(page.locator(".al-pots").count() == 0 and page.locator(".vt-carte").count() == 4, "vitrine : 4 produits (%d), plus de grand pot" % page.locator(".vt-carte").count())
+    noms = page.locator(".vt-carte .vt-info > b").all_inner_texts()
+    verif(noms[:3] == ["Miel toutes fleurs", "Miel toutes fleurs", "Hydromel"] and noms[3] == "Miel printemps", "ordre : miel, hydromel, puis l'épuisé (%s)" % noms)
+    verif(page.locator(".vt-carte .vt-prix").count() == 1 and "Prix à fixer" in page.locator(".vt-carte").first.inner_text(), "250 g sans prix : « Prix à fixer »")
+    verif(page.locator(".vt-epuise").count() == 1 and page.locator(".vt-epuise .vt-plus").count() == 0, "1 kg épuisé, sans « + »")
+    verif(page.locator(".vt-ajout").count() == 1 and page.locator(".vt-sans-vente").count() == 1, "« Ajouter un produit » et « Pas encore de vente »")
+    onglets = page.locator(".g-onglets button").all_inner_texts()
+    verif(onglets == ["Ventes", "Clients", "Commandes", "Stock", "Récoltes"], "onglets de Produits : %s" % onglets)
+    shot("vc-ventes")
+    page.click(".g-onglets button:has-text('Clients')"); page.wait_for_selector(".vt-vide")
+    verif("Pas encore de client" in page.locator(".vt-vide").inner_text(), "onglet Clients vide : une phrase, pas d'écran bloquant")
+    page.set_viewport_size({"width": 1280, "height": 900}); page.click(".g-onglets button:has-text('Ventes')"); page.wait_for_selector(".vt-vitrine"); shot("vc-ventes-1280", False)
+    page.set_viewport_size({"width": 390, "height": 844})
+
+    # 2. « + » d'une carte : la vente s'ouvre avec ce produit compté ; « Vente sans client ».
+    page.click(".vt-carte:has-text('Hydromel') .vt-plus"); page.wait_for_selector(".pq-champ")
+    verif(page.evaluate(f"S.route === 'vente' && S.vente.q['{L3}'] === 1"), "vente ouverte avec 1 bouteille d'hydromel")
+    verif(page.locator("#s_client").count() == 1 and page.locator(".pq-liste").count() == 1, "liste des clients gardée, masquée")
+    page.click(".pq-champ"); page.wait_for_selector("#sheet[open] #pq_q")
+    verif(page.locator("#pq_res .pq-ligne").count() == 0, "aucun client : pas de résultat")
+    shot("vc-pourqui-vide", False)
+    page.click("[data-act=pqsans]"); page.wait_for_selector(".pq-champ.pq-plein")
+    marche = next((c for c in DATA["clients"] if c["nom"] == "Vente au marché"), None)
+    verif(marche and page.input_value("#s_client") == marche["id"] and "Vente au marché" in page.locator(".pq-champ").inner_text(), "vente sans client : « Vente au marché »")
+    verif(page.evaluate(f"S.vente.q['{L3}'] === 1"), "le produit compté est gardé")
+    page.click("form[data-form=vente] .btn.main"); page.wait_for_selector(".toast >> text=Vente enregistrée", timeout=10000)
+    v = [b["p"] for n, b in recu["rpc"] if n == "creer_vente"]
+    verif(len(v) == 1 and v[0]["client_id"] == marche["id"] and v[0]["lignes"] == [{"lot_id": L3, "quantite": 1}], "creer_vente : client du marché, 1 hydromel")
+
+    # 3. Des clients : recherche dans la feuille « Pour qui ? ».
+    M1, M2, M3 = str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["clients"] += [{"id": M1, "nom": "Marie Durand", "cercle": "Famille", "telephone": "0611111111", "email": "", "adresse": "12 rue de la Paix", "code_postal": "49000", "ville": "Angers"},
+                        {"id": M2, "nom": "Mathieu Leroy", "cercle": "Collègues", "telephone": "", "email": "mathieu@exemple.fr", "adresse": "", "code_postal": "", "ville": "Nantes"},
+                        {"id": M3, "nom": "Lucie Martin", "cercle": "Voisins", "telephone": "0622222222", "email": "", "adresse": "3 place du Marché", "code_postal": "49100", "ville": "Angers"}]
+    page.evaluate("refresh()"); page.wait_for_timeout(600)
+    page.evaluate("ACT.newvente()"); page.wait_for_selector(".pq-champ")
+    page.click(".pq-champ"); page.wait_for_selector("#sheet[open] #pq_q")
+    verif(page.locator("#pq_res .pq-ligne").count() == 3 and "Vente au marché" not in page.locator("#pq_res").inner_text(), "sans texte : les 3 clients, pas le client du marché")
+    page.fill("#pq_q", "ma"); page.wait_for_timeout(100)
+    res = page.locator("#pq_res .pq-ligne b").all_inner_texts()
+    verif(res == ["Marie Durand", "Mathieu Leroy", "Lucie Martin"] and page.locator("#pq_res mark").count() == 3, "« ma » : début du nom d'abord, puis le nom de famille (%s)" % res)
+    verif("3 clients trouvés" in page.locator(".pq-nb").inner_text(), "3 clients trouvés")
+    shot("vc-pourqui", False)
+    page.fill("#pq_q", "nantes"); page.wait_for_timeout(100)
+    verif(page.locator("#pq_res .pq-ligne b").all_inner_texts() == ["Mathieu Leroy"], "recherche par ville")
+    page.fill("#pq_q", "mari"); page.press("#pq_q", "Enter"); page.wait_for_selector(".pq-champ.pq-plein")
+    verif(page.input_value("#s_client") == M1 and "Marie Durand" in page.locator(".pq-champ").inner_text(), "Entrée choisit Marie Durand")
+
+    # 4. Créer un client depuis la vente : nom pré-rempli, adresses proposées, goûts, « prévenir ».
+    page.click(".pq-champ"); page.wait_for_selector("#sheet[open] #pq_q")
+    page.fill("#pq_q", "Clara Lemoine"); page.click("[data-act=pqcreer]"); page.wait_for_selector("#sheet[open] .fc-hero")
+    verif(page.input_value("#sheet [name=nom]") == "Clara Lemoine" and page.locator("#fc_ini").inner_text() == "CL", "fiche : nom tapé repris, initiales CL")
+    verif(all(page.locator("#sheet [name=%s]" % n).count() == 1 for n in ("etiquettes", "telephone", "email", "adresse", "code_postal", "ville", "siret", "notes", "gouts", "prevenir")), "fiche : tous les champs")
+    page.fill("#sheet [name=telephone]", "06 12 34 56 78")
+    page.locator("#fc_adresse").press_sequentially("12 rue de la P", delay=10)
+    page.wait_for_selector("#fc_sugg .fc-opt >> nth=2", timeout=5000)
+    groupes = page.locator("#fc_sugg .fc-groupe").all_inner_texts()
+    verif(groupes[:2] == ["Déjà chez tes clients", "Adresses en France"], "adresses : clients d'abord, puis la France (%s)" % groupes)
+    verif("Même adresse que Marie Durand" in page.locator("#fc_sugg").inner_text(), "adresse connue : « Même adresse que Marie Durand »")
+    verif(page.locator("#fc_sugg .fc-opt").count() == 3, "la rue de la Paix n'apparaît qu'une fois (3 propositions)")
+    verif(ADR and "q=12+rue+de+la+P" in ADR[-1] and "autocomplete=1" in ADR[-1], "service d'adresses interrogé : %s" % (ADR[-1] if ADR else "rien"))
+    shot("vc-adresse", False)
+    page.click("#fc_sugg .fc-opt >> nth=1")
+    verif(page.input_value("#sheet [name=adresse]") == "12 Rue de la Poste" and page.input_value("#sheet [name=code_postal]") == "49100" and page.input_value("#sheet [name=ville]") == "Angers", "adresse choisie : code postal et ville remplis")
+    page.locator("#sheet .ch-puce").filter(has_text="Miel 500 g").first.click()
+    page.locator("#sheet .ch-puce").filter(has_text="Hydromel").first.click()
+    page.check("#sheet [name=prevenir]")
+    shot("vc-fiche", True)
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Client enregistré", timeout=10000)
+    cl = next((c for c in DATA["clients"] if c["nom"] == "Clara Lemoine"), None)
+    verif(cl and cl.get("gouts") == ["Miel 500 g", "Hydromel 75 cl"] and cl.get("prevenir") is True and cl.get("ville") == "Angers", "client créé avec goûts, « prévenir » et adresse (%s)" % cl)
+    page.wait_for_selector(".pq-champ.pq-plein")
+    verif(page.evaluate("S.route") == "vente" and "Clara Lemoine" in page.locator(".pq-champ").inner_text(), "retour à la vente, Clara choisie")
+
+    # 5. Onglet Récoltes : saison, à prévenir, productions.
+    page.evaluate("ACT.go('recoltes')"); page.wait_for_selector(".rc-saison")
+    verif(page.locator(".rc-trois b").count() == 3 and page.locator(".rc-prod .rc-ligne").count() >= 2, "saison en trois chiffres, récoltes et hydromel")
+    verif("1 client à prévenir" in page.locator(".rc-prevenir").inner_text(), "Clara à prévenir")
+    verif(page.locator(".g-onglets button.on").inner_text() == "Récoltes", "onglet Récoltes allumé")
+    shot("vc-recoltes")
+    page.click("[data-act=rcprevenir]"); page.wait_for_selector("#sheet[open] .rc-pv")
+    sms = page.locator("#sheet .rc-pv a.btn").first.get_attribute("href")
+    verif(sms.startswith("sms:0612345678") and "nouvelle%20r%C3%A9colte" in sms, "SMS prêt : %s" % sms[:60])
+    page.click("[data-act=rcprevenus]"); page.wait_for_selector(".toast >> text=prévenu", timeout=10000)
+    verif(any(t == "clients" and b == {"prevenir": False} for t, b in patchs), "liste vidée : prevenir à faux")
+
+    # 6. Feuille d'API : la récolte en avant (saison ou miel en attente).
+    page.evaluate("S.d.recoltes.push({id: 'essai', kg: 10, date_recolte: '2026-09-01'})")  # 9 kg attendent d'être mis en pots
+    page.evaluate("quickSheet()"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    verif(page.locator("#sheet .n4-tuile.fa-saison[data-v=newrecolte]").count() == 1, "miel en attente : tuile Récolte mise en avant")
+    verif("Mettre 9 kg en pots" in page.locator("#sheet .fa-pots").inner_text(), "ligne « Mettre 9 kg en pots »")
+    shot("vc-api", False)
+    page.evaluate("$sheet.close(); S.d.recoltes = S.d.recoltes.filter((r) => r.id !== 'essai')")
+
+    # 7. Récolte en deux étapes.
+    page.evaluate("ACT.newrecolte()"); page.wait_for_selector(".rc-etape-1")
+    page.click("[data-act=v3rrucher][data-v=Verger]")
+    verif(page.locator(".rc-hx").count() == 3, "3 ruches du Verger en alvéoles")
+    page.click(".rc-hx >> nth=0"); page.click(".rc-hx >> nth=1"); page.click(".rc-hx >> nth=2")
+    verif(page.locator(".rc-hx.on").count() == 3, "3 ruches choisies")
+    page.click("[data-act=rcetape][data-v='2']"); page.wait_for_selector(".toast >> text=Indique le poids")
+    page.fill("#r_kg", "20"); page.fill("#r_hum", "17.5")
+    verif("Environ 6,7 kg par ruche" in page.locator("#rc_parruche").inner_text(), "poids par ruche")
+    page.evaluate("window.scrollTo(0, 0)"); shot("vc-recolte-1", False); shot("vc-recolte-1-entier")
+    page.click("[data-act=rcetape][data-v='2']"); page.wait_for_selector(".rc-etape-2:not([hidden])")
+    page.click("[data-act=rcpot][data-k='500'][data-v='1']"); page.fill("#r_p500", "10"); page.fill("#r_x500", "12")
+    verif("5 kg mis en pots" in page.locator("#r_pots").inner_text() and "15 kg" in page.locator("#r_pots").inner_text(), "5 kg en pots, 15 kg en vrac")
+    verif("L26-03 (500 g)" in page.locator("#rc_codes").inner_text(), "lot proposé : %s" % page.locator("#rc_codes").inner_text())
+    verif("40 en stock" in page.locator(".rc-vides").inner_text(), "pots de 500 g vides : 40 en stock")
+    verif(page.locator("#rc_envoyer").inner_text() == "Ajouter 10 pots au stock", "bouton : Ajouter 10 pots au stock")
+    shot("vc-recolte-2")
+    page.click("form[data-form=v3recolte] .btn.main"); page.wait_for_selector(".toast >> text=Récolte et 1 lot enregistrés", timeout=10000)
+    lots = [x for t, u, rows in recu["upsert"] if t == "lots" for x in rows]
+    verif(lots and lots[-1]["code"] == "L26-03" and lots[-1]["pots_initiaux"] == 10 and lots[-1]["prix"] == 12, "lot L26-03 de 10 pots à 12 €")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

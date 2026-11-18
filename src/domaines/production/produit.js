@@ -172,7 +172,7 @@ export const actions = {
 export const remplace = ["editlot"];
 
 /**
- * Complément de l'écran « miel » (Stock et récoltes) : les produits par catégorie, avant le tableau des lots, et
+ * Complément de l'écran « miel » (onglet Stock, ex-« Stock et récoltes ») : les produits par catégorie, avant le tableau des lots, et
  * « Ajouter un produit ». Le miel garde ses chiffres (récolté, mis en pots, kilos en stock) au-dessus.
  */
 export function completerStock() {

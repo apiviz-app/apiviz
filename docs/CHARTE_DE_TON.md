@@ -33,6 +33,7 @@ Exceptions actuelles (textes de documents émis) :
 | `ux.js` | « Votre miel · … » | objet de l'e-mail envoyé au client |
 | `terrain-regles.js` | « …votre commande (…) est prête… » | SMS envoyé au client quand sa commande en ligne est prête (v5.57) |
 | `commandes.js` | « Réservez votre miel en ligne : » | texte du lien de la page de commande, partagé aux clients (v5.57) |
+| `saison.js` | « Dites-moi ce qui vous ferait plaisir » | message aux clients qui ont demandé à être prévenus de la récolte (v5.66) |
 | `commande.html` | toute la page | page de commande publique, lue par les clients (v5.57) |
 
 Ajouter une exception : seulement pour un texte destiné à un tiers, en l'inscrivant ici **et** dans le test.

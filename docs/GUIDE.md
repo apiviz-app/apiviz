@@ -77,13 +77,25 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Produits *(v5.65, anciennement Miel)*
 
-- **D'autres produits que le miel** *(v5.65)* : Stock et récoltes › Tes produits › « Ajouter un produit ». Choisis un
+- **Ventes** *(v5.66)* : une carte par produit (pot de la taille du format, bouteille, pain de cire…) avec ce qui
+  reste et le prix, ou « Prix à fixer » à toucher pour le donner. Le « + » d'une carte ouvre la vente avec ce produit
+  déjà compté. Pas besoin d'un client pour voir ses produits ni pour vendre.
+- **Nouvelle vente** *(v5.66)* : touche le champ Client, la feuille « Pour qui ? » cherche dans le nom, la ville et le
+  téléphone. « Créer un nouveau client » reprend le nom tapé ; « Vente sans client » vend au client « Vente au marché ».
+- **Fiche client** *(v5.66)* : initiales dans une alvéole, étiquettes et goûts en puces, « Importer depuis mes
+  contacts » (Chrome sur Android). L'adresse propose celles de tes clients (même foyer) puis les adresses officielles,
+  et remplit le code postal et la ville. « Prévenir à la prochaine récolte » met le client dans Récoltes ›
+  « À prévenir », avec un message prêt à envoyer par SMS ou e-mail. « Enregistrer et vendre » ouvre la vente.
+- **Récoltes** *(v5.66)* : la saison en trois chiffres (récolté, en pots, vendu), le miel qui attend d'être mis en pots,
+  « Saisir une récolte », la liste des récoltes et des autres productions. La saisie se fait en deux étapes : les ruches
+  (touche les alvéoles) et le poids, puis les pots par format, avec les lots créés et les pots vides en stock. Pendant la
+  saison, ou quand du miel attend, la tuile Récolte du bouton API est mise en avant.
+- **D'autres produits que le miel** *(v5.65)* : Stock › Tes produits › « Ajouter un produit ». Choisis un
   modèle (hydromel, cire, bougie, propolis, pollen, gelée royale, pain d'épices, essaim, reine, coffret, cosmétique) ou
   un produit libre, puis le nom, l'unité (bouteille, pièce, flacon…), le format, le prix, la quantité et, si tu veux,
   une alerte de stock bas. Le miel passe toujours par la mise en pots. Une vente, la caisse et la page de commande
   proposent tous tes produits ; une même vente peut les mélanger. Toucher le lot d'un produit le modifie.
 
-- Un pot par format, rempli selon le stock ; le toucher ouvre une vente.
 - Ventes (à encaisser, à livrer), clients, lots et récoltes. **Clients** *(v5.38)* : en tableau (étiquettes, dernier
   achat, total de l'année, reste à payer) ou en liste, avec recherche et puces (À encaisser, chaque étiquette) ; ceux qui
   doivent encore passent en tête. Un client a des étiquettes libres (Marché, Famille, Pro…) à la place du cercle. **Fiche d'un lot** : récolte, ruches, ventes, clients,

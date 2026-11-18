@@ -40,7 +40,7 @@
     }"""
     ECRANS = [("dash", "ACT.go('dash')"), ("ruches", "ACT.go('ruches')"), ("carte", "ACT.go('carte')"), ("varroa", "ACT.go('varroa')"),
               ("rucher", "ACT.alrucher(S.d.ruches[0].rucher)"), ("ruche", "ACT.ruche(S.d.ruches[1].id)"), ("meteo", "ACT.go('meteo')"),
-              ("miel", "ACT.go('miel')"), ("lot", "S.lotId = S.d.lots[0].id; ACT.go('lot')"), ("clients", "ACT.go('clients')"), ("agenda", "ACT.go('agenda')"),
+              ("miel", "ACT.go('miel')"), ("recoltes", "ACT.go('recoltes')"), ("lot", "S.lotId = S.d.lots[0].id; ACT.go('lot')"), ("clients", "ACT.go('clients')"), ("agenda", "ACT.go('agenda')"),
               ("materiel", "ACT.go('materiel')"), ("courses", "ACT.go('courses')"), ("fournisseurs", "ACT.go('fournisseurs')"),
               ("pilotage", "ACT.go('pilotage')"), ("compta", "ACT.go('compta')"), ("factures", "ACT.go('factures')"), ("commandes", "ACT.go('commandes')"),
               ("caisse", "ACT.go('caisse')"), ("etiquettesqr", "ACT.go('etiquettesqr')"), ("fil", "ACT.go('fil')"), ("masaison", "ACT.go('masaison')"),

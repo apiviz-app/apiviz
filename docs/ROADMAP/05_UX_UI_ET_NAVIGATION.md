@@ -25,8 +25,8 @@ Ruchers
  ├─ Fiche colonie : en-tête, onglets Journal · Santé · Reine & lignée · Colonie · Photos ; bouton principal + « + »
  └─ Saisies (flux) : Visite (Express / Complète) · Tournée · Déplacer (écran, ou feuille après une sélection)
 Produits (ex-Miel, v5.65)
- ├─ Ventes · Clients · Commandes · Stock et récoltes (Tes produits ; détail : Lot, Facture)
- └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots · Ajouter un produit (modèles, puis le produit)
+ ├─ Ventes (vitrine des produits) · Clients · Commandes · Stock (Tes produits ; détail : Lot, Facture) · Récoltes
+ └─ Saisies (flux) : Nouvelle vente (feuille « Pour qui ? ») · Récolte (2 étapes) · Mise en pots · Ajouter un produit
 Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
 Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
@@ -37,6 +37,12 @@ API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, 
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.66 (18 nov. 2026)** : l'onglet « Stock et récoltes » de Produits se sépare en **Stock** et **Récoltes** (saison,
+miel à mettre en pots, récoltes et productions, clients à prévenir) : point d'entrée de la production de miel. La
+**Récolte** se saisit en deux étapes (ruches et poids, puis mise en pots) ; le client d'une **Nouvelle vente** se choisit
+dans une feuille « Pour qui ? » avec recherche, et une vente peut se faire sans client. Pas de nouvelle rubrique. Décision
+de Pierre-Louis (18 nov. 2026, maquettes « Ventes, clients et récolte » : « je valide la totalité »).
 
 **v5.57 (17 nov. 2026)** : onglet **Commandes** dans Miel (entre Clients et Stock et récoltes) ; écran **Caisse du
 marché** (niveau 2 sous Miel, ouvert depuis Miel › ⋯ et le bouton API) ; écran **Étiquettes QR** (niveau 2 sous

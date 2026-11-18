@@ -1,0 +1,173 @@
+/* ---------- Ventes, clients et récolte (v5.66, maquettes du 18 nov. 2026) ----------
+   vitrine.js (onglet Ventes), pour-qui.js (feuille « Pour qui ? »), fiche-client.js (fiche et adresses),
+   recoltes.js (onglet Récoltes), recolte.js (saisie en deux étapes). Rayons et tailles : jetons du gabarit. */
+.pq-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* Vitrine */
+.vt-vitrine{display:flex;flex-direction:column;gap:10px}
+.vt-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:700px){.vt-grille{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1100px){.vt-grille{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.vt-carte{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card)}
+.vt-dessin{position:relative;height:118px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.vt-epuise .vt-dessin svg{opacity:.5}
+.vt-plus{position:absolute;top:8px;right:8px;width:var(--cible);height:var(--cible);display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card);color:var(--ink);cursor:pointer}
+.vt-plus:hover{background:var(--honeysoft)}
+.vt-info{display:flex;flex-direction:column;gap:2px;padding:12px 12px 14px;min-width:0}
+.vt-info>b{font-weight:600;line-height:1.25}
+.vt-info>.small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vt-bas{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap}
+.vt-q b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl);font-variant-numeric:tabular-nums}
+.vt-prix{border:0;cursor:pointer;font:inherit;font-size:var(--t-xs);font-weight:600;min-height:24px}
+.vt-bas-stock{align-self:flex-start;margin-top:4px}
+.vt-ajout{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;padding:16px;border:1.5px dashed var(--line2);border-radius:var(--r-m);background:transparent;color:var(--ink);font:inherit;text-align:center;cursor:pointer}
+.vt-ajout:hover{background:var(--honeysoft)}
+.vt-ajout b{font-weight:600}
+.vt-alv,.rc-alv,.pq-alv,.fc-alv{flex:none;display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.vt-alv{width:52px;height:45px;background:var(--pine);color:#fff}
+.vt-sans-vente{display:flex;align-items:flex-start;gap:14px}
+.vt-sans-vente .vt-alv{background:var(--honeysoft);color:var(--ink)}
+.vt-sans-vente p{margin:4px 0 0}
+
+/* Champ Client de la vente et feuille « Pour qui ? » */
+.pq-liste{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0;padding:0}
+.pq-bloc{display:flex;flex-direction:column;gap:6px}
+.pq-champ{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
+.pq-champ:hover{border-color:var(--pine)}
+.pq-vide{flex:1;color:var(--muted)}
+.pq-nom{flex:1;font-weight:600}
+.pq-champ .pq-alv{width:36px;height:31px;font-size:var(--t-s)}
+.pq-alv{width:46px;height:40px;background:var(--honeysoft);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:var(--t-m)}
+.pq-tete h2{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl)}
+.pq-cherche{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:52px;padding:0 14px;border:2px solid var(--pine);border-radius:var(--r-m);background:var(--card);box-shadow:0 0 0 3px var(--honey-light)}
+.pq-cherche input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:16px;padding:0;height:48px;box-shadow:none}
+.pq-nb{margin:4px 0 0}
+.pq-res,.pq-autres{display:flex;flex-direction:column}
+.pq-autres{border-top:1px solid var(--line);margin-top:4px;padding-top:4px}
+.pq-ligne{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:8px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.pq-ligne:last-child{border-bottom:0}
+.pq-ligne:hover{background:var(--ground)}
+.pq-ligne.on .pq-alv{background:var(--honey)}
+.pq-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.pq-t b{font-weight:600}
+.pq-t .small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pq-ligne mark{background:var(--honeysoft);color:inherit;padding:0 1px}
+.pq-rond{flex:none;width:44px;height:44px;border-radius:var(--r-pill);display:flex;align-items:center;justify-content:center;background:var(--ground);color:var(--ink)}
+.pq-sapin{background:var(--pine);color:#fff}
+.pq-miel{background:var(--honeysoft)}
+
+/* Fiche client */
+.fc-hero{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:4px}
+.fc-alv{width:96px;height:83px;background:var(--honeysoft);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:var(--t-xxl)}
+.fc-nom{width:100%;margin:0}
+.fc-nom input{height:56px;font-size:20px;font-weight:600;text-align:center}
+.fc-import{display:inline-flex;align-items:center;gap:6px}
+.fc-sec{margin:10px 0 0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-l)}
+.fc-adresse{position:relative}
+.fc-champ{position:relative;display:block}
+.fc-champ svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.fc-champ input{padding-left:40px}
+.fc-sugg{display:flex;flex-direction:column;margin-top:6px;padding:4px 12px;border:1px solid var(--line2);border-radius:var(--r-m);background:var(--card)}
+.fc-sugg[hidden]{display:none}
+.fc-groupe{margin:8px 4px 2px;font-weight:600}
+.fc-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.fc-opt:hover{background:var(--ground)}
+.fc-opt .pq-rond{width:40px;height:40px}
+.fc-main{align-self:flex-start;min-height:var(--cible)}
+.fc-prevenir{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);cursor:pointer}
+.fc-prevenir-t{flex:1;display:flex;flex-direction:column;gap:2px}
+.fc-prevenir-t b{font-weight:600}
+.fc-sw{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:52px!important;height:32px!important;min-height:0!important;margin:0;padding:0!important;border:0!important;border-radius:var(--r-pill)!important;background:var(--line2)!important;cursor:pointer;transition:background var(--duree-rapide)}
+.fc-sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left var(--duree-rapide) var(--sortie)}
+.fc-sw:checked{background:var(--pine)!important}
+.fc-sw:checked::after{left:23px}
+.fc-sw:focus-visible{outline:2px solid var(--pine);outline-offset:2px}
+
+/* Onglet Récoltes */
+.rc-saison{display:flex;flex-direction:column;gap:14px}
+.rc-trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.rc-etape{display:flex;flex-direction:column;align-items:center;gap:6px}
+.rc-etape b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-variant-numeric:tabular-nums}
+.rc-alv{width:60px;height:52px;color:var(--ink)}
+.rc-miel{background:var(--honey)}
+.rc-doux{background:var(--honeysoft)}
+.rc-gris{background:#E9ECE4}
+.rc-jauge{height:10px}
+.rc-jauge i{background:var(--pine)}
+.rc-saison>p{margin:-6px 0 0}
+.rc-pots{width:100%}
+.rc-ligne .rc-mini{flex:none;width:40px;height:35px;display:flex;align-items:center;justify-content:center;background:var(--honeysoft);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.rc-ligne .tag{flex:none}
+.rc-prevenir{display:flex;align-items:center;gap:12px;background:var(--honeysoft);border-color:transparent}
+.rc-prevenir .rc-alv{width:46px;height:40px}
+.rc-prevenir-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rc-prevenir-t b{font-weight:600}
+.rc-prevenir-t .small{color:var(--ink)}
+.rc-message{margin:0;padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft);white-space:pre-line;font-size:var(--t-s)}
+.rc-pvs{display:flex;flex-direction:column}
+.rc-pv{display:flex;align-items:center;gap:10px;min-height:56px;border-bottom:1px solid var(--line)}
+.rc-pv-b{display:flex;gap:6px}
+.rc-pv-b .btn{min-height:36px;height:36px;padding:0 12px;display:inline-flex;align-items:center;text-decoration:none}
+
+/* Récolte en deux étapes */
+.rc-progres{display:flex;gap:6px}
+.rc-progres i{flex:1;height:5px;border-radius:var(--r-pill);background:#EBD9A6}
+.rc-progres i.on{background:var(--pine)}
+.rc-form>div[hidden]{display:none}
+.rc-etape-1,.rc-etape-2{display:flex;flex-direction:column;gap:18px}
+.rc-question{margin:4px 0 0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl);font-weight:700;letter-spacing:-.015em;line-height:1.15}
+.rc-question+.small{margin:4px 0 0}
+.rc-bloc{display:flex;flex-direction:column;gap:10px}
+.rc-rayon{display:flex;flex-direction:column;align-items:center;padding:4px 0}
+.rc-rang{display:flex;gap:4px}
+.rc-rang+.rc-rang{margin-top:-4px}
+.rc-decale{margin-left:100px}
+.rc-hx{width:96px;height:83px;padding:2px;border:0;background:var(--line2);cursor:pointer;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.rc-hx>span{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--card);color:var(--ink);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);font-size:var(--t-s)}
+.rc-hx b{font-weight:600}
+.rc-hx i{font-style:normal;font-size:var(--t-xs)}
+.rc-hx.on{background:var(--pine)}
+.rc-hx.on>span{background:var(--honey)}
+.rc-hx:focus-visible{outline:none}
+.rc-hx:focus-visible>span{box-shadow:inset 0 0 0 3px var(--pine)}
+.rc-tout{align-self:center;min-height:var(--cible)}
+.rc-hausses{border-top:1px solid var(--line);padding-top:8px}
+.rc-hausses summary{min-height:var(--cible);display:flex;align-items:center;font-weight:600;cursor:pointer}
+.rc-poids{display:flex;flex-direction:column;align-items:center;gap:8px}
+.rc-lab{font-weight:600}
+.rc-kg{display:flex;align-items:center;gap:18px}
+.rc-kg-v{display:flex;align-items:baseline;gap:6px}
+.rc-kg-v input{width:120px;height:64px;border:0;border-bottom:2px solid var(--line2);border-radius:0;background:transparent;text-align:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:48px;font-weight:700;font-variant-numeric:tabular-nums;padding:0;box-shadow:none}
+.rc-kg-v input:focus{border-bottom-color:var(--pine);outline:none}
+.rc-kg-v b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px}
+.rc-rond{flex:none;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);border-radius:var(--r-pill);background:var(--card);color:var(--ink);cursor:pointer}
+.rc-rond:hover{background:var(--honeysoft)}
+.rc-parruche{margin:0}
+.rc-formats{display:flex;flex-direction:column;padding-top:4px;padding-bottom:4px}
+.rc-format{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rc-format:last-child{border-bottom:0}
+.rc-pot{flex:none;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-s);background:var(--honeysoft)}
+.rc-format-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rc-format-t b{font-weight:600}
+.rc-prix{display:flex;flex-direction:row;align-items:center;gap:6px;margin:2px 0 0;font-size:var(--t-s);color:var(--muted)}
+.rc-prix input{flex:none;width:84px;height:36px;min-height:36px;padding:0 8px}
+.rc-cpt{display:flex;align-items:center;gap:4px}
+.rc-cpt .rc-rond{width:44px;height:44px}
+.rc-cpt-v{margin:0}
+.rc-cpt-v input{width:52px;height:44px;padding:0;text-align:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;font-weight:700}
+.rc-reste{display:flex;flex-direction:column;gap:8px}
+.rc-reste .rc-jauge i{background:var(--honey)}
+.rc-reste p{margin:0}
+.rc-vides{padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft)}
+.rc-vides p{margin:0}
+.rc-vides p+p{margin-top:6px}
+.rc-vides b{color:var(--watch)}
+.rc-lot{display:flex;flex-direction:column;gap:10px}
+.rc-lot p{margin:0}
+.rc-barre{display:flex;flex-direction:column;gap:6px}
+.rc-barre .link{align-self:center;min-height:var(--cible)}
+@media (prefers-reduced-motion:reduce){.fc-sw,.fc-sw::after{transition:none}}
+
+/* Feuille d'API : la récolte en avant pendant la saison */
+.n4-tuile.fa-saison{position:relative;background:var(--honeysoft);border:2px solid var(--honey)}
+.n4-tuile.fa-saison::after{content:"Saison";position:absolute;top:6px;right:6px;padding:1px 6px;border-radius:var(--r-pill);background:#fff;color:var(--watch);font-size:var(--t-xs);font-weight:600}

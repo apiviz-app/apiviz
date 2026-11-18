@@ -274,7 +274,7 @@ with sync_playwright() as pw:
 
     # 4. Récolte sans réseau (fiche).
     page.evaluate("ACT.newrecolte()"); page.fill("#r_kg", "12.5")
-    page.click("form[data-form=v3recolte] .btn.main")
+    page.click("[data-act=rcsans]")  # v5.66 : récolte en deux étapes, enregistrée sans mise en pots
     page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
 
     # 5. L'app survit à un rechargement sans réseau, saisies comprises.

@@ -110,6 +110,7 @@
     page.click("[data-act=v3rrucher][data-v=Verger]")
     page.fill("#r_kg", "20"); page.fill("#r_hum", "17.5")
     verif("Bon pour la conservation" in page.locator("#r_humh").inner_text(), "humidité : bon pour la conservation")
+    page.click("[data-act=rcetape][data-v='2']"); page.wait_for_selector(".rc-etape-2:not([hidden])")  # v5.66 : deux étapes
     page.fill("#r_p500", "10"); page.fill("#r_x500", "12")
     verif("5 kg mis en pots" in page.locator("#r_pots").inner_text() and "15 kg" in page.locator("#r_pots").inner_text(), "calcul : 5 kg en pots, 15 kg en vrac")
     shot("recolte")
