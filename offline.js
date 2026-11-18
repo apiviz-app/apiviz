@@ -137,6 +137,9 @@ const HL = (() => {
         Regles.stock.appliquerAchat(d, it.args.p, { _attente: true });
       } else if (it.type === "rpc" && it.nom === "mettre_en_pots") {
         Regles.stock.appliquerMiseEnPots(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "assembler_ruches") {
+        // Ruches physiques assemblées sans réseau (migration 027) : caisses ajoutées, pièces retirées du stock.
+        Regles.assemblage.appliquer(d, it.args.p, { _attente: true });
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
@@ -444,6 +447,11 @@ const HL = (() => {
       const p = it.args.p;
       return ["Mise en pots · lot " + (p.code || ""), dfr(p.date) + " · " + pluriel(p.pots, "pot")];
     }
+    if (it.type === "rpc" && it.nom === "assembler_ruches") {
+      const p = it.args.p, r = p.ruches || [];
+      return ["Ruches physiques · n° " + (r.length > 1 ? r[0].code + " à " + r[r.length - 1].code : r[0]?.code || ""), pluriel((p.pieces || []).length, "pièce") + " du stock · " + dfr(p.date)];
+    }
+    if (it.type === "rpc" && it.nom === "enregistrer_composition") return ["Composition · " + (it.args.p.type || ""), pluriel((it.args.p.pieces || []).length, "pièce")];
     const l = it.lignes[0] || {};
     if (it.table === "recoltes") return ["Récolte · " + n(l.kg) + " kg", dfr(l.date_recolte)];
     if (it.table === "depenses") return ["Dépense · " + (l.libelle || ""), dfr(l.date_depense) + " · " + eur(l.montant)];
