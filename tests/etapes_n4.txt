@@ -11,7 +11,7 @@
 
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     libs = page.locator(".bottom button span:not(.n4-badge)").all_inner_texts()
-    verif(libs == ["Accueil", "Ruchers", "API", "Produits", "Menu"], "barre du bas (Produits, ex-Miel, v5.64) : %s" % libs)
+    verif(libs == ["Accueil", "Ruchers", "API", "Produits", "Menu"], "barre du bas (Produits, ex-Miel, v5.65) : %s" % libs)
     verif(page.locator('.bottom [data-v=ventes] .n4-badge').inner_text() == "1", "pastille sur Miel : 1 vente à suivre")
     # Prochaine action
     # v5.24 : sur téléphone, la prochaine action (tournée) est proposée dans la carte d'API.
@@ -70,7 +70,7 @@
     verif(page.locator(".u-vente").count() == 1 and "À encaisser" in page.locator(".u-filtre-t").inner_text(), "tuile « à encaisser » : filtre")
     shot("miel")
     page.click(".u-tuile[data-v=stock]"); page.wait_for_selector("text=Récoltes")
-    verif(page.locator(".head h1").inner_text() == "Produits" and page.locator(".u-tuiles").count() == 1, "Stock et récoltes dans Produits (ex-Miel, v5.64)")
+    verif(page.locator(".head h1").inner_text() == "Produits" and page.locator(".u-tuiles").count() == 1, "Stock et récoltes dans Produits (ex-Miel, v5.65)")
     # Menu (v5.32) : volet par catégories à la place de Gestion
     page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] .nl-entree")
     cats = page.locator("#nlVolet .nl-entree b").all_inner_texts()

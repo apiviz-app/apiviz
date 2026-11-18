@@ -13,7 +13,7 @@ import * as colonies from "./domaines/colonies/regles.js";
 import * as reines from "./domaines/colonies/reines.js";
 import * as stock from "./domaines/materiel/regles.js";
 import * as assemblage from "./domaines/colonies/regles-assemblage.js";
-// Produits de la ruche (v5.64, migration 032) : libellés et formats de tous les lots, miel ou non.
+// Produits de la ruche (v5.65, migration 032) : libellés et formats de tous les lots, miel ou non.
 import * as produits from "./domaines/production/produits.js";
 // File d'opérations hors ligne v2 (IT-09), lue par offline.js.
 import * as file from "./donnees/file.js";

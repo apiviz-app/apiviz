@@ -1,4 +1,4 @@
-/* ---------- Produits de la ruche (v5.64, src/domaines/production/produit.js, migration 032) ----------
+/* ---------- Produits de la ruche (v5.65, src/domaines/production/produit.js, migration 032) ----------
    Maquettes du 18 nov. 2026 : modèles en alvéoles, catalogue par catégorie dans Stock et récoltes. */
 .pr-ecran{display:flex;flex-direction:column;gap:14px;max-width:640px}
 .pr-modeles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

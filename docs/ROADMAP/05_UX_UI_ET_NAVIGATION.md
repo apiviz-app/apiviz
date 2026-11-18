@@ -24,7 +24,7 @@ Ruchers
  ├─ Fiche rucher : colonies · météo 5 j (détail : Météo heure par heure) · tâches · historique · infos
  ├─ Fiche colonie : en-tête, onglets Journal · Santé · Reine & lignée · Colonie · Photos ; bouton principal + « + »
  └─ Saisies (flux) : Visite (Express / Complète) · Tournée · Déplacer (écran, ou feuille après une sélection)
-Produits (ex-Miel, v5.64)
+Produits (ex-Miel, v5.65)
  ├─ Ventes · Clients · Commandes · Stock et récoltes (Tes produits ; détail : Lot, Facture)
  └─ Saisies (flux) : Nouvelle vente · Récolte · Mise en pots · Ajouter un produit (modèles, puis le produit)
 Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
@@ -44,7 +44,7 @@ Ruchers, ouvert depuis Ruchers › ⋯). « Scanner une ruche » est une feuille
 feuille d'une ruche scannée. Pas de nouvelle rubrique. Décision de Pierre-Louis (17 nov. 2026, maquettes
 « Nouveautés » 1 à 4 validées, « implémente la 1, 2, 3 et 4 »).
 
-**v5.64 (18 nov. 2026)** : la rubrique **Miel devient Produits** (barre du bas, volet « Ruchers et produits », menu de
+**v5.65 (18 nov. 2026)** : la rubrique **Miel devient Produits** (barre du bas, volet « Ruchers et produits », menu de
 l'ordinateur), même place et mêmes onglets. Nouvel écran **Ajouter un produit** (flux de niveau 2 sous Produits, ouvert
 depuis Stock et récoltes › Tes produits ; il sert aussi à modifier un produit qui n'est pas du miel). Pas de nouvelle
 rubrique. Décision de Pierre-Louis (18 nov. 2026, maquettes « Produits de la ruche » : « l'application doit être

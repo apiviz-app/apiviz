@@ -1,4 +1,4 @@
-// Apiviz — produits de la ruche (v5.64, migration 032, maquettes « Produits de la ruche » du 18 nov. 2026).
+// Apiviz — produits de la ruche (v5.65, migration 032, maquettes « Produits de la ruche » du 18 nov. 2026).
 // Un lot est le lot d'un produit : du miel en pots (categorie « Miel », format_g en grammes) ou un autre produit
 // (hydromel, cire, bougie…) décrit par son nom (colonne miel), son unité et son format libre. Règles pures : pas de
 // navigateur ni de base, testées par tests/unitaires/produits.test.mjs. Les scripts classiques les lisent par

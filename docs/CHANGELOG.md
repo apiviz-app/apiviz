@@ -5,7 +5,7 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.64 · à publier en recette · d'autres produits que le miel
+## v5.65 · à publier en recette · d'autres produits que le miel
 **Migration 032 (ne casse pas l'ancienne version pour le miel, après 031).** Maquettes « Produits de la ruche » du
 18 nov. 2026 ; demande de Pierre-Louis : l'application doit pouvoir servir au plus grand nombre et ne pas parler que de
 miel. Ce socle couvre le catalogue, le stock et la vente ; les suivis spécialisés (cuvées d'hydromel, transformation de
@@ -49,6 +49,41 @@ Technique :
 - Caisse du marché et page de commande : l'hydromel apparaît à côté du miel.
 - Mode avion : créer une bougie, puis remettre le réseau ; elle part une seule fois.
 - Ancienne version installée : le miel s'affiche et se vend comme avant.
+
+Numérotation (18 nov. 2026) : le bouton retour (#101) a pris v5.64 ; cette PR passe en v5.65 et contient la #101.
+
+## v5.64 · à publier en recette · bouton retour
+**Sans migration.** Maquette « Apiviz · Retour en arrière » du 18 nov. 2026 ; Pierre-Louis a demandé de l'implémenter
+directement (« je verrai à l'usage »).
+
+Pour l'apiculteur :
+1. **Le bouton retour ne fait plus sortir d'Apiviz.** Celui du téléphone Android, la flèche ← du navigateur (ou
+   Alt + ←) et le lien « ‹ » en haut d'un écran ramènent à l'écran d'où l'on vient : une ruche ouverte depuis
+   l'Accueil ramène à l'Accueil, ouverte depuis un rucher ramène au rucher.
+2. **Le lien « ‹ » porte le nom de l'écran d'avant** (« ‹ Accueil », « ‹ Ruchers »…) au lieu d'un parent fixe.
+3. **Une fenêtre ouverte se ferme d'abord** (feuille du bas, volet Menu, recherche) et l'écran du dessous ne bouge
+   pas. Une saisie commencée dans une feuille n'est pas perdue : « Saisie gardée en brouillon · Reprendre ».
+4. **Un onglet n'a derrière lui que l'Accueil** : Miel, Ruchers ou un écran du Menu, retour → l'Accueil. Entre les
+   onglets d'une même rubrique (Liste, Carte, Santé) et entre deux fiches voisines (flèches ‹ ›), on ne s'empile pas.
+5. **À l'Accueil, un premier appui prévient** : « Appuie encore sur retour pour quitter Apiviz ». Le second, dans les
+   3 secondes, ferme l'application.
+
+Écart avec la maquette : pas de question « Quitter sans enregistrer ? ». Le brouillon qui existe déjà garde la saisie,
+sans question en plus ; à revoir à l'usage.
+
+Technique : `src/noyau/historique.js` (pile tenue à chaque rendu, crochet « historique » après le gabarit ; règles
+testées par `tests/unitaires/historique.test.mjs`) ; scénario navigateur `tests/etapes_rt.txt`. Applications : plugin
+`@capacitor/app` 8.1.2 (écouteur du bouton retour, fermeture de l'app). C'est un changement natif : niveau natif
+`natif-2` (`capacitor.config.json`), les applis en `natif-1` demandent donc le nouvel APK au lieu de se mettre à jour
+seules. Il faut **refaire les applis de test** (Actions › Applis mobiles) et réinstaller l'APK une fois. Sans le
+plugin, le site et une appli ancienne gardent le lien « ‹ » ; le retour du navigateur marche dans le site.
+
+À vérifier :
+- Sur Android (appli de test refaite, ou site dans Chrome) : Ruchers › un rucher › une ruche, puis retour trois fois.
+- Accueil › « Voir Ruche … » › retour : on revient à l'Accueil.
+- Ouvrir une feuille (+ › Dépense), écrire, faire retour : la feuille se ferme, « Reprendre » rend la saisie.
+- À l'Accueil : un retour affiche le message, un second ferme l'app.
+- iPhone : le lien « ‹ » en haut fait la même chose (le glissé depuis le bord n'est pas encore branché).
 
 ## v5.63 · à publier en recette · l'appli se met à jour toute seule (IT-30, AP-TECH-409)
 **Aucune migration, aucune base touchée.** Demande de Pierre-Louis du 18 nov. 2026 : ne plus réinstaller d'APK à

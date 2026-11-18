@@ -1,4 +1,4 @@
-// Apiviz — écran « Produit » (v5.64, maquettes « Produits de la ruche » du 18 nov. 2026, migration 032).
+// Apiviz — écran « Produit » (v5.65, maquettes « Produits de la ruche » du 18 nov. 2026, migration 032).
 // Étape 1 : « Que veux-tu vendre ? », un modèle par produit (miel, hydromel, cire, bougie…) ou un produit libre. Le
 // miel ouvre la mise en pots (récolte, pots vides, étiquettes), comme avant. Étape 2 : nom, unité, format, prix,
 // quantité en stock, numéro de lot, DDM et alerte de stock bas, puis creer_produit() par la file d'envoi (hors ligne

@@ -8,7 +8,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Se repérer
 
-- **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Produits (Miel avant la v5.64), Agenda, Finances, Matériel, Registre et déclaration,
+- **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Produits (Miel avant la v5.65), Agenda, Finances, Matériel, Registre et déclaration,
   Réglages. Sur ordinateur, ces 8 entrées sont toujours visibles à gauche, avec **Nouvelle visite** et **API** en tête.
   Sur téléphone, la barre du bas garde Accueil, Ruchers, **API** (au centre) et Produits ; la touche **Menu** ouvre un volet
   avec la recherche et les 5 autres entrées. Un sujet qui a plusieurs parties les range en **onglets** sous le titre
@@ -75,9 +75,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   passer à … » ouvre la ruche suivante du rucher ; le journal dit ce qui a été repris.
 - Récolte, vente, dépense, tâche, note vocale, photo.
 
-## Produits *(v5.64, anciennement Miel)*
+## Produits *(v5.65, anciennement Miel)*
 
-- **D'autres produits que le miel** *(v5.64)* : Stock et récoltes › Tes produits › « Ajouter un produit ». Choisis un
+- **D'autres produits que le miel** *(v5.65)* : Stock et récoltes › Tes produits › « Ajouter un produit ». Choisis un
   modèle (hydromel, cire, bougie, propolis, pollen, gelée royale, pain d'épices, essaim, reine, coffret, cosmétique) ou
   un produit libre, puis le nom, l'unité (bouteille, pièce, flacon…), le format, le prix, la quantité et, si tu veux,
   une alerte de stock bas. Le miel passe toujours par la mise en pots. Une vente, la caisse et la page de commande

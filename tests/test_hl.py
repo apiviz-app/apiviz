@@ -119,7 +119,7 @@ def supabase(route):
                     mvs.append({"id": str(uuid.uuid4()), "article_id": a["id"], "type": "consommation", "origine": "mise_en_pots", "quantite": -float(i["quantite"]),
                                 "lot_id": p["id"], "date_mouvement": p["date"], "note": "", "created_at": "2026-11-11T10:00:00Z"})
             return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
-        # v5.64 (migration 032) : lot d'un produit qui n'est pas du miel, idempotent par l'identifiant.
+        # v5.65 (migration 032) : lot d'un produit qui n'est pas du miel, idempotent par l'identifiant.
         if nom == "creer_produit":
             p = body["p"]; lots = DATA["lots_stock"]
             if p.get("categorie") == "Miel": return route.fulfill(status=400, headers=hdr, body=json.dumps({"message": "Le miel passe par la mise en pots"}))

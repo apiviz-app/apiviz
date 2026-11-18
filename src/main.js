@@ -7,6 +7,7 @@ import { ecrans } from "./domaines/index.js";
 import * as choisir from "./noyau/choisir.js";
 import * as gabarit from "./noyau/gabarit.js";
 import { nbAVoir } from "./domaines/ruchers/vue-tableau.js";
+import * as historique from "./noyau/historique.js";
 
 for (const def of ecrans) {
   routeur.enregistrer(def);
@@ -30,3 +31,7 @@ window.Noyau.choisir = choisir;
 // il passe après tous les autres crochets « après le rendu », sur l'écran tel qu'ils l'ont laissé.
 window.Noyau.crochets.sur("apresRendu", "gabarit", () => gabarit.appliquer());
 window.Noyau.gabarit = gabarit;
+
+// Retour en arrière (v5.64) : après le gabarit, qui pose le lien « ‹ » que l'historique renomme.
+window.Noyau.crochets.sur("apresRendu", "historique", () => historique.apresRendu());
+window.Noyau.historique = historique;

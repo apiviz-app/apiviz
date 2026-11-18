@@ -8,7 +8,7 @@ export const venteTotal = (d, vente) =>
   sum(d.lignes.filter((ligne) => ligne.vente_id === vente.id), (ligne) => ligne.quantite * ligne.prix_unitaire);
 
 /**
- * Stock : pots de miel, kilos restants, kilos mis en pots (miel seulement, v5.64) ; autres produits en stock ; valeur à
+ * Stock : pots de miel, kilos restants, kilos mis en pots (miel seulement, v5.65) ; autres produits en stock ; valeur à
  * vendre de tous les produits.
  */
 export function stock(d) {

@@ -27,7 +27,7 @@ export function lireLienRuche(texte) {
 }
 
 // ---------- Caisse ----------
-// Libellé d'un produit à la caisse : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.64, migration 032).
+// Libellé d'un produit à la caisse : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.65, migration 032).
 const libelleLot = (l) => (estMiel(l) ? `${l.miel || "Miel"} ${l.format_g} g` : `${nomLot(l)}${formatLot(l) ? " " + formatLot(l) : ""}`);
 
 /** Produits proposés à la caisse : un par catégorie, nom, format et prix, avec le stock de tous les lots correspondants. */

@@ -1,4 +1,4 @@
-    # v5.64 — Produits de la ruche (migration 032, maquettes du 18 nov. 2026) : rubrique Produits, « Ajouter un produit »
+    # v5.65 — Produits de la ruche (migration 032, maquettes du 18 nov. 2026) : rubrique Produits, « Ajouter un produit »
     # avec modèles (le miel ouvre la mise en pots), création d'un lot d'hydromel par creer_produit, catalogue par
     # catégorie dans Stock et récoltes, vente qui mélange miel et hydromel, modification du produit.
     # Avec CAPTURES=<dossier>, capture à 390 px.

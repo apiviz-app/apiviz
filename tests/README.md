@@ -25,7 +25,7 @@ Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 
-Scénario v5.64 : `etapes_pr` (produits de la ruche, migration 032 : rubrique Produits, modèles, création d'un lot
+Scénario v5.65 : `etapes_pr` (produits de la ruche, migration 032 : rubrique Produits, modèles, création d'un lot
 d'hydromel, catalogue par catégorie, vente miel et hydromel, modification). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
 Scénario v5.38 : `etapes_op` (inscription en deux étapes et Mon profil avec la migration 021, membres avec leurs noms et
@@ -64,6 +64,10 @@ Scénario v5.59 (IT-27, première partie) : `etapes_of` (offres et gouttes d'API
 et sa jauge, au mois / à l'année, essai de 30 jours puis arrêt, recharge et répartition du prix, bloc Équipe Apiviz,
 écran API en Rapide puis Approfondie avec le coût sous chaque réponse, gouttes épuisées, base sans 029). Avec
 `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
+Scénario v5.64 : `etapes_rt` (bouton retour : retour du navigateur et lien « ‹ » vers l'écran d'avant, « ‹ Accueil » pour
+une fiche ouverte depuis l'Accueil, onglet → Accueil, volet et feuille fermés d'abord, saisie gardée en brouillon,
+message avant de quitter). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
 Scénario v5.52 : `etapes_fx` (facture lue par API, fonction « lire-facture » simulée : accès par le bouton API et Matériel (v5.53), feuille Source, PDF envoyé avec
 jeton et exploitation, lecture, validation avec ligne à vérifier qui bloque, nouvel article, frais sans stock, écart de

@@ -91,7 +91,7 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
     $("go").disabled = !nb;
   }
 
-  // Libellé d'un produit : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.64, migration 032).
+  // Libellé d'un produit : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.65, migration 032).
   function libelle(p) {
     var f = p.format_libelle || (p.format_g ? p.format_g + " g" : "");
     return (p.miel || p.categorie || "") + (f ? " " + f : "");

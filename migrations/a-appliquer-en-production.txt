@@ -33,7 +33,7 @@
 # 031-echanges-api.sql (PR claude/api-agenda-corrections, v5.62) : historique des échanges avec API (table
 #   api_echanges). Additive. À appliquer sur apidoo-test (après 030) par la mise en ligne en recette, puis sur apidoo
 #   avec l'accord de Pierre-Louis.
-# 032-produits.sql (PR claude/produits-de-la-ruche, v5.64) : d'autres produits que le miel (catégorie, unité, format libre,
+# 032-produits.sql (PR claude/produits-de-la-ruche, v5.65) : d'autres produits que le miel (catégorie, unité, format libre,
 #   seuil ; creer_produit ; commandes en ligne de tous les produits). Ne casse pas l'ancienne version pour le miel. Après 031.
 #   APPLIQUÉE le 18 nov. 2026 par Claude (accès Supabase) : apidoo-test, puis apidoo avec l'accord de Pierre-Louis (18 h 04).
 #   controler-structure.mjs config.js : « Structure identique » après 032. Rien à faire à la mise en ligne.

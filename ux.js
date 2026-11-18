@@ -337,7 +337,7 @@ const UX = (() => {
   function enteteMiel(actif) {
     const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
     const tuile = (act, v, nb, lab, on, ton = "") => `<button type="button" class="u-tuile ${on ? "on " + ton : ""}" aria-pressed="${on}" data-act="${act}" data-v="${v}"><b>${esc(nb)}</b><span>${lab}</span></button>`;
-    const st = stock(); // v5.64 : les autres produits comptent aussi (bouteilles, bougies…).
+    const st = stock(); // v5.65 : les autres produits comptent aussi (bouteilles, bougies…).
     return `<div class="u-tuiles">${tuile("uonglet", "stock", String(st.pots + (st.autres || 0)), st.autres ? "en stock" : "pots en stock", actif === "stock")}
       ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
       ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>

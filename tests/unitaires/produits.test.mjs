@@ -1,4 +1,4 @@
-// Tests des règles des produits de la ruche (v5.64, migration 032) : libellés, formats, unités, catalogue, numéros.
+// Tests des règles des produits de la ruche (v5.65, migration 032) : libellés, formats, unités, catalogue, numéros.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as P from "../../src/domaines/production/produits.js";
