@@ -337,9 +337,6 @@ export function ecran() {
 function ajuster() {
   const b = document.querySelector(".tb-boite");
   if (!b) return;
-  // Téléphone (17 nov. 2026) : le tableau prend la hauteur de ses lignes et la page défile ; plus de boîte coupée à
-  // quatre lignes avec un vide dessous.
-  if (!ordinateur()) { b.style.height = ""; return; }
   // Barres fixées en bas (barre du bas du téléphone, barre de sélection) : le tableau s'arrête au-dessus.
   let limite = window.innerHeight;
   for (const x of document.querySelectorAll(".bottom, .tb-selection")) {
@@ -347,6 +344,11 @@ function ajuster() {
     if (st.position === "fixed" && st.display !== "none" && st.visibility !== "hidden") limite = Math.min(limite, x.getBoundingClientRect().top);
   }
   const haut = b.getBoundingClientRect().top + window.scrollY;
+  // Téléphone (18 nov. 2026) : le tableau défile lui-même, vers le bas et sur les côtés, et s'arrête au-dessus de la
+  // barre du bas ; l'en-tête reste collé en haut. Hauteur maximale seulement : peu de colonies, pas de vide dessous
+  // (correction du 17 nov.).
+  if (!ordinateur()) { b.style.height = ""; b.style.maxHeight = Math.max(300, limite - haut - 8) + "px"; return; }
+  b.style.maxHeight = "";
   b.style.height = Math.max(220, limite - haut - 12) + "px";
 }
 addEventListener("resize", () => { if (typeof S != "undefined" && S.route === "ruches") { if (S.tb?.aff === "tableau") ajuster(); placerFiltres(); } });
@@ -388,6 +390,8 @@ function placerFiltres() {
 }
 function apresRendu() {
   ajuster();
+  // La page finit parfois de se placer après le rendu (bandeau, puces) : on recalcule une fois qu'elle est posée.
+  requestAnimationFrame(() => requestAnimationFrame(ajuster)); setTimeout(ajuster, 400);
   placerFiltres();
   const t = etat();
   const q = document.getElementById("tb_q");

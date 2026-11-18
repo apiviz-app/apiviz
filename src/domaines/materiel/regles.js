@@ -122,7 +122,7 @@ export function libelleMouvement(m) {
   if (m.type === "ouverture") return "Stock de départ";
   if (m.type === "inventaire") return "Inventaire";
   if (m.type === "rebut") return "Perte";
-  return { achat: "Achat", visite: "Visite", mise_en_pots: "Mise en pots", saisie: m.type === "entree" ? "Entrée" : "Correction", reprise: "Stock de départ" }[m.origine] || "Mouvement";
+  return { achat: "Achat", visite: "Visite", mise_en_pots: "Mise en pots", assemblage: "Assemblage", saisie: m.type === "entree" ? "Entrée" : "Correction", reprise: "Stock de départ" }[m.origine] || "Mouvement";
 }
 
 // ---------- Achat ----------

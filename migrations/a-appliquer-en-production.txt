@@ -20,3 +20,6 @@
 # 027-commandes-en-ligne.sql (PR claude/terrain-sur-main, v5.57) : commandes en ligne (boutiques, commandes, page
 #   publique). Additive. Après 026. À appliquer sur apidoo-test par la mise en ligne en recette, puis sur apidoo avec
 #   l'accord de Pierre-Louis.
+# 028-assemblage-ruches.sql (PR claude/liste-et-assemblage-2, v5.58) : compositions des types de ruche, assemblage des
+#   ruches physiques avec les pièces du stock. Additive. À appliquer sur apidoo-test (après 027) par la mise en ligne
+#   en recette, puis sur apidoo avec l'accord de Pierre-Louis.

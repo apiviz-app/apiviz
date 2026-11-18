@@ -49,9 +49,11 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     liens: ["colonie_liens", "date_lien", !1],
     // v5.32 (migration 020) : argent passé d'un associé à l'autre, ou versé à la société.
     reglements: ["reglements_associes", "date_reglement", !1],
+    // Migration 028 : pièces du stock qui composent chaque type de ruche physique.
+    compositions: ["compositions_ruches", "type"],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020", compositions: "028" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",

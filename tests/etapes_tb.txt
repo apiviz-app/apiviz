@@ -109,8 +109,18 @@
     # Téléphone (17 nov. 2026) : rangé par rucher, synthèse en une phrase au-dessus, tableau à la hauteur de ses lignes.
     verif(page.locator(".tb-gligne").count() == 2 and page.locator(".tb-gligne", has_text="Les Chênes").count() == 1, "tableau : un en-tête par rucher")
     verif(page.locator(".tb-synthese").count() == 0 and page.locator(".tb-resume").count() == 1 and "6 colonies" in page.locator(".tb-resume").inner_text(), "tableau : synthèse en une phrase au-dessus")
-    g = page.evaluate("() => { const b = document.querySelector('.tb-boite'); return [b.scrollHeight, b.clientHeight]; }")
-    verif(abs(g[0] - g[1]) <= 2, f"tableau : toutes les lignes visibles, sans défilement dans la boîte ({g})")
+    # Téléphone (18 nov. 2026) : la boîte s'arrête au-dessus de la barre du bas et défile vers le bas ; en-têtes collés.
+    g = page.evaluate("""() => { const b = document.querySelector('.tb-boite'), r = b.getBoundingClientRect();
+        const bas = document.querySelector('.bottom')?.getBoundingClientRect().top ?? innerHeight;
+        return [Math.round(r.bottom), Math.round(bas), getComputedStyle(b).overflowY]; }""")
+    verif(g[0] <= g[1] + 1 and g[2] == "auto", f"tableau : la boîte s'arrête au-dessus de la barre du bas et défile vers le bas ({g})")
+    page.locator(".tb-boite").evaluate("b => { b.dataset.mh = b.style.maxHeight; b.style.maxHeight = '260px'; }"); page.locator(".tb-boite").evaluate("b => b.scrollTop = 400"); page.wait_for_timeout(100)
+    g = page.evaluate("""() => { const b = document.querySelector('.tb-boite').getBoundingClientRect();
+        const t = document.querySelector('.tb-tete').getBoundingClientRect();
+        const gl = [...document.querySelectorAll('.tb-gligne')].map((x) => x.getBoundingClientRect().top);
+        return [Math.round(t.top - b.top), document.querySelector('.tb-boite').scrollTop, gl.some((y) => Math.abs(y - t.bottom) <= 2)]; }""")
+    verif(abs(g[0]) <= 2 and g[1] > 0 and g[2], f"tableau défilé : en-têtes collés en haut, rucher collé dessous ({g})")
+    page.locator(".tb-boite").evaluate("b => { b.scrollTop = 0; b.style.maxHeight = b.dataset.mh; }")
     page.locator(".tb-boite").evaluate("b => b.scrollLeft = 250"); page.wait_for_timeout(100)
     g = page.evaluate("""() => { const b = document.querySelector('.tb-boite').getBoundingClientRect();
         const n = document.querySelector('.tb-ligne:not(.tb-tete) .tb-c-nom').getBoundingClientRect(); return [b.left, n.left, document.querySelector('.tb-boite').scrollLeft]; }""")

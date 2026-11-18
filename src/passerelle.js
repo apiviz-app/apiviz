@@ -12,12 +12,13 @@ import * as ruchers from "./domaines/ruchers/regles.js";
 import * as colonies from "./domaines/colonies/regles.js";
 import * as reines from "./domaines/colonies/reines.js";
 import * as stock from "./domaines/materiel/regles.js";
+import * as assemblage from "./domaines/colonies/regles-assemblage.js";
 // File d'opérations hors ligne v2 (IT-09), lue par offline.js.
 import * as file from "./donnees/file.js";
 import { creerFile } from "./noyau/erreurs.js";
 import * as crochets from "./noyau/crochets.js";
 
-window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, file });
+window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, assemblage, file });
 
 // Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
 // S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.

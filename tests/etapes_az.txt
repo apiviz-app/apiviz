@@ -1,0 +1,48 @@
+    # v5.58 (migration 028) — ruches physiques montées avec les pièces du stock : composition par type pré-remplie,
+    # quantités × nombre de ruches, alerte si une pièce manque (création permise), assembler_ruches envoyé ; réglage
+    # d'une composition.
+    import os
+    cap = os.environ.get("CAPTURES")
+    PL, CA, CI = (str(uuid.uuid4()) for _ in range(3))
+    DATA["articles"] += [{"id": PL, "nom": "Plancher Dadant 10", "type": "Équipement", "unite": "unité", "stock": 5, "seuil": 0},
+                         {"id": CA, "nom": "Cadres de corps", "type": "Consommable", "unite": "unité", "stock": 40, "seuil": 0},
+                         {"id": CI, "nom": "Cire gaufrée", "type": "Consommable", "unite": "unité", "stock": 12, "seuil": 0}]
+    DATA["mouvements_stock"] = []
+    DATA["compositions_ruches"] = [{"id": str(uuid.uuid4()), "type": "Dadant 10 cadres", "article_id": a, "quantite": q} for a, q in ((PL, 1), (CA, 10), (CI, 10))]
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l[data-act=errgcontenants]")
+    page.click(".rg-l[data-act=errgcontenants]"); page.wait_for_selector("#sheet[open]")
+    page.select_option("#sheet [name=contenants]", "1"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")
+
+    page.evaluate("ACT.go('materiel')"); page.wait_for_selector(".ct-liste", timeout=5000)
+    verif(page.locator("[data-act=ctcompo]").count() == 1, "Matériel › Ruches physiques : lien « Compositions »")
+    page.click("[data-act=ctajouter]"); page.wait_for_selector("#sheet[open] .asm-pieces")
+    page.fill("#sheet [name=code]", "13"); page.fill("#sheet [name=jusqua]", "14"); page.fill("#sheet [name=type]", "Dadant 10 cadres")
+    page.wait_for_timeout(150)
+    z = page.locator("#sheet .asm-pieces")
+    verif(z.locator(".asm-l").count() == 3 and "pour 2 ruches" in z.inner_text(), "type choisi : 3 pièces pré-remplies, pour 2 ruches")
+    verif("20 en tout · 40 en stock → 20" in z.inner_text(), "cadres : 20 en tout, stock après affiché")
+    al = page.locator("#sheet .asm-alerte")
+    verif(al.is_visible() and "Il manque 8 Cire gaufrée" in al.inner_text() and z.locator(".asm-l.manque").count() == 1, "cire : il en manque 8, alerte orange")
+    verif("Créer 2 ruches et retirer du stock" in page.locator("#sheet .btn.main").inner_text(), "bouton : « Créer 2 ruches et retirer du stock »")
+    # Une cire de moins par ruche : 18 en tout, toujours 6 qui manquent ; la création reste permise.
+    page.click("#sheet .asm-l:has-text('Cire') [data-as=moins]"); page.wait_for_timeout(100)
+    verif("il en manque 6" in page.locator("#sheet .asm-l:has-text('Cire')").inner_text(), "− : quantité baissée, manque recalculé")
+    if cap:
+        page.locator("#sheet .asm-pieces").scroll_into_view_if_needed(); page.screenshot(path=f"{cap}/az-ajout-390.png")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=2 ruches physiques ajoutées, pièces retirées du stock", timeout=10000)
+    env = [b["p"] for n, b in recu["rpc"] if n == "assembler_ruches"]
+    verif(len(env) == 1 and [r["code"] for r in env[0]["ruches"]] == ["13", "14"] and env[0]["type"] == "Dadant 10 cadres", "assembler_ruches envoyé : ruches 13 et 14, type gardé")
+    verif(sorted((p["article_id"], p["quantite"]) for p in env[0]["pieces"]) == sorted([(PL, 1), (CA, 10), (CI, 9)]), "pièces envoyées : quantités pour une ruche")
+    verif(not any(n == "enregistrer_composition" for n, b in recu["rpc"]), "composition existante : non réécrite sans le demander")
+
+    # Réglage d'une composition : Warré, une pièce ajoutée depuis le stock.
+    page.click("[data-act=ctcompo]"); page.wait_for_selector("#sheet[open] .asm-pieces")
+    page.fill("#sheet [name=type]", "Warré"); page.wait_for_timeout(150)
+    page.select_option("#sheet [data-as-ajout]", PL); page.wait_for_timeout(100)
+    page.click("#sheet .asm-l [data-as=plus]")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Composition « Warré » enregistrée", timeout=10000)
+    c = [b["p"] for n, b in recu["rpc"] if n == "enregistrer_composition"]
+    verif(len(c) == 1 and c[0]["type"] == "Warré" and c[0]["pieces"] == [{"article_id": PL, "quantite": 2}], f"enregistrer_composition : Warré, 2 planchers ({c})")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
