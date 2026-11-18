@@ -1,0 +1,84 @@
+/* Apiviz — offres et gouttes d'API (IT-27, migration 029) : Mon offre, Choisir une offre, Recharger, coût sous les
+   réponses d'API. Maquette « Apiviz — Offres et IA » du 18 nov. 2026. Jetons seulement (styles/jetons.css). */
+.of{display:flex;flex-direction:column;gap:14px}
+.of .card{margin:0}
+.of h2{font-size:var(--t-l);margin:0 0 8px}
+.of-ligne{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.of-ligne h2{margin:0}
+.of-vide{display:flex;align-items:center;gap:12px;color:var(--muted)}
+.of-vide .of-goutte{color:var(--watch);flex:none}
+.of-vide p{margin:0}
+
+/* Carte de l'offre en vigueur : sapin, jauge miel clair. */
+.of-carte{background:var(--pine);color:#fff;border-color:var(--pine);border-radius:var(--r-l);display:flex;flex-direction:column;gap:10px}
+.of-carte h2{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl);color:#fff}
+.of-statut{font-size:var(--t-s);color:var(--honey-light)}
+.of-sous{margin:0;font-size:var(--t-s);color:var(--line)}
+.of-jauge-tete,.of-jauge-pied{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-s)}
+.of-jauge-pied{color:var(--line)}
+.of-jauge{height:10px;border-radius:var(--r-pill);background:var(--pine2);overflow:hidden}
+.of-jauge i{display:block;height:100%;background:var(--honey-light);border-radius:var(--r-pill)}
+.of-alerte{margin:0;padding:8px 10px;border-radius:var(--r-s);font-size:var(--t-s);background:var(--cire);color:var(--ink)}
+.of-alerte.epuise{background:var(--critbg);color:var(--crit)}
+
+.of-gestes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.of-gestes .btn{min-height:var(--cible);justify-content:center}
+.of-rang{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--t-m)}
+.of-rang:last-of-type{border-bottom:0}
+.of-rang span{display:flex;align-items:center;gap:8px}
+
+/* Réponse par défaut et période : deux choix côte à côte. */
+.of-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--ground);border-radius:var(--r-m);padding:4px}
+.of-mode{min-height:52px;border:0;border-radius:var(--r-s);background:transparent;color:var(--ink);font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.of-mode span{font-size:var(--t-xs);color:var(--muted)}
+.of-mode.on{background:var(--card);box-shadow:var(--shadow)}
+.of-periode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:4px}
+.of-periode button{min-height:36px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font:inherit;font-size:var(--t-s);cursor:pointer}
+.of-periode button.on{background:var(--pine);color:#fff;font-weight:600}
+
+/* Les offres. */
+.of-offre{display:flex;flex-direction:column;gap:10px;border-radius:var(--r-l)}
+.of-offre.conseil{border:2px solid var(--pine)}
+.of-offre h2{font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.of-prix{margin:0}
+.of-prix b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl)}
+.of-pastille{margin:0;display:flex;align-items:center;gap:8px;background:var(--cire);border-radius:var(--r-s);padding:8px 10px;font-size:var(--t-s)}
+.of-pastille .of-goutte{color:var(--watch);flex:none}
+.of-liste{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:var(--t-m)}
+.of-liste li{padding-left:22px;position:relative}
+.of-liste li::before{content:"";position:absolute;left:4px;top:4px;width:9px;height:5px;border-left:2px solid var(--good);border-bottom:2px solid var(--good);transform:rotate(-45deg)}
+.of-offre .btn{min-height:var(--cible);justify-content:center}
+.of-bientot{margin:0}
+
+/* Recharges. */
+.of-packs{display:flex;flex-direction:column;gap:8px}
+.of-pack{min-height:72px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r-l);border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.of-pack>span{display:flex;flex-direction:column;gap:2px}
+.of-pack b{font-size:var(--t-l)}
+.of-pack.on{border:2px solid var(--pine);background:var(--cire)}
+.of-pack-prix{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl)!important}
+.of-barre{display:flex;height:14px;border-radius:var(--r-pill);overflow:hidden;margin-bottom:6px}
+.of-barre i,.of-pt{display:block}
+.of-pt{width:10px;height:10px;border-radius:3px;display:inline-block}
+.of .ia{background:var(--honey)}
+.of .tva{background:var(--line2)}
+.of .frais{background:var(--muted)}
+.of .apiviz{background:var(--pine)}
+.of>.btn.main{min-height:52px;justify-content:center}
+
+.of-equipe{border-style:dashed}
+.of-choix{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+
+/* Écran API : gouttes en tête, choix de réponse, coût sous chaque réponse. */
+.as-tete .as-gouttes{margin-left:auto;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:var(--t-s);font-weight:600;cursor:pointer}
+.as-tete .as-gouttes svg{color:var(--watch)}
+.as-tete .as-gouttes.bas{background:var(--watchbg)}
+.as-tete .as-gouttes.epuise{background:var(--critbg);color:var(--crit)}
+.as-form:has(.as-modes){flex-wrap:wrap}
+.as-modes{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;order:-1}
+.as-mode{min-height:36px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--line2);background:var(--card);color:var(--ink);font:inherit;font-size:var(--t-s);cursor:pointer}
+.as-mode.on{background:var(--pine);border-color:var(--pine);color:#fff;font-weight:600}
+.as-modes .small{margin-left:auto}
+.as-cout{display:flex;justify-content:space-between;gap:8px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--muted)}
+.as-cout-g{font-weight:600;color:var(--watch)}
+.as-gestes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}

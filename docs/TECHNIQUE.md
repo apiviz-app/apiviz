@@ -236,6 +236,37 @@ cache à 0,10 $), Haiku 5.5 à 0,10 $ / 0,50 $. Une question coûte de l'ordre d
 chaque question sont écrits dans le journal de la fonction (Supabase › Edge Functions › assistant › Logs).
 
 
+## Offres et gouttes d'API (IT-27, première partie, v5.59)
+
+Décidé le 18 nov. 2026 (maquette « Apiviz — Offres et IA ») : **1 goutte = 1 centime d'euro de coût IA réel**, gouttes
+partagées par l'exploitation, trois offres, pas encore de paiement.
+
+| Élément | Où | Rôle |
+|---|---|---|
+| Catalogue | table `offres` (migration 029) | prix TTC en centimes, gouttes du mois, limites affichées, jours d'essai. Modifiable à l'éditeur SQL seulement : un prix change sans nouvelle version |
+| Abonnement | table `abonnements` | une ligne par exploitation (offre, statut essai / actif / résilié, échéance, canal manuel / web / apple / google). Sans ligne ou échue : Découverte |
+| Gouttes | table `gouttes_mouvements` | dépenses (négatives) et recharges ; réserve « forfait » (remise à neuf le 1er du mois, heure de Paris, sans écriture) ou « recharge » (cumulée) |
+| Coût réel | `supabase/functions/*/gouttes.js` | tarifs Claude par million de jetons, relevés le 18 nov. 2026 ; même fichier dans les deux fonctions (test `gouttes.test.mjs`) |
+| Écrans | `src/domaines/compte/offre.js`, `regles-offre.js` | Mon offre, Choisir une offre, Recharger ; bloc Équipe Apiviz |
+
+**Déroulé d'une question.** La fonction lit `gouttes_disponibles()` ; à zéro ou moins, refus 402 `gouttes` avant tout
+appel au modèle et avant le plafond du jour. Sinon elle appelle Claude Sonnet (Approfondie) ou Claude Haiku (Rapide,
+`mode: "rapide"`), additionne les jetons de tous les tours, convertit le coût en gouttes (`GOUTTES_EUR_PAR_USD`, 0,91 par
+défaut) et appelle `gouttes_debiter` (forfait d'abord, puis recharge ; la dernière réponse peut faire passer un peu sous
+zéro). Une réponse en échec n'est pas débitée. Le plafond de 30 questions par jour et par personne reste en place,
+contre les emballements. Sans migration 029, les fonctions se comportent comme avant (pas de gouttes).
+
+**Secrets ajoutés** (facultatifs) : `ASSISTANT_MODELE_RAPIDE` (« claude-haiku-5-5 »), `GOUTTES_EUR_PAR_USD` (0,91).
+
+**Équipe Apiviz.** `administrateurs_apiviz` est remplie à la main (éditeur SQL), jamais par l'application ni par une
+migration. Ses adresses voient le bloc « Équipe Apiviz » de Mon offre : poser une offre (`admin_definir_offre`),
+créditer ou retirer des gouttes (`admin_crediter_gouttes`). Tant que le paiement n'existe pas, c'est le seul moyen
+d'activer une offre payée ou une recharge.
+
+**Suite (IT-27, deuxième partie).** Paiement web (prestataire D-14) et achats intégrés : chaque canal écrira dans
+`abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
+changent pas : seul le bouton « Payer » sera branché.
+
 ## Lecture des factures par API (v5.52)
 
 « Ajouter un achat » propose de donner la facture (photo ou PDF) à API ; l'apiculteur valide le relevé, puis l'achat est
