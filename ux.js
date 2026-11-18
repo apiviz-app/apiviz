@@ -331,7 +331,7 @@ const UX = (() => {
 
   // ---------- 4. Ventes ----------
   let onglet = "ventes";
-  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? redessiner("clients") : go("clients"); };
+  ACT.uonglet = (v) => { if (v === "stock") return go("miel"); if (v === "recoltes") return go("recoltes"); onglet = v; if (v === "ventes") S.venteFiltre = "toutes"; S.route === "clients" ? redessiner("clients") : go("clients"); };
   ACT.uafiltre = () => { onglet = "ventes"; S.venteFiltre = S.venteFiltre === "impayees" ? "toutes" : "impayees"; S.route === "clients" ? redessiner("clients") : go("clients"); };
   // Tuiles et onglets communs aux écrans Miel (ventes, clients, stock).
   function enteteMiel(actif) {
@@ -341,7 +341,7 @@ const UX = (() => {
     return `<div class="u-tuiles">${tuile("uonglet", "stock", String(st.pots + (st.autres || 0)), st.autres ? "en stock" : "pots en stock", actif === "stock")}
       ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
       ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>
-      ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock et récoltes"]], actif, "uonglet")}`;
+      ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock"], ["recoltes", "Récoltes"]], actif, "uonglet")}`;
   }
   const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);
   function carteVente(v) {
@@ -358,7 +358,7 @@ const UX = (() => {
   }
   function viewClients() {
     const d = S.d;
-    if (!d.clients.length) return shell("Produits", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
+    // v5.66 : plus besoin d'un client pour voir ses produits et ses ventes ; l'onglet Clients dit seulement qu'il est vide.
     const impayees = d.ventes.filter((v) => !v.paye);
     const du = sum(impayees, venteTotal);
     let corps = "";
@@ -371,6 +371,8 @@ const UX = (() => {
         ${potsAVendre()}`;
     } else if (onglet === "livrer" && typeof V3 != "undefined") {
       corps = filtre(`À livrer · ${pluriel(aLivrer().length, "commande")}`) + V3.livraisons();
+    } else if (!d.clients.length) {
+      corps = '<section class="card vt-vide"><h2>Pas encore de client</h2><p class="small">Famille, amis, collègues : retrouve qui a acheté quoi. Tu peux aussi créer le client pendant une vente.</p></section>';
     } else {
       corps = d.clients.map((c) => {
         const vs = d.ventes.filter((v) => v.client_id === c.id);

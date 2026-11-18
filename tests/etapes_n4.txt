@@ -65,12 +65,12 @@
     verif(any(m == "DELETE" and "/visites?" in u for m, u, b in requetes), "sans Annuler : suppression après 5 s")
     # Miel
     page.click(".bottom button[data-v=ventes]"); page.wait_for_selector(".u-tuiles")
-    verif(page.locator(".subtabs button").all_inner_texts() == ["Ventes", "Clients", "Commandes", "Stock et récoltes"], "Miel : 4 onglets (Commandes, v5.57)")
+    verif(page.locator(".subtabs button").all_inner_texts() == ["Ventes", "Clients", "Commandes", "Stock", "Récoltes"], "Produits : 5 onglets (Commandes v5.57, Récoltes v5.66)")
     page.click("[data-act=uafiltre]")
     verif(page.locator(".u-vente").count() == 1 and "À encaisser" in page.locator(".u-filtre-t").inner_text(), "tuile « à encaisser » : filtre")
     shot("miel")
     page.click(".u-tuile[data-v=stock]"); page.wait_for_selector("text=Récoltes")
-    verif(page.locator(".head h1").inner_text() == "Produits" and page.locator(".u-tuiles").count() == 1, "Stock et récoltes dans Produits (ex-Miel, v5.65)")
+    verif(page.locator(".head h1").inner_text() == "Produits" and page.locator(".u-tuiles").count() == 1, "Stock dans Produits (ex-Miel, v5.65)")
     # Menu (v5.32) : volet par catégories à la place de Gestion
     page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] .nl-entree")
     cats = page.locator("#nlVolet .nl-entree b").all_inner_texts()

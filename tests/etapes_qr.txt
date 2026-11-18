@@ -25,7 +25,7 @@
     page.wait_for_selector(".toast >> text=Vente gardée sur le téléphone", timeout=10000)
     id_vente = page.evaluate("JSON.parse(JSON.stringify(S.d.ventes.find(v => v._attente))).id")
     page.evaluate("ACT.newrecolte()"); page.fill("#r_kg", "8")
-    page.click("form[data-form=v3recolte] .btn.main")
+    page.click("[data-act=rcsans]")  # v5.66 : récolte en deux étapes
     page.wait_for_selector(".toast >> text=Gardé sur le téléphone", timeout=10000)
 
     # Entre-temps, un autre membre a vendu 7 pots : il n'en reste que 3.

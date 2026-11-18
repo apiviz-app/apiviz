@@ -8,6 +8,7 @@
 import * as T from "./terrain-regles.js";
 
 const CLIENT = "Vente au marché";
+export const CLIENT_MARCHE = CLIENT; // v5.66 : aussi « Vente sans client » de la feuille « Pour qui ? » (pour-qui.js)
 const e = (t) => esc(t);
 const etat = () => (S.caisse ||= { q: {}, mode: "" });
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
@@ -32,7 +33,7 @@ export function ecran() {
   const lignes = produits.filter((p) => st.q[p.cle]).map((p) => `<li><span>${st.q[p.cle]} × ${e(p.nom)}</span>
       <button type="button" class="cs-moins" data-act="csretire" data-v="${e(p.cle)}" aria-label="Retirer un ${e(p.nom)}">−</button><b>${e(eur(st.q[p.cle] * p.prix))}</b></li>`).join("");
   shell("Caisse du marché", jour.nb ? `${jour.nb} vente${jour.nb > 1 ? "s" : ""} aujourd’hui, ${eur(jour.montant)}` : "Touche un produit pour l’ajouter", "",
-    !produits.length ? '<p class="small">Rien en stock. Mets du miel en pots ou ajoute un produit dans Produits › Stock et récoltes.</p>'
+    !produits.length ? '<p class="small">Rien en stock. Mets du miel en pots ou ajoute un produit dans Produits › Stock.</p>'
       : `<div class="cs-pots">${produits.map(tuile).join("")}</div>
       <section class="cs-panier" aria-labelledby="cs_p"><div class="cs-ptete"><h2 id="cs_p">Panier</h2>${pots ? '<button type="button" class="link" data-act="csvider">Vider</button>' : ""}</div>
         ${lignes ? `<ul>${lignes}</ul>` : '<p class="small">Rien pour l’instant.</p>'}
@@ -44,7 +45,7 @@ export function ecran() {
   document.querySelector(".wrap")?.classList.add("cs-ecran", "op-ecran");
 }
 
-async function clientMarche() {
+export async function clientMarche() {
   const c = client();
   if (c) return c.id;
   if (!enLigne()) throw new Error("Sans réseau, la première vente de la caisse n’est pas possible : il faut créer le client « Vente au marché ».");

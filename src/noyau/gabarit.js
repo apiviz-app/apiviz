@@ -13,7 +13,7 @@
 export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "produit", "deplacer", "inventaire"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
-export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "agenda", "pilotage", "compta", "factures", "commandes",
+export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "recoltes", "agenda", "pilotage", "compta", "factures", "commandes",
   "previsions", "associes", "materiel", "courses", "fournisseurs", "registre", "declaration", "membres", "reglages", "plus"]);
 
 /** Parent d'un écran de 2e niveau quand l'écran ne le donne pas lui-même : [route, libellé]. */
@@ -38,7 +38,7 @@ export const SUJETS = {
   // v5.50 (standards d'écran du 16 nov. 2026) : Ruchers et Miel suivent la même règle. Un onglet peut lancer une action de
   // l'écran au lieu d'une adresse : [adresse, libellé, action, valeur] (Ventes et Clients partagent l'adresse « clients »).
   ruchers: { titre: "Ruchers", onglets: [["ruches", "Liste"], ["carte", "Carte"], ["varroa", "Santé"]] },
-  miel: { titre: "Produits", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["commandes", "Commandes"], ["miel", "Stock et récoltes", "uonglet", "stock"]] },
+  miel: { titre: "Produits", onglets: [["clients", "Ventes", "uonglet", "ventes"], ["clients", "Clients", "uonglet", "clients"], ["commandes", "Commandes"], ["miel", "Stock", "uonglet", "stock"], ["recoltes", "Récoltes"]] },
   finances: { titre: "Finances", onglets: [["pilotage", "Bilan"], ["compta", "Dépenses"], ["factures", "Factures"], ["previsions", "Budget"], ["associes", "Associés"]] },
   materiel: { titre: "Matériel", onglets: [["materiel", "Stock"], ["courses", "Courses"], ["fournisseurs", "Fournisseurs"]] },
   registre: { titre: "Registre et déclaration", onglets: [["registre", "Registre"], ["declaration", "Déclaration"]] },
@@ -240,6 +240,9 @@ export function appliquer() {
     const actif = ongletActif(sujet, route, typeof UX != "undefined" ? UX.ongletMiel?.() : undefined);
     head.insertAdjacentHTML("afterend", `<div class="subtabs g-onglets" role="tablist" aria-label="${echap(sujet.titre)}">${sujet.onglets.map(([r, t, act, v], i) =>
       `<button type="button" role="tab" class="${i === actif ? "on" : ""}" aria-selected="${i === actif}" data-act="${act || "go"}" data-v="${echap(v || r)}">${echap(t)}</button>`).join("")}</div>`);
+    // v5.66 : cinq onglets dans Produits ne tiennent pas tous sur un téléphone ; l'onglet allumé reste visible.
+    const rang = wrap.querySelector(":scope > .g-onglets"), on = rang?.querySelector(".on");
+    if (rang && on && rang.scrollWidth > rang.clientWidth) rang.scrollLeft = Math.max(0, on.offsetLeft - rang.offsetLeft - (rang.clientWidth - on.offsetWidth) / 2);
   }
 
   // La ligne d'état peut être coupée par « … » : son texte entier reste au survol et pour les lecteurs d'écran.

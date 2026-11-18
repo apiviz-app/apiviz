@@ -43,7 +43,7 @@
     verif(page.input_value("#sheet [name=etiquettes]") == "AMAP, Marché", "deux étiquettes cochées : « AMAP, Marché » : " + page.input_value("#sheet [name=etiquettes]"))
     page.locator("#sheet .ch-puce").filter(has_text="AMAP").click()
     verif(page.input_value("#sheet [name=etiquettes]") == "Marché", "décocher retire l'étiquette")
-    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
+    page.click("#sheet .er-croix"); page.wait_for_timeout(200)  # v5.66 : la fiche client se ferme par la croix
 
     # C · feuille de choix des articles (9 articles) puis B · nom d'un nouvel article
     page.evaluate("ACT.newdepense()"); page.wait_for_selector("#sheet[open] .st-achat-corps")

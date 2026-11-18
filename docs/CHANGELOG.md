@@ -5,6 +5,67 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.66 · à publier en recette · ventes, clients et récolte
+**Migration 033 (ne casse pas l'ancienne version, après 032).** Maquettes « Apiviz : ventes, clients et récolte » du
+18 nov. 2026 (9 écrans téléphone) ; Pierre-Louis : « je valide la totalité ». Point de départ : il fallait ajouter un
+client pour voir ses produits, l'écran Ventes n'avait qu'un grand pot, le client d'une vente se cherchait dans une liste
+déroulante, et la saisie d'une récolte n'avait pas de point d'entrée clair.
+
+Pour l'apiculteur :
+1. **Plus besoin d'un client pour voir ses produits.** L'écran « Ajoute ton premier client » disparaît : l'onglet Ventes
+   s'affiche toujours, et l'onglet Clients vide le dit en une phrase.
+2. **Vitrine** (Produits › Ventes) : une carte par produit, avec un dessin (pot de la taille du format, bouteille
+   d'hydromel, pain de cire, bougie ; l'icône du modèle pour les autres), le nom, le format et le lot, ce qui reste, le
+   prix, « Prix à fixer » (à toucher pour le donner) ou « Épuisé », « Stock bas » sous le seuil. Le « + » d'une carte
+   ouvre la vente avec ce produit déjà compté. « Ajouter un produit » en dernière carte. « Aucune vente » devient une
+   phrase qui dit qu'un client n'est pas nécessaire.
+3. **« Pour qui ? »** (Nouvelle vente) : le champ Client ouvre une feuille qui cherche dans le nom (en surlignant ce qui
+   est tapé), la ville et le téléphone ; sans texte, les derniers clients. « Créer un nouveau client » reprend le nom
+   tapé et revient à la vente ; « Vente sans client » vend au client « Vente au marché » (celui de la caisse). Les puces
+   des clients récents restent.
+4. **Fiche client** : initiales dans une alvéole, étiquettes et goûts en puces, téléphone, e-mail, « Importer depuis mes
+   contacts » (Chrome sur Android). **Adresse avec suggestions** : d'abord les adresses déjà saisies chez tes clients
+   (« Même adresse que Marie Durand »), puis les adresses officielles (service de géocodage de l'IGN, ex-API Adresse de
+   la Base Adresse Nationale, gratuit et sans compte), les plus proches de ton rucher d'abord ; code postal et ville se
+   remplissent. Sans réseau, seules les adresses de tes clients sont proposées. « Prévenir à la prochaine récolte ».
+   « Enregistrer et vendre » ouvre la vente avec ce client.
+5. **Onglet Récoltes** (Produits ; « Stock et récoltes » devient « Stock ») : la saison en trois chiffres (récolté, en
+   pots, vendu) et sa jauge, le miel qui attend d'être mis en pots avec « Mettre … en pots », « Saisir une récolte » en
+   bouton principal, les récoltes regroupées par extraction et les autres productions, et **« À prévenir »** : les
+   clients qui l'ont demandé, un message prêt à envoyer par SMS ou e-mail (vouvoiement : document émis), puis « C'est
+   fait : vider la liste ».
+6. **Récolte en deux étapes** : 1. les ruches en alvéoles (un toucher choisit ; les hausses se règlent dessous), le
+   miel en puces, le poids avec − et +, « environ … kg par ruche », l'humidité, la date ; 2. un compteur par format avec
+   son prix, ce qui reste au maturateur, les pots vides en stock (« il te manque 20 pots de 500 g vides »), les numéros
+   de lot qui seront créés et la DDM. « Enregistrer sans mettre en pots » reste possible dès l'étape 1.
+7. **Bouton API** : de mai à septembre, ou quand du miel attend, la tuile Récolte est mise en avant et une ligne
+   « Mettre … kg en pots » apparaît.
+
+Technique :
+- `migrations/033-clients-gouts.sql` : `clients.gouts text[]` (8 au plus) et `clients.prevenir boolean`. Sans 033, la
+  fiche enregistre le reste et prévient ; les goûts ne partent que s'ils servent.
+- `src/domaines/ventes/clients-regles.js` (règles pures : vitrine, recherche, adresses), `vitrine.js`, `pour-qui.js`,
+  `fiche-client.js` (remplace `clientForm()` d'app.js, mêmes colonnes et même repli sans 012 et 021) ;
+  `src/domaines/production/saison.js` (règles pures), `recoltes.js` (écran `recoltes`, onglet de `SUJETS.miel`),
+  `recolte.js` (affichage de la récolte ; l'enregistrement reste celui de v3.js, actions `v3rrucher` et `v3rh`
+  remplacées). `caisse.js` exporte `clientMarche()`. Le gabarit fait défiler la rangée d'onglets jusqu'à l'onglet allumé.
+  Les récoltes quittent l'onglet Stock (`N4.completerMiel` n'est plus appelé). Styles : `styles/65-ventes-clients.css`.
+- Adresses : `https://data.geopf.fr/geocodage/search` (l'API Adresse a été transférée à l'IGN ; l'ancienne adresse
+  api-adresse.data.gouv.fr n'était maintenue que jusqu'en janvier 2026), requête après 3 lettres et 250 ms de pause, annulée si l'on continue de taper.
+- Tests : `tests/unitaires/clients.test.mjs`, `tests/sql/test_033.mjs`, scénario `etapes_vc` ; `etapes_ml`, `etapes_n4`,
+  `etapes_ch`, `etapes_nk`, `etapes_sd`, `etapes_v4`, `etapes_qr` et `test_hl.py` mis à jour (vitrine, cinq onglets,
+  récolte en deux étapes, 51 écrans).
+
+À vérifier :
+- Exploitation sans client : Produits › Ventes montre les produits ; « + » sur un produit, « Vente sans client »,
+  enregistrer.
+- Nouvelle vente › Client : taper deux lettres, choisir ; puis « Créer un nouveau client » avec une adresse (taper
+  « 12 rue de… ») et « Prévenir à la prochaine récolte ».
+- Produits › Récoltes : « 1 client à prévenir » › Prévenir › SMS ; puis « C'est fait ».
+- Saisir une récolte : choisir les ruches, 20 kg, Continuer, 10 pots de 500 g, enregistrer ; le lot apparaît dans Stock.
+- Mode avion : la fiche client propose encore les adresses de tes clients ; une récolte sans mise en pots se garde.
+- Ancienne version installée : clients et ventes comme avant.
+
 ## v5.65 · à publier en recette · d'autres produits que le miel
 **Migration 032 (ne casse pas l'ancienne version pour le miel, après 031).** Maquettes « Produits de la ruche » du
 18 nov. 2026 ; demande de Pierre-Louis : l'application doit pouvoir servir au plus grand nombre et ne pas parler que de
