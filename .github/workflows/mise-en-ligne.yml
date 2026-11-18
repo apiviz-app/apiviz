@@ -149,6 +149,18 @@ jobs:
             fi
           fi
           rm -f node_modules
+      # Applications Android / iOS (IT-30, AP-TECH-409) : paquet de mise à jour de chaque environnement, dans son
+      # dossier mobile/. Les applis installées le téléchargent à leur ouverture : plus besoin d'un nouvel APK, sauf
+      # changement natif (niveau « natif » de capacitor.config.json).
+      - name: Paquets des applications mobiles
+        run: |
+          # Chaque environnement avec les scripts et le niveau natif de sa propre version.
+          if [ -f /tmp/src-recette/scripts/paquet-mobile.sh ]; then sh /tmp/src-recette/scripts/paquet-mobile.sh _site/recette
+          else echo "::notice::Pas encore de paquet mobile dans la version en recette."; exit 0; fi
+          if [ "${{ inputs.cible }}" = production ] && [ -f /tmp/src-prod/scripts/paquet-mobile.sh ]; then
+            sh /tmp/src-prod/scripts/paquet-mobile.sh _site
+          fi
+          printf 'Applis mobiles : version %s prête pour les téléphones.\n' "$(python3 -c 'import json;print(json.load(open("_site/recette/mobile/version.json"))["version"])')" >> "$GITHUB_STEP_SUMMARY"
       # Cloudflare (IT-29) : la cible seule part sur son domaine, recette.apiviz.fr ou app.apiviz.fr (wrangler.jsonc).
       # Sans les secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID, l'étape est sautée et GitHub Pages publie seul.
       # Une erreur ici arrête la mise en ligne : rien n'est publié nulle part.

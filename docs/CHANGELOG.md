@@ -5,6 +5,41 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.63 · à publier en recette · l'appli se met à jour toute seule (IT-30, AP-TECH-409)
+**Aucune migration, aucune base touchée.** Demande de Pierre-Louis du 18 nov. 2026 : ne plus réinstaller d'APK à
+chaque changement.
+
+Pour l'apiculteur :
+1. **Mise à jour automatique de l'appli** : à chaque ouverture (avec réseau), l'appli regarde si « Mise en ligne » a
+   publié une nouvelle version. Si oui, elle la télécharge discrètement et affiche « Nouvelle version d'Apiviz prête :
+   elle s'appliquera à la prochaine ouverture ». Elle s'applique quand on ferme complètement l'appli puis la rouvre :
+   jamais pendant une saisie, ni en passant à l'appareil photo.
+2. **Filet de sécurité** : si une nouvelle version ne démarre pas, l'appli revient seule à la précédente au bout de
+   15 s et ne la retente pas.
+3. Si la nouveauté demande un nouvel APK (nouvelle permission, nouveau module natif), l'appli prévient une fois :
+   « Une nouvelle version de l'application est à installer ».
+4. **Une dernière installation à la main** : l'APK actuel (v5.60) n'a pas ce mécanisme. Installer une fois l'APK de
+   cette version ; ensuite, plus besoin.
+
+Technique :
+- Module `@capgo/capacitor-updater` 8.54.2, **en mode manuel et auto-hébergé** : aucun serveur Capgo, statistiques
+  coupées (`statsUrl` vide), aucun compte.
+- `scripts/embarquer-mobile.sh` (extrait de `preparer-mobile.sh`) : bibliothèques embarquées et `version-mobile.json`
+  (empreinte du contenu, même valeur dans l'APK et dans le paquet publié, et niveau natif).
+- `scripts/paquet-mobile.sh` : `mobile/<version>.zip` et `mobile/version.json` dans chaque environnement publié ;
+  étape « Paquets des applications mobiles » de « Mise en ligne », avec les scripts de la version publiée.
+- `mise-a-jour-appli.js` : ne fait rien dans le site. Dans l'appli : confirmation de démarrage, lecture native de
+  `version.json` (CapacitorHttp, le site étant sur une autre origine), téléchargement, application au lancement suivant
+  (`setMultiDelay` « kill »), ménage des anciens paquets.
+- Niveau natif : `plugins.CapacitorUpdater.version` dans `capacitor.config.json` (`natif-1`). **À augmenter à chaque
+  changement natif** (module, permission, réglage Android / iOS) : les applis plus anciennes demandent alors l'APK.
+
+À vérifier :
+- Installer l'APK de cette version (dernière fois à la main), l'ouvrir : aucun message (même version).
+- Publier une petite modification en recette, rouvrir l'appli : message « Nouvelle version prête ». Fermer
+  complètement l'appli, la rouvrir : la modification est là, saisies en attente comprises.
+- Site web (recette) : rien ne change.
+
 ## v5.62 · à publier en recette · échanges avec API, agenda en semaine, corrections de la fiche ruche
 **Migration 031 (additive, ne casse pas l'ancienne version, après 030).** Maquettes « Corrections et échanges avec API »
 validées par Pierre-Louis le 18 nov. 2026 (« Implémente le tout », flèches simples, zone pour écrire qui s'agrandit,
