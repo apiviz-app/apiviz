@@ -210,7 +210,8 @@ API répond en lecture seule aux questions sur les données de l'exploitation. M
 | Outils de lecture | `…/outils.js` | Instantané (colonies, dernières visites, tâches, miel en stock) envoyé avec chaque question, puis 12 lectures typées : visites, santé, reines, événements, récoltes, lots, ventes, clients, dépenses et budget, matériel, tâches, météo |
 | Règles | `…/regles.js` | Schéma de la réponse en quatre blocs, contrôle du format, retrait des références inventées et des recommandations sanitaires non sourcées ou chiffrées |
 | Consignes | `…/consignes.js` | Texte fixe envoyé au modèle (mis en cache) : rôle, quatre blocs, interdits sanitaires, raisonnement de saison |
-| Écran | `src/domaines/assistant/` | Champ dans la feuille du bouton API, écran `api` (conversation en mémoire), rendu des quatre blocs |
+| Écran | `src/domaines/assistant/` | Champ dans la feuille du bouton API (questions sur la ruche quand elle est ouverte depuis sa fiche), écran `api` : « Tes échanges » (historique, conseils pas encore faits, recherche) et la conversation, rendu des quatre blocs |
+| Historique | `api_echanges` (migration 031), `…/historique.js` | Chaque échange répondu est gardé par l'application (pas par la fonction, qui n'écrit rien), visible de son auteur seul ; sans la migration, la conversation reste en mémoire |
 | Compteur | `migrations/024-assistant-usage.sql` | Plafond de questions par personne et par jour |
 
 **Sécurité.** Chaque lecture passe par le jeton de l'utilisateur et l'en-tête `x-exploitation` : la RLS s'applique, API ne

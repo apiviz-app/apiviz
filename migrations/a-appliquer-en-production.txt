@@ -30,3 +30,6 @@
 # 030-fil-equipe.sql (PR claude/fil-courbes-saison, v5.61) : fil de l'équipe (table messages, prendre_demande).
 #   Additive. À appliquer sur apidoo-test (après 029) par la mise en ligne en recette, puis sur apidoo avec l'accord de
 #   Pierre-Louis.
+# 031-echanges-api.sql (PR claude/api-agenda-corrections, v5.62) : historique des échanges avec API (table
+#   api_echanges). Additive. À appliquer sur apidoo-test (après 030) par la mise en ligne en recette, puis sur apidoo
+#   avec l'accord de Pierre-Louis.

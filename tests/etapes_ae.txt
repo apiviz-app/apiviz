@@ -1,0 +1,139 @@
+    # v5.62 — Corrections et échanges avec API (maquettes du 18 nov. 2026) : historique des échanges (migration 031),
+    # conseils pas encore faits, recherche, effacer ; feuille d'API depuis une ruche ; plus d'alvéole par-dessus la
+    # feuille ; plus de balayage pour changer de ruche ; calendrier au toucher franc ; agenda en liste sur téléphone.
+    # Fonction serveur « assistant » simulée. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os, datetime
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    nom = {r["id"]: r["nom"] for r in DATA["ruches"]}
+    IA = {"recus": []}
+    def fonction_ia(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}
+        IA["recus"].append(corps)
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps({"actif": True, "plafond": 30, "restant": 30}))
+        return route.fulfill(status=200, headers=h, body=json.dumps({"reponse": {"resume": "Tout va bien.", "faits": [], "hypotheses": [],
+            "recommandations": [{"texte": "Pèse-la avant samedi. Donne du candy si elle est légère."}], "manques": []}, "restant": 29}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/assistant", fonction_ia)
+    effaces = []
+    page.on("request", lambda rq: effaces.append(rq.url) if rq.method == "DELETE" and "/api_echanges" in rq.url else None)
+
+    maint = datetime.datetime.now(datetime.timezone.utc)
+    il_y_a = lambda h: (maint - datetime.timedelta(hours=h)).isoformat()
+    C = [str(uuid.uuid4()) for _ in range(4)]
+    rep = lambda resume, *c: {"resume": resume, "faits": [], "hypotheses": [], "recommandations": [{"texte": x} for x in c], "manques": []}
+    DATA["api_echanges"] = [
+        {"id": str(uuid.uuid4()), "conversation_id": C[0], "ruche_id": R[4], "question": "Pourquoi Ruche 5 perd du poids ?", "reponse": rep("Elle mange ses réserves.", "Pèse Ruche 5 avant samedi. Donne du candy sous 30 kg.", "Recompte le varroa de Ruche 5."), "mode": "", "cout": None, "conseils_suivis": [], "created_at": il_y_a(1)},
+        {"id": str(uuid.uuid4()), "conversation_id": C[0], "ruche_id": None, "question": "Et Ruche 2 ?", "reponse": rep("Ruche 2 va bien."), "mode": "", "cout": None, "conseils_suivis": [], "created_at": il_y_a(0.9)},
+        {"id": str(uuid.uuid4()), "conversation_id": C[1], "ruche_id": None, "question": "Combien de pots pour Noël ?", "reponse": rep("Il te reste 29 pots."), "mode": "", "cout": None, "conseils_suivis": [], "created_at": il_y_a(50)},
+        {"id": str(uuid.uuid4()), "conversation_id": C[2], "ruche_id": None, "question": "Quand traiter contre le varroa ?", "reponse": rep("Après la dernière récolte."), "mode": "", "cout": None, "conseils_suivis": [], "created_at": il_y_a(80)},
+        {"id": str(uuid.uuid4()), "conversation_id": C[3], "ruche_id": None, "question": "Bilan de la récolte d'été", "reponse": rep("42 kg cet été."), "mode": "", "cout": None, "conseils_suivis": [], "created_at": il_y_a(24 * 40)},
+    ]
+    X0 = DATA["api_echanges"][0]["id"]
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Tes échanges : historique par rubrique, conseils pas encore faits, recherche.
+    page.evaluate("ACT.go('api')"); page.wait_for_selector(".as-hist button", timeout=6000)
+    verif(page.locator(".as-hist button").count() == 4, "4 conversations dans l'historique")
+    verif(page.locator(".as-periode").first.inner_text().lower().startswith("aujourd"), "la plus récente sous « Aujourd'hui »")
+    premier = page.locator(".as-hist button").first.inner_text()
+    verif("Pourquoi Ruche 5 perd du poids ?" in premier and "2 questions" in premier and "Ruche 5" in premier, f"titre, nombre de questions et ruche ({premier!r})")
+    verif(page.locator(".as-af").count() == 2 and "Pèse Ruche 5 avant samedi" in page.locator(".as-afaire").inner_text(), "les 2 conseils pas encore faits")
+    verif(page.locator(".as-sugg").count() == 0, "pas d'exemples de questions quand il y a un historique")
+    shot("ae-echanges-390")
+    page.fill("#asCherche", "varroa"); page.wait_for_timeout(200)
+    verif(page.locator(".as-hist button").count() == 2, "recherche « varroa » : la question et le conseil qui en parlent")
+    page.fill("#asCherche", "ete"); page.wait_for_timeout(200)
+    verif(page.locator(".as-hist button").count() == 1 and "récolte d'été" in page.locator(".as-hist button").inner_text(), "recherche sans accents (« ete » trouve « été »)")
+    page.fill("#asCherche", ""); page.wait_for_timeout(200)
+
+    # 2. Conseil → tâche : la feuille s'ouvre avec le titre, sur la ruche ; une fois enregistrée, le conseil est suivi.
+    page.click(".as-af [data-act=apiconseil]"); page.wait_for_selector("#sheet[open] [name=titre]")
+    verif(page.input_value("#sheetForm [name=titre]") == "Pèse Ruche 5 avant samedi" and page.input_value("#sheetForm [name=ruche_id]") == R[4], "tâche pré-remplie : titre du conseil, Ruche 5")
+    page.click("#sheetForm .btn.main"); page.wait_for_timeout(900)
+    t = [r for t_, u, rows in recu["upsert"] if t_ == "taches" for r in rows]
+    verif(len(t) == 1 and t[0]["titre"] == "Pèse Ruche 5 avant samedi", "tâche enregistrée")
+    pa = [c for t_, c in patchs if t_ == "api_echanges"]
+    verif(pa and pa[-1].get("conseils_suivis") == [0], f"conseil noté comme suivi ({pa[-1] if pa else None})")
+    page.wait_for_selector(".as-af"); verif(page.locator(".as-af").count() == 1, "il reste un conseil")
+    page.click(".as-af [data-act=apiecarter]"); page.wait_for_timeout(400)
+    pa = [c for t_, c in patchs if t_ == "api_echanges"]
+    verif(page.locator(".as-af").count() == 0 and pa[-1].get("conseils_suivis") == [0, 1], "écarter : le conseil disparaît")
+
+    # 3. Rouvrir une conversation, continuer, l'effacer.
+    page.click(".as-hist button >> nth=0"); page.wait_for_selector(".as-conv")
+    verif(page.locator(".as-ech").count() == 2 and "à propos de Ruche 5" in page.locator(".as-quand").inner_text(), "conversation rouverte, sur Ruche 5")
+    verif(page.locator(".as-form.as-bas #asTexte").count() == 1, "zone pour écrire en bas de la conversation")
+    page.fill("#asTexte", "Et quand la peser ?"); page.click(".as-form button[type=submit]"); page.wait_for_function("document.querySelectorAll('.as-resume').length === 3", timeout=8000)
+    verif(IA["recus"][-1]["question"] == "À propos de Ruche 5 : Et quand la peser ?" and IA["recus"][-1]["historique"][-1]["question"] == "Et Ruche 2 ?", "suite : la ruche est rappelée, l'historique de la conversation est envoyé")
+    page.wait_for_timeout(300)
+    g = [r for t_, u, rows in recu["upsert"] if t_ == "api_echanges" for r in rows]
+    verif(len(g) == 1 and g[0]["conversation_id"] == C[0] and g[0]["ruche_id"] == R[4], "la suite est gardée dans la même conversation")
+    verif(page.locator(".as-taches [data-act=apiconseil]").count() == 1, "le conseil de la réponse : « Créer la tâche »")
+    shot("ae-conversation-390")
+    page.click("[data-act=apieffacer]"); page.wait_for_selector("#sheet[open]"); page.click("#sheetForm .btn.main"); page.wait_for_timeout(600)
+    verif(any(f"conversation_id=eq.{C[0]}" in u for u in effaces) and page.locator(".as-accueil").count() == 1 and page.locator(".as-hist button").count() == 3, "conversation effacée")
+
+    # 4. Feuille d'API depuis une ruche : questions sur cette ruche ; pas de transition (plus d'alvéole par-dessus).
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.wait_for_timeout(700)
+    verif(page.evaluate("[...document.querySelectorAll('.u-gros-hex')].every((x) => !x.style.viewTransitionName)"), "après l'ouverture de la fiche, l'alvéole n'a plus de nom de transition")
+    page.evaluate("window._vt = 0; const o = document.startViewTransition && document.startViewTransition.bind(document); document.startViewTransition = (f) => { window._vt++; return o ? o(f) : (f(), {}); }; 0")
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-champ input", timeout=5000)
+    verif(page.evaluate("window._vt") == 0, "ouvrir la feuille d'API depuis une ruche : pas de transition")
+    verif(page.get_attribute("#asQ", "placeholder") == f"Question sur {nom[R[0]]}…" and page.locator(".as-qruche .as-puce").count() == 2, "feuille : champ et 2 questions sur la ruche")
+    shot("ae-feuille-ruche-390")
+    page.fill("#asQ", "Quand la visiter ?"); page.click("[data-act=apiposer]"); page.wait_for_selector(".as-resume", timeout=8000)
+    verif(IA["recus"][-1]["question"] == f"À propos de {nom[R[0]]} : Quand la visiter ?", f"question envoyée avec la ruche ({IA['recus'][-1]['question']})")
+    page.wait_for_timeout(300)
+    g = [r for t_, u, rows in recu["upsert"] if t_ == "api_echanges" for r in rows]
+    verif(g[-1]["ruche_id"] == R[0] and g[-1]["conversation_id"] != C[0] and g[-1]["question"] == "Quand la visiter ?", "gardée : nouvelle conversation, sur la ruche, question telle qu'écrite")
+
+    # 5. Fiche ruche : glisser ne change plus de ruche ; les flèches oui.
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.wait_for_timeout(700)
+    page.evaluate("""() => { const el = document.querySelector('.subtabs') || document.body;
+      const t = (x) => new Touch({ identifier: 1, target: el, clientX: x, clientY: 400 });
+      el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [t(300)], changedTouches: [t(300)] }));
+      el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [t(80)] })); }""")
+    page.wait_for_timeout(300)
+    verif(page.evaluate("S.ruche") == R[0], "balayage : on reste sur la même ruche")
+    page.click("[data-act=n4voisine] >> nth=1"); page.wait_for_timeout(500)
+    verif(page.evaluate("S.ruche") != R[0], "flèche : ruche suivante")
+
+    # 6. Calendrier : un doigt qui glisse sur le champ ne l'ouvre pas ; un toucher franc l'ouvre.
+    page.evaluate("ACT.newtache()"); page.wait_for_selector("#sheet[open] [name=echeance]")
+    toucher = """(dx) => { const c = document.querySelector('#sheetForm [name=echeance]'), r = c.getBoundingClientRect(), x = r.left + 20, y = r.top + 10;
+      const ev = (type, px, py) => c.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 7, isPrimary: true, clientX: px, clientY: py }));
+      ev('pointerdown', x, y); if (dx) ev('pointermove', x, y - dx); ev('pointerup', x, y - dx); }"""
+    page.evaluate(toucher, 40); page.wait_for_timeout(300)
+    verif(page.locator("#calDate[open]").count() == 0, "doigt qui fait défiler sur le champ : pas de calendrier")
+    page.evaluate(toucher, 0); page.wait_for_timeout(300)
+    verif(page.locator("#calDate[open]").count() == 1, "toucher franc : calendrier ouvert")
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
+    page.evaluate("$sheet.close()")
+
+    # 7. Agenda, vue Semaine sur téléphone : en liste, éléments en entier.
+    page.evaluate("ACT.go('agenda')"); page.wait_for_selector(".ag-page")
+    page.click("[data-cp=agvue][data-v=semaine]"); page.wait_for_selector(".ag-sliste")
+    verif(page.locator(".ag-bande .ag-bj").count() == 7 and page.locator(".ag-sliste > li").count() == 7, "bande des 7 jours et une ligne par jour")
+    verif(page.locator(".ag-grille").count() == 0 and not page.locator("#agJour").is_visible(), "plus de grille de 7 colonnes ni de jour répété")
+    pleins = page.locator(".ag-sj")
+    if pleins.count():
+        b = pleins.first.locator(".ag-ouvrir b").first
+        verif(b.evaluate("(e) => e.scrollWidth <= e.clientWidth + 1"), "titres écrits en entier")
+    shot("ae-agenda-semaine-390")
+    page.click("[data-cp=agvue][data-v=mois]"); page.wait_for_selector(".ag-grille")
+    verif(page.locator(".ag-sliste").count() == 0, "vue Mois : la grille revient")
+    page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_timeout(300)
+    page.click("[data-cp=agvue][data-v=semaine]"); page.wait_for_timeout(300)
+    verif(page.locator(".ag-grille.ag-semaine").count() == 1 and page.locator(".ag-sliste").count() == 0, "ordinateur : la semaine garde ses 7 colonnes")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

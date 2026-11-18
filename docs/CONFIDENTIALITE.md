@@ -24,6 +24,8 @@ Pour toute question ou demande : [à compléter : adresse e-mail de contact].
   de l'exploitation.
 - **Les messages du fil de l'équipe** : le texte, son auteur, le membre à qui il est adressé et la ruche éventuelle,
   visibles des seuls membres de l'exploitation. L'auteur peut supprimer ses messages.
+- **Vos échanges avec API** : vos questions et ses réponses, et la ruche dont vous parliez, visibles de vous seul
+  (pas des autres membres de l'exploitation).
 - **Le journal des suppressions et modifications** : l'ancienne valeur, l'auteur et la date, pour pouvoir réparer une
   erreur. Visible des seuls responsables de l'exploitation.
 - **Le journal des erreurs techniques** : version de l'application, écran, message d'erreur, sans adresse e-mail ni
@@ -100,7 +102,7 @@ données »).
 | Profil (nom, réponses facultatives) | Tant que le compte existe ; les réponses s'effacent à tout moment dans Mon profil |
 | Journal des suppressions et modifications | 1 an, puis effacement automatique |
 | Journal des erreurs techniques | 90 jours, puis effacement automatique |
-| Questions posées à API | Non conservées : seul le nombre de questions du jour est gardé, pour le plafond d'usage |
+| Questions posées à API | Gardées avec leurs réponses dans votre historique, visibles de vous seul, jusqu'à ce que vous les effaciez (écran API : une conversation ou tout l'historique) ; le nombre de questions du jour est aussi gardé, pour le plafond d'usage |
 | Commande en ligne (nom, téléphone, pots) | Tant que l'exploitation existe, comme ses ventes et ses clients |
 | Données sur votre appareil | Jusqu'à la déconnexion |
 

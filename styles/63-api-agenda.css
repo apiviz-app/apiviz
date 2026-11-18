@@ -1,0 +1,89 @@
+/* Apiviz — v5.62 (maquettes « Corrections et échanges avec API » du 18 nov. 2026) : écran API (tes échanges, une
+   conversation, zone pour écrire qui s'agrandit), feuille d'API depuis une ruche, agenda en liste sur téléphone,
+   sous-titre entier de la fiche ruche. Écrans : src/domaines/assistant/ecrans.js, agenda-mois.js. */
+
+/* ---------- Zone pour écrire à API ---------- */
+.as-form{flex-direction:column;align-items:stretch;gap:8px;padding:8px}
+.as-form:has(.as-modes){flex-wrap:nowrap}
+.as-saisie{display:flex;gap:8px;align-items:flex-end;padding:4px 4px 4px 16px;border:1.5px solid var(--honey);border-radius:var(--r-pill);background:var(--card)}
+.as-saisie textarea{flex:1;min-width:0;min-height:44px;max-height:50vh;padding:11px 0;border:0;resize:none;font:inherit;font-size:16px;line-height:1.38;background:transparent;color:var(--ink)}
+.as-form .as-envoyer{flex:none;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center}
+.as-form .as-envoyer span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.as-saisie textarea:focus,.as-saisie textarea:focus-visible{outline:none;box-shadow:none;border:0}
+.as-saisie:focus-within{box-shadow:0 0 0 3px var(--honeysoft)}
+.as-form.grand .as-saisie{border-radius:var(--r-l);padding:4px 4px 4px 14px}
+.as-form.grand textarea{min-height:clamp(140px,30vh,260px)}
+.as-form .as-modes{padding:0 4px}
+.as-accueil .as-form{position:static;box-shadow:none;background:transparent;padding:0}
+.as-conv{padding-bottom:150px}
+.as-form.as-bas{position:fixed;left:0;right:0;bottom:var(--as-bas,76px);z-index:20;margin:0;padding:10px 16px 12px;border-radius:0;border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(20,28,24,.06)}
+@media (min-width:801px){
+  .as-conv{padding-bottom:24px}
+  .as-form.as-bas{position:sticky;bottom:16px;left:auto;right:auto;border:1px solid var(--line);border-radius:var(--r-l)}
+}
+
+/* ---------- Tes échanges ---------- */
+.as-afaire{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:var(--r-l);background:var(--honeysoft)}
+.as-afaire h2{margin:0;font-size:17px;font-weight:700}
+.as-af{display:flex;align-items:center;gap:6px}
+.as-af > span{flex:1 1 0;min-width:0;font-size:15px;line-height:1.38}
+.as-af .btn{min-height:44px;flex:none;background:transparent;border-color:var(--pine)}
+.as-ecarter{flex:none;width:44px;height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.as-cherche{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r-m);background:var(--card);color:var(--muted)}
+.as-cherche input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:16px;color:var(--ink)}
+.as-groupe{display:flex;flex-direction:column;gap:8px}
+.as-liste{display:flex;flex-direction:column;gap:14px}
+.as-periode{margin:0;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.as-hist{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r-l)}
+.as-hist li + li{border-top:1px solid var(--line)}
+.as-hist button{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:12px 14px;border:0;background:transparent;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.as-h-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.as-h-t b{font-size:15px;overflow-wrap:anywhere}
+.as-hist .tag{flex:none;white-space:nowrap}
+.as-rien{margin:0}
+.as-note .link{min-height:36px}
+
+/* ---------- Une conversation ---------- */
+.as-retour{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:700;color:var(--ink)}
+.as-titre{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;line-height:1.15;letter-spacing:-.015em;overflow-wrap:anywhere}
+.as-quand{margin:-6px 0 0}
+.as-tete.mini{padding:10px 14px}
+.as-tete.mini p{font-size:15px;font-weight:500}
+.as-taches{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.as-taches .btn{justify-content:flex-start;text-align:left;min-height:44px;white-space:normal;background:var(--pine);border-color:var(--pine);color:#fff}
+.as-effacer{align-self:flex-start;min-height:44px;color:var(--muted)}
+
+/* ---------- Feuille d'API : depuis une ruche ---------- */
+.as-champ-bloc{display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
+.as-champ-bloc .as-champ{margin:0}
+.as-champ-bloc.sur-ruche{padding:12px;border-radius:var(--r-l);background:var(--honeysoft)}
+.as-qruche{display:flex;flex-wrap:wrap;gap:6px}
+.as-qruche .as-puce{min-height:36px}
+.as-vers{align-self:flex-start;min-height:36px;font-size:14px;font-weight:600}
+
+/* ---------- Agenda : la semaine en liste (téléphone) ---------- */
+.ag-bande{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:10px}
+.ag-bj{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;border:0;border-radius:var(--r-m);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.ag-bj small{font-size:13px;color:var(--muted)}
+.ag-bj b{font-size:18px;font-variant-numeric:tabular-nums}
+.ag-bpts{display:flex;gap:3px;min-height:6px}
+.ag-bpts i{width:6px;height:6px;border-radius:50%;background:var(--pine)}
+.ag-bj.auj{box-shadow:inset 0 0 0 2px var(--pine)}
+.ag-bj.choisi{background:var(--pine);color:#fff}
+.ag-bj.choisi small{color:#C5D0C8}
+.ag-bj.choisi .ag-bpts i{background:var(--honey)}
+.ag-sliste{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ag-sv{display:flex;gap:12px;align-items:center;min-height:40px;padding:0 4px;font-size:14px;color:var(--muted);scroll-margin-top:90px}
+.ag-sv span:first-child{width:64px;font-weight:600}
+.ag-sj{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-l);background:var(--card);scroll-margin-top:90px}
+.ag-sj.auj{border:2px solid var(--pine)}
+.ag-sj-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.ag-sj h3{margin:0;font-size:17px}
+.ag-sj-auj{padding:2px 8px;border-radius:var(--r-s);background:var(--honeysoft);color:#7D5200;font-size:13px;font-weight:600}
+.ag-sj .ag-ligne{padding:8px 0}
+.ag-sj .ag-ligne:first-of-type{border-top:0}
+.ag-sj .ag-ouvrir b{white-space:normal}
+.ag-page.ag-en-liste #agJour{display:none}
+
+/* ---------- Fiche ruche : le type de ruche en entier ---------- */
+.wrap>.head.g-tete:has(.n4-fleches) .sub{height:auto;white-space:normal;overflow:visible}
