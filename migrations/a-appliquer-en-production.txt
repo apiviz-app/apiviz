@@ -23,3 +23,6 @@
 # 028-assemblage-ruches.sql (PR claude/liste-et-assemblage-2, v5.58) : compositions des types de ruche, assemblage des
 #   ruches physiques avec les pièces du stock. Additive. À appliquer sur apidoo-test (après 027) par la mise en ligne
 #   en recette, puis sur apidoo avec l'accord de Pierre-Louis.
+# 029-fil-equipe.sql (PR claude/fil-courbes-saison, v5.59) : fil de l'équipe (table messages, prendre_demande).
+#   Additive. À appliquer sur apidoo-test (après 028) par la mise en ligne en recette, puis sur apidoo avec l'accord de
+#   Pierre-Louis.

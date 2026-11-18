@@ -74,7 +74,7 @@
     # Menu (v5.32) : volet par catégories à la place de Gestion
     page.click(".bottom button[data-v=menu]"); page.wait_for_selector("#nlVolet[open] .nl-entree")
     cats = page.locator("#nlVolet .nl-entree b").all_inner_texts()
-    verif(cats == ["Agenda", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "entrées du volet (v5.44) : %s" % cats)
+    verif(cats == ["Agenda", "Fil de l’équipe", "Ma saison", "Finances", "Matériel", "Registre et déclaration", "Réglages"], "entrées du volet (v5.44) : %s" % cats)
     shot("menu")
     page.click("#nlVolet [data-v=pilotage]"); page.wait_for_function("S.route === 'pilotage'")
     verif(not page.evaluate("document.getElementById('nlVolet').open"), "le volet se ferme après un choix")

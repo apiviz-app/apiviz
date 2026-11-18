@@ -6,7 +6,7 @@
         {"id": str(uuid.uuid4()), "titre": "Commander des pots", "echeance": auj.isoformat(), "faite": False, "ruche_id": None, "assigne": ""},
     ]
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    page.set_viewport_size({"width": 1280, "height": 640})
+    page.set_viewport_size({"width": 1280, "height": 560})  # v5.59 : le menu latéral défile vraiment à cette hauteur
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
 
     # 1. Menu latéral : il garde sa position d'un écran à l'autre ; Nouvelle visite en tête (API dans la barre du haut, v5.50).

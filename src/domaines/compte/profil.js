@@ -203,6 +203,8 @@ export function associes() {
   return R.associesMembres(st.noms || [], cfg());
 }
 export const moi = () => st.ligne || null;
+/** Membres de l'exploitation, pour le fil de l'équipe (v5.59) : [{ email, nom }] (prénom et nom, nom donné, ou début de l'e-mail). */
+export const membres = () => (st.noms || []).map((n) => ({ email: String(n.email || "").toLowerCase(), nom: R.nomMembre(n, cfg()) || String(n.email || "").split("@")[0] }));
 export const prenom = () => st.ligne?.prenom || String(memo(clePrenom()) || "").trim();
 export const nbPersonnes = () => (st.noms ? st.noms.length : 0) + R.sansCompte(cfg()).length;
 
@@ -312,5 +314,5 @@ export const actions = {
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),
 };
 
-if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, associes, moi, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
+if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, associes, moi, membres, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
 export { ecranProfil, completerMembres };
