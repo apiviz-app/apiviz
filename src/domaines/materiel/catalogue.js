@@ -163,7 +163,7 @@ export async function envoyerEcarts() {
 /** Produits du rucher : miel en vrac et pots de miel par format (lus dans les récoltes et les lots). */
 function produits() {
   const d = S.d, vrac = R.mielEnVrac(d), formats = new Map();
-  (d.lots || []).forEach((l) => formats.set(l.format_g, (formats.get(l.format_g) || 0) + Number(l.pots_restants ?? l.pots_initiaux)));
+  (d.lots || []).filter((l) => (l.categorie || "Miel") === "Miel").forEach((l) => formats.set(l.format_g, (formats.get(l.format_g) || 0) + Number(l.pots_restants ?? l.pots_initiaux)));
   if (!(d.recoltes || []).length && !formats.size) return "";
   const lignes = [
     (d.recoltes || []).length ? `<button type="button" class="u-todo st-art" data-act="go" data-v="miel"><span class="u-todo-t"><b>Miel en vrac</b><span class="small">Récolté, pas encore en pots</span></span><span class="st-q"><b>${e(n(Math.max(0, vrac)))} kg</b></span></button>` : "",

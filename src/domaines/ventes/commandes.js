@@ -45,7 +45,7 @@ export function ecran() {
   const pots = aPreparer.reduce((t, c) => t + T.potsCommande(c), 0);
   const carte = !b
     ? `<section class="cm-page"><span class="cm-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></svg></span>
-        <div class="cm-page-t"><b>Une page de commande pour tes clients</b><span class="small">Ils réservent leurs pots en ligne, tu les prépares et tu encaisses au retrait.</span></div>
+        <div class="cm-page-t"><b>Une page de commande pour tes clients</b><span class="small">Ils réservent en ligne, tu les prépares et tu encaisses au retrait.</span></div>
         ${ecrire ? '<button type="button" class="btn" data-act="cmcreer">Créer ma page</button>' : ""}</section>`
     : `<section class="cm-page${b.ouverte ? " ouverte" : ""}"><span class="cm-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></svg></span>
         <div class="cm-page-t"><b>${b.ouverte ? "Ta page de commande est ouverte" : "Ta page de commande est fermée"}</b>
@@ -60,7 +60,7 @@ export function ecran() {
         <a class="btn" href="${e(T.lienSms(c.telephone, T.messagePret(c, (typeof cfg == "function" && cfg().nom) || "")))}">Prévenir</a>
         <button type="button" class="btn" data-act="cmannuler" data-v="${e(c.id)}">Annuler</button></div>` : ""}</li>`;
   const fait = (c) => `<li class="cm-f"><span><b>${e(c.nom)}</b><span class="small">${e(T.detailCommande(c))}</span></span><span class="tag ${c.statut === "livree" ? "good" : ""}">${c.statut === "livree" ? "Livrée" : "Annulée"}</span></li>`;
-  shell("Commandes", aPreparer.length ? `${aPreparer.length} à préparer · ${pots} pot${pots > 1 ? "s" : ""} réservé${pots > 1 ? "s" : ""}` : "Rien à préparer", "",
+  shell("Commandes", aPreparer.length ? `${aPreparer.length} à préparer · ${pots} article${pots > 1 ? "s" : ""} réservé${pots > 1 ? "s" : ""}` : "Rien à préparer", "",
     `${s.erreur ? `<p class="notice">${e(s.erreur)}</p>` : ""}${carte}
     <h2 class="u-titre">À préparer</h2>
     ${aPreparer.length ? `<ul class="cm-liste">${aPreparer.map(ligne).join("")}</ul>` : `<p class="small">Aucune commande à préparer.${b?.ouverte ? "" : " Ouvre ta page de commande et partage son lien."}</p>`}
@@ -136,7 +136,7 @@ function annuler(id) {
   if (!c) return;
   sheet({
     title: "Annuler la commande ?",
-    intro: `${c.nom} · ${T.detailCommande(c)}. Les pots réservés redeviennent disponibles. Pense à prévenir le client.`,
+    intro: `${c.nom} · ${T.detailCommande(c)}. Ce qui était réservé redevient disponible. Pense à prévenir le client.`,
     fields: [],
     label: "Annuler la commande",
     submit: async () => {

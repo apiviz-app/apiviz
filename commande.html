@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#FBEFC9">
 <meta name="robots" content="noindex">
-<title>Commander du miel</title>
+<title>Commander</title>
 <link rel="icon" href="icone-apiviz.svg" type="image/svg+xml">
 <!-- Page publique de commande (v5.57, migration 027). Sans compte : elle ne lit que boutique_publique() et n'écrit que
      par passer_commande(), deux fonctions qui ne travaillent que sur l'exploitation du jeton « b ». Page lue par les
@@ -53,10 +53,10 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 </style>
 </head>
 <body>
-<header><div class="wrap"><p class="oeil" id="nom">Miel</p><h1 id="titre">Réservez vos pots</h1><p class="mot" id="mot"></p></div></header>
+<header><div class="wrap"><p class="oeil" id="nom">Commander</p><h1 id="titre">Réservez vos produits</h1><p class="mot" id="mot"></p></div></header>
 <main><div class="wrap" id="corps"><p class="etat" role="status">Chargement…</p></div></main>
 <div class="pied" id="pied" hidden><div class="wrap">
-  <div class="total"><span id="nb">Aucun pot</span><b id="somme">0 €</b></div>
+  <div class="total"><span id="nb">Rien de choisi</span><b id="somme">0 €</b></div>
   <button type="submit" form="f" class="go" id="go" disabled>Réserver</button>
   <p class="erreur" id="erreur" role="alert"></p>
   <p class="petit">Paiement au retrait · vos coordonnées ne servent qu’à cette commande · <a href="confidentialite.html">confidentialité</a></p>
@@ -86,24 +86,31 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
       $("m" + i).disabled = !q[i];
       $("p" + i).disabled = q[i] >= Math.min(20, p.disponibles);
     });
-    $("nb").textContent = nb ? nb + " pot" + (nb > 1 ? "s" : "") : "Aucun pot";
+    $("nb").textContent = nb ? nb + " article" + (nb > 1 ? "s" : "") : "Rien de choisi";
     $("somme").textContent = eur(total);
     $("go").disabled = !nb;
   }
 
+  // Libellé d'un produit : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.64, migration 032).
+  function libelle(p) {
+    var f = p.format_libelle || (p.format_g ? p.format_g + " g" : "");
+    return (p.miel || p.categorie || "") + (f ? " " + f : "");
+  }
+
   function afficher(b) {
     if (!b.ouverte) return etat("Les commandes sont fermées pour le moment. Revenez un peu plus tard, ou contactez directement votre apiculteur.");
-    document.title = "Commander du miel · " + (b.nom || "");
-    $("nom").textContent = b.nom || "Miel";
-    $("mot").textContent = b.message || "Choisissez vos pots, puis le lieu de retrait. Vous payez au retrait.";
+    document.title = "Commander · " + (b.nom || "");
+    $("nom").textContent = b.nom || "Commander";
+    $("mot").textContent = b.message || "Choisissez vos produits, puis le lieu de retrait. Vous payez au retrait.";
     produits = b.produits || [];
     q = produits.map(function () { return 0; });
-    if (!produits.length) return etat("Plus aucun pot disponible pour le moment. Revenez après la prochaine récolte.");
+    if (!produits.length) return etat("Plus rien de disponible pour le moment. Revenez un peu plus tard.");
     var html = produits.map(function (p, i) {
-      return '<div class="prod"><span class="alv" aria-hidden="true"></span><div class="prod-t"><b>' + esc(p.miel) + " " + p.format_g + " g</b><span>" + esc(eur(p.prix)) + " · encore " + p.disponibles + "</span></div>"
-        + '<div class="q"><button type="button" class="moins" id="m' + i + '" data-i="' + i + '" data-d="-1" aria-label="Un pot de ' + esc(p.miel) + " " + p.format_g + ' g de moins">−</button>'
+      var lib = libelle(p);
+      return '<div class="prod"><span class="alv" aria-hidden="true"></span><div class="prod-t"><b>' + esc(lib) + "</b><span>" + esc(eur(p.prix)) + " · encore " + p.disponibles + "</span></div>"
+        + '<div class="q"><button type="button" class="moins" id="m' + i + '" data-i="' + i + '" data-d="-1" aria-label="' + esc(lib) + ' : un de moins">−</button>'
         + '<output id="q' + i + '" aria-live="polite">0</output>'
-        + '<button type="button" class="plus" id="p' + i + '" data-i="' + i + '" data-d="1" aria-label="Un pot de ' + esc(p.miel) + " " + p.format_g + ' g de plus">+</button></div></div>';
+        + '<button type="button" class="plus" id="p' + i + '" data-i="' + i + '" data-d="1" aria-label="' + esc(lib) + ' : un de plus">+</button></div></div>';
     }).join("");
     var retraits = (b.retraits || []).map(function (r, i) {
       return '<label class="retrait"><input type="radio" name="retrait" value="' + esc(r.nom) + '"' + (i === 0 ? " checked" : "") + '><span><b>' + esc(r.nom) + "</b>" + (r.quand ? "<span>" + esc(r.quand) + "</span>" : "") + "</span></label>";
@@ -134,7 +141,7 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
     if (nom.length < 2) { err.textContent = "Indiquez votre nom."; return f.nom.focus(); }
     if (!/^[0-9+ .()-]{6,20}$/.test(tel)) { err.textContent = "Indiquez un numéro de téléphone valide."; return f.telephone.focus(); }
     var lignes = [];
-    produits.forEach(function (p, i) { if (q[i]) lignes.push({ miel: p.miel, format_g: p.format_g, prix: p.prix, quantite: q[i] }); });
+    produits.forEach(function (p, i) { if (q[i]) lignes.push({ categorie: p.categorie || "Miel", miel: p.miel, format_g: p.format_g, format_libelle: p.format_libelle || "", prix: p.prix, quantite: q[i] }); });
     var r = f.querySelector("input[name=retrait]:checked");
     $("go").disabled = true; $("go").textContent = "Envoi…";
     rpc("passer_commande", { p_jeton: jeton, p: { id: id, nom: nom, telephone: tel, retrait: r ? r.value : "", note: f.note.value.trim(), lignes: lignes } })
@@ -142,7 +149,7 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
         var total = produits.reduce(function (t, p, i) { return t + q[i] * p.prix; }, 0);
         $("pied").hidden = true;
         $("corps").innerHTML = '<div class="merci" role="status"><h2>Merci ' + esc(nom.split(/\s+/)[0]) + "</h2><p>Votre commande est enregistrée : "
-          + esc(lignes.map(function (l) { return l.quantite + " × " + l.miel + " " + l.format_g + " g"; }).join(", ")) + ", " + esc(eur(total)) + ".</p>"
+          + esc(lignes.map(function (l) { return l.quantite + " × " + libelle(l); }).join(", ")) + ", " + esc(eur(total)) + ".</p>"
           + (r ? "<p>Retrait : " + esc(r.value) + ".</p>" : "") + "<p>Vous serez prévenu par SMS quand elle sera prête. Paiement au retrait.</p></div>";
       })
       .catch(function (e) { err.textContent = e.message; $("go").disabled = false; $("go").textContent = "Réserver"; });

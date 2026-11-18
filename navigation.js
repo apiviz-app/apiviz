@@ -28,7 +28,7 @@ const NL = (() => {
   // le volet du téléphone (Accueil, Ruchers et Miel sont déjà dans la barre du bas).
   const CATEGORIES = [
     ["Au quotidien", [["dash", "Accueil"], ["agenda", "Agenda"], ["fil", "Fil de l’équipe"]]],
-    ["Ruchers et miel", [["ruches", "Ruchers"], ["clients", "Miel"], ["masaison", "Ma saison"]]],
+    ["Ruchers et produits", [["ruches", "Ruchers"], ["clients", "Produits"], ["masaison", "Ma saison"]]],
     ["Gestion", [["pilotage", "Finances"], ["materiel", "Matériel"], ["registre", "Registre et déclaration"]]],
     ["Compte", [["reglages", "Réglages"]]],
   ];
@@ -45,7 +45,7 @@ const NL = (() => {
   // Écrans de détail : l'entrée du menu qui reste allumée.
   const PARENT = { ruche: "ruches", rucher: "ruches", visite: "ruches", deplacer: "ruches", tournee: "ruches", meteo: "ruches",
     carte: "ruches", varroa: "ruches", visiteexpress: "ruches", etiquettesqr: "ruches",
-    miel: "clients", recolte: "clients", lot: "clients", miseenpots: "clients", ventes: "clients", vente: "clients", facture: "clients", caisse: "clients", commandes: "clients",
+    miel: "clients", recolte: "clients", lot: "clients", miseenpots: "clients", produit: "clients", ventes: "clients", vente: "clients", facture: "clients", caisse: "clients", commandes: "clients",
     compta: "pilotage", factures: "pilotage", achatfacture: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
     courses: "materiel", inventaire: "materiel", fournisseurs: "materiel", declaration: "registre",
     membres: "reglages", profil: "reglages", rappels: "reglages", synchronisation: "reglages",

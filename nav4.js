@@ -10,14 +10,14 @@ const N4 = (() => {
   ICON.plus = "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z";
   ICON.ventes = "M8 3h8M7 6h10l1 3v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9z";
   ICON.ruches = "M12 2l8.5 5v10L12 22l-8.5-5V7z";
-  BOTTOM.splice(0, BOTTOM.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["saisir", "Saisir"], ["ventes", "Miel"], ["plus", "Gestion"]);
+  BOTTOM.splice(0, BOTTOM.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["saisir", "Saisir"], ["ventes", "Produits"], ["plus", "Gestion"]);
   Object.assign(GROUP, { carte: "ruches", varroa: "ruches", recolte: "ruches", miel: "ventes", clients: "ventes", vente: "ventes",
     materiel: "plus", agenda: "plus", registre: "plus", declaration: "plus", activite: "plus", pilotage: "plus", compta: "plus",
     previsions: "plus", fournisseurs: "plus", reglages: "plus", membres: "plus" });
-  SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Miel"], null,
+  SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Produits"], null,
     ["agenda", "Agenda"], ["varroa", "Suivi varroa"], ["registre", "Registre"], ["declaration", "Déclaration"], null,
     ["pilotage", "Bilan"], ["compta", "Dépenses"], ["previsions", "Budget"], null, ["materiel", "Matériel"], ["fournisseurs", "Fournisseurs"], null, ["plus", "Gestion"]);
-  const TITRES = { pilotage: "Bilan", miel: "Miel", materiel: "Matériel" };
+  const TITRES = { pilotage: "Bilan", miel: "Produits", materiel: "Matériel" };
 
   // ---------- Coquille : titres, onglets Ruchers, badge Miel, avatar ----------
   // Crochets de la coquille (IT-03) : titres et sous-titres avant, onglets, retours, badge et avatar après.

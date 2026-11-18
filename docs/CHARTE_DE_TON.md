@@ -31,7 +31,7 @@ Exceptions actuelles (textes de documents émis) :
 | `registre.js` | « Gardez les ordonnances et factures des médicaments… » | mention imprimée sur le registre |
 | `ux.js` | « …merci pour votre achat du… » | reçu envoyé au client |
 | `ux.js` | « Votre miel · … » | objet de l'e-mail envoyé au client |
-| `terrain-regles.js` | « …votre commande de miel… » | SMS envoyé au client quand sa commande en ligne est prête (v5.57) |
+| `terrain-regles.js` | « …votre commande (…) est prête… » | SMS envoyé au client quand sa commande en ligne est prête (v5.57) |
 | `commandes.js` | « Réservez votre miel en ligne : » | texte du lien de la page de commande, partagé aux clients (v5.57) |
 | `commande.html` | toute la page | page de commande publique, lue par les clients (v5.57) |
 

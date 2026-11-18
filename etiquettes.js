@@ -55,6 +55,6 @@ const ET = (() => {
     });
   };
 
-  const bouton = (lot) => `<button class="btn sm" data-act="etiq" data-v="${lot.id}">Étiquettes</button>`;
+  const bouton = (lot) => (Regles.produits.estMiel(lot) ? `<button class="btn sm" data-act="etiq" data-v="${lot.id}">Étiquettes</button>` : "");
   return { bouton, etiquette };
 })();

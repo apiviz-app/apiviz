@@ -7,7 +7,7 @@ const UX = (() => {
   ICON.saisir = "M12 5v14M5 12h14";
   ICON.ventes = ICON.miel;
   ICON.carte = "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14";
-  BOTTOM.splice(0, BOTTOM.length, ["dash", "Accueil"], ["ruches", "Ruches"], ["saisir", "Saisir"], ["ventes", "Miel"], ["plus", "Plus"]);
+  BOTTOM.splice(0, BOTTOM.length, ["dash", "Accueil"], ["ruches", "Ruches"], ["saisir", "Saisir"], ["ventes", "Produits"], ["plus", "Plus"]);
   Object.assign(GROUP, { clients: "ventes", vente: "ventes", miel: "ventes", materiel: "ventes", pilotage: "plus", agenda: "plus", carte: "ruches" });
   const iR = SIDE.findIndex((x) => x && x[0] === "ruches");
   SIDE.splice(iR + 1, 0, ["carte", "Carte"]);
@@ -97,7 +97,7 @@ const UX = (() => {
   let toutVoir = false, filtreTodo = "tout";
   ACT.utout = () => { toutVoir = !toutVoir; redessiner("dash"); };
   ACT.utfiltre = (v) => { filtreTodo = v; toutVoir = false; redessiner("dash"); };
-  const CATS = [["ruches", "Ruches"], ["miel", "Miel"], ["stock", "Stock"], ["agenda", "Agenda"]];
+  const CATS = [["ruches", "Ruches"], ["miel", "Produits"], ["stock", "Stock"], ["agenda", "Agenda"]];
   const categorie = (cible) => (cible.startsWith("ruche:") ? "ruches" : ["clients", "livrer", "miel"].includes(cible) ? "miel" : cible === "materiel" ? "stock" : "agenda");
   function viewDash() {
     const d = S.d, c = cfg(), s = stock(), an = new Date().getFullYear(), f = fin(an);
@@ -337,7 +337,8 @@ const UX = (() => {
   function enteteMiel(actif) {
     const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
     const tuile = (act, v, nb, lab, on, ton = "") => `<button type="button" class="u-tuile ${on ? "on " + ton : ""}" aria-pressed="${on}" data-act="${act}" data-v="${v}"><b>${esc(nb)}</b><span>${lab}</span></button>`;
-    return `<div class="u-tuiles">${tuile("uonglet", "stock", String(stock().pots), "pots en stock", actif === "stock")}
+    const st = stock(); // v5.64 : les autres produits comptent aussi (bouteilles, bougies…).
+    return `<div class="u-tuiles">${tuile("uonglet", "stock", String(st.pots + (st.autres || 0)), st.autres ? "en stock" : "pots en stock", actif === "stock")}
       ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
       ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>
       ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock et récoltes"]], actif, "uonglet")}`;
@@ -345,7 +346,7 @@ const UX = (() => {
   const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);
   function carteVente(v) {
     const d = S.d, c = byId(d.clients, v.client_id);
-    const pots = d.lignes.filter((x) => x.vente_id === v.id).map((x) => `${x.quantite} × ${n(byId(d.lots, x.lot_id)?.format_g, 0)} g`).join(", ");
+    const pots = d.lignes.filter((x) => x.vente_id === v.id).map((x) => `${x.quantite} × ${Regles.produits.estMiel(byId(d.lots, x.lot_id)) ? Regles.produits.formatLot(byId(d.lots, x.lot_id)) : Regles.produits.libelleLot(byId(d.lots, x.lot_id))}`).join(", ");
     const statut = v.paye ? `<span class="u-chip good">payée${v.mode ? " · " + esc(v.mode.toLowerCase()) : ""}</span>` : '<span class="u-chip watch">à encaisser</span>';
     const actions = v.paye
       ? `<button type="button" class="btn" data-act="urecu" data-v="${v.id}">Envoyer le reçu</button><button type="button" class="btn" data-act="uvente" data-v="${v.id}">Détails</button>`
@@ -357,7 +358,7 @@ const UX = (() => {
   }
   function viewClients() {
     const d = S.d;
-    if (!d.clients.length) return shell("Miel", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
+    if (!d.clients.length) return shell("Produits", "", "", emptyState("Ajoute ton premier client", "Famille, amis, collègues : retrouve qui a acheté quoi.", "Ajouter un client", "newclient"));
     const impayees = d.ventes.filter((v) => !v.paye);
     const du = sum(impayees, venteTotal);
     let corps = "";
@@ -377,14 +378,14 @@ const UX = (() => {
           <span class="u-vente-m"><b>${esc(eur(sum(vs, venteTotal)))}</b>${c.telephone ? `<a class="small" href="tel:${esc(c.telephone)}">Appeler</a>` : ""}</span></article>`;
       }).join("");
     }
-    shell("Miel", "",
+    shell("Produits", "",
       onglet === "clients" ? '<button class="btn main" data-act="newclient">Ajouter un client</button>' : '<button class="btn main" data-act="newvente">Nouvelle vente</button>',
       `${enteteMiel(onglet === "clients" ? "clients" : "ventes")}${corps}`);
   }
   function potsAVendre() {
     const lots = S.d.lots.filter((l) => l.pots_restants > 0);
     if (!lots.length) return "";
-    return `<section class="card"><div class="u-entete"><h2>Pots à vendre</h2><button type="button" class="link" data-act="go" data-v="miel">Stock</button></div>${lots.map((l) => `<div class="u-lot"><span>${n(l.format_g, 0)} g · lot ${esc(l.code)}</span><b>${pluriel(l.pots_restants, "pot")} · ${esc(eur(l.prix))}</b></div>
+    return `<section class="card"><div class="u-entete"><h2>À vendre</h2><button type="button" class="link" data-act="go" data-v="miel">Stock</button></div>${lots.map((l) => `<div class="u-lot"><span>${esc(Regles.produits.estMiel(l) ? Regles.produits.formatLot(l) : Regles.produits.libelleLot(l))} · lot ${esc(l.code)}</span><b>${esc(Regles.produits.quantiteLot(l, l.pots_restants))} · ${esc(eur(l.prix))}</b></div>
       <div class="track"><i style="width:${Math.round(l.pots_restants / Math.max(1, l.pots_initiaux) * 100)}%"></i></div>`).join("")}</section>`;
   }
   ACT.urelancer = () => {
@@ -395,7 +396,7 @@ const UX = (() => {
   };
   ACT.uvente = (id) => {
     const d = S.d, v = byId(d.ventes, id), c = byId(d.clients, v.client_id);
-    const lignes = d.lignes.filter((x) => x.vente_id === id).map((x) => { const l = byId(d.lots, x.lot_id); return `<div class="u-lot"><span>${x.quantite} × ${n(l?.format_g, 0)} g · lot ${esc(l?.code || "?")}</span><b>${esc(eur(x.quantite * x.prix_unitaire))}</b></div>`; }).join("");
+    const lignes = d.lignes.filter((x) => x.vente_id === id).map((x) => { const l = byId(d.lots, x.lot_id); return `<div class="u-lot"><span>${x.quantite} × ${esc(l && !Regles.produits.estMiel(l) ? Regles.produits.libelleLot(l) : n(l?.format_g, 0) + " g")} · lot ${esc(l?.code || "?")}</span><b>${esc(eur(x.quantite * x.prix_unitaire))}</b></div>`; }).join("");
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<h2>${esc(c?.nom || "Vente")}</h2><p class="small">Vente du ${esc(dfr(v.date_vente))}${v.auteur ? " · " + esc(qui(v.auteur)) : ""}</p>
       ${lignes}<div class="u-lot u-total"><span>Total</span><b>${esc(eur(venteTotal(v)))}</b></div>
@@ -417,7 +418,7 @@ const UX = (() => {
   const ou = (l) => (l.length > 1 ? l.slice(0, -1).join(", ") + " ou " + l[l.length - 1] : l.join(""));
   function texteMessage(v, mode) {
     const d = S.d, c = byId(d.clients, v.client_id), cf = cfg();
-    const detail = ou(d.lignes.filter((x) => x.vente_id === v.id).map((x) => `${x.quantite} pot${x.quantite > 1 ? "s" : ""} de ${n(byId(d.lots, x.lot_id)?.format_g, 0)} g`)).replace(/ ou ([^,]*)$/, " et $1");
+    const detail = ou(d.lignes.filter((x) => x.vente_id === v.id).map((x) => { const l = byId(d.lots, x.lot_id); return l && !Regles.produits.estMiel(l) ? `${Regles.produits.quantiteLot(l, x.quantite)} de ${Regles.produits.libelleLot(l)}` : `${x.quantite} pot${x.quantite > 1 ? "s" : ""} de ${n(l?.format_g, 0)} g`; })).replace(/ ou ([^,]*)$/, " et $1");
     const date = new Date(v.date_vente + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
     const nom = String(c?.nom || "").trim();
     if (mode === "recu") return `Bonjour ${nom}, merci pour votre achat du ${date} : ${detail}, soit ${eur(venteTotal(v))}${v.paye ? ", réglé" + (v.mode && v.mode !== "Autre" ? " en " + v.mode.toLowerCase() : "") : ""}. Bonne dégustation !\n${cf.nom}`;

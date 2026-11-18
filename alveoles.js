@@ -26,7 +26,7 @@ const AL = (() => {
   // ---------- Navigation ----------
   const central = BOTTOM.find(([k]) => k === "saisir");
   if (central) central[1] = "API";
-  SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Miel"], ["plus", "Gestion"], ["saisir", "API"]);
+  SIDE.splice(0, SIDE.length, ["dash", "Accueil"], ["ruches", "Ruchers"], ["ventes", "Produits"], ["plus", "Gestion"], ["saisir", "API"]);
   Object.assign(GROUP, { agenda: "dash", activite: "dash", registre: "plus", declaration: "plus", rucher: "ruches" });
 
   const ruchesDe = (k) => (U.ruchers().find(([c]) => c === k) || [k, []])[1];
@@ -126,13 +126,13 @@ const AL = (() => {
     const d = S.d, s = stock(), an = new Date().getFullYear(), f = fin(an), nb = (e) => d.ruches.filter((r) => r.etat === e).length;
     const bien = nb("Bonne"), crit = nb("Critique"), surv = d.ruches.length - bien - crit;
     const etats = [[bien, "en forme"], [surv, "à surveiller"], [crit, "critique"]].filter(([c]) => c).map(([c, m]) => `${c} ${m}`).join(", ");
-    const formats = [...d.lots.reduce((m, l) => (l.pots_restants > 0 ? m.set(l.format_g, (m.get(l.format_g) || 0) + l.pots_restants) : m), new Map())]
+    const formats = [...d.lots.reduce((m, l) => (l.pots_restants > 0 && Regles.produits.estMiel(l) ? m.set(l.format_g, (m.get(l.format_g) || 0) + l.pots_restants) : m), new Map())]
       .sort((a, b) => a[0] - b[0]).map(([g, p]) => `${p} de ${g} g`).join(", ");
     const impayees = d.ventes.filter((v) => !v.paye && new Date(v.date_vente).getFullYear() === an).length, bilan = f.resultat;
     const tuile = (act, v, lab, val, cl, sous) => `<button type="button" class="ab-chiffre" data-act="${act}" data-v="${v}"><span class="small">${lab}</span><b class="${cl}">${esc(val)}</b>${sous}</button>`;
     return `<section class="ab-chiffres" aria-label="Chiffres clés">
       ${tuile("go", "ruches", "Ruches", String(d.ruches.length), "", `<span class="ab-minis" aria-hidden="true">${d.ruches.map(miniHex).join("")}</span><span class="small">${esc(etats)}</span>`)}
-      ${tuile("go", "miel", "Pots en stock", String(s.pots), "", `<span class="small">${esc(formats || "Aucun pot pour le moment")}</span>`)}
+      ${tuile("go", "miel", "Pots en stock", String(s.pots), "", `<span class="small">${esc([formats, s.autres ? `${s.autres} autre${s.autres > 1 ? "s" : ""} produit${s.autres > 1 ? "s" : ""}` : ""].filter(Boolean).join(", ") || "Aucun pot pour le moment")}</span>`)}
       ${tuile("uafiltre", "", "À encaisser", eur0(f.aEncaisser), f.aEncaisser > 0 ? "watch" : "", `<span class="small">${impayees ? U.pluriel(impayees, "vente") : "Tout est encaissé"}</span>`)}
       ${tuile("go", "pilotage", `Bilan ${an}`, `${bilan > 0 ? "+" : ""}${eur0(bilan)}`, bilan > 0 ? "good" : "", '<span class="small">Ventes moins dépenses</span>')}
     </section>`;
@@ -330,7 +330,7 @@ const AL = (() => {
   }
   function potsParFormat() {
     const f = new Map();
-    S.d.lots.forEach((l) => {
+    S.d.lots.filter(Regles.produits.estMiel).forEach((l) => {
       const x = f.get(l.format_g) || { g: l.format_g, reste: 0, total: 0, prix: l.prix };
       x.reste += Number(l.pots_restants); x.total += Number(l.pots_initiaux || l.pots_restants); f.set(l.format_g, x);
     });

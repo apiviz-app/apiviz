@@ -46,7 +46,7 @@ test("commandes : lien, rangement, détail, message, retraits", () => {
   const c = { nom: "Marie Le Goff", retrait: "Samedi matin", lignes: [{ miel: "Printemps", format_g: 500, quantite: 2 }, { miel: "Été", format_g: 250, quantite: 1 }] };
   assert.equal(T.detailCommande(c), "2 × Printemps 500 g · 1 × Été 250 g");
   assert.equal(T.potsCommande(c), 3);
-  assert.equal(T.messagePret(c, "Bee's Brothers"), "Bonjour Marie, votre commande de miel (2 × Printemps 500 g · 1 × Été 250 g) est prête : retrait Samedi matin. À bientôt, Bee's Brothers.");
+  assert.equal(T.messagePret(c, "Bee's Brothers"), "Bonjour Marie, votre commande (2 × Printemps 500 g · 1 × Été 250 g) est prête : retrait Samedi matin. À bientôt, Bee's Brothers.");
   assert.equal(T.lienSms("06 12 34 56 78", "a b"), "sms:0612345678?body=a%20b");
   const rs = T.lireRetraits("Chez Pierre-Louis : samedi matin\nAu marché\n\n");
   assert.deepEqual(rs, [{ nom: "Chez Pierre-Louis", quand: "samedi matin" }, { nom: "Au marché", quand: "" }]);

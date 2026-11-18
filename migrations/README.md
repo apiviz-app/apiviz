@@ -5,7 +5,7 @@
 Point d'entrée unique : `000-structure-au-3-nov-2026.sql`, puis les migrations **dans cet ordre** :
 
 ```
-000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013 → 014 → 015 → 016 → 017 → 018 → 019 → 020 → 021 → 022 → 023 → 024 → 025 → 026 → 027 → 028 → 029 → 030 → 031
+000 → 004 → 005 → 006 → 007 → 009 → 008 → 010 → 011 → 012 → 013 → 014 → 015 → 016 → 017 → 018 → 019 → 020 → 021 → 022 → 023 → 024 → 025 → 026 → 027 → 028 → 029 → 030 → 031 → 032
 ```
 
 - **009 avant 008** : c'est l'ordre réel des deux bases, et il est obligatoire. 008 ajoute `exploitation_id` à
@@ -66,6 +66,7 @@ structure obtenue au relevé (tables, colonnes, vue, fonctions, politiques, espa
 | 029-offres-gouttes.sql | `offres`, `abonnements`, `gouttes_mouvements`, `administrateurs_apiviz` ; offres et gouttes d'API au coût réel (IT-27, v5.59) |
 | 030-fil-equipe.sql | `messages` (fil de l'équipe : notes, demandes @Prénom, réponses ; RLS par exploitation, ajout et suppression par l'auteur seulement, audit) ; `prendre_demande(p_id, p)` crée la tâche d'une demande et la marque prise (idempotente). Additive, ne casse pas l'ancienne version (v5.59) | à appliquer (mise en ligne en recette) | en attente (accord de Pierre-Louis) |
 | 031-echanges-api.sql | `api_echanges` (historique des échanges avec API : question, réponse, conversation, ruche, conseils suivis ; RLS par exploitation ET par auteur, sans audit pour qu'un effacement soit réel). Additive, ne casse pas l'ancienne version (v5.62) | à appliquer (mise en ligne en recette) | en attente (accord de Pierre-Louis) |
+| 032-produits.sql | Produits de la ruche : `lots.categorie` (Miel par défaut), `unite`, `format_libelle`, `seuil` ; `format_g` facultatif sauf pour le miel ; `lots_stock` avec ces colonnes ; `creer_produit(p)` ; commandes en ligne par catégorie, nom, format et prix (anciennes commandes livrables). Ne casse pas l'ancienne version pour le miel (v5.64) | à appliquer (mise en ligne en recette) | en attente (accord de Pierre-Louis) |
 
 En attente pour la production : **020** (après la recette, avec l'accord de Pierre-Louis). Le 12 nov. 2026, avec l'accord de Pierre-Louis, 017, 018 et 019 ont été appliquées sur `apidoo` une par une, l'empreinte de structure vérifiée identique au rejeu des fichiers après chacune ; données inchangées (6 ruches, 3 articles, stock 257, 3 dépenses).
 `select * from public.incoherences_exploitation();` **après** la migration (ou la requête équivalente avant) : une ligne
@@ -90,6 +91,7 @@ les contrôles de structure ; « Vérifier » les lance dans un job à part (« 
 | `test_029.mjs` | Relance de 029, catalogue lisible et non modifiable, Découverte sans abonnement, débit au centième (forfait puis recharge, dernière réponse servie sous zéro), quantité négative ou nulle refusée, gouttes partagées et détail par membre, autre exploitation isolée, essai unique par un responsable, résiliation, équipe Apiviz seule à poser une offre ou créditer, échéance, nouveau mois |
 | `test_030.mjs` | Relance de 030, fil de l'équipe : table `messages` (RLS par exploitation, auteur seul pour modifier ou supprimer), `prendre_demande` (tâche créée une seule fois) |
 | `test_031.mjs` | Relance de 031, historique des échanges avec API : chacun ne voit, modifie et efface que les siens ; autre exploitation et anonyme : rien |
+| `test_032.mjs` | Relance de 032 : miel existant intact, création d'un produit (contrôles, droits, relance hors ligne), vente miel + hydromel, page de commande avec les deux, livraison, ancienne commande encore livrable |
 | `test_015.mjs` | Relance de 015, reprise sur un jeu varié (casse, espaces, vide), renommage d'un rucher de 8 colonies, écriture de l'ancienne version par le texte, archivage, position, `creer_rucher` et `placer_rucher` (idempotence, lecteur refusé), rattachement croisé refusé |
 | `test_demo.mjs` | Chargement de l'exploitation de démonstration par les mêmes opérations que `scripts/demo.mjs` |
 | `test_012.mjs`, `test_013.mjs`, `test_donnees_essai.mjs` | Migrations 012 et 013, scripts d'essai de `tests/production` |

@@ -373,7 +373,7 @@ const ES = (() => {
     const etape = (t, g, s) => `<div class="er-etape"><span class="small">${t}</span><b>${esc(g)}</b><span class="small">${esc(s)}</span></div>`;
     const ctl = [["Dénomination, poids net, origine", l.miel && l.format_g && c.origine !== ""], ["DDM et numéro de lot", l.ddm && l.code], ["Adresse de l’exploitation", c.adresse]];
     const clients = [...parClient.values()], mails = clients.map((x) => x.c?.email).filter(Boolean);
-    shell(`Lot ${l.code}`, `${l.miel}, ${n(l.format_g, 0)} g, ${c.origine || "France"}`, `<button type="button" class="btn" data-act="editlot" data-v="${l.id}">Modifier</button><button type="button" class="btn main" data-act="etiq" data-v="${l.id}">Imprimer les étiquettes</button>${mails.length ? `<a class="btn u-lienbtn" href="mailto:?bcc=${encodeURIComponent(mails.join(","))}&amp;subject=${encodeURIComponent("Lot de miel " + l.code)}">Prévenir les clients du lot</a>` : ""}`,
+    shell(`Lot ${l.code}`, Regles.produits.estMiel(l) ? `${l.miel}, ${n(l.format_g, 0)} g, ${c.origine || "France"}` : `${Regles.produits.libelleLot(l)}, ${Regles.produits.categorieDe(l).toLowerCase()}`, `<button type="button" class="btn" data-act="editlot" data-v="${l.id}">Modifier</button>${Regles.produits.estMiel(l) ? `<button type="button" class="btn main" data-act="etiq" data-v="${l.id}">Imprimer les étiquettes</button>` : ""}${mails.length ? `<a class="btn u-lienbtn" href="mailto:?bcc=${encodeURIComponent(mails.join(","))}&amp;subject=${encodeURIComponent("Lot de miel " + l.code)}">Prévenir les clients du lot</a>` : ""}`,
       `<section class="er-fil" aria-label="Du rucher au client">
         ${etape("Récolte", recoltes.length ? `${n(kg)} kg` : "Non reliée", recoltes.length ? dfr(debut) : "Lot sans extraction")}
         ${etape("Ruches d’origine", ruches.length ? ruches.join(", ") : "Toutes", soins.length ? U.pluriel(soins.length, "traitement") + " la même année" : "Aucun traitement noté")}
@@ -382,7 +382,7 @@ const ES = (() => {
       </section>
       <div class="er-deux2"><section class="card u-liste"><h2>Clients de ce lot</h2>${clients.map((x) => `<button type="button" class="u-todo" ${x.c ? `data-act="editclient" data-v="${x.c.id}"` : "disabled"}><span class="u-todo-t"><b>${esc(x.c?.nom || "?")}</b><span class="small">${esc(U.quand(x.date))}</span></span><b>${esc(U.pluriel(x.q, "pot"))}</b></button>`).join("") || '<p class="small">Aucune vente pour ce lot.</p>'}</section>
       <section class="card u-liste"><h2>Étiquette du lot</h2>${ctl.map(([t, ok]) => `<div class="er-rang"><span class="u-todo-t"><b>${t}</b></span><span class="u-chip ${ok ? "good" : "watch"}">${ok ? "Complet" : "À renseigner"}</span></div>`).join("")}</section></div>`);
-    retour("go", "miel", "Miel");
+    retour("go", "miel", "Produits");
     phrase(`Lot ${l.code} : ${U.pluriel(l.pots_restants ?? l.pots_initiaux - vendus, "pot")} en stock, ${vendus} vendu${vendus > 1 ? "s" : ""}.`);
   };
 
@@ -408,7 +408,7 @@ const ES = (() => {
     const d = S.d, v = byId(d.ventes, S.factId), c = cfg();
     if (!v?.facture_num) { S.route = "clients"; return render(); }
     const cl = byId(d.clients, v.client_id), l = d.lignes.filter((x) => x.vente_id === v.id), a = (x, t) => (x ? esc(x) : `<span class="er-manque">[${t}]</span>`);
-    const lignes = l.map((x) => { const lot = byId(d.lots, x.lot_id); return `<tr><td>Miel ${esc(lot?.miel?.toLowerCase() || "")}, ${n(lot?.format_g, 0)} g</td><td>${esc(lot?.code || "–")}</td><td class="m">${x.quantite}</td><td class="m">${esc(eur(x.prix_unitaire))}</td><td class="m">${esc(eur(x.quantite * x.prix_unitaire))}</td></tr>`; }).join("");
+    const lignes = l.map((x) => { const lot = byId(d.lots, x.lot_id); return `<tr><td>${lot && !Regles.produits.estMiel(lot) ? esc(Regles.produits.libelleLot(lot)) : `Miel ${esc(lot?.miel?.toLowerCase() || "")}, ${n(lot?.format_g, 0)} g`}</td><td>${esc(lot?.code || "–")}</td><td class="m">${x.quantite}</td><td class="m">${esc(eur(x.prix_unitaire))}</td><td class="m">${esc(eur(x.quantite * x.prix_unitaire))}</td></tr>`; }).join("");
     const mail = cl?.email ? `<a class="btn u-lienbtn" href="mailto:${esc(cl.email)}?subject=${encodeURIComponent(`Facture ${numero(v)}`)}&amp;body=${encodeURIComponent(`Bonjour,\n\nVoici la facture ${numero(v)} de ${eur(venteTotal(v))}.\n\n${c.nom}`)}">Écrire au client</a>` : "";
     shell(`Facture ${numero(v)}`, `${cl?.nom || "Client"}, ${v.paye ? "payée" : "à encaisser"}`, `<button type="button" class="btn" data-act="uvente" data-v="${v.id}">Voir la vente</button>${mail}<button type="button" class="btn main" data-act="erimprimer">Imprimer ou PDF</button>`,
       `<article class="er-feuille" aria-label="Facture">

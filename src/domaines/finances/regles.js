@@ -1,18 +1,24 @@
 // Apiviz — règles financières (IT-03, AP-FEAT-013). Fonctions pures, reprises d'app.js (fin, rythme, stock).
 // `d` a la forme de S.d : { ventes, lignes, depenses, recoltes, lots }. `maintenant` permet de tester une date fixe.
 import { sum, byId, yr, mo } from "../../noyau/format.js";
+import { lotsMiel, estMiel } from "../production/produits.js";
 
 /** Montant d'une vente : somme quantité × prix de ses lignes. */
 export const venteTotal = (d, vente) =>
   sum(d.lignes.filter((ligne) => ligne.vente_id === vente.id), (ligne) => ligne.quantite * ligne.prix_unitaire);
 
-/** Miel en stock : pots, kilos restants, kilos mis en pots, valeur à vendre. */
+/**
+ * Stock : pots de miel, kilos restants, kilos mis en pots (miel seulement, v5.64) ; autres produits en stock ; valeur à
+ * vendre de tous les produits.
+ */
 export function stock(d) {
+  const miel = lotsMiel(d.lots), autres = (d.lots || []).filter((lot) => !estMiel(lot));
   return {
-    pots: sum(d.lots, (lot) => lot.pots_restants),
-    kg: sum(d.lots, (lot) => (lot.pots_restants * lot.format_g) / 1e3),
-    kgPots: sum(d.lots, (lot) => (lot.pots_initiaux * lot.format_g) / 1e3),
-    valeur: sum(d.lots, (lot) => lot.pots_restants * lot.prix),
+    pots: sum(miel, (lot) => lot.pots_restants),
+    kg: sum(miel, (lot) => (lot.pots_restants * lot.format_g) / 1e3),
+    kgPots: sum(miel, (lot) => (lot.pots_initiaux * lot.format_g) / 1e3),
+    autres: sum(autres, (lot) => Math.max(0, Number(lot.pots_restants) || 0)),
+    valeur: sum(d.lots || [], (lot) => lot.pots_restants * lot.prix),
   };
 }
 
@@ -32,7 +38,9 @@ export function fin(d, annee, maintenant = new Date()) {
     encaisse = sum(ventes.filter((vente) => vente.paye), total),
     charges = sum(depenses, (depense) => depense.montant),
     kgRecolte = sum(recoltes, (recolte) => recolte.kg),
-    kgVendu = sum(lignes, (ligne) => (ligne.quantite * (byId(d.lots, ligne.lot_id)?.format_g || 0)) / 1e3),
+    lignesMiel = lignes.filter((ligne) => estMiel(byId(d.lots, ligne.lot_id))),
+    kgVendu = sum(lignesMiel, (ligne) => (ligne.quantite * (byId(d.lots, ligne.lot_id)?.format_g || 0)) / 1e3),
+    caMiel = sum(lignesMiel, (ligne) => ligne.quantite * ligne.prix_unitaire),
     moisCa = Array(12).fill(0),
     moisEncaisse = Array(12).fill(0),
     moisDepenses = Array(12).fill(0),
@@ -56,7 +64,7 @@ export function fin(d, annee, maintenant = new Date()) {
     kgRec: kgRecolte, kgVendu, mCa: moisCa, mEnc: moisEncaisse, mDep: moisDepenses, mPots: moisPots,
     treso: tresorerie, report, tresoFin: report + encaisse - charges,
     coutKg: kgRecolte ? charges / kgRecolte : null,
-    prixKg: kgVendu ? ca / kgVendu : null,
+    prixKg: kgVendu ? caMiel / kgVendu : null,
   };
 }
 
@@ -64,7 +72,7 @@ export function fin(d, annee, maintenant = new Date()) {
 export function rythme(d, maintenant = new Date()) {
   const depuis = new Date(maintenant.getTime() - 90 * 864e5).toISOString().slice(0, 10);
   const idsVentes = new Set(d.ventes.filter((vente) => vente.date_vente >= depuis).map((vente) => vente.id));
-  const potsParMois = sum(d.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)), (ligne) => ligne.quantite) / 3;
+  const potsParMois = sum(d.lignes.filter((ligne) => idsVentes.has(ligne.vente_id) && estMiel(byId(d.lots || [], ligne.lot_id) || {})), (ligne) => ligne.quantite) / 3;
   const pots = stock(d).pots;
   return { mois: potsParMois, moisRestants: potsParMois > 0 ? pots / potsParMois : null };
 }

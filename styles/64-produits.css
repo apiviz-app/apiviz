@@ -1,0 +1,29 @@
+/* ---------- Produits de la ruche (v5.64, src/domaines/production/produit.js, migration 032) ----------
+   Maquettes du 18 nov. 2026 : modèles en alvéoles, catalogue par catégorie dans Stock et récoltes. */
+.pr-ecran{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.pr-modeles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (min-width:700px){.pr-modeles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pr-modele{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:84px;padding:8px 4px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:600 var(--t-s)/1.2 'Instrument Sans',system-ui,sans-serif;text-align:center;cursor:pointer;transition:border-color var(--duree-rapide),background var(--duree-rapide)}
+.pr-modele:hover{border-color:var(--line2);background:var(--honeysoft)}
+.pr-modele:active{transform:scale(.97)}
+.pr-libre{border:1.5px dashed var(--line2);background:transparent}
+.pr-tete{display:flex;align-items:center;gap:12px}
+.pr-alv{flex:none;width:46px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--honeysoft);color:var(--ink);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.pr-cat{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-l);font-weight:700}
+.pr-grand{flex:1}
+.pr-lab{display:block;margin-bottom:6px;font-size:var(--t-s);font-weight:600}
+.pr-unites{flex-wrap:wrap}
+.pr-note{margin:0;padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft);color:var(--watch);font-size:var(--t-s);line-height:1.38}
+.pr-suppr{align-self:center;color:var(--crit)}
+/* Catalogue dans Stock et récoltes */
+.pr-catalogue{display:flex;flex-direction:column;gap:0}
+.pr-ligne{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 0;border-top:1px solid var(--line)}
+.pr-ligne:first-of-type{border-top:0}
+.pr-ligne .pr-alv{width:40px;height:35px}
+.pr-ligne-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pr-ligne-t .small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-ligne-q{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums}
+.pr-ligne-q b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-m)}
+.pr-ajout{display:flex;align-items:center;justify-content:center;gap:8px;min-height:var(--cible);margin-top:10px;border:1.5px dashed var(--line2);border-radius:var(--r-m);background:transparent;color:var(--ink);font:600 var(--t-m) 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.pr-ajout:hover{background:var(--honeysoft)}
+@media (prefers-reduced-motion:reduce){.pr-modele{transition:none}.pr-modele:active{transform:none}}

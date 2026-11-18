@@ -1,5 +1,6 @@
 // Apiviz — règles pures des outils de terrain (v5.57, maquettes « Nouveautés » du 17 nov. 2026) : étiquette QR d'une
 // ruche, caisse du marché, commandes en ligne. Testées par tests/unitaires/terrain.test.mjs.
+import { estMiel, nomLot, formatLot, categorieDe } from "../production/produits.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -26,20 +27,23 @@ export function lireLienRuche(texte) {
 }
 
 // ---------- Caisse ----------
-const libelleLot = (l) => `${l.miel || "Miel"} ${l.format_g} g`;
+// Libellé d'un produit à la caisse : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.64, migration 032).
+const libelleLot = (l) => (estMiel(l) ? `${l.miel || "Miel"} ${l.format_g} g` : `${nomLot(l)}${formatLot(l) ? " " + formatLot(l) : ""}`);
 
-/** Pots proposés à la caisse : un par miel, format et prix, avec le stock de tous les lots correspondants. */
+/** Produits proposés à la caisse : un par catégorie, nom, format et prix, avec le stock de tous les lots correspondants. */
 export function produitsCaisse(lots) {
   const m = new Map();
   for (const l of lots || []) {
-    const k = `${l.miel || ""}|${l.format_g}|${Number(l.prix)}`;
-    const p = m.get(k) || { cle: k, nom: libelleLot(l), miel: l.miel || "", format_g: Number(l.format_g), prix: Number(l.prix), stock: 0, lots: [] };
+    const k = `${categorieDe(l)}|${l.miel || ""}|${l.format_g ?? ""}|${l.format_libelle || ""}|${Number(l.prix)}`;
+    const p = m.get(k) || { cle: k, nom: libelleLot(l), categorie: categorieDe(l), miel: l.miel || "", format_g: l.format_g == null ? null : Number(l.format_g),
+      format_libelle: l.format_libelle || "", unite: l.unite || "pot", prix: Number(l.prix), stock: 0, lots: [] };
     p.stock += Math.max(0, Number(l.pots_restants ?? 0));
     p.lots.push(l);
     m.set(k, p);
   }
   return [...m.values()].filter((p) => p.stock > 0 || p.lots.length)
-    .sort((a, b) => (b.stock > 0) - (a.stock > 0) || a.miel.localeCompare(b.miel, "fr") || a.format_g - b.format_g);
+    .sort((a, b) => (b.stock > 0) - (a.stock > 0) || (a.categorie !== "Miel") - (b.categorie !== "Miel") || a.categorie.localeCompare(b.categorie, "fr")
+      || a.miel.localeCompare(b.miel, "fr") || (a.format_g || 0) - (b.format_g || 0) || a.format_libelle.localeCompare(b.format_libelle, "fr"));
 }
 
 /** Total du panier (q : { cle: nombre de pots }). */
@@ -90,13 +94,13 @@ export function rangerCommandes(cs) {
 }
 
 /** « 2 × Printemps 500 g · 1 × Été 250 g » */
-export const detailCommande = (c) => (c.lignes || []).map((l) => `${l.quantite} × ${l.miel || "Miel"} ${l.format_g} g`).join(" · ");
+export const detailCommande = (c) => (c.lignes || []).map((l) => `${l.quantite} × ${l.miel || "Miel"} ${l.format_libelle || (l.format_g ? l.format_g + " g" : "")}`.trim()).join(" · ");
 export const potsCommande = (c) => (c.lignes || []).reduce((t, l) => t + Number(l.quantite || 0), 0);
 
 /** Message prêt à envoyer au client (SMS) quand sa commande est prête. Message émis : vouvoiement (charte de ton). */
 export function messagePret(c, signature) {
   const prenom = String(c.nom || "").trim().split(/\s+/)[0] || "";
-  return `Bonjour ${prenom}, votre commande de miel (${detailCommande(c)}) est prête${c.retrait ? ` : retrait ${c.retrait}` : ""}. À bientôt${signature ? `, ${signature}` : ""}.`.replace(/\s+/g, " ");
+  return `Bonjour ${prenom}, votre commande (${detailCommande(c)}) est prête${c.retrait ? ` : retrait ${c.retrait}` : ""}. À bientôt${signature ? `, ${signature}` : ""}.`.replace(/\s+/g, " ");
 }
 
 /** Lien sms: (iOS et Android acceptent « ?&body= » ou « ?body= » ; « ?body= » suffit aux deux aujourd'hui). */
