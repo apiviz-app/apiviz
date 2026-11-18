@@ -1,0 +1,82 @@
+    # v5.61 — Fil de l'équipe, courbes d'une colonie, Ma saison (maquettes « Nouveautés » 5, 6 et 7 du 17 nov. 2026).
+    # La table messages et prendre_demande sont testées par tests/sql/test_030.mjs. Avec CAPTURES=<dossier>, captures à
+    # 390 px.
+    import pathlib as _pl, os, datetime
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    for v_ in DATA["visites"]: v_["varroa_abeilles"] = 300
+    DATA["profils"] = [{"email": "test@apidoo.fr", "prenom": "Pierre-Louis", "nom": "G", "inscription_finie": True}, {"email": "ami@apidoo.fr", "prenom": "Johan", "nom": "", "inscription_finie": True}]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    an = datetime.date.today().year
+    il_y_a = lambda h: (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=h)).isoformat()
+    M1, M2 = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["messages"] = [
+        {"id": M1, "auteur": "ami@apidoo.fr", "texte": "@Pierre-Louis tu peux passer peser Ruche 5 avant samedi ?", "pour": "test@apidoo.fr", "ruche_id": R[4], "parent_id": None, "tache_id": None, "pris_par": "", "created_at": il_y_a(2)},
+        {"id": M2, "auteur": "test@apidoo.fr", "texte": "Reine vue, très calme.", "pour": "", "ruche_id": R[1], "parent_id": None, "tache_id": None, "pris_par": "", "created_at": il_y_a(30)},
+    ]
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Fil de l'équipe : demande pour moi en tête, activité, mentions, filtres.
+    page.evaluate("ACT.go('fil')"); page.wait_for_selector(".fe-carte", timeout=6000)
+    verif("1 demande pour toi" in page.locator(".wrap .head").inner_text(), "fil : « 1 demande pour toi » dans l'en-tête")
+    premier = page.locator(".fe-liste > li").first
+    verif("pour-moi" in (premier.get_attribute("class") or "") and "Johan" in premier.inner_text(), "fil : la demande de Johan en tête, encadrée")
+    verif("Passer peser Ruche 5 avant samedi" in premier.inner_text(), "fil : titre de la tâche annoncé")
+    verif(page.locator(".fe-act").count() >= 3, "fil : l'activité de l'équipe (visites, ventes…) suit")
+    verif(page.locator(".fe-mentions .fe-m", has_text="@Johan").count() == 1, "zone d'écriture : @Johan proposé")
+    shot("fs-fil-390")
+    page.click("[data-act=fefiltre][data-v=notes]"); page.wait_for_timeout(200)
+    verif(page.locator(".fe-act").count() == 0 and page.locator(".fe-carte").count() == 2, "Notes : messages seulement")
+    page.click("[data-act=fefiltre][data-v=moi]"); page.wait_for_timeout(200)
+    verif(page.locator(".fe-carte").count() == 1, "Pour moi : la seule demande")
+
+    # 2. « Je m'en occupe » : prendre_demande avec titre, échéance (samedi) et mon prénom.
+    page.click("[data-act=feprendre]"); page.wait_for_timeout(700)
+    pr = [b for n_, b in recu["rpc"] if n_ == "prendre_demande"]
+    p = pr[-1]["p"] if pr else {}
+    verif(len(pr) == 1 and pr[0]["p_id"] == M1, "Je m'en occupe : prendre_demande sur la bonne demande")
+    sam = datetime.date.fromisoformat(p.get("echeance") or "2000-01-01")
+    verif(p.get("titre") == "Passer peser Ruche 5 avant samedi" and sam.weekday() == 5 and p.get("assigne") == "Pierre-Louis", f"tâche : titre, samedi, pour Pierre-Louis ({p})")
+
+    # 3. Écrire une demande à Johan, sur une ruche : la mention devient le destinataire.
+    page.click("[data-act=fefiltre][data-v=tout]"); page.wait_for_timeout(200)
+    page.click(".fe-mentions .fe-m"); page.locator("#fe_texte").type("nourrir la 2 demain")
+    page.select_option("#fe_ruche", R[1])
+    page.click(".fe-envoyer"); page.wait_for_timeout(700)
+    ins = [r for t, u, rows in recu["upsert"] if t == "messages" for r in rows]
+    verif(len(ins) == 1 and ins[0]["pour"] == "ami@apidoo.fr" and ins[0]["ruche_id"] == R[1] and ins[0]["texte"].startswith("@Johan nourrir"), f"envoi : demande à Johan sur Ruche 2 ({ins[-1] if ins else None})")
+    verif(page.locator("#fe_texte").input_value() == "", "zone d'écriture vidée")
+
+    # 4. Courbes : onglet de la fiche, trois mesures, comparaison.
+    page.evaluate(f"ACT.ruche('{R[0]}')"); page.wait_for_timeout(400)
+    page.click(".subtabs button:has-text('Courbes')"); page.wait_for_selector(".cb-svg", timeout=4000)
+    verif(page.locator(".cb-p").count() >= 1 and page.locator(".cb-seg button.on").inner_text() == "Poids", "courbes : poids par défaut, points tracés")
+    verif(page.locator(".cb-svg").get_attribute("aria-label").startswith("Poids de la ruche"), "courbes : décrites pour le lecteur d'écran")
+    verif(page.locator(".cb-liste li", has_text="Récolte").count() >= 1 and page.locator(".cb-ev.recolte").count() >= 1, "courbes : la récolte posée sur la courbe et listée")
+    shot("fs-courbes-390")
+    page.click("[data-act=cbmesure][data-v=varroa]"); page.wait_for_timeout(200)
+    verif(page.locator(".cb-seuil").count() == 1 and "Varroa" in page.locator(".cb-seg button.on").inner_text(), "varroa : le seuil d'alerte est tracé")
+    page.click("[data-act=cbmesure][data-v=force]"); page.wait_for_timeout(200)
+    verif(page.locator(".cb-p").count() >= 1, "force : tirée de l'activité des visites")
+    page.select_option("#cb_comp", R[1]); page.wait_for_timeout(200)
+    verif(page.locator(".cb-comp, .cb-p-comp").count() >= 1 and "Ruche 2" in page.locator(".cb-legende").inner_text(), "comparer à Ruche 2 : sa courbe et la légende")
+
+    # 5. Ma saison : chiffres, kilos par ruche, constats, partager.
+    page.evaluate(f"S.annee = {an}; ACT.go('masaison')"); page.wait_for_selector(".ms-page", timeout=4000)
+    kg = sum(x["kg"] for x in DATA["recoltes"] if x["date_recolte"].startswith(str(an)))
+    verif(page.locator(".ms-phrase").inner_text().startswith(f"{kg} kg récoltés") or kg == 0, f"phrase : {page.locator('.ms-phrase').inner_text()}")
+    verif(page.locator(".ms-tuile").count() == 4, "4 chiffres : pots, stock, argent rentré, dépensé")
+    if kg: verif(page.locator(".ms-ruches li").count() == len(DATA["ruches"]) and page.locator(".ms-barre .top").count() >= 1, "kilos par ruche, les meilleures en miel")
+    verif(page.locator("[data-act=mspartager]").count() == 1 and page.locator("[data-act=msimprimer]").count() == 1, "Partager et Imprimer")
+    shot("fs-saison-390")
+
+    # 6. Menu : les deux nouveaux écrans.
+    page.evaluate("ACT.go('menu')"); page.wait_for_timeout(300)
+    verif(page.locator("#nlVolet [data-v=fil]").count() >= 1 and page.locator("#nlVolet [data-v=masaison]").count() >= 1, "Menu : Fil de l'équipe et Ma saison")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

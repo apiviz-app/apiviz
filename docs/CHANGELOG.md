@@ -5,7 +5,45 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.59 · à fabriquer · applications Android et iOS de test (IT-30, première partie)
+## v5.61 · à publier en recette · fil de l'équipe, courbes d'une colonie, Ma saison
+**Migration 030 (additive, ne casse pas l'ancienne version, après 029).** Maquettes « Nouveautés » 5, 6 et 7 validées
+par Pierre-Louis le 18 nov. 2026 (« implémenter les propositions 5, 6 et 7 »).
+
+Pour l'apiculteur :
+1. **Fil de l'équipe** (Menu › Au quotidien) : ce que chacun a saisi (visites, ventes, récoltes), les notes de l'équipe,
+   éventuellement sur une ruche, et les demandes. Écrire « @Johan nourrir la 2 demain » envoie une demande à Johan.
+   Les demandes pour soi passent en tête, encadrées ; « Je m'en occupe » crée la tâche dans l'Agenda (titre tiré du
+   message, échéance si le message dit « demain », « samedi »…, ruche reprise, assignée à soi). « Répondre » écrit
+   sous le message. Filtres : Tout, Pour moi, Notes. On peut supprimer ses propres messages.
+2. **Courbes** (nouvel onglet de la fiche d'une ruche, après Journal) : Poids, Varroa ou Force sur la saison ; l'année
+   en cours en trait plein, l'an dernier en pointillés ; récoltes et traitements posés sur la courbe ; seuil d'alerte
+   du varroa ; une phrase qui dit ce qui compte ; « Comparer à » une autre ruche. La force reprend l'activité notée
+   (Faible, Normale, Forte) quand la force n'est pas notée. Le varroa n'apparaît que pour les comptages avec un nombre
+   d'abeilles (comme l'écran Varroa).
+3. **Ma saison** (Menu › Ruchers et miel) : kilos récoltés et écart avec l'an dernier, pots vendus et clients, stock et
+   combien de semaines il tient, argent rentré et dépensé, kilos par ruche (les 3 meilleures en miel), « Ce qu'API
+   retient ». « Partager le résumé » envoie le texte (ou le copie) ; « Imprimer ou PDF » imprime la page seule.
+
+Correctif : dans Ruchers, un choix du menu ⋯ (Nouveau rucher, Ajouter des ruches, Scanner, Étiquettes QR) referme le
+menu ; avant, on le retrouvait ouvert, voile compris, en revenant sur l'écran.
+
+Numérotation (18 nov. 2026) : cette PR portait v5.59 et la migration 029, déjà prises par les offres et gouttes (#95).
+Elle passe en **v5.61** avec la **migration 030** (après 029) ; aucune des deux n'était appliquée sur `apidoo-test`.
+
+Technique : table `messages` et fonction `prendre_demande(p_id, p)` (migration 030, testée par
+`tests/sql/test_030.mjs`) ; règles pures `src/domaines/equipe/regles.js` (tests unitaires `equipe.test.mjs`) ; scénario
+navigateur `tests/etapes_fs.txt`. Ma saison et les Courbes ne demandent rien de nouveau à la base. Sans la migration 030,
+le Fil affiche l'activité de l'équipe et un avis (« le fil arrive avec la prochaine mise à jour »).
+
+À vérifier :
+- Fil, à deux téléphones (toi et un membre) : écrire « @Prénom … samedi » ; l'autre voit « 1 demande pour toi »,
+  touche « Je m'en occupe », la tâche apparaît dans l'Agenda au samedi, assignée à lui.
+- Zone d'écriture du fil sur iPhone : au-dessus de la barre du bas, le clavier ne la masque pas.
+- Fiche d'une ruche pesée plusieurs fois › Courbes : Poids, Varroa (seuil), Force, Comparer à une autre ruche.
+- Ma saison 2026 puis 2025 : chiffres cohérents avec Finances et Miel ; Partager depuis le téléphone ; Imprimer
+  (une seule page propre, sans menus).
+
+## v5.60 · à fabriquer · applications Android et iOS de test (IT-30, première partie)
 **Aucune migration, aucune base touchée. Le site publié ne change presque pas** (un fichier `plateforme.js` en plus).
 Demande de Pierre-Louis du 18 nov. 2026 : avoir Apiviz en vraie application pour l'essayer en conditions réelles.
 Choix du jour : Android d'abord (gratuit, fichier à installer), iPhone préparé pour TestFlight ; applis branchées sur la
@@ -38,6 +76,7 @@ Limites connues (suite d'IT-30) :
 - Photo d'une facture, lecture d'un QR de ruche, position d'un rucher : l'autorisation est demandée, puis ça marche.
 - Haut et bas de l'écran : rien sous la barre d'état ni sous la barre de navigation du téléphone.
 - Site web (recette) inchangé ; « Installer Apiviz » toujours proposé dans le navigateur.
+
 ## v5.59 · à publier en recette · offres et gouttes d'API (IT-27, première partie)
 **Migration 029 (additive, ne casse pas l'ancienne version, après 028).** Maquette « Apiviz — Offres et IA » du 18 nov.
 2026, choix de Pierre-Louis : gouttes au coût réel, partagées par l'exploitation, forfaits tels que proposés, pas encore

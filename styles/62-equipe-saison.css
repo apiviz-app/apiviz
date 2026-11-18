@@ -1,0 +1,116 @@
+/* Apiviz — fil de l'équipe, courbes d'une colonie, Ma saison (v5.61, maquettes « Nouveautés » 5, 6 et 7 du 17 nov.
+   2026). Écrans : src/domaines/equipe/fil.js, src/domaines/colonies/courbes.js, src/domaines/equipe/saison.js. */
+
+/* ---------- Fil de l'équipe ---------- */
+.fe-ecran{padding-bottom:180px}
+.fe-liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.fe-carte{display:flex;flex-direction:column;gap:10px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.fe-carte.pour-moi{border:2px solid var(--honey)}
+.fe-tete{display:flex;align-items:center;gap:10px}
+.fe-av{flex:none;width:36px;height:36px;border-radius:var(--r-pill);background:#E9ECE4;color:#3F4A44;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.fe-av.moi{background:var(--honey);color:var(--ink)}
+.fe-qui{flex:1;min-width:0}
+.fe-texte{margin:0;font-size:15px;line-height:1.38;overflow-wrap:anywhere;white-space:pre-wrap}
+.fe-mention{color:var(--good)}
+.fe-ruche{align-self:flex-start;min-height:36px;padding:0}
+.fe-etat{margin:0}
+.fe-reponses{list-style:none;margin:0;padding:0 0 0 12px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.fe-reponses p{margin:2px 0 0;font-size:15px;overflow-wrap:anywhere;white-space:pre-wrap}
+.fe-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.fe-actions .btn{min-height:44px}
+.fe-prendre{flex:1 1 140px;background:var(--pine);border-color:var(--pine);color:#fff}
+.fe-suppr{margin-left:auto;min-height:44px;color:var(--muted)}
+.fe-act > button,.fe-act > div{display:flex;gap:10px;align-items:flex-start;width:100%;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);text-align:left;font:inherit;color:var(--ink)}
+.fe-act > button{cursor:pointer}
+.fe-hex{flex:none;width:28px;height:24px;margin-top:2px;background:var(--good);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.fe-act-t{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:15px}
+.fe-supprimes{align-self:flex-start;min-height:44px}
+.fe-ecrire{position:fixed;left:0;right:0;bottom:var(--fe-bas,84px);z-index:20;display:flex;flex-direction:column;gap:8px;padding:10px 16px 12px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(20,28,24,.06)}
+.fe-ligne{display:flex;gap:8px;align-items:flex-end}
+.fe-champ{flex:1;min-width:0;display:block}
+.fe-champ textarea{width:100%;min-height:48px;max-height:160px;padding:12px 16px;border:1px solid var(--line2);border-radius:var(--r-pill);font:inherit;font-size:16px;line-height:1.35;resize:none;background:#fff;color:var(--ink)}
+.fe-envoyer{flex:none;width:48px;height:48px;border:0;border-radius:var(--r-pill);background:var(--pine);color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.fe-envoyer:disabled{opacity:.45;cursor:default}
+.fe-mentions{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.fe-m{flex:none;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--r-pill);background:#fff;color:var(--good);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.fe-sur{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500}
+.fe-sur select{min-height:36px;padding:0 10px;font-size:14px;border-radius:var(--r-s)}
+.fe-rep{margin:0;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:600}
+@media (min-width:1024px){
+  .fe-ecran{padding-bottom:40px}
+  .fe-ecrire{position:sticky;bottom:12px;left:auto;right:auto;border:1px solid var(--line);border-radius:var(--r-m);margin-top:16px}
+}
+
+/* ---------- Courbes d'une colonie ---------- */
+.cb-onglet{display:flex;flex-direction:column;gap:12px}
+.cb-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:var(--r-m);background:#E7EAE1}
+.cb-seg button{min-height:44px;border:0;border-radius:10px;background:transparent;color:#3F4A44;font:inherit;font-size:15px;font-weight:500;cursor:pointer}
+.cb-seg button.on{background:#fff;color:var(--ink);font-weight:700}
+.cb-carte{display:flex;flex-direction:column;gap:8px}
+.cb-tete{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cb-tete h2{margin:0;font-size:15px;font-weight:600;color:var(--muted)}
+.cb-der{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-variant-numeric:tabular-nums}
+.cb-phrase{margin:0;font-size:14px;color:var(--muted)}
+.cb-phrase.watch{color:var(--watch)}
+.cb-phrase.crit{color:var(--crit)}
+.cb-phrase.good{color:var(--good)}
+.cb-svg{display:block;overflow:visible}
+.cb-gl{stroke:#EDF0E8;stroke-width:1}
+.cb-at{font-size:11px;fill:var(--muted);font-family:inherit}
+.cb-ligne{fill:none;stroke:var(--pine);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.cb-avant{fill:none;stroke:#7D847B;stroke-width:2;stroke-dasharray:4 4}
+.cb-comp{fill:none;stroke:var(--honey);stroke-width:2}
+.cb-p{fill:#fff;stroke:var(--pine);stroke-width:2}
+.cb-p-avant{fill:#fff;stroke:#7D847B;stroke-width:1.5}
+.cb-p-comp{fill:#fff;stroke:var(--honey);stroke-width:1.5}
+.cb-ev{stroke-width:2}
+.cb-ev.recolte{stroke:var(--honey)}
+.cb-ev.traitement{stroke:var(--good)}
+.cb-seuil{stroke:var(--crit);stroke-width:1.5;stroke-dasharray:5 4}
+.cb-seuil-t{font-size:11px;fill:var(--crit);font-family:inherit}
+.cb-legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:#3F4A44}
+.cb-legende span{display:inline-flex;align-items:center;gap:6px}
+.cb-l{display:inline-block}
+.cb-l.plein{width:16px;height:3px;background:var(--pine)}
+.cb-l.tirets{width:16px;height:0;border-top:2px dashed #7D847B}
+.cb-l.comp{width:16px;height:2px;background:var(--honey)}
+.cb-l.recolte{width:3px;height:14px;background:var(--honey)}
+.cb-l.traitement{width:3px;height:14px;background:var(--good)}
+.cb-comparer{display:flex;flex-direction:row;align-items:center;gap:10px;font-size:14px;font-weight:600;margin-top:4px}
+.cb-comparer select{flex:1;min-width:0;min-height:44px}
+.cb-liste{list-style:none;margin:0;padding:0}
+.cb-liste li{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;font-size:15px}
+.cb-liste li + li{border-top:1px solid var(--line)}
+
+/* ---------- Ma saison ---------- */
+.ms-page{display:flex;flex-direction:column;gap:16px}
+.ms-oeil{margin:0;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--watch)}
+.ms-page .ms-phrase{margin:-8px 0 0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:27px;line-height:1.14;letter-spacing:-.018em}
+.ms-tuiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ms-tuile{display:flex;flex-direction:column;gap:2px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m)}
+.ms-tuile > span:first-child{font-size:13px;color:var(--muted)}
+.ms-tuile b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-variant-numeric:tabular-nums}
+.ms-sous{font-size:13px;color:var(--good)}
+.ms-ruches h2,.ms-api h2{margin:0 0 4px;font-size:17px}
+.ms-ruches ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ms-ruches li{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) 52px;align-items:center;gap:8px;font-size:14px}
+.ms-nom{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-barre{height:14px;border-radius:var(--r-pill);background:#E3E6DC;overflow:hidden}
+.ms-barre > span{display:block;height:100%;border-radius:var(--r-pill);background:var(--good)}
+.ms-barre > span.top{background:var(--honey)}
+.ms-kg{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ms-api{display:flex;gap:12px;padding:16px;background:var(--honeysoft);border-radius:var(--r-m)}
+.ms-api p{margin:0 0 6px;font-size:15px;line-height:1.38}
+.ms-api-av{flex:none}
+.ms-boutons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ms-boutons .btn{min-height:48px;justify-content:center}
+@media (min-width:1024px){.ms-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}.ms-page{max-width:880px}}
+/* Impression : seulement la page de la saison, sur l'écran « Ma saison ». */
+@media print{
+  body:has(.ms-ecran) *{visibility:hidden}
+  body:has(.ms-ecran) .ms-page,body:has(.ms-ecran) .ms-page *{visibility:visible}
+  body:has(.ms-ecran) .ms-page{position:absolute;left:0;top:0;width:100%;padding:12mm}
+  .ms-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ms-tuile,.ms-ruches,.ms-api{break-inside:avoid}
+  body:has(.ms-ecran) .ms-boutons{display:none}
+}

@@ -28,7 +28,7 @@ Gladoo est écrit en Expo depuis le début. Apiviz est du JavaScript sans framew
 
 La Trusted Web Activity (Chrome en plein écran sur Android) prévue dans la version précédente de ce document est abandonnée : elle ne couvrait qu'Android.
 
-## Applis de test (IT-30, depuis v5.59)
+## Applis de test (IT-30, depuis v5.60)
 
 Les applis embarquent la **recette** (base `apidoo-test`) : tous les fichiers du site sont dans l'appli, rien n'est
 chargé depuis le site, rien n'est publié sur les stores.

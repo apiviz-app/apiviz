@@ -22,6 +22,8 @@ Pour toute question ou demande : [à compléter : adresse e-mail de contact].
   récoltes, lots, stock, clients, ventes et factures, dépenses, fournisseurs, tâches, photos de visite.
 - **Qui a fait quoi** : l'adresse e-mail de l'auteur d'une visite, d'une vente ou d'une photo, visible des autres membres
   de l'exploitation.
+- **Les messages du fil de l'équipe** : le texte, son auteur, le membre à qui il est adressé et la ruche éventuelle,
+  visibles des seuls membres de l'exploitation. L'auteur peut supprimer ses messages.
 - **Le journal des suppressions et modifications** : l'ancienne valeur, l'auteur et la date, pour pouvoir réparer une
   erreur. Visible des seuls responsables de l'exploitation.
 - **Le journal des erreurs techniques** : version de l'application, écran, message d'erreur, sans adresse e-mail ni

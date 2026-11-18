@@ -27,3 +27,6 @@
 #   Additive. Après 028. À appliquer sur apidoo-test par la mise en ligne en recette, puis sur apidoo avec l'accord de
 #   Pierre-Louis ; redéployer alors les fonctions serveur « assistant » et « lire-facture » sur la même base, puis
 #   ajouter les adresses de l'équipe : insert into public.administrateurs_apiviz values ('…') (éditeur SQL).
+# 030-fil-equipe.sql (PR claude/fil-courbes-saison, v5.61) : fil de l'équipe (table messages, prendre_demande).
+#   Additive. À appliquer sur apidoo-test (après 029) par la mise en ligne en recette, puis sur apidoo avec l'accord de
+#   Pierre-Louis.

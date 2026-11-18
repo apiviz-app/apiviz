@@ -98,6 +98,12 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Visite express, Visite complète, fiche). Depuis Apiviz : Ruchers › ⋯ ou bouton API › Scanner une ruche.
 - **Caisse du marché** *(v5.57)* : Miel › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
   Marche sans réseau (la vente part au retour du réseau) ; client « Vente au marché ».
+- **Fil de l'équipe** *(v5.61)* : Menu › Au quotidien. Ce que chacun a saisi, les notes et les demandes. Écris
+  « @Prénom » pour demander quelque chose à un membre ; il voit la demande en tête et la transforme en tâche avec
+  « Je m'en occupe ». Rattache une note à une ruche avec « Sur une ruche ».
+- **Courbes** *(v5.61)* : fiche d'une ruche › Courbes. Poids, varroa ou force sur la saison, contre l'an dernier, avec
+  les récoltes et les traitements ; compare à une autre ruche.
+- **Ma saison** *(v5.61)* : Menu › Ruchers et miel. Le bilan de l'année en un écran ; partage-le ou imprime-le en PDF.
 - **Commandes** *(v5.57, Miel)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
   clients réservent les miels en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
   s'enregistre), Prévenir (SMS prêt), Annuler.

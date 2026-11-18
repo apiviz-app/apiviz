@@ -377,6 +377,17 @@ addEventListener("click", (ev) => {
   if (t.choix || t.sel.length) { ev.preventDefault(); ev.stopImmediatePropagation(); cocher(c.dataset.id); }
 }, true);
 
+// Un choix du menu ⋯ referme le menu (v5.61) : avant, « Nouveau rucher », « Ajouter des ruches », Scanner ou les
+// étiquettes laissaient le menu ouvert, et on le retrouvait ouvert, voile compris, en revenant sur Ruchers.
+// Le clic est capté avant l'action, qui part ensuite normalement.
+addEventListener("click", (ev) => {
+  const btn = ev.target.closest?.(".tb-menu [data-act]");
+  if (!btn || typeof S == "undefined" || !S.tb || S.tb.feuille !== "menu") return;
+  S.tb.feuille = null;
+  document.querySelector(".tb-menu")?.remove(); document.querySelector(".tb-voile")?.remove();
+  document.querySelector(".tb-plus")?.setAttribute("aria-expanded", "false");
+}, true);
+
 addEventListener("keydown", (ev) => {
   if (ev.key !== "Escape" || typeof S == "undefined" || S.route !== "ruches" || !S.tb || !(S.tb.feuille || S.tb.fiche)) return;
   ev.preventDefault(); fermer();

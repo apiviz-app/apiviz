@@ -226,8 +226,9 @@ const UX = (() => {
       `${tete}${chiffres}${r.notes ? `<section class="card">${esc(r.notes)}</section>` : ""}
        ${taches.length ? `<section class="card"><h2>Tâches prévues</h2>${taches.map(taskRow).join("")}</section>` : ""}
        ${poids}
-       ${subtabs([["journal", "Journal"], ["sante", "Santé"], ["reine", "Reine & lignée"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
+       ${subtabs([["journal", "Journal"], ["courbes", "Courbes"], ["sante", "Santé"], ["reine", "Reine & lignée"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
        ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
+         : ongletRuche.v === "courbes" ? '<div class="cb-onglet"></div>' // rempli par src/domaines/colonies/courbes.js (v5.61)
          : ongletRuche.v === "sante" || ongletRuche.v === "reine" ? `<div class="cl-onglet" data-o="${ongletRuche.v}"></div>` // rempli par src/domaines/colonies/lignee.js (IT-07)
          : `<h2 class="u-titre">Journal</h2>${vis.length ? "" : '<p class="small">Aucune visite enregistrée.</p>'}${journalRuche(r)}`}
        ${!r.sortie && typeof N4 != "undefined" ? `<div class="n4-rbarre"><button class="btn main" data-act="newvisite" data-v="${r.id}">Nouvelle visite</button><button type="button" class="btn g-plus-bas" data-act="gactions" aria-label="Autres actions pour ${esc(r.nom)}">+</button><div class="g-autres" hidden><button class="btn" data-act="newtache" data-v="${r.id}">Tâche</button></div></div>` : ""}`);
