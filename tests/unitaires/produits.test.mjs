@@ -85,3 +85,27 @@ test("caisse et commandes : miel et autres produits côte à côte", () => {
   assert.equal(detailCommande({ lignes: [{ quantite: 2, miel: "Hydromel sec", format_libelle: "75 cl" }, { quantite: 1, miel: "Été", format_g: 250 }] }),
     "2 × Hydromel sec 75 cl · 1 × Été 250 g");
 });
+
+// v5.67 — mise en pots : seulement le miel ; ligne d'état commune aux onglets de Produits.
+test("mise en pots : formats sans « 0 g », miels sans hydromel", () => {
+  const d = { lots: [miel, hydro, bougie, kilo], recoltes: [{ miel: "Châtaignier" }, { miel: "" }] };
+  assert.deepEqual(P.formatsMiseEnPots(d, [250, 0, null]), [250, 500, 1000]);
+  assert.deepEqual(P.formatsMiseEnPots({ lots: [{ ...miel, format_g: 750 }] }), [250, 500, 750, 1000]);
+  assert.deepEqual(P.mielsMiseEnPots(d), ["Toutes fleurs", "Acacia", "Châtaignier"]);
+  assert.deepEqual(P.mielsMiseEnPots({}), ["Toutes fleurs"]);
+});
+
+test("mise en pots : prix proposé", () => {
+  assert.deepEqual(P.prixPropose([miel, kilo], 500), { prix: 10, d: "" });
+  const p = P.prixPropose([miel], 250);
+  assert.equal(p.prix, 5);
+  assert.match(p.d, /500 g à 10 €/);
+  assert.equal(P.prixPropose([{ ...miel, prix: 6.3, format_g: 250 }], 500).prix, 12.5);
+  assert.deepEqual(P.prixPropose([hydro], 500), { prix: "", d: "" });
+});
+
+test("ligne d'état de Produits : tous les produits, comme la tuile « en stock »", () => {
+  assert.equal(P.ligneEtat([miel, hydro, bougie], 0), "3 produits · 22 en stock");
+  assert.equal(P.ligneEtat([miel], 12.5), "1 produit · 12 en stock · 12,5 € à encaisser");
+  assert.equal(P.ligneEtat([], 0), "");
+});

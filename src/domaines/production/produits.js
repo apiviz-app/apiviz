@@ -3,7 +3,7 @@
 // (hydromel, cire, bougie…) décrit par son nom (colonne miel), son unité et son format libre. Règles pures : pas de
 // navigateur ni de base, testées par tests/unitaires/produits.test.mjs. Les scripts classiques les lisent par
 // window.Regles.produits.
-import { n } from "../../noyau/format.js";
+import { n, eur } from "../../noyau/format.js";
 
 /**
  * Modèles proposés à la création d'un produit : catégorie, unité de vente, formats courants, ce qu'Apiviz suit.
@@ -66,6 +66,36 @@ export const quantiteLot = (lot, quantite) => `${n(Number(quantite) || 0, 0)} ${
 /** Lots de miel seulement : les chiffres en kilos (stock, mis en pots, vendus) ne comptent qu'eux. */
 export const lotsMiel = (lots) => (lots || []).filter(estMiel);
 
+/**
+ * Formats de la mise en pots (v5.67) : ceux des pots vides du matériel (contenances données), ceux des lots de miel et
+ * les trois courants. Jamais « 0 g » : l'hydromel ou le pain d'épices n'ont pas de grammage.
+ * `contenances` : contenances des pots vides du matériel, en grammes (materiel/regles.js, contenance).
+ */
+export function formatsMiseEnPots(d, contenances = []) {
+  const f = new Set([250, 500, 1000, ...contenances.map(Number), ...lotsMiel(d?.lots).map((l) => Number(l.format_g))]);
+  return [...f].filter((g) => Number.isFinite(g) && g > 0).sort((a, b) => a - b);
+}
+
+/** Miels de la mise en pots (v5.67) : « Toutes fleurs », ceux des lots de miel et ceux des récoltes. */
+export function mielsMiseEnPots(d) {
+  return [...new Set(["Toutes fleurs", ...lotsMiel(d?.lots).map((l) => l.miel), ...(d?.recoltes || []).map((r) => r.miel)]
+    .map((m) => String(m || "").trim()).filter(Boolean))];
+}
+
+/**
+ * Prix proposé pour un pot de miel (v5.67) : celui du dernier lot de miel du même format ; sinon le prix au kilo du
+ * dernier lot de miel ramené au format, arrondi à 50 centimes, avec d'où il vient. { prix: nombre | "", d: texte }.
+ */
+export function prixPropose(lots, fmt) {
+  const miel = lotsMiel(lots).filter((l) => Number(l.prix) > 0 && Number(l.format_g) > 0);
+  const meme = miel.filter((l) => Number(l.format_g) === Number(fmt)).at(-1);
+  if (meme) return { prix: Number(meme.prix), d: "" };
+  const autre = miel.at(-1);
+  if (!autre || !(Number(fmt) > 0)) return { prix: "", d: "" };
+  const prix = Math.round((Number(autre.prix) / Number(autre.format_g)) * Number(fmt) * 2) / 2;
+  return { prix, d: `Proposé d’après ton pot de ${formatGrammes(autre.format_g)} à ${n(Number(autre.prix))} €` };
+}
+
 /** Le stock d'un lot passe sous son seuil d'alerte (s'il en a un). */
 export const stockBas = (lot) => lot?.seuil != null && lot.seuil !== "" && Number(lot.pots_restants ?? 0) <= Number(lot.seuil);
 
@@ -123,4 +153,14 @@ export function appliquerProduit(d, p, extra = {}) {
   d.lots.push({ id: p.id, code: p.code, categorie: p.categorie, miel: p.nom, unite: p.unite, format_libelle: p.format_libelle,
     format_g: null, prix: Number(p.prix || 0), pots_initiaux: p.quantite, pots_vendus: 0, pots_restants: p.quantite,
     date_mise_en_pot: p.date, ddm: p.ddm, seuil: p.seuil, extraction: "", ...extra });
+}
+
+/**
+ * Ligne d'état de Produits (v5.67), la même sur chaque onglet : « 3 produits · 56 en stock · 12,00 € à encaisser ».
+ * Le stock compte tous les produits (pots, bouteilles, sachets…), comme la tuile « en stock » de l'onglet Ventes.
+ */
+export function ligneEtat(lots, aEncaisser = 0) {
+  const groupes = catalogue(lots), total = groupes.reduce((t, g) => t + g.restants, 0);
+  if (!groupes.length) return Number(aEncaisser) > 0 ? `${eur(aEncaisser)} à encaisser` : "";
+  return [`${groupes.length} produit${groupes.length > 1 ? "s" : ""}`, `${n(total, 0)} en stock`, Number(aEncaisser) > 0 ? `${eur(aEncaisser)} à encaisser` : ""].filter(Boolean).join(" · ");
 }

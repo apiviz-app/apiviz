@@ -1,7 +1,9 @@
     page.add_init_script("window.print=()=>{window.__imprime=(window.__imprime||0)+1}")
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    page.evaluate("ACT.go('miel')"); page.wait_for_selector("[data-act=etiq]")
-    page.click("[data-act=etiq]")
+    # v5.67 : les étiquettes s'impriment depuis la fiche du lot (l'onglet Stock n'a plus de tableau des lots).
+    LOT0 = DATA["lots_stock"][0]["id"]
+    page.evaluate("ACT.erlot('%s')" % LOT0); page.wait_for_selector("[data-act=etiq]:visible")
+    page.click("[data-act=etiq]:visible")
     page.wait_for_selector(".toast.err >> text=adresse", timeout=5000)
     verif(page.evaluate("S.route") == "reglages", "sans adresse : renvoi vers Réglages")
     page.fill("textarea[name=adresse]", "12 rue des Abeilles\n21000 Dijon")
@@ -10,14 +12,14 @@
     # Depuis IT-01 : regler() (clé par clé) ; l'ancienne écriture PATCH reste acceptée.
     corps = [x[1]["data"] for x in patchs if x[0] == "reglages"] + [b["p_modifs"] for n, b in recu["rpc"] if n == "regler"]
     verif(corps and corps[-1]["adresse"] == "12 rue des Abeilles\n21000 Dijon" and corps[-1]["origine"] == "France", "adresse et origine enregistrées")
-    page.evaluate("ACT.go('miel')"); page.click("[data-act=etiq]")
+    page.evaluate("ACT.erlot('%s')" % LOT0); page.click("[data-act=etiq]:visible")
     page.click("#sheetForm .btn.main")
     page.wait_for_selector(".toast.err >> text=DDM", timeout=5000)
     verif(page.evaluate("window.__imprime||0") == 0, "sans DDM : pas d'impression")
     page.click("[data-act=closesheet]")
     DATA["lots_stock"][0]["ddm"] = "2028-11-30"
     page.evaluate("refresh()"); page.wait_for_timeout(300)
-    page.click("[data-act=etiq]")
+    page.click("[data-act=etiq]:visible")
     page.fill("#sheetForm input[name=nombre]", "5"); page.fill("#sheetForm input[name=deja]", "2")
     page.click("#sheetForm .btn.main"); page.wait_for_timeout(300)
     verif(page.evaluate("window.__imprime") == 1, "impression lancée")

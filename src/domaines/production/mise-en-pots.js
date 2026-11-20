@@ -6,19 +6,18 @@
 // Globales d'app.js lues à l'appel : S, esc, n, eur, dfr, today, shell, render, refresh, toast, go, lotForm.
 import * as R from "../materiel/regles.js";
 import { stockSuivi } from "../materiel/catalogue.js";
+import * as P from "./produits.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
 const ROLES = [["pot", "Pot vide"], ["couvercle", "Couvercle"], ["etiquette", "Étiquette"]];
 const format = (g) => (Number(g) >= 1000 ? `${n(Number(g) / 1000)} kg` : `${n(g, 0)} g`);
 
-/** Formats proposés : ceux des pots vides du catalogue, ceux des lots, et les trois courants. */
-function formats() {
-  const d = S.d, f = new Set([250, 500, 1000]);
-  (d.articles || []).forEach((a) => { const c = R.contenance(a); if (c && R.famille(a) === "emballage") f.add(c); });
-  (d.lots || []).forEach((l) => f.add(Number(l.format_g)));
-  return [...f].sort((a, b) => a - b);
-}
+/** Formats et miels de la mise en pots : lots de miel seulement (v5.67, règles dans produits.js). */
+const formats = () => P.formatsMiseEnPots(S.d, (S.d.articles || []).filter((a) => R.famille(a) === "emballage").map(R.contenance).filter(Boolean));
+const miels = (d) => P.mielsMiseEnPots(d);
+const lotsDeMiel = P.lotsMiel;
+const prixPropose = (lots, fmt) => P.prixPropose(lots, fmt);
 
 function etat() {
   if (S.mp) return S.mp;
@@ -26,7 +25,7 @@ function etat() {
   const pots = (d.articles || []).filter((a) => R.famille(a) === "emballage" && R.contenance(a) && Number(a.stock) > 0)
     .sort((a, b) => Number(b.stock) - Number(a.stock));
   const fmt = R.contenance(pots[0]) || 500;
-  S.mp = { id: crypto.randomUUID(), code: R.prochainCode(d.lots, an), miel: (d.lots || []).at(-1)?.miel || "Toutes fleurs", format_g: fmt,
+  S.mp = { id: crypto.randomUUID(), code: R.prochainCode(d.lots, an), miel: lotsDeMiel(d.lots).at(-1)?.miel || "Toutes fleurs", format_g: fmt,
     pots: "", prix: "", date: today(), ddm: R.ddmProposee(today()), extraction: derniereExtraction(d) };
   choisirFormat(fmt);
   return S.mp;
@@ -45,8 +44,8 @@ function choisirFormat(fmt) {
   const f = S.mp, prop = R.proposerIntrants(S.d.articles, fmt);
   f.format_g = Number(fmt);
   ROLES.forEach(([k]) => (f[k] = prop[k]?.id || ""));
-  const dernier = (S.d.lots || []).filter((l) => Number(l.format_g) === f.format_g).at(-1);
-  f.prix = dernier ? dernier.prix : "";
+  const p = prixPropose(S.d.lots, f.format_g);
+  f.prix = p.prix; f.prixD = p.d;
   const b = R.bilanMiseEnPots(S.d, { pots: 0, format_g: f.format_g, intrants: ROLES.map(([k]) => f[k]) });
   f.pots = b.max ? Math.min(b.max, f.pots || b.max) : f.pots;
 }
@@ -78,25 +77,41 @@ function sorties(f, b) {
       `;
 }
 
+/** Ce qui manque, en clair, avec deux actions (v5.67). Le rôle de l'article (couvercle…) dit quoi proposer de changer. */
+function manqueAlerte(f, b) {
+  const vrac = b.limite === "miel en vrac";
+  const role = vrac ? null : ROLES.find(([k]) => (S.d.articles || []).find((a) => a.id === f[k])?.nom === b.limite);
+  const autres = { pot: "Autres pots", couvercle: "Autres couvercles", etiquette: "Autres étiquettes" }[role?.[0]] || "Changer d’article";
+  const titre = vrac ? "Plus de miel en vrac" : `Plus de ${b.limite}`;
+  const texte = vrac ? `Il n’en reste pas assez pour remplir des pots de ${format(f.format_g)}. Saisis ta récolte ou choisis un plus petit format.`
+    : `Il en reste 0 : impossible de remplir des pots de ${format(f.format_g)}. Choisis un autre article ou note un achat.`;
+  const actions = lecteurMp() ? "" : vrac
+    ? '<button type="button" class="btn" data-act="newrecolte">Saisir une récolte</button>'
+    : `<button type="button" class="btn" data-act="mpautre" data-v="${e(role?.[0] || "")}">${e(autres)}</button><button type="button" class="btn" data-act="newdepense">Noter un achat</button>`;
+  return `<section class="st-manque" role="alert"><span class="st-manque-i" aria-hidden="true">!</span>
+    <div class="st-manque-t"><b>${e(titre)}</b><span>${e(texte)}</span>${actions ? `<div class="st-manque-a">${actions}</div>` : ""}</div></section>`;
+}
+const lecteurMp = () => document.documentElement.classList.contains("lecteur");
+
 /** L'écran « miseenpots ». */
 export function ecran() {
   const f = etat(), d = S.d;
   const intrants = ROLES.map(([k]) => f[k]);
   const b = R.bilanMiseEnPots(d, { pots: f.pots, format_g: f.format_g, intrants });
   const extractions = [...new Set((d.recoltes || []).map((r) => r.extraction).filter(Boolean))];
-  const say = b.max === null ? `Combien de pots de ${format(f.format_g)} remplis-tu ?`
-    : b.max === 0 ? `Il te manque ${b.limite === "miel en vrac" ? "du miel en vrac" : b.limite.toLowerCase()} pour remplir des pots de ${format(f.format_g)}.`
-      : `Tu peux remplir jusqu’à ${n(b.max, 0)} pots de ${format(f.format_g)}.`;
-  const limite = b.max !== null && b.limite ? (b.limite === "miel en vrac" ? `Miel en vrac : il en reste ${n(b.vrac)} kg, c’est ce qui limite.` : `${b.limite} : il en reste ${n(b.max, 0)}, c’est ce qui limite.`) : "";
+  // v5.67 : le titre reste « Mise en pots » ; ce qui limite s'affiche dessous, en entier (avant : la phrase remplaçait
+  // le titre et se faisait couper, « Il te manque caps… »). À zéro, une alerte avec de quoi s'en sortir.
+  const limite = b.max > 0 && b.limite ? `Tu peux remplir jusqu’à ${n(b.max, 0)} pots de ${format(f.format_g)}. ${b.limite === "miel en vrac" ? `Miel en vrac : il en reste ${n(b.vrac)} kg` : `${b.limite} : il en reste ${n(b.max, 0)}`}, c’est ce qui limite.` : "";
+  const alerte = b.max === 0 ? manqueAlerte(f, b) : "";
   const pret = Number(f.pots) > 0 && !b.manque.length && String(f.code).trim();
-  shell("Mise en pots", "Pots vides et miel deviennent des pots de miel", '<button type="button" class="btn" data-act="mpannuler">Annuler</button>',
+  shell("Mise en pots", "Du miel en vrac aux pots.", '<button type="button" class="btn" data-act="mpannuler">Annuler</button>',
     `<div class="form st-mp">
-      <p class="small st-limite">${e(limite)}</p>
+      ${alerte || (limite ? `<p class="small st-limite">${e(limite)}</p>` : "")}
       <section class="card stack"><h2>Quoi</h2>
         <div class="seg st-formats" role="group" aria-label="Format du pot">${formats().map((g) => `<button type="button" class="${g === f.format_g ? "on" : ""}" aria-pressed="${g === f.format_g}" data-act="mpformat" data-v="${g}">${e(format(g))}</button>`).join("")}</div>
-        <div class="two"><label>Miel<input id="mp_miel" value="${e(f.miel)}" list="mp_miels" autocomplete="off"></label>
-          <label>Prix du pot (€)<input id="mp_prix" type="number" inputmode="decimal" step="0.01" min="0" value="${e(f.prix)}"></label></div>
-        <datalist id="mp_miels">${[...new Set(["Toutes fleurs", ...(d.lots || []).map((l) => l.miel)])].map((m) => `<option value="${e(m)}">`).join("")}</datalist>
+        <label>Miel<input id="mp_miel" value="${e(f.miel)}" list="mp_miels" autocomplete="off"></label>
+        <datalist id="mp_miels">${miels(d).map((m) => `<option value="${e(m)}">`).join("")}</datalist>
+        <label>Prix du pot (€)<input id="mp_prix" type="number" inputmode="decimal" step="0.01" min="0" value="${e(f.prix)}">${f.prixD ? `<span class="small st-prixd">${e(f.prixD)}</span>` : ""}</label>
         ${extractions.length ? `<label>Extraction (traçabilité)<select id="mp_extraction"><option value="">Aucune</option>${extractions.map((x) => `<option ${x === f.extraction ? "selected" : ""}>${e(x)}</option>`).join("")}</select></label>` : ""}
         <div class="st-pas"><span>Pots à remplir</span><div class="st-pas-c">
           <button type="button" class="st-pas-b" data-act="mppas" data-v="-1" aria-label="Retirer un pot">−</button>
@@ -114,8 +129,7 @@ export function ecran() {
       <button type="button" class="btn main block" data-act="mpvalider" ${pret && !S.busy ? "" : "disabled"}>Valider la mise en pots</button>
       <button type="button" class="link st-deja" data-act="mpdeja">Saisir des pots déjà prêts, sans rien retirer du stock</button>
     </div>`);
-  const h = document.querySelector(".wrap .head h1");
-  if (h) { h.textContent = say; h.closest(".head")?.classList.add("g-tete"); }
+  document.querySelector(".wrap .head")?.classList.add("g-tete");
   brancher();
   // Nombre de pots tapé : chiffres mis à jour sans redessiner l'écran (le clavier reste ouvert, le bouton reste là).
   document.getElementById("mp_pots")?.addEventListener("input", majChiffres);
@@ -174,5 +188,7 @@ export const actions = {
   mpvalider: valider,
   mpannuler: () => { S.mp = null; go("miel"); },
   mpdeja: () => lotForm(),
+  // v5.67 : « Autres capsules » de l'alerte mène au choix de l'article qui manque.
+  mpautre: (role) => { const x = document.getElementById("mp_" + (role || "couvercle")); if (x) { x.scrollIntoView({ block: "center" }); x.focus(); } },
 };
 export const remplace = ["newlot"];

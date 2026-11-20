@@ -5,6 +5,50 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.67 · à publier en recette · Produits : mise en pots, lots, clients
+**Aucune migration.** Maquettes « apiviz — Produits : mise en pots, lots, clients » du 20 nov. 2026 (canvas
+https://claude.ai/artifact/DYd97j7D1xhMLUJfTDYdkL) ; Pierre-Louis : « je souhaite que tu implémentes ce que tu m'as
+proposé ». Point de départ (captures Android) : « Il te manque caps… » incompréhensible, Hydromel et Pain d'épices
+proposés comme miels, lots trop longs dans Stock, un pot de miel au milieu de l'onglet Clients.
+
+Pour l'apiculteur :
+1. **Mise en pots** : le titre reste « Mise en pots » (la phrase « Il te manque capsules TO63… » le remplaçait et se
+   faisait couper). Quand un article manque, une alerte le dit en entier avec deux boutons : « Autres couvercles »
+   (ou pots, étiquettes : mène au choix de l'article) et « Noter un achat » ; sans miel en vrac, « Saisir une récolte ».
+   Sinon, « Tu peux remplir jusqu'à … pots » s'affiche sous le titre.
+2. **Seulement du miel** dans la mise en pots : les miels proposés viennent des lots de miel et des récoltes (plus
+   d'hydromel ni de pain d'épices) ; plus de format « 0 g ».
+3. **Prix proposé** : pour un format jamais mis en pots, le prix au kilo de ton dernier pot de miel ramené au format,
+   arrondi à 50 centimes, avec d'où il vient (« Proposé d'après ton pot de 250 g à 6 € »).
+4. **Onglet Stock** : une carte par produit (Miel, Hydromel, Pain d'épices…) avec ses lots en vignettes, deux par ligne
+   (numéro, prix, jauge de ce qui reste, restants, DDM) ; un toucher ouvre la fiche du lot (étiquettes comprises). La
+   vignette pointillée ajoute un lot du produit (« Mettre en pots » pour le miel). Le tableau des lots, qui faisait une
+   fiche de cinq lignes par lot sur téléphone et répétait « Tes produits », disparaît. Les chiffres du miel tiennent
+   sur une rangée (récolté, en pots, à mettre en pots).
+5. **Un seul bouton « Ajouter »** dans Stock, qui propose : Mettre du miel en pots, Autre produit, Pots de miel déjà
+   prêts (remplace « Nouveau lot » et « Ajouter un produit »). « Saisir une récolte » passe dans ⋯.
+6. **Onglet Clients** : ni pot ni chiffres de stock, seulement les clients. Les trois tuiles (en stock, à encaisser,
+   à livrer) restent sur l'onglet Ventes.
+7. **Mêmes chiffres partout** : la ligne sous « Produits » dit « 3 produits · 56 en stock · … à encaisser » sur chaque
+   onglet, comme la tuile « en stock » (avant : « 26 pots en stock » d'un côté, « 56 » de l'autre).
+
+Technique :
+- `src/domaines/production/produits.js` : `formatsMiseEnPots`, `mielsMiseEnPots`, `prixPropose`, `ligneEtat` (règles
+  pures). `mise-en-pots.js` : titre fixe, `manqueAlerte()`, action `mpautre`. `produit.js` › `completerStock()` : cartes
+  produit et vignettes à la place du tableau `section.card.tbl` de `viewMiel()` ; actions `stajouter` (feuille),
+  `stchoix`, `stnouveau`. `app.js` › `viewMiel()` : rangée `.st-chiffres`, bouton « Ajouter ». `ux.js` › `enteteMiel()` :
+  tuiles seulement sur Ventes ; `alveoles.js` › `completerClients()` : pots seulement sur Ventes ; `nav4.js` : ligne
+  d'état par `Regles.produits.ligneEtat`. Styles : `styles/64-produits.css`, `styles/45-stock.css`.
+- Tests : `tests/unitaires/produits.test.mjs` (3 de plus), scénario `etapes_po` ; `etapes_pr`, `etapes_v3`,
+  `etapes_n4`, `etapes_st` mis à jour.
+
+À vérifier :
+- Stock › Ajouter › Mettre du miel en pots, avec un couvercle à 0 : l'alerte, « Autres couvercles », « Noter un achat ».
+- Dans la mise en pots, la liste « Miel » : plus d'hydromel ni de pain d'épices ; pas de « 0 g ».
+- Produits › Stock : les vignettes de lots ; toucher un lot ouvre sa fiche ; « Nouveau lot » sur l'hydromel.
+- Produits › Clients : plus de pot ; la ligne sous le titre est la même sur les quatre onglets.
+- Ordinateur (1 280 px) : vignettes quatre par ligne.
+
 ## v5.66 · à publier en recette · ventes, clients et récolte
 **Migration 033 (ne casse pas l'ancienne version, après 032).** Maquettes « Apiviz : ventes, clients et récolte » du
 18 nov. 2026 (9 écrans téléphone) ; Pierre-Louis : « je valide la totalité ». Point de départ : il fallait ajouter un

@@ -1,0 +1,67 @@
+    # v5.67 — Produits : mise en pots, lots, clients (maquettes du 20 nov. 2026). Mise en pots : titre fixe, ce qui manque
+    # en alerte avec deux actions, miels et formats tirés des seuls lots de miel (ni hydromel ni « 0 g »), prix proposé.
+    # Onglets : même ligne d'état partout, tuiles seulement sur Ventes, ni pot ni tuiles sur Clients. Stock : une carte
+    # par produit avec ses lots en vignettes, « Ajouter » et sa feuille. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    P500, CAP = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["articles"] = [{"id": A1, "nom": "Candy", "type": "Consommable", "famille": "alimentation", "unite": "kg", "stock": 1, "seuil": 2},
+                        {"id": P500, "nom": "Pot 500 g vide", "type": "Consommable", "famille": "emballage", "contenance_g": 500, "unite": "unité", "stock": 40, "seuil": 0},
+                        {"id": CAP, "nom": "Capsules TO63", "type": "Consommable", "famille": "emballage", "unite": "unité", "stock": 0, "seuil": 0}]
+    DATA["mouvements_stock"] = []
+    H, G = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["lots_stock"] = [l for l in DATA["lots_stock"] if l["format_g"] == 250] + [
+        {"id": H, "code": "H26-01", "categorie": "Hydromel", "miel": "Hydromel", "unite": "bouteille", "format_libelle": "75 cl", "format_g": None, "prix": 12, "pots_initiaux": 10, "pots_restants": 10, "ddm": "2027-03-13"},
+        {"id": G, "code": "P26-01", "categorie": "Pain d'épices", "miel": "Pain d'épices", "unite": "sachet", "format_libelle": "100g", "format_g": None, "prix": 5, "pots_initiaux": 20, "pots_restants": 20, "ddm": None}]
+    DATA["vente_lignes"] = [x for x in DATA["vente_lignes"] if any(l["id"] == x["lot_id"] for l in DATA["lots_stock"])]
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # Mise en pots
+    page.evaluate("ACT.newlot()"); page.wait_for_selector(".st-mp")
+    verif(page.locator(".head h1").inner_text() == "Mise en pots", "titre fixe : « Mise en pots » (%s)" % page.locator(".head h1").inner_text())
+    formats = page.locator(".st-formats button").all_inner_texts()
+    verif("0 g" not in formats and formats == ["250 g", "500 g", "1 kg"], "formats sans « 0 g » : %s" % formats)
+    miels = page.locator("#mp_miels option").evaluate_all("l => l.map(o => o.value)")
+    verif(miels == ["Toutes fleurs"], "miels : ni hydromel ni pain d'épices (%s)" % miels)
+    page.click(".st-formats [data-v='500']"); page.wait_for_timeout(200)
+    verif(page.locator(".st-manque[role=alert]").count() == 1 and "Plus de Capsules TO63" in page.locator(".st-manque").inner_text(), "capsules à 0 : alerte en entier")
+    verif(page.locator(".st-manque [data-act=mpautre]").inner_text() == "Autres couvercles" and page.locator(".st-manque [data-act=newdepense]").count() == 1, "alerte : changer de couvercle, noter un achat")
+    verif(page.input_value("#mp_prix") == "14" and "250 g" in page.locator(".st-prixd").inner_text(), "prix proposé d'après le pot de 250 g à 7 € : %s" % page.input_value("#mp_prix"))
+    shot("po-mise-en-pots")
+    page.click(".st-manque [data-act=mpautre]"); page.wait_for_timeout(200)
+    verif(page.evaluate("document.activeElement.id") == "mp_couvercle", "« Autres couvercles » mène au choix du couvercle")
+    page.click("[data-act=mpannuler]"); page.wait_for_timeout(300)
+
+    # Stock : cartes produit, vignettes, Ajouter
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
+    cartes = page.locator(".pr-produit .pr-cat").all_inner_texts()
+    verif(cartes == ["Miel", "Hydromel", "Pain d'épices"], "une carte par produit : %s" % cartes)
+    verif(page.locator(".card.tbl").count() == 0 and page.locator(".pr-lot[data-act=erlot]").count() == 3, "lots en vignettes, plus de tableau")
+    verif("10 / 10" in page.locator(".pr-lot[data-v='%s']" % H).inner_text() and "DDM 03/27" in page.locator(".pr-lot[data-v='%s']" % H).inner_text(), "vignette : restants et DDM")
+    verif(page.locator(".u-tuiles").count() == 0 and page.locator(".st-chiffres").count() == 1, "Stock : chiffres du miel en une rangée, pas de tuiles")
+    etat = page.locator(".head .sub").inner_text()
+    verif(etat.startswith("3 produits · 41 en stock"), "ligne d'état : tous les produits (%s)" % etat)
+    shot("po-stock")
+    page.click(".pr-produit:has-text('Hydromel') .pr-lot-ajout"); page.wait_for_selector("#pr_nom")
+    verif(page.input_value("#pr_code") == "H26-02", "« Nouveau lot » d'hydromel : lot H26-02 proposé")
+    page.evaluate("ACT.prannuler()"); page.wait_for_selector(".pr-catalogue")
+    page.click(".pr-lot[data-v='%s']" % H); page.wait_for_selector(".er-fil")
+    verif(page.evaluate("S.route") == "lot", "un toucher sur la vignette ouvre la fiche du lot")
+
+    # Onglets : Clients sans pot ni tuiles, Ventes avec
+    page.evaluate("ACT.go('clients'); ACT.uonglet('clients')"); page.wait_for_timeout(400)
+    verif(page.locator(".al-pots").count() == 0 and page.locator(".u-tuiles").count() == 0, "Clients : ni pot ni tuiles")
+    verif(page.locator(".head .sub").inner_text() == etat, "Clients : même ligne d'état que Stock")
+    shot("po-clients")
+    page.evaluate("ACT.uonglet('ventes')"); page.wait_for_selector(".u-tuiles")
+    verif(page.locator(".u-tuile").count() == 3 and page.locator(".head .sub").inner_text() == etat, "Ventes : les trois tuiles, même ligne d'état")
+    tuile = page.locator(".u-tuile[data-v=stock] b").inner_text()
+    verif(tuile.replace(" ", "").replace(" ", "").strip() == "41", "la tuile « en stock » dit la même chose que la ligne d'état (%s)" % tuile)

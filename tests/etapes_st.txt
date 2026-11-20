@@ -98,7 +98,7 @@
     verif(page.evaluate("S.route") == "miseenpots", "« Nouveau lot » ouvre la mise en pots")
     page.click(".st-formats [data-v='250']"); page.wait_for_timeout(200)
     verif(page.input_value("#mp_pot") == P250 and page.input_value("#mp_couvercle") == COU and page.input_value("#mp_etiquette") == ETI, "pot, couvercle et étiquette du format proposés")
-    verif(page.locator(".head h1").inner_text().startswith("Tu peux remplir jusqu’à 75 pots de 250 g"), "limite : " + page.locator(".head h1").inner_text())
+    verif(page.locator(".head h1").inner_text() == "Mise en pots" and page.locator(".st-limite").inner_text().startswith("Tu peux remplir jusqu’à 75 pots de 250 g"), "titre fixe et limite dessous (v5.67) : " + page.locator(".st-limite").inner_text())
     page.fill("#mp_pots", "80"); page.dispatch_event("#mp_pots", "input"); page.wait_for_timeout(100)
     verif(page.locator(".st-alerte").count() >= 1 and page.locator("[data-act=mpvalider]").is_disabled(), "80 pots : il manque des étiquettes, validation bloquée")
     page.fill("#mp_pots", "40"); page.dispatch_event("#mp_pots", "input"); page.wait_for_timeout(100)

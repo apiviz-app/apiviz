@@ -42,11 +42,11 @@
     page.click("[data-act=uannuler]")
     verif(page.locator("#uCarte.u-visee").count() == 0 and len([1 for m, u, b in requetes if m == "PATCH"]) == avant, "« Annuler » ne change rien")
     # Tableaux en cartes sur téléphone
-    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".card.tbl td[data-label]")
-    verif(page.locator(".card.tbl thead").first.evaluate("e => getComputedStyle(e).display") == "none", "en-têtes de tableau masqués sur téléphone")
-    lab = page.locator(".card.tbl tbody tr").first.locator("td").nth(1).get_attribute("data-label")
-    verif(lab == "Produit", "chaque cellule porte le titre de sa colonne (Produit, ex-Miel, v5.65) (%s)" % lab)
-    verif(page.locator(".card.tbl [data-act=etiq]").first.is_visible(), "bouton Étiquettes visible sans faire défiler")
+    # v5.67 : l'onglet Stock n'a plus de tableau des lots ; les lots sont des vignettes, deux par ligne sur téléphone.
+    page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-lot[data-act=erlot]")
+    b = page.locator(".pr-lot").evaluate_all("l => l.slice(0, 2).map(x => x.getBoundingClientRect()).map(r => [Math.round(r.top), Math.round(r.width)])")
+    verif(len(b) == 2 and b[0][0] == b[1][0] and b[0][1] < 190, "vignettes de lots deux par ligne (%s)" % b)
+    verif(page.locator(".card.tbl").count() == 0 and page.locator(".pr-lot").first.evaluate("e => e.getBoundingClientRect().height") < 140, "plus de fiche de cinq lignes par lot")
     page.wait_for_timeout(400); page.screenshot(path="v2/stocks.png", full_page=True)
     page.evaluate("ACT.go('compta')"); page.wait_for_timeout(300)
     verif(page.locator(".dj-table tbody tr").count() >= 1 and page.locator(".op-boite").first.evaluate("b => getComputedStyle(b).overflowX") == "auto", "dépenses : journal en tableau qui défile (v5.38)")

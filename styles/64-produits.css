@@ -27,3 +27,30 @@
 .pr-ajout{display:flex;align-items:center;justify-content:center;gap:8px;min-height:var(--cible);margin-top:10px;border:1.5px dashed var(--line2);border-radius:var(--r-m);background:transparent;color:var(--ink);font:600 var(--t-m) 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
 .pr-ajout:hover{background:var(--honeysoft)}
 @media (prefers-reduced-motion:reduce){.pr-modele{transition:none}.pr-modele:active{transform:none}}
+/* v5.67 (maquettes « Produits : mise en pots, lots, clients » du 20 nov. 2026) : onglet Stock en cartes produit, lots en
+   vignettes deux par ligne (quatre sur ordinateur), feuille « Ajouter au stock ». */
+.pr-catalogue{display:flex;flex-direction:column;gap:12px}
+.pr-produit{display:flex;flex-direction:column;gap:12px}
+.pr-produit .pr-ligne{border-top:0;padding:0;min-height:0}
+.pr-lots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:900px){.pr-lots{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pr-lot{display:flex;flex-direction:column;gap:6px;min-height:92px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:var(--t-s)/1.3 'Instrument Sans',system-ui,sans-serif;text-align:left;cursor:pointer;transition:border-color var(--duree-rapide),background var(--duree-rapide)}
+.pr-lot:hover{border-color:var(--line2);background:var(--cire)}
+.pr-lot-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.pr-lot-h b{font-size:var(--t-m)}
+.pr-lot-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-jauge{display:block;height:6px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.pr-jauge i{display:block;height:100%;border-radius:var(--r-pill);background:var(--honey)}
+.pr-lot-bas .pr-jauge i{background:var(--watch)}
+.pr-lot-vide{background:var(--ground);color:var(--muted)}
+.pr-lot-b{display:flex;justify-content:space-between;gap:6px;color:var(--muted);font-size:var(--t-xs);font-variant-numeric:tabular-nums}
+.pr-lot-ajout{align-items:center;justify-content:center;flex-direction:row;gap:6px;border:1.5px dashed var(--line2);background:transparent;color:var(--muted);font-weight:600}
+.pr-lot-ajout:hover{background:var(--honeysoft);color:var(--ink)}
+.pr-choix-l{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.pr-choix{display:flex;align-items:center;gap:14px;width:100%;min-height:var(--cible);padding:14px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:var(--t-m) 'Instrument Sans',system-ui,sans-serif;text-align:left;cursor:pointer}
+.pr-choix:hover{background:var(--honeysoft)}
+.pr-choix-t{flex:1;display:flex;flex-direction:column;gap:3px}
+.pr-choix-t b{font-size:var(--t-l)}
+.pr-choix-discret{border-style:dashed;background:transparent}
+.pr-choix-discret .pr-choix-t b{font-size:var(--t-m)}
+@media (prefers-reduced-motion:reduce){.pr-lot{transition:none}}

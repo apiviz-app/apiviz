@@ -340,7 +340,8 @@ const AL = (() => {
   function completerClients() {
     const pots = potsParFormat(), wrap = document.querySelector(".wrap");
     const prec = S.alMiel || {}, suite = {};
-    if (pots.length && wrap) {
+    // v5.67 : les pots (raccourci de vente) seulement sur l'onglet Ventes, où la vitrine les remplace ; plus sur Clients.
+    if (pots.length && wrap && UX.ongletMiel?.() === "ventes") {
       wrap.querySelector(".u-tuiles")?.insertAdjacentHTML("beforebegin", `<section class="al-pots" aria-label="Pots à vendre">${pots.map((p) => {
         const h = Math.round(p.reste / p.total * 100), av = prec["p" + p.g];
         suite["p" + p.g] = h;
