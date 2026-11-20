@@ -89,6 +89,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Sous chaque réponse : **Écouter**, le coût réel, et **Ajouter à l'agenda** quand un conseil donne sa date (« avant
   samedi »). Le haut-parleur, en haut, fait lire chaque réponse. ⋯ › **Mains libres** : pour le rucher, avec des gants :
   on parle, API répond en réponse rapide et lit sa réponse ; touche n'importe où pour reparler.
+- *(v5.72)* **Sans réseau**, API répond ce qu'il sait déjà (dernière visite, poids, reine, traitement d'une ruche, stock,
+  tâches) et garde les autres questions pour les poser au retour du réseau. Quand une réponse parle du poids d'une ruche,
+  ses pesées s'affichent en **courbe**. Dis-lui tes façons de faire (« mon seuil varroa est de 2 % ») : il propose de les
+  **retenir** (Réglages › API › Ce qu'API sait de toi › Oublier pour revenir en arrière). En mains libres, l'**écoute
+  continue** enchaîne les questions sans toucher l'écran ; « Mains libres » est aussi dans la feuille du bouton API.
+- *(v5.72)* **Conseils au bon moment** : un conseil d'API par jour au plus dans les Rappels (et en notification si tu les
+  as autorisées), le lundi le point de la semaine ; jamais pendant une visite. Réglages › API › Conseils d'API.
 
 - **Visite** : au doigt, ou « Visiter à la voix » (dire par exemple « activité faible, reine vue, 38 kilos, c'est
   bon »). Photos réduites avant l'envoi, 10 au plus par visite. À la relecture *(v5.71)*, « API a remarqué » signale ce

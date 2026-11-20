@@ -218,3 +218,45 @@ html.rt-anim-aucune :is(.gv-g,.gv-pris,.as-onde i,.ae-onde i,.am-ondes,.as-goutt
   .gv-g,.gv-pris,.as-onde i,.ae-onde i,.am-ondes,.as-gouttes.gv-saute{animation:none!important}
   .gv-vol{display:none}
 }
+
+/* ---------- v5.72 : suite de l'espace API ---------- */
+/* La courbe de la ruche dans la réponse. */
+.as-courbe{margin:10px 0 4px;padding:10px 12px 8px;border-radius:var(--r-m);background:var(--ground)}
+.as-courbe svg{display:block;width:100%;height:auto;max-width:420px}
+.as-c-axe{stroke:var(--line);stroke-width:1.5}
+.as-c-ruche{fill:none;stroke:var(--honey);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.as-c-moy{fill:none;stroke:#8A938D;stroke-width:2.2;stroke-dasharray:5 4}
+.as-c-point{fill:var(--honey);stroke:var(--card);stroke-width:2}
+.as-c-date{font-size:11px;fill:var(--muted);font-family:inherit}
+.as-c-val{font-size:12px;font-weight:700;fill:var(--watch);font-family:inherit}
+.as-courbe figcaption{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin-top:4px;font-size:12px}
+.as-c-l{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.as-c-l::before{content:"";width:18px;height:0;border-top:3px solid var(--honey)}
+.as-c-l.moy{font-weight:600;color:var(--muted)}
+.as-c-l.moy::before{border-top:2px dashed #8A938D}
+.as-courbe .small{color:var(--muted);margin-left:auto}
+/* La mémoire qui apprend. */
+.as-apprendre{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--honeysoft)}
+.as-apprendre p{flex:1;min-width:160px;margin:0;font-size:15px;font-weight:600;line-height:1.35}
+.as-apprendre .as-gestes{display:flex;align-items:center;gap:12px}
+.as-apprendre .btn{background:var(--pine);border-color:var(--pine);color:#fff}
+.as-appris{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--muted)}
+/* Sans réseau. */
+.as-cout.as-local .as-cout-g{color:var(--good)}
+.as-en-attente .as-cout.as-local .as-cout-g{color:var(--watch)}
+.as-en-attente{border-style:dashed}
+.as-file{margin:0 0 6px;color:var(--watch);font-weight:700}
+.as-form.epuise textarea{background:var(--ground);color:var(--muted)}
+/* Mains libres depuis la feuille, écoute continue. */
+.as-parle{flex-wrap:wrap}
+.as-parle-t{flex:1}
+.as-mains{flex:none;min-height:44px;padding:0 14px;border:1.5px solid var(--ink);border-radius:var(--r-pill);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.am-continu{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border:0;background:none;color:#C9D2CB;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.am-continu i{position:relative;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.18);transition:background var(--duree-rapide)}
+.am-continu i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform var(--duree-rapide) var(--sortie)}
+.am-continu.on{color:#fff}.am-continu.on i{background:var(--honey)}.am-continu.on i::after{transform:translateX(16px)}
+p.am-cout{margin:6px 18px 0;text-align:left}
+/* Agenda : les jours où API propose quelque chose. */
+.ag-page .ap-propose{position:relative;outline:2px dashed var(--honey);outline-offset:-3px}
+.ap-marque{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:var(--honey);color:var(--ink);font-size:11px;font-weight:700;line-height:16px;text-align:center}
+@media (prefers-reduced-motion:reduce){.am-continu i,.am-continu i::after{transition:none}}

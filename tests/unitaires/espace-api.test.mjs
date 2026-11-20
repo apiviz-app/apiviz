@@ -155,3 +155,62 @@ test("voix d'API : préférences par défaut, normalisées", () => {
   assert.equal(VA.doitLire({ lecture: "toujours" }, false), true);
   assert.equal(VA.doitLire({ lecture: "jamais" }, true), false);
 });
+
+// ---------- v5.72 ----------
+const D = {
+  ruches: [{ id: "r5", nom: "Ruche 5", rucher: "Bois" }, { id: "r1", nom: "Ruche 1", rucher: "Bois" }, { id: "r15", nom: "Ruche 15", rucher: "Pré" }],
+  visites: [
+    { ruche_id: "r5", date_visite: "2026-11-17", poids_kg: 38, reine: "Vue", couvain: "Normal", activite: "Normale" },
+    { ruche_id: "r5", date_visite: "2026-10-10", poids_kg: 40, traitement: "Acide oxalique" },
+    { ruche_id: "r5", date_visite: "2026-09-02", varroa: 9, varroa_abeilles: 300, varroa_methode: "Lavage" },
+    { ruche_id: "r1", date_visite: "2026-11-15", poids_kg: 44 }, { ruche_id: "r1", date_visite: "2026-10-12", poids_kg: 46 },
+    { ruche_id: "r15", date_visite: "2026-11-01", poids_kg: 20 },
+  ],
+  articles: [{ nom: "Candy", stock: 1, seuil: 2, unite: "kg" }, { nom: "Pots 500 g", stock: 40, seuil: 0, unite: "unité" }],
+  taches: [{ titre: "Peser Ruche 5", echeance: "2026-11-19", faite: false }, { titre: "Plus tard", echeance: "2026-12-01", faite: false }],
+};
+
+test("rucheDuTexte : le nom le plus long, en entier", () => {
+  assert.equal(C.rucheDuTexte("Comment va Ruche 15 ?", D.ruches).id, "r15");
+  assert.equal(C.rucheDuTexte("et ruche 5, elle mange ?", D.ruches).id, "r5");
+  assert.equal(C.rucheDuTexte("Ruche 51", D.ruches), null);
+});
+
+test("reponseLocale : réponses simples sans réseau, sinon null", () => {
+  const o = { seuil: 3, aujourdhui: AUJ };
+  assert.equal(C.reponseLocale("Combien pèse Ruche 5 ?", D, o).resume, "Ruche 5 : 38 kg le 17 nov.");
+  assert.equal(C.reponseLocale("Combien pèse Ruche 5 ?", D, o).faits[0].refs[0].id, "r5");
+  assert.equal(C.reponseLocale("La reine de Ruche 5 ?", D, o).resume, "Reine vue le 17 nov.");
+  assert.equal(C.reponseLocale("Ruche 5 a été traitée ?", D, o).resume, "Ruche 5 : dernier traitement noté : Acide oxalique le 10 oct. ; varroa à 3 % le 2 sept.");
+  assert.equal(C.reponseLocale("Ruche 5", D, o).resume, "Dernière visite de Ruche 5 le 17 nov. : activité normale, couvain normal, reine vue, 38 kg.");
+  assert.equal(C.reponseLocale("Quel est mon seuil varroa déjà ?", D, o).resume, "Ton seuil d’alerte varroa : 3 varroas pour 100 abeilles.");
+  assert.equal(C.reponseLocale("Il me reste combien de candy ?", D, o).resume, "Candy : 1 kg en stock (seuil 2).");
+  assert.equal(C.reponseLocale("Qu'est-ce que j'ai à faire ?", D, o).resume, "1 tâche pour aujourd’hui ou en retard : Peser Ruche 5.");
+  assert.equal(C.reponseLocale("Pourquoi mes abeilles sont agressives ?", D, o), null, "question ouverte : pour API");
+  assert.equal(C.reponseLocale("Combien pèse Ruche 15 ?", { ...D, visites: [] }, o).resume, "Je n’ai encore aucune visite de Ruche 15.");
+});
+
+test("apprentissage : ce qu'API propose de retenir", () => {
+  assert.deepEqual(C.apprentissage("Mon seuil varroa est de 2 %"), { cle: "varroaSeuil", valeur: 2, texte: "Je retiens que ton seuil d’alerte varroa est 2 % ?" });
+  assert.equal(C.apprentissage("mon seuil varroa c'est 2,5 pour cent").valeur, 2.5);
+  assert.equal(C.apprentissage("En hiver je m'alerte quand une ruche est sous 18 kg").cle, "hiverPoids");
+  assert.equal(C.apprentissage("Je vise 120 kilos cette année").valeur, 120);
+  assert.equal(C.apprentissage("Combien pèse Ruche 5 ?"), null);
+  assert.equal(C.apprentissage("seuil varroa 90 %"), null, "valeur aberrante : rien");
+});
+
+test("serieRuche : pesées et moyenne du rucher le même mois", () => {
+  const s = C.serieRuche(D, "r5");
+  assert.equal(s.nom, "Ruche 5");
+  assert.deepEqual(s.points, [{ date: "2026-10-10", kg: 40, moyenne: 46 }, { date: "2026-11-17", kg: 38, moyenne: 44 }]);
+  assert.equal(s.min, 38); assert.equal(s.max, 46);
+  assert.equal(C.serieRuche(D, "r15"), null, "une seule pesée : pas de courbe");
+});
+
+test("rappelsApi : un conseil par jour, le point du lundi, rien en visite", () => {
+  const lignes = [{ titre: "Ruche 5 a perdu 1 kg", sous: "D’après 3 pesées", act: "ruche", v: "r5" }];
+  assert.deepEqual(C.rappelsApi({ lignes, aujourdhui: AUJ }).map((r) => [r.cle, r.titre, r.sous]), [["api-2026-11-20", "Ruche 5 a perdu 1 kg", "Conseil d’API · D’après 3 pesées"]]);
+  assert.deepEqual(C.rappelsApi({ lignes, aujourdhui: "2026-11-23" }).map((r) => r.act), ["ruche", "apsemaine"], "lundi : le point de la semaine");
+  assert.equal(C.rappelsApi({ lignes, aujourdhui: "2026-11-23", prefs: { notif: false, lundi: false } }).length, 0);
+  assert.equal(C.rappelsApi({ lignes, aujourdhui: AUJ, enVisite: true }).length, 0);
+});

@@ -58,6 +58,30 @@ function carte() {
 function dessiner() {
   const c = document.getElementById("apAgenda");
   if (c) c.outerHTML = carte();
+  marquer();
+}
+
+// v5.72 : les jours où API propose quelque chose sont marqués dans le calendrier (pastille miel en pointillé), tant que
+// les propositions sont ouvertes ; le calendrier se redessine en changeant de mois ou de semaine : les marques suivent.
+function marquer() {
+  document.querySelectorAll(".ap-marque").forEach((m) => m.remove());
+  document.querySelectorAll(".ap-propose").forEach((c) => c.classList.remove("ap-propose"));
+  if (!etat.ouvert) return;
+  const parJour = new Map();
+  etat.props.forEach((p, i) => { if (p.echeance && !etat.ecartes.has(i)) parJour.set(p.echeance, (parJour.get(p.echeance) || 0) + 1); });
+  parJour.forEach((n, jour) => document.querySelectorAll(`.ag-page [data-cp="agjour"][data-v="${jour}"]`).forEach((c) => {
+    c.classList.add("ap-propose");
+    c.insertAdjacentHTML("beforeend", `<span class="ap-marque" title="${n} proposition${n > 1 ? "s" : ""} d’API">${n}</span>`);
+    if (!/proposition d’API/.test(c.getAttribute("aria-label") || "")) c.setAttribute("aria-label", `${c.getAttribute("aria-label") || jour}, ${n} proposition${n > 1 ? "s" : ""} d’API`);
+  }));
+}
+let observateur = null;
+function suivreCalendrier() {
+  const page = document.querySelector(".wrap .ag-page");
+  if (!page || typeof MutationObserver == "undefined") return;
+  observateur?.disconnect();
+  observateur = new MutationObserver(() => { if (etat.ouvert && !document.querySelector(".ag-page .ap-marque")) marquer(); });
+  observateur.observe(page, { childList: true, subtree: true });
 }
 
 /** Après le rendu de l'agenda (et du calendrier d'agenda-mois.js) : la carte d'API en tête. */
@@ -67,6 +91,8 @@ function completer() {
   if (!page) return;
   if (etat.ouvert) etat.props = donnees();
   page.insertAdjacentHTML("beforebegin", carte());
+  marquer();
+  suivreCalendrier();
 }
 if (typeof window != "undefined" && window.Noyau?.crochets) window.Noyau.crochets.sur("apresRendu", "agenda-api", completer);
 // La météo d'un rucher arrive : les propositions ouvertes en tiennent compte.
@@ -76,6 +102,8 @@ if (typeof window != "undefined") {
 }
 
 export const actions = {
+  // v5.72 : « Le point de la semaine avec API » (rappel du lundi) : l'agenda, propositions ouvertes.
+  apsemaine: () => { etat.ouvert = true; etat.ecartes.clear(); go("agenda"); },
   apagenda: () => { etat.ouvert = true; etat.ecartes.clear(); etat.props = donnees(); dessiner(); },
   apfermer: () => { etat.ouvert = false; dessiner(); },
   apgarder: (i) => { etat.ecartes.delete(Number(i)); dessiner(); },
