@@ -38,6 +38,12 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.69 (20 nov. 2026)** : **Ma saison** devient la saison en cours en un écran (phase et frise, priorité d'API, quatre
+chiffres et leurs aperçus, six raccourcis), même place (Menu › Ruchers et produits). L'ancien contenu (bilan de l'année,
+partager, imprimer) devient l'écran **Bilan de la saison** (niveau 2 sous Ma saison, ouvert par le raccourci « Bilan » ;
+retour « ‹ Ma saison »). Pas de nouvelle rubrique. Décision de Pierre-Louis (20 nov. 2026, maquette « Accueil compact » :
+« c'est validé, je veux bien que tu l'implémentes »).
+
 **v5.68 (20 nov. 2026)** : carte **Ton rayon** sur l'Accueil (une alvéole par semaine de mars à novembre, série de
 semaines, visites et jalons) et écran **Jalons** (niveau 2 sous Accueil, ouvert depuis la carte et l'annonce d'un nouveau
 jalon ; retour « ‹ Accueil »). Réglages › Affichage gagne **Sons et vibrations** (feuille), L'exploitation gagne

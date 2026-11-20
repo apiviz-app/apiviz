@@ -134,7 +134,10 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   « Je m'en occupe ». Rattache une note à une ruche avec « Sur une ruche ».
 - **Courbes** *(v5.61)* : fiche d'une ruche › Courbes. Poids, varroa ou force sur la saison, contre l'an dernier, avec
   les récoltes et les traitements ; compare à une autre ruche.
-- **Ma saison** *(v5.61)* : Menu › Ruchers et produits. Le bilan de l'année en un écran ; partage-le ou imprime-le en PDF.
+- **Ma saison** *(v5.69)* : Menu › Ruchers et produits. Où en est ta saison, sans défiler : la phase en cours sur la
+  frise (touche un moment pour le résumer), la priorité d'API (« + Agenda », « Suivant »), quatre chiffres qui changent
+  avec la saison (touche-en un pour l'aperçu) et six raccourcis, dont celui « du moment ». Le raccourci **Bilan** donne
+  le bilan de l'année *(v5.61)* : partage-le ou imprime-le en PDF.
 - **Commandes** *(v5.57, Produits)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
   clients réservent les produits en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
   s'enregistre), Prévenir (SMS prêt), Annuler.

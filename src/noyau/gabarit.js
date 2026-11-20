@@ -24,6 +24,8 @@ export const PARENTS = {
   rappels: ["reglages", "Réglages"], synchronisation: ["reglages", "Réglages"],
   // Factures (17 nov. 2026) : le détail d'une facture d'achat revient à la liste des factures.
   achatfacture: ["factures", "Factures"],
+  // Ma saison (v5.69) : le bilan de l'année revient à l'écran de la saison.
+  msbilan: ["masaison", "Ma saison"],
   // Outils de terrain (v5.57).
   etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Produits"],
   // Offres et gouttes d'API (IT-27).
