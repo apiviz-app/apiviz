@@ -1,6 +1,6 @@
 # Apiviz — confidentialité et services tiers
 
-Version du 6 novembre 2026 (IT-04, AP-FEAT-021). Ce texte est la source de la page publiée `confidentialite.html`
+Version du 20 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.72). Ce texte est la source de la page publiée `confidentialite.html`
 (racine du site) : toute modification se fait dans les deux fichiers, dans la même pull request
 (contrôlé par `tests/unitaires/confidentialite.test.mjs`).
 
@@ -59,10 +59,9 @@ et choisir de recevoir ou non les nouveautés par e-mail (non par défaut).
 | Service | Ce qu'il reçoit | Pourquoi | Où |
 |---|---|---|---|
 | Supabase (hébergeur de la base de données, des comptes et des photos) | Toutes les données ci-dessus | Faire fonctionner l'application | Union européenne |
-| GitHub Pages (hébergement des fichiers de l'application) | Votre adresse IP, comme tout site visité | Télécharger l'application | États-Unis (GitHub, Inc.) |
+| Cloudflare (hébergement des fichiers de l'application) | Votre adresse IP, comme tout site visité | Télécharger l'application | États-Unis (Cloudflare, Inc.), réseau mondial |
 | jsDelivr (diffusion de bibliothèques : accès à la base, carte, QR code) | Votre adresse IP | Télécharger ces bibliothèques | Réseau mondial |
-| Google Fonts (polices de caractères) | Votre adresse IP | Afficher les polices | Google, réseau mondial |
-| OpenStreetMap (fonds de carte, recherche d'adresse) | Votre adresse IP, la zone de carte affichée, l'adresse ou la position recherchée | Carte des ruchers, nom de la commune | Royaume-Uni (fondation OpenStreetMap), réseau mondial |
+| IGN – Géoplateforme (fond de carte Plan IGN, recherche d'adresse) | Votre adresse IP, la zone de carte affichée, l'adresse ou la position recherchée | Carte des ruchers, adresse d'un client, nom de la commune | France (Institut national de l'information géographique et forestière, établissement public) |
 | Open-Meteo (météo) | La position de vos ruchers (latitude, longitude) | Prévisions et créneaux de visite | Europe |
 | Anthropic (modèle Claude, pour l'assistant API et la lecture des factures) | Votre question et les données de votre exploitation utiles à la réponse (colonies, visites, ventes…), au moment où vous la posez ; la facture d'achat que vous lui donnez (photo ou PDF), avec la liste de vos articles et fournisseurs, au moment de la lecture | Répondre à vos questions, lire vos factures | États-Unis (Anthropic, PBC) ; données non utilisées pour entraîner ses modèles, conservées au plus 30 jours par Anthropic pour la sécurité |
 

@@ -3,7 +3,7 @@
     exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
     for r in DATA["ruches"][:3]: r.update({"lat": 47.32, "lng": 5.04, "hausses": 2})
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     requetes = []
     page.on("request", lambda r: requetes.append((r.method, r.url, r.post_data)))
     import os; os.makedirs("n4", exist_ok=True)

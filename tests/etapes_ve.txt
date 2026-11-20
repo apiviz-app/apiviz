@@ -8,7 +8,7 @@
     R7 = str(uuid.uuid4())
     DATA["ruches"].append({"id": R7, "nom": "Ruche 7", "rucher": "Verger", "etat": "Bonne", "type_ruche": "", "annee_reine": None, "notes": ""})
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     cap = os.environ.get("CAPTURES")
     if cap: os.makedirs(cap, exist_ok=True)
     page.set_viewport_size({"width": 390, "height": 844})

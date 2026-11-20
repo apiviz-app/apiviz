@@ -195,15 +195,18 @@
   rayon (complément de l'accueil), écran `jalons`, annonce d'un nouveau jalon (ids annoncés et vus gardés sur l'appareil,
   par exploitation et saison). `reglages.js` : « Sons et vibrations » et « Objectif de récolte »
   (`reglages.data.objectif_recolte`, par `saveCfg`). Styles : `styles/66-retours.css`.
-- **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
-  <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
-  sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit
-  s'attendre à perdre l'accès à tout moment, et la page renvoie vers des fournisseurs payants. Exigences : HTTPS,
-  attribution visible (faite : « © OpenStreetMap » sur la carte et sous la carte), en-tête Referer valide pour le web,
-  User-Agent propre à l'application pour une application installée, respect du cache ; téléchargement en masse et
-  « carte hors ligne » interdits. Apiviz est conforme pour le site tant que l'usage reste modeste. **À trancher avant
-  les applications des stores (IT-30) et l'abonnement payant** : passer à un fournisseur de tuiles qui autorise
-  l'usage commercial (ou des tuiles hébergées), la vue web de Capacitor ne permettant pas un User-Agent propre simple.
+- **Fond de carte et adresses : IGN** (v5.72, décision D-09). Plan IGN (WMTS de la Géoplateforme,
+  `GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2`, grille `PM`) et le géocodage (`/geocodage/search` et `/reverse`) sont gratuits,
+  sans clé, sous Licence Ouverte Etalab : usage commercial permis, source à citer (« © IGN – Plan IGN » sur la carte et
+  sous la carte). Limite : 50 requêtes par seconde et par adresse IP. Adresses dans `src/domaines/ruchers/regles.js`
+  (`FOND_CARTE`, `urlCherche`, `urlCommune`) et `src/domaines/ventes/clients-regles.js`. Ne pas utiliser les SCAN 25 /
+  SCAN 100 de l'IGN (licence payante pour l'usage numérique grand public). Remplace `tile.openstreetmap.org` et Nominatim
+  (politique de l'OSMF : applications très utilisées interdites sans accord, aucun service commercial).
+- **Polices** (v5.72) : hébergées avec le site (`styles/00-polices.css`, `styles/polices/`, SIL OFL 1.1), plus de
+  Google Fonts.
+- **Météo** : Open-Meteo, gratuit pour un usage **non commercial** seulement. À remplacer avant toute offre payante :
+  API publique de Météo-France (Licence Ouverte, compte gratuit) par une fonction serveur avec cache par rucher, ou offre
+  Standard d'Open-Meteo (payante).
 - **Environnements** : un seul dépôt, voir `PROCESSUS.md`. La racine porte la configuration de production, `environnements/recette/` celle de la recette.
 - **Créneaux météo** (`meteo.js`, `SEUILS`), cherchés entre 10 h et 16 h sur 3 jours :
   - Température : 15 °C pour une visite normale ([BeekeepingInsider](https://beekeepinginsider.com/whats-the-ideal-hive-inspection-temperature/)), 13 °C pour une visite rapide (55 °F, [Utah State University](https://extension.usu.edu/answers/articles/how-often-should-i-inspect-my-beehive)).

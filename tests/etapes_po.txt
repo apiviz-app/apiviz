@@ -17,7 +17,7 @@
         {"id": G, "code": "P26-01", "categorie": "Pain d'épices", "miel": "Pain d'épices", "unite": "sachet", "format_libelle": "100g", "format_g": None, "prix": 5, "pots_initiaux": 20, "pots_restants": 20, "ddm": None}]
     DATA["vente_lignes"] = [x for x in DATA["vente_lignes"] if any(l["id"] == x["lot_id"] for l in DATA["lots_stock"])]
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     cap = os.environ.get("CAPTURES")
     if cap: os.makedirs(cap, exist_ok=True)
     shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))

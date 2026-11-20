@@ -7,7 +7,7 @@
     cap = os.environ.get("CAPTURES")
     if cap: os.makedirs(cap, exist_ok=True)
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     V0, REC0, T1 = (str(uuid.uuid4()) for _ in range(3))
     t0 = "2026-11-16T10:00:00+00:00"
     DATA["visites"].append({"id": V0, "ruche_id": R1, "date_visite": "2026-11-16", "activite": "Normale", "provisions": "Bonnes", "reine": "Vue",

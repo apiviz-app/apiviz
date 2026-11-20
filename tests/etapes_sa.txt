@@ -9,7 +9,7 @@
     exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
     DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     # Faux AudioContext : chaque oscillateur démarré note sa fréquence ; navigator.vibrate note son motif.
     ctx.add_init_script("""(() => {
       window.__notes = []; window.__vib = [];
