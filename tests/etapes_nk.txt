@@ -2,7 +2,7 @@
     # Les anciennes définitions window.view* ont été retirées : on vérifie qu'aucune n'existe plus.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     ids = page.evaluate("Noyau.ecrans()")
-    verif(len(ids) == 53 and len(set(ids)) == 53, "53 écrans enregistrés (dont Bilan de la saison, v5.69, Jalons, v5.68, Récoltes, v5.66, Produit, v5.65, Fil de l’équipe et Ma saison, v5.61, Mon offre, Choisir une offre et Recharger, IT-27, Caisse, Commandes et Étiquettes QR, v5.57, Synchronisation, IT-09, Factures et Facture, 17 nov. 2026, API, IT-24, Déplacer, IT-06, Mise en pots, v5.30, Visite express et Entre associés, v5.32, Inventaire, Liste de courses et Mon profil, v5.38), chacun une seule fois : %s" % len(ids))
+    verif(len(ids) == 54 and len(set(ids)) == 54 and "apimemoire" in ids, "54 écrans enregistrés (dont Ce qu’API sait de toi, v5.71, Bilan de la saison, v5.69, Jalons, v5.68, Récoltes, v5.66, Produit, v5.65, Fil de l’équipe et Ma saison, v5.61, Mon offre, Choisir une offre et Recharger, IT-27, Caisse, Commandes et Étiquettes QR, v5.57, Synchronisation, IT-09, Factures et Facture, 17 nov. 2026, API, IT-24, Déplacer, IT-06, Mise en pots, v5.30, Visite express et Entre associés, v5.32, Inventaire, Liste de courses et Mon profil, v5.38), chacun une seule fois : %s" % len(ids))
     # Un écran enregistré : render() l'utilise et aucune autre définition n'est appelée.
     restes = page.evaluate("""() => ["viewDash", "viewPlus", "viewRuches", "viewRuche", "viewVisite", "viewClients"].filter((v) => v in window)""")
     verif(restes == [], "anciennes définitions recouvertes supprimées : %s" % restes)

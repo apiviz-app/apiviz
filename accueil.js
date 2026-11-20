@@ -47,6 +47,14 @@ const AC = (() => {
     const actions = [r ? `<button type="button" class="btn main" data-act="ruche" data-v="${r.id}">Voir ${esc(r.nom)}</button>` : "",
       tournee ? `<button type="button" class="btn" data-act="${tournee.dataset.act}" data-v="${esc(tournee.dataset.v)}">${esc(tournee.textContent)}</button><button type="button" class="link ac-plustard" data-act="n4plustard">Plus tard</button>` : ""].join("");
     prochaine?.remove();
+    // v5.71 (maquette « Sur l'Accueil : Pour aujourd'hui d'API ») : la priorité, puis jusqu'à deux autres choses utiles
+    // du jour (créneau, saison, stock…), la tournée proposée et le micro ; src/domaines/assistant/aujourdhui.js.
+    // Réglages › API › Conseils d'API peut remettre la priorité seule.
+    const EA = window.Noyau?.espaceApi;
+    if (EA && EA.prefsConseils().accueil) {
+      return EA.carteAccueil({ humeur: r?.etat === "Critique" ? "attention" : "repos",
+        tournee: tournee ? { act: tournee.dataset.act, v: tournee.dataset.v, texte: prochaine?.querySelector("b")?.textContent || tournee.textContent, bouton: tournee.textContent } : null });
+    }
     return `<section class="ac-api${r ? "" : " calme"}">${AL.compagnon(r?.etat === "Critique" ? "attention" : "repos", 44)}
       <div class="ac-api-t"><b id="acPhrase">${esc(AL.phrase())}</b><span class="small">${esc(source)}</span>${actions ? `<div class="ac-api-a">${actions}</div>` : ""}</div></section>`;
   }

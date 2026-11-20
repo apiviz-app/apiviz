@@ -47,10 +47,10 @@
               ("achatfacture", "S.factureCle = S.d.depenses[0].achat_id || S.d.depenses[0].id; ACT.go('achatfacture')"), ("previsions", "ACT.go('previsions')"), ("associes", "ACT.go('associes')"),
               ("registre", "ACT.go('registre')"), ("declaration", "ACT.go('declaration')"), ("reglages", "ACT.go('reglages')"), ("membres", "ACT.go('membres')"),
               ("profil", "ACT.go('profil')"), ("rappels", "ACT.go('rappels')"), ("activite", "ACT.go('activite')"), ("jalons", "ACT.go('jalons')"), ("recherche", "ACT.go('recherche')"),
-              ("saison", "ACT.go('saison')"), ("plus", "ACT.go('plus')"), ("api", "ACT.go('api')"),
+              ("saison", "ACT.go('saison')"), ("plus", "ACT.go('plus')"), ("api", "ACT.go('api')"), ("apimemoire", "ACT.go('apimemoire')"),
               ("offre", "ACT.go('offre')"), ("offres", "ACT.go('offres')"), ("recharge", "ACT.go('recharge')"),
               ("visite", "S.visite = null; ACT.newvisite()"), ("vente", "ACT.newvente()"), ("recolte", "ACT.go('recolte')")]
-    NIVEAU2 = {"msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge"}
+    NIVEAU2 = {"msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge", "apimemoire"}
     RAYONS = {"10px", "12px", "14px", "20px", "999px", "50%"}
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)

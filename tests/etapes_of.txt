@@ -127,6 +127,9 @@
     page.wait_for_selector(".as-cout", timeout=8000)
     verif(IA["recus"][-1].get("mode") == "rapide", "mode rapide envoyé à la fonction")
     verif("Réponse rapide" in page.locator(".as-cout").inner_text() and "0,2 goutte" in page.locator(".as-cout").inner_text(), "coût sous la réponse : 0,2 goutte")
+    # v5.71 : dans une conversation, le volet des gouttes est replié ; on l'ouvre pour changer de réponse.
+    verif(page.locator(".as-bas .gv-corps").is_hidden() and "moins d’1 goutte" in page.locator(".as-bas .gv-tete").inner_text(), "conversation : volet replié, coût annoncé")
+    page.click(".as-bas .gv-tete")
     page.click(".as-mode[data-v=approfondi]"); page.fill("#asTexte", "Et l'an dernier ?"); page.locator("#asTexte").press("Enter")
     page.wait_for_function("document.querySelectorAll('.as-cout').length === 2", timeout=8000)
     verif(IA["recus"][-1].get("mode") == "approfondi" and "3 gouttes" in page.locator(".as-cout").last.inner_text(), "réponse approfondie : 3 gouttes")

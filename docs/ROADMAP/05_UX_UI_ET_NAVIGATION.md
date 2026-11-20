@@ -31,12 +31,20 @@ Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
 Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
 Registre et déclaration : onglets Registre · Déclaration
-Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne)
+Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne ; Ce qu'API sait de toi — v5.71, ouvert depuis Réglages › API et l'écran API › ⋯)
 Cloche : feuille Rappels · Loupe : recherche plein écran · Avatar : exploitations, plein soleil, aide, déconnexion
-API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche)
+API (bouton central) : parler à API (micro ; appui long : écoute directe) · rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche) · Ouvrir l'espace API (écran API : pour aujourd'hui, tes échanges, mains libres)
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.71 (20 nov. 2026)** : **Espace API**. L'écran API (même place : bouton central › « Ouvrir l'espace API ») gagne
+« Pour aujourd'hui », le micro, la lecture à voix haute et le mode **Mains libres** (plein écran, sans adresse) ; la carte
+d'API de l'Accueil devient « Pour aujourd'hui ». Réglages gagne un groupe **API** (entre L'exploitation et Sur le terrain :
+Offre et gouttes d'API, qui y déménage, Ce qu'API sait de toi, Voix d'API, Conseils d'API) et l'écran **Ce qu'API sait
+de toi** (niveau 2 sous Réglages ; retour « ‹ Réglages »). Agenda : carte « Organiser avec API » en tête. Pas de nouvelle
+rubrique ni d'entrée de menu. Décision de Pierre-Louis (20 nov. 2026, maquettes « Espace API dans l'appli actuelle » :
+« je souhaite que tu implémentes tout cela »).
 
 **v5.69 (20 nov. 2026)** : **Ma saison** devient la saison en cours en un écran (phase et frise, priorité d'API, quatre
 chiffres et leurs aperçus, six raccourcis), même place (Menu › Ruchers et produits). L'ancien contenu (bilan de l'année,
