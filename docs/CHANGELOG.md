@@ -5,6 +5,17 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## Correctif · à publier en recette · le bas de l'accueil caché sous la barre du bas
+**Aucune migration.** Signalé par Pierre-Louis le 20 nov. 2026 : « sur le menu d'accueil, je ne peux pas descendre
+jusqu'en bas ». Sur téléphone, la barre du bas grandit de la hauteur de la barre système (gestes ou boutons
+Android, trait de l'iPhone), mais la marge sous le contenu restait fixe (96 px). Avec une barre
+système de 48 px, la dernière ligne de « Bien démarrer » restait derrière la barre, même tout en bas.
+
+- `styles/01-base.css` : `main` garde 96 px **plus** `env(safe-area-inset-bottom)` sous le contenu (téléphone).
+
+À vérifier :
+- Appli Android (gestes et trois boutons) et iPhone : accueil tout en bas, la dernière ligne est entière au-dessus de la barre.
+
 ## v5.68 · à publier en recette · sons, vibrations, rayon de la saison et jalons
 **Aucune migration.** À fusionner après la v5.67 (#104), sur laquelle cette branche repose. Maquettes « APIVIZ —
 Interactivité et satisfaction » du 20 nov. 2026 (canvas https://claude.ai/artifact/JFCEa3cMazu1fwN6HxTQvc, 8 écrans
