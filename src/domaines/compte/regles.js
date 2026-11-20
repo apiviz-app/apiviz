@@ -28,7 +28,7 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "fefiltre", "cbmesure", "mspartager", "msimprimer", // fil de l'équipe, courbes, Ma saison (v5.61) : consultation
   "msphase", "msapisuivant", "msapercu", "msruche", "msaller", // Ma saison en un écran (v5.69) : frise, priorités, aperçus
   "rtsemaine", "jlouvrir", "rtfermer", "rtsons", "rtregle", // rayon de la saison, jalons, sons et vibrations de l'appareil (v5.68)
-  "apivoix", "apivoixregle", "apiconseilsreglage", "apiconseilsregle", // Réglages › API : voix et conseils de l'appareil (v5.70)
+  "apivoix", "apivoixregle", "apiconseilsreglage", "apiconseilsregle", // Réglages › API : voix et conseils de l'appareil (v5.71)
   // Ruchers (v5.37, v5.40) : présentation, regroupement, filtres, tri, colonnes, fiche rapide, export (pas la sélection)
   "tbaff", "tbgrouper", "tbfeuille", "tbfermer", "tbfiltre", "tbseuil", "tbsugg", "tbeffacer", "tbcol", "tbcompact", "tbtri", "tbouvrir", "tbexport",
   // Impression et exports (rien n'est modifié)

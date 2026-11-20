@@ -1,4 +1,4 @@
-// Apiviz — Agenda : « Organiser avec API » (v5.70, maquette « L'agenda : API organise ta semaine » du 20 nov. 2026).
+// Apiviz — Agenda : « Organiser avec API » (v5.71, maquette « L'agenda : API organise ta semaine » du 20 nov. 2026).
 // En tête de l'agenda, une carte d'API. Toucher « Organiser avec API » : il propose ce qu'il placerait dans les sept
 // prochains jours (visites selon la météo déjà connue de chaque rucher, priorités de la saison, conseils d'API pas encore
 // faits, matériel sous le seuil), en pointillé, chacun avec sa raison. Une coche garde, une croix écarte ; « Tout

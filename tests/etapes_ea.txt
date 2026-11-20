@@ -1,4 +1,4 @@
-    # v5.70 — Espace API dans l'appli actuelle (maquettes du 20 nov. 2026) : « Pour aujourd'hui » sur l'Accueil, espace API
+    # v5.71 — Espace API dans l'appli actuelle (maquettes du 20 nov. 2026) : « Pour aujourd'hui » sur l'Accueil, espace API
     # (bonjour, liste du jour, haut-parleur, volet des gouttes), parler à API (micro, appui long sur le bouton API, mains
     # libres), lecture à voix haute, « Ajouter à l'agenda » d'un conseil daté, feuille du bouton API, Réglages › API,
     # Ce qu'API sait de toi, Voix d'API, agenda organisé avec API, avis d'API dans la visite à la voix.

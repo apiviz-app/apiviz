@@ -8,7 +8,7 @@
 //   on la touche. Chaque échange est gardé (migration 031), visible de son auteur seul ; sans la migration, la
 //   conversation reste en mémoire comme avant.
 // - API est en lecture seule : aucune saisie n'est faite depuis cet écran (IT-25).
-// - v5.70 (maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026) : l'écran devient l'espace API. Bonjour et
+// - v5.71 (maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026) : l'écran devient l'espace API. Bonjour et
 //   « Pour aujourd'hui » en tête (aujourdhui.js), micro à côté du champ, haut-parleur dans l'en-tête (lecture à voix
 //   haute, voix-api.js), ⋯ : Mains libres, Ce qu'API sait de toi, Voix d'API (ecoute.js, reglages-api.js). Sous chaque
 //   réponse : « Écouter », le coût réel, et « Ajouter à l'agenda » quand un conseil donne sa date. Au-dessus du champ, le
@@ -51,7 +51,7 @@ export function humeur(echanges, enligne = true) {
 const restant = (st) => (st && Number.isInteger(st.restant) ? `${st.restant} question${st.restant > 1 ? "s" : ""} encore possible${st.restant > 1 ? "s" : ""} aujourd’hui` : "");
 
 const GOUTTE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2.5c3.5 4.6 6.5 8.3 6.5 12a6.5 6.5 0 0 1-13 0c0-3.7 3-7.4 6.5-12z" fill="currentColor"/><ellipse cx="9.4" cy="14.2" rx="1.5" ry="2.4" fill="#FFF8E7" opacity=".85"/></svg>';
-/** Coût d'une réponse, sous la réponse (IT-27) : le juste prix se voit. v5.70 : coût réel et ce qui était prévu. */
+/** Coût d'une réponse, sous la réponse (IT-27) : le juste prix se voit. v5.71 : coût réel et ce qui était prévu. */
 const cout = (g) => { const c = C.coutTexte(g); return c ? `<p class="as-cout"><span class="as-cout-g">${GOUTTE}${esc(c.reel)}</span><span>${esc(c.prevu)}</span></p>` : ""; };
 
 // ---------- Lecture à voix haute ----------
@@ -121,7 +121,7 @@ async function garder(x) {
   } catch { /* hors ligne : la conversation reste en mémoire */ }
 }
 
-// ---------- Volet des gouttes (v5.70) ----------
+// ---------- Volet des gouttes (v5.71) ----------
 const CLE_VOLET = "apiviz.api.volet";
 // Ouvert par défaut sur la page de tes échanges ; replié dans une conversation (la zone pour écrire y est fixée en bas
 // et ne doit pas cacher la réponse). Chaque endroit garde le dernier choix sur l'appareil.
@@ -196,7 +196,7 @@ function brancherZone() {
   // Hauteur de la barre du bas : la zone fixée en bas de la conversation se pose juste au-dessus.
   const barre = document.querySelector(".bottom");
   if (f.classList.contains("as-bas")) document.documentElement.style.setProperty("--as-bas", `${barre && getComputedStyle(barre).display !== "none" ? barre.getBoundingClientRect().height : 0}px`);
-  // v5.70 : le volet des gouttes peut agrandir la zone ; la conversation garde la place de la voir en entier au-dessus.
+  // v5.71 : le volet des gouttes peut agrandir la zone ; la conversation garde la place de la voir en entier au-dessus.
   if (f.classList.contains("as-bas")) document.documentElement.style.setProperty("--as-h", `${Math.round(f.getBoundingClientRect().height)}px`);
 }
 
@@ -281,7 +281,7 @@ function entete(actif, vide) {
 function vue() {
   verifierCle();
   const st = connu();
-  // v5.70 : l'état d'API peut dater d'avant une recharge ou un changement d'offre (Mon offre) : la pastille et le
+  // v5.71 : l'état d'API peut dater d'avant une recharge ou un changement d'offre (Mon offre) : la pastille et le
   // volet suivent les gouttes de l'offre quand elles sont connues.
   const o = offreConnue();
   if (st && st.gouttes !== null && st.gouttes !== undefined && o && Number.isFinite(Number(o.gouttes?.total))) st.gouttes = Number(o.gouttes.total);
@@ -370,7 +370,7 @@ function poserChamp(st) {
   // v5.62 : ouverte depuis la fiche d'une ruche, la feuille propose des questions sur cette ruche.
   const r = S.route === "ruche" && S.ruche ? (S.d?.ruches || []).find((x) => x.id === S.ruche) : null;
   fil.rucheFeuille = r ? r.id : null;
-  // v5.70 : en tête, le grand micro « Parle à API » (touche et parle) ; le lien mène à l'espace API, avec ses conseils.
+  // v5.71 : en tête, le grand micro « Parle à API » (touche et parle) ; le lien mène à l'espace API, avec ses conseils.
   const n = J.conseilsOuverts().length;
   const parle = Ecoute.peutEcouter() ? `<div class="as-parle"><button type="button" class="as-parle-b" data-act="apiparle" aria-label="${r ? `Parle à API de ${esc(r.nom)}` : "Parle à API"}">${MICRO}</button>
       <span class="as-parle-t"><b>Parle à API</b><span class="small">Touche et parle${Voix.disponible() ? ", il te répond à voix haute" : ""}</span></span></div>` : "";
@@ -398,7 +398,7 @@ export function installer() {
 }
 
 /**
- * v5.70 : appui long sur le bouton API (barre du bas, menu sur ordinateur) : API écoute tout de suite, sans ouvrir la
+ * v5.71 : appui long sur le bouton API (barre du bas, menu sur ordinateur) : API écoute tout de suite, sans ouvrir la
  * feuille, comme un talkie-walkie ; relâcher envoie. Un toucher simple ouvre la feuille comme avant.
  */
 function installerAppuiLong() {
@@ -459,7 +459,7 @@ function ouvrirMains() {
 }
 
 export const actions = {
-  // v5.70 : parler à API.
+  // v5.71 : parler à API.
   apiparle: () => { const r = fil.rucheFeuille; $sheet.close(); Ecoute.ecouter({ surTexte: (t) => { nouvelle(r); envoyer(t, r, { dite: true }); } }); },
   apimicro: () => Ecoute.ecouter({ surTexte: (t) => { if (S.route !== "api") nouvelle(); envoyer(t, null, { dite: true }); } }),
   apimains: () => ouvrirMains(),
@@ -505,7 +505,7 @@ export const actions = {
     render();
   },
   apiconseil: (v) => tacheConseil(v, false),
-  // v5.70 : la même tâche, avec l'échéance que le conseil donne (« avant samedi »).
+  // v5.71 : la même tâche, avec l'échéance que le conseil donne (« avant samedi »).
   apiagenda: (v) => tacheConseil(v, true),
   apiecarter: (v) => { const c = conseil(v); if (c) suivre(c.x, c.i); },
   apieffacer: () => {

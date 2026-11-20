@@ -1,4 +1,4 @@
-// Apiviz — voix d'API (v5.70) : API lit ses réponses à voix haute avec la synthèse vocale du téléphone
+// Apiviz — voix d'API (v5.71) : API lit ses réponses à voix haute avec la synthèse vocale du téléphone
 // (speechSynthesis). Rien ne part sur Internet pour la lecture, et elle ne coûte aucune goutte. Préférences propres à
 // l'appareil (localStorage « apiviz.api.voix ») : quand lire (toujours, en mains libres seulement, jamais), voix posée
 // ou vive, vitesse. Réglages › API › Voix d'API, et le haut-parleur de l'écran API.

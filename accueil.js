@@ -47,7 +47,7 @@ const AC = (() => {
     const actions = [r ? `<button type="button" class="btn main" data-act="ruche" data-v="${r.id}">Voir ${esc(r.nom)}</button>` : "",
       tournee ? `<button type="button" class="btn" data-act="${tournee.dataset.act}" data-v="${esc(tournee.dataset.v)}">${esc(tournee.textContent)}</button><button type="button" class="link ac-plustard" data-act="n4plustard">Plus tard</button>` : ""].join("");
     prochaine?.remove();
-    // v5.70 (maquette « Sur l'Accueil : Pour aujourd'hui d'API ») : la priorité, puis jusqu'à deux autres choses utiles
+    // v5.71 (maquette « Sur l'Accueil : Pour aujourd'hui d'API ») : la priorité, puis jusqu'à deux autres choses utiles
     // du jour (créneau, saison, stock…), la tournée proposée et le micro ; src/domaines/assistant/aujourdhui.js.
     // Réglages › API › Conseils d'API peut remettre la priorité seule.
     const EA = window.Noyau?.espaceApi;

@@ -1,0 +1,41 @@
+/* Apiviz — feuilles du bas qu'on attrape du doigt (v5.70, src/noyau/glisser.js). Téléphone seulement : sur ordinateur,
+   la fenêtre centrée ne change pas. */
+@media (max-width:800px){
+  /* L'animation d'ouverture ne « tient » plus sa position finale : sinon elle écraserait le déplacement du doigt. */
+  dialog[open]{animation-fill-mode:backwards;transition:transform var(--duree,.32s) cubic-bezier(.22,.9,.24,1)}
+  dialog.gl-glisse{user-select:none;-webkit-user-select:none}
+  dialog.gl-sort{transition:transform .24s cubic-bezier(.4,0,1,1)}
+  /* Le fond suit la feuille (navigateurs où ::backdrop hérite des variables de la fenêtre ; ailleurs, il reste fixe). */
+  dialog::backdrop{opacity:var(--gl-fond,1);transition:opacity .3s ease}
+  dialog.gl-glisse::backdrop{transition:none}
+
+  /* Poignée : un peu plus grande, elle s'allonge quand on tire et passe au miel quand relâcher fermera. */
+  dialog form::before,.cal.feuille::before{width:44px;height:5px;border-radius:3px;transition:width .2s ease,background .2s ease}
+  dialog.gl-glisse form::before,dialog.gl-glisse.cal.feuille::before{width:56px;background:#8C948A}
+  dialog.gl-seuil form::before,dialog.gl-seuil.cal.feuille::before{width:64px;background:var(--honey)}
+  dialog.gl-astuce form::before,dialog.gl-astuce.cal.feuille::before{animation:gl-astuce 1.2s ease-in-out 2}
+  @keyframes gl-astuce{0%,100%{transform:none;background:#D5D8CE}40%{transform:translateY(5px);background:#8C948A}}
+  /* Le haut de la feuille se saisit : curseur de saisie, et le titre ne se sélectionne pas par erreur. */
+  #sheetForm > h2:first-of-type,#sheetForm > .g-ftete h2{user-select:none;-webkit-user-select:none}
+
+  /* Boutons Enregistrer / Annuler collés en bas de la feuille quand le formulaire défile. */
+  #sheetForm > .actions{position:sticky;bottom:0;z-index:2;margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card,#fff);box-shadow:0 -1px 0 var(--line)}
+}
+
+/* Champ obligatoire oublié : il tremble (partout, ordinateur compris). */
+.gl-secoue{animation:gl-secoue .4s ease both}
+@keyframes gl-secoue{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+@media (prefers-reduced-motion:reduce){
+  dialog[open],dialog.gl-sort{transition:none}
+  dialog.gl-astuce form::before,.gl-secoue{animation:none}
+}
+
+/* Pastille du brouillon : elle dit quelle saisie attend, et se touche en entier pour la reprendre. */
+.er-reprendre{display:flex;align-items:center;gap:12px;min-width:0;min-height:44px;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.er-btitre{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.er-btitre b{font-weight:700}
+.er-reprendre .link{flex:none}
+.er-brouillon{animation:gl-pastille .28s cubic-bezier(.22,.9,.24,1) both}
+@keyframes gl-pastille{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.er-brouillon{animation:none}}

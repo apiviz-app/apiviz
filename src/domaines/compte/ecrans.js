@@ -14,7 +14,7 @@ export default [
   // Réglages : essentiels.js. v5.38 : cinq groupes en lignes (Toi, L'exploitation, Sur le terrain, Affichage, Tes
   // données) ; plus de « Listes », ni de bloc « Toi » ou « Associés ». Couleur du bandeau : apparence.js (aperçu).
   // v5.68 : « Objectif de récolte » (L'exploitation) et « Sons et vibrations » (Affichage), src/domaines/retours/reglages.js.
-  // v5.70 : groupe « API » (Offre et gouttes, Ce qu'API sait de toi, Voix d'API, Conseils d'API), src/domaines/assistant/reglages-api.js.
+  // v5.71 : groupe « API » (Offre et gouttes, Ce qu'API sait de toi, Voix d'API, Conseils d'API), src/domaines/assistant/reglages-api.js.
   { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); completerApi(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons }, remplace },
   // Exploitation et membres : exploitations.js.
   // v5.38 : prénom et nom des membres (noms_membres, migration 021) et personnes sans compte (profil.js).

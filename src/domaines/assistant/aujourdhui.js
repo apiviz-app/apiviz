@@ -1,4 +1,4 @@
-// Apiviz — « Pour aujourd'hui » d'API (v5.70) : ce que l'Accueil, l'écran API et l'agenda lisent des données de
+// Apiviz — « Pour aujourd'hui » d'API (v5.71) : ce que l'Accueil, l'écran API et l'agenda lisent des données de
 // l'application pour les règles pures de compagnon.js (priorité du jour, météo déjà chargée, priorités de la saison,
 // matériel sous le seuil, tâches en retard, conseils d'API pas encore faits).
 // Préférences « Conseils d'API » (Réglages › API) : sur cet appareil, nombre de lignes (1 ou 3) et carte de l'Accueil.

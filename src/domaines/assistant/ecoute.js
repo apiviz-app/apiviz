@@ -1,4 +1,4 @@
-// Apiviz — parler à API (v5.70, maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026, écrans 1 et 4).
+// Apiviz — parler à API (v5.71, maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026, écrans 1 et 4).
 //   - ecouter() : la fenêtre « API t'écoute… » (micro de la feuille du bouton API, de l'Accueil, de l'écran API, et
 //     appui long sur le bouton API). Toucher : on parle, l'écoute s'arrête au silence ou sur « Envoyer ». Appui long :
 //     on parle tant qu'on appuie, relâcher envoie.

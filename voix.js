@@ -154,7 +154,7 @@ const VX = (() => {
       ${E.final ? `<label class="vx-note">Note<textarea id="vx_note" rows="3">${esc(E.final)}</textarea></label>` : ""}</div>
       <div class="vx-pied"><div class="vx-deux"><button type="button" class="btn main" data-act="vxenreg">${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button><button type="button" class="btn" data-act="vxcorriger">Au doigt</button></div></div>`;
   }
-  // v5.70 (maquette « Visiter à la voix, avec l'avis d'API ») : à la relecture, ce qu'API remarque en comparant aux
+  // v5.71 (maquette « Visiter à la voix, avec l'avis d'API ») : à la relecture, ce qu'API remarque en comparant aux
   // visites précédentes et au seuil varroa, chaque remarque avec « Ajouter à l'agenda » (la tâche est créée avec la
   // visite) ; et une seule question en cas de doute (un poids très différent de la dernière pesée). Règles :
   // src/domaines/assistant/compagnon.js (remarquesVoix).

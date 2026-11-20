@@ -31,14 +31,14 @@ Agenda (tâches, visites, ventes, récoltes ; détail : Ce mois-ci)
 Finances : onglets Bilan · Dépenses · Factures · Budget · Associés (détail : Facture)
 Matériel : onglets Stock · Courses · Fournisseurs (Inventaire dans ⋯)
 Registre et déclaration : onglets Registre · Déclaration
-Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne ; Ce qu'API sait de toi — v5.70, ouvert depuis Réglages › API et l'écran API › ⋯)
+Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne ; Ce qu'API sait de toi — v5.71, ouvert depuis Réglages › API et l'écran API › ⋯)
 Cloche : feuille Rappels · Loupe : recherche plein écran · Avatar : exploitations, plein soleil, aide, déconnexion
 API (bouton central) : parler à API (micro ; appui long : écoute directe) · rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche) · Ouvrir l'espace API (écran API : pour aujourd'hui, tes échanges, mains libres)
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
 
-**v5.70 (20 nov. 2026)** : **Espace API**. L'écran API (même place : bouton central › « Ouvrir l'espace API ») gagne
+**v5.71 (20 nov. 2026)** : **Espace API**. L'écran API (même place : bouton central › « Ouvrir l'espace API ») gagne
 « Pour aujourd'hui », le micro, la lecture à voix haute et le mode **Mains libres** (plein écran, sans adresse) ; la carte
 d'API de l'Accueil devient « Pour aujourd'hui ». Réglages gagne un groupe **API** (entre L'exploitation et Sur le terrain :
 Offre et gouttes d'API, qui y déménage, Ce qu'API sait de toi, Voix d'API, Conseils d'API) et l'écran **Ce qu'API sait

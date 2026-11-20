@@ -140,7 +140,10 @@ const ER = (() => {
   function pastille() {
     document.querySelector(".er-brouillon")?.remove();
     if (!brouillon) return;
-    document.body.insertAdjacentHTML("beforeend", '<div class="er-brouillon" role="status"><span>Saisie gardée en brouillon</span><button type="button" class="link" data-act="erreprendre">Reprendre</button><button type="button" class="er-oubli" data-act="eroublier" aria-label="Oublier le brouillon">×</button></div>');
+    // v5.70 : la pastille dit quelle saisie attend (titre de la fenêtre) ; toute la pastille la rouvre.
+    const titre = (new DOMParser().parseFromString(brouillon.html, "text/html").querySelector("h2")?.textContent || "").trim();
+    const nom = titre.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    document.body.insertAdjacentHTML("beforeend", `<div class="er-brouillon" role="status"><button type="button" class="er-reprendre" data-act="erreprendre"><span class="er-btitre">Brouillon gardé${nom ? ` · <b>${nom}</b>` : ""}</span><span class="link">Reprendre</span></button><button type="button" class="er-oubli" data-act="eroublier" aria-label="Oublier le brouillon">×</button></div>`);
   }
   ACT.eroublier = () => { brouillon = null; pastille(); };
   ACT.erreprendre = () => {

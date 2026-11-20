@@ -1,4 +1,4 @@
-// Espace API (v5.70) : src/domaines/assistant/compagnon.js et src/domaines/assistant/voix-api.js.
+// Espace API (v5.71) : src/domaines/assistant/compagnon.js et src/domaines/assistant/voix-api.js.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as C from "../../src/domaines/assistant/compagnon.js";

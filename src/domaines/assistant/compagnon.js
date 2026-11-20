@@ -1,4 +1,4 @@
-// Apiviz — espace API (v5.70, maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026) : règles pures, testées
+// Apiviz — espace API (v5.71, maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026) : règles pures, testées
 // par tests/unitaires/espace-api.test.mjs. Aucune donnée inventée : chaque ligne vient d'une saisie, d'un réglage ou
 // de la météo déjà chargée ; ce qui n'est pas connu n'est pas proposé.
 //   - lignesDuJour : « Pour aujourd'hui » (Accueil, écran API), trois choses utiles au plus, chacune avec son geste ;

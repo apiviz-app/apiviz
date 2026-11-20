@@ -111,7 +111,7 @@
     verif(page.locator(".er-cloche em").count() == 0, "tout vu : cloche sans pastille")
     page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-l")
     groupes = page.locator(".rg-g").evaluate_all("l => l.map(x => x.textContent)")
-    verif(groupes == ["Toi", "L’exploitation", "API", "Sur le terrain", "Affichage", "Tes données"], "v5.38, v5.70 : réglages en six groupes (dont API) : " + " | ".join(groupes))
+    verif(groupes == ["Toi", "L’exploitation", "API", "Sur le terrain", "Affichage", "Tes données"], "v5.38, v5.71 : réglages en six groupes (dont API) : " + " | ".join(groupes))
     verif("Listes" not in page.locator(".wrap").inner_text() and page.locator("[data-act=errgform]").count() == 0, "plus de « Listes » dans les réglages")
     page.click(".rg-l[data-act=errgexpl]"); page.wait_for_selector("#sheet[open]")
     page.fill("#sheet [name=siret]", "12345678900011"); page.click("#sheet .btn.main"); page.wait_for_function("!document.getElementById('sheet').open")

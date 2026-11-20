@@ -1,4 +1,4 @@
-// Apiviz — Réglages › API (v5.70, maquette « Réglages : un groupe API qui réunit tout » du 20 nov. 2026).
+// Apiviz — Réglages › API (v5.71, maquette « Réglages : un groupe API qui réunit tout » du 20 nov. 2026).
 //   - Groupe « API » entre « L'exploitation » et « Sur le terrain » : Offre et gouttes d'API (déplacée), Ce qu'API sait de
 //     toi, Voix d'API, Conseils d'API.
 //   - « Ce qu'API sait de toi » (écran apimemoire) : tes façons de faire telles qu'API les lit (réglages et saisies),
