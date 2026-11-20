@@ -5,6 +5,8 @@ import * as routeur from "./noyau/routeur.js";
 import * as actions from "./noyau/actions.js";
 import { ecrans } from "./domaines/index.js";
 import * as choisir from "./noyau/choisir.js";
+import * as glisser from "./noyau/glisser.js";
+import { vibrer } from "./domaines/retours/sons.js";
 import * as gabarit from "./noyau/gabarit.js";
 import { nbAVoir } from "./domaines/ruchers/vue-tableau.js";
 import * as historique from "./noyau/historique.js";
@@ -26,6 +28,10 @@ Object.assign(window.Noyau, {
 // Champs à suggestions transformés en puces ou en liste sous le champ (v5.41).
 choisir.demarrer();
 window.Noyau.choisir = choisir;
+
+// Feuilles du bas qu'on ferme en tirant le haut vers le bas (v5.70), vibrations selon les réglages de l'utilisateur.
+glisser.demarrer({ vibreur: vibrer });
+window.Noyau.glisser = glisser;
 
 // Gabarit d'écran commun (v5.43) : en-tête, retour, bouton principal en bas, ⋯, puce d'année. Déclaré en dernier :
 // il passe après tous les autres crochets « après le rendu », sur l'écran tel qu'ils l'ont laissé.
