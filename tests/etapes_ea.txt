@@ -119,10 +119,16 @@
     # 8. Mains libres : réponse rapide, lue à voix haute, gros boutons.
     page.evaluate("window.__dicte = 'Combien de cadres de couvain ?'"); n = page.evaluate("window.__lu.length")
     page.evaluate("ACT.apimains()"); page.wait_for_selector("#apiMains[open]", timeout=4000)
-    page.wait_for_selector("#apiMains .am-rep p", timeout=8000)
+    page.wait_for_selector("#apiMains .am-rep .am-lab", timeout=8000)
     verif(IA["recus"][-1].get("mode") == "rapide" and IA["recus"][-1].get("question") == "Combien de cadres de couvain ?", "mains libres : question en réponse rapide")
     page.wait_for_function(f"window.__lu.length > {n}", timeout=4000)
     verif(page.locator("#apiMains .am-b").count() == 3 and "Rapide" in page.locator("#apiMains .am-cout").inner_text(), "Pause, Répéter, Terminer ; coût annoncé")
+    # v5.72 : écoute continue : après la réponse lue, API écoute de nouveau sans qu'on touche l'écran.
+    nq = len(IA["recus"]); page.evaluate("window.__dicte = 'Et la reine ?'")
+    page.wait_for_function("document.querySelector('#apiMains .am-dit') && document.querySelector('#apiMains .am-dit').textContent.includes('Et la reine')", timeout=6000)
+    page.wait_for_timeout(600)
+    verif(len(IA["recus"]) > nq and IA["recus"][-1].get("question") == "Et la reine ?", "écoute continue : la question suivante part sans toucher l'écran")
+    page.evaluate("window.__dicte = ''")
     shot("ea-mains-libres")
     page.click("#apiMains [data-act=amfin]"); page.wait_for_timeout(300)
     verif(page.locator("#apiMains[open]").count() == 0, "Terminer ferme le mode mains libres")

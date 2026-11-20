@@ -20,7 +20,8 @@ const P = {
 const ligne = (act, v, icone, titre, sous, valeur) => `<button type="button" class="rg-l" data-act="${act}"${v ? ` data-v="${esc(v)}"` : ""}>${icone}<span class="rg-t"><b>${esc(titre)}</b><span>${esc(sous)}</span></span>${valeur ? `<span class="rg-v">${esc(valeur)}</span>` : FL}</button>`;
 const reglages = () => (typeof cfg == "function" ? cfg() : {}) || {};
 const fr = (x) => String(Math.round(Number(x) * 10) / 10).replace(".", ",");
-const resumeConseils = (p) => (p.accueil ? `${p.lignes === 1 ? "La priorité du jour" : "Trois choses utiles"} sur l’Accueil` : "La priorité seule sur l’Accueil");
+const resumeConseils = (p) => [p.accueil ? (p.lignes === 1 ? "La priorité sur l’Accueil" : "Trois choses utiles sur l’Accueil") : "La priorité seule",
+  p.notif ? "un conseil par jour" : "", p.lundi ? "point du lundi" : ""].filter(Boolean).join(" · ");
 
 /** Après le rendu de « reglages » : le groupe API, avec la ligne « Offre et gouttes d'API » déplacée dedans. */
 export function completerReglages() {
@@ -49,13 +50,18 @@ function memoire() {
   const item = (titre, valeur, source, act, v, geste = "Modifier") => `<div class="mm-l"><span class="mm-t"><span class="small">${esc(titre)}</span><b>${esc(valeur)}</b>${source ? `<span class="small mm-src">${esc(source)}</span>` : ""}</span>
     ${act ? `<button type="button" class="link mm-geste" data-act="${act}"${v ? ` data-v="${esc(v)}"` : ""}>${esc(geste)}</button>` : ""}</div>`;
   const obj = Number(c.objectif_recolte) || 0, hiver = Number(c.hiverPoids) || 0;
+  // v5.72 : ce qu'API a retenu en parlant avec toi (apiAppris : clé → date), avec « Oublier ».
+  const appris = c.apiAppris && typeof c.apiAppris == "object" ? c.apiAppris : {};
+  const dateAppris = (k) => new Date(`${appris[k]}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const source = (k, sinon) => (appris[k] ? `Appris le ${dateAppris(k)} en parlant avec API` : sinon);
+  const geste = (k, act, libelle = "Modifier") => (appris[k] ? ["apioublier", k, "Oublier"] : [act, "", libelle]);
   shell("Ce qu’API sait de toi", "Tes façons de faire, telles qu’API les lit", "", `<div class="mm-ecran">
-    <section class="card mm-intro">${typeof Apiviz != "undefined" ? Apiviz.compagnon("repos", 44) : ""}<p>Je réponds avec <b>tes</b> données et <b>tes</b> réglages, jamais avec une méthode toute faite. Si quelque chose est faux ici, corrige-le : mes conseils suivront.</p></section>
+    <section class="card mm-intro">${typeof Apiviz != "undefined" ? Apiviz.compagnon("repos", 44) : ""}<p>Je réponds avec <b>tes</b> données et <b>tes</b> réglages, jamais avec une méthode toute faite. Si quelque chose est faux ici, corrige-le : mes conseils suivront. Dis-moi aussi tes façons de faire en me parlant (« mon seuil varroa est de 2 % ») : je te proposerai de les retenir.</p></section>
     <h2 class="rg-g">Tes façons de faire</h2><div class="rg-bloc mm-bloc">
-      ${item("Seuil d’alerte varroa", `${fr(seuilVarroa(c))} varroas pour 100 abeilles`, c.varroaSeuil ? "Ton réglage" : "Réglage par défaut : à adapter avec ton GDSA ou ton technicien sanitaire", "v3seuilfeuille")}
+      ${item("Seuil d’alerte varroa", `${fr(seuilVarroa(c))} varroas pour 100 abeilles`, source("varroaSeuil", c.varroaSeuil ? "Ton réglage" : "Réglage par défaut : à adapter avec ton GDSA ou ton technicien sanitaire"), ...geste("varroaSeuil", "v3seuilfeuille"))}
       ${item("Dernier traitement noté", t ? t.quoi : "Aucun traitement noté", t ? `Le ${t.quand}, d’après tes visites` : "Note-le dans la visite : je saurai quand reparler du varroa", t ? "" : null)}
-      ${item("Poids d’alerte en hiver", hiver ? `${fr(hiver)} kg` : "Pas fixé", hiver ? "Ton réglage" : "Sans lui, je me fie aux provisions notées en visite", "")}
-      ${item("Objectif de récolte", obj ? `${obj} kg` : "Pas fixé", obj ? "Ton réglage" : "", "rtobjectif", "", obj ? "Modifier" : "Fixer")}
+      ${item("Poids d’alerte en hiver", hiver ? `${fr(hiver)} kg` : "Pas fixé", source("hiverPoids", hiver ? "Ton réglage" : "Dis-le-moi : « en hiver, je m’alerte sous 18 kg »"), ...(appris.hiverPoids ? geste("hiverPoids") : ["", ""]))}
+      ${item("Objectif de récolte", obj ? `${obj} kg` : "Pas fixé", source("objectif_recolte", obj ? "Ton réglage" : ""), ...geste("objectif_recolte", "rtobjectif", obj ? "Modifier" : "Fixer"))}
       ${s ? item("Météo pour ouvrir", `Dès ${s.ouvrir} °C, vent sous ${s.vent} km/h`, "Tes seuils de météo de visite", "errgmeteo") : ""}
     </div>
     <h2 class="rg-g">Ce que je lis</h2><div class="rg-bloc mm-bloc">
@@ -110,12 +116,15 @@ function corpsConseils() {
   return `<div class="rt-reglages ac-reglages">
     ${choix("accueil", [["oui", "Pour aujourd’hui"], ["non", "La priorité seule"]], p.accueil ? "oui" : "non", "Sur l’Accueil")}
     ${p.accueil ? choix("lignes", [[1, "Une ligne"], [3, "Trois lignes"]], p.lignes, "Combien de choses à la fois") : ""}
+    ${choix("notif", [["oui", "Un par jour au plus"], ["non", "Jamais"]], p.notif ? "oui" : "non", "Me prévenir d’un conseil")}
+    ${choix("lundi", [["oui", "Le lundi"], ["non", "Non"]], p.lundi ? "oui" : "non", "Le point de la semaine")}
+    <p class="small">Les conseils arrivent dans tes Rappels (la cloche), et en notification si tu les as autorisées dans Réglages › Rappels. Jamais pendant une visite.</p>
     <p class="small">API ne parle que de ce qui vient de tes données : priorité du jour, bon créneau météo, priorités de la saison, matériel sous le seuil, tâches en retard, conseils pas encore faits.</p>
   </div>`;
 }
 function ouvrirConseils() {
   essaiC = prefsConseils();
-  sheet({ title: "Conseils d’API", intro: "Ce qu’API te montre de lui-même. Propre à cet appareil.", fields: [], label: "Enregistrer",
+  sheet({ title: "Conseils d’API", intro: "Ce qu’API te montre et t’envoie de lui-même. Propre à cet appareil.", fields: [], label: "Enregistrer",
     submit: async () => { ecrirePrefs(essaiC); render(); toast("Conseils d’API réglés"); } });
   $sheetForm.querySelector(".actions")?.insertAdjacentHTML("beforebegin", corpsConseils());
   document.getElementById("sheet")?.addEventListener("close", () => { essaiC = null; }, { once: true });
@@ -124,11 +133,22 @@ function reglerConseils(v, k) {
   if (!essaiC) return;
   if (k === "accueil") essaiC.accueil = v === "oui";
   if (k === "lignes") essaiC.lignes = Number(v) === 1 ? 1 : 3;
+  if (k === "notif") essaiC.notif = v === "oui";
+  if (k === "lundi") essaiC.lundi = v === "oui";
   const z = $sheetForm.querySelector(".ac-reglages");
   if (z) z.outerHTML = corpsConseils();
 }
 
+/** v5.72 : oublier ce qu'API a retenu en parlant avec toi (le réglage revient à sa valeur par défaut). */
+async function oublier(cle) {
+  const c = reglages(), appris = { ...(c.apiAppris || {}) };
+  if (!cle || !appris[cle]) return;
+  delete appris[cle];
+  try { await saveCfg({ [cle]: null, apiAppris: Object.keys(appris).length ? appris : null }, "C’est oublié"); } catch { toast("Je n’ai pas pu l’oublier. Réessaie."); }
+}
+
 export const actions = {
+  apioublier: oublier,
   apivoix: ouvrirVoix, apivoixregle: reglerVoix,
   apiconseilsreglage: ouvrirConseils, apiconseilsregle: reglerConseils,
 };

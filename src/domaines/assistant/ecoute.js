@@ -137,18 +137,24 @@ export function relacher() {
 }
 
 // ---------- Mains libres ----------
+// v5.72 : écoute continue (par défaut) : après la réponse, API écoute de nouveau tout seul ; deux silences de suite le
+// mettent en pause. Réglable dans l'en-tête du mode (propre à l'appareil).
 let M = null;
+const CLE_CONTINU = "apiviz.api.continu";
+const continu = () => { try { return localStorage.getItem(CLE_CONTINU) !== "0"; } catch { return true; } };
 
 function dessinerMains() {
   const d = document.getElementById("apiMains");
   if (!d || !M) return;
   const humeur = M.phase === "ecoute" ? "ecoute" : M.phase === "reflexion" ? "reflexion" : M.phase === "erreur" ? "attention" : M.phase === "lecture" ? "repond" : "repos";
-  d.innerHTML = `<div class="am-haut"><span class="am-puce"><i></i>Mains libres${M.lieu ? ` · ${esc(M.lieu)}` : ""}</span><span class="am-cout">${esc(M.cout)}</span></div>
+  d.innerHTML = `<div class="am-haut"><span class="am-puce"><i></i>Mains libres${M.lieu ? ` · ${esc(M.lieu)}` : ""}</span>
+      <button type="button" class="am-continu${continu() ? " on" : ""}" data-act="amcontinu" role="switch" aria-checked="${continu()}"><span>Écoute continue</span><i aria-hidden="true"></i></button></div>
+    ${M.cout ? `<p class="am-cout">${esc(M.cout)}</p>` : ""}
     <div class="am-dit">${M.dit ? `<span class="am-lab">Tu as dit</span><p>« ${esc(M.dit)} »</p>` : `<p class="am-aide">${M.phase === "ecoute" ? "Parle, je t’écoute…" : "Touche n’importe où pour parler"}</p>`}</div>
     <div class="am-scene"><span class="am-ondes${M.phase === "ecoute" || M.phase === "lecture" ? " on" : ""}" aria-hidden="true"></span>${Apiviz.compagnon(humeur, 112, "sombre")}</div>
     ${M.reponse ? `<div class="am-rep" aria-live="polite"><span class="am-lab">${M.phase === "lecture" ? "API répond à voix haute" : "API a répondu"}</span><p>${esc(M.reponse)}</p>${M.source ? `<span class="am-src">${esc(M.source)}</span>` : ""}</div>`
       : M.phase === "reflexion" ? `<div class="am-rep"><p class="am-aide">API lit tes données…</p></div>` : M.erreur ? `<div class="am-rep"><p>${esc(M.erreur)}</p></div>` : ""}
-    <p class="am-touche">${M.phase === "ecoute" ? "J’écoute…" : M.phase === "reflexion" ? "Un instant…" : "Touche n’importe où pour reparler"}</p>
+    <p class="am-touche">${M.phase === "ecoute" ? "J’écoute…" : M.phase === "reflexion" ? "Un instant…" : M.phase === "lecture" && continu() ? "Je t’écoute de nouveau après ma réponse" : "Touche n’importe où pour reparler"}</p>
     <div class="am-gros">
       <button type="button" class="am-b" data-act="ampause">${ic("pause")}<span>Pause</span></button>
       <button type="button" class="am-b" data-act="amrepeter" ${M.reponse ? "" : "disabled"}>${ic("repeter")}<span>Répéter</span></button>
@@ -166,8 +172,12 @@ function ecouterMains() {
     fin: () => {
       if (!M) return;
       const t = E.texte.trim();
-      if (!t) { M.phase = "pause"; M.erreur = E.erreur || ""; dessinerMains(); return; }
-      M.dit = t; poserMains(t);
+      if (!t) {
+        M.vides = (M.vides || 0) + 1;
+        if (continu() && M.vides < 2 && !E.erreur) { setTimeout(() => { if (M && M.phase === "ecoute") ecouterMains(); }, 300); return; }
+        M.phase = "pause"; M.erreur = E.erreur || ""; dessinerMains(); return;
+      }
+      M.vides = 0; M.dit = t; poserMains(t);
     },
   });
 }
@@ -186,7 +196,11 @@ async function poserMains(t) {
 function lireMains() {
   if (!M?.reponse) return;
   M.phase = "lecture"; dessinerMains();
-  Voix.parler(M.reponse, { surFin: () => { if (M && M.phase === "lecture") { M.phase = "pret"; dessinerMains(); } } });
+  Voix.parler(M.reponse, { surFin: () => {
+    if (!M || M.phase !== "lecture") return;
+    M.phase = "pret"; dessinerMains();
+    if (continu()) setTimeout(() => { if (M && M.phase === "pret") ecouterMains(); }, 500);
+  } });
 }
 
 function toucherScene(ev) {
@@ -224,7 +238,8 @@ export const actions = {
   aeenvoyer: () => envoyerEcoute(),
   aefermer: () => { E.fini = true; fermerEcoute(); },
   aereessayer: () => { const s = E.surTexte; ecouter({ surTexte: s }); },
-  ampause: () => { if (!M) return; arreterReco(); Voix.arreter(); M.phase = "pause"; dessinerMains(); },
+  ampause: () => { if (!M) return; M.phase = "pause"; arreterReco(); Voix.arreter(); dessinerMains(); },
+  amcontinu: () => { try { localStorage.setItem(CLE_CONTINU, continu() ? "0" : "1"); } catch { /* navigation privée */ } dessinerMains(); },
   amrepeter: () => lireMains(),
   amfin: () => finirMains(),
 };

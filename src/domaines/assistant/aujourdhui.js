@@ -15,11 +15,20 @@ const auj = () => (typeof today == "function" ? today() : new Date().toISOString
 
 // ---------- Préférences « Conseils d'API » ----------
 const CLE = "apiviz.api.conseils";
+// v5.72 : notif (un conseil par jour au plus dans Rappels et en notification) et lundi (le point de la semaine).
+const normPrefs = (p = {}) => ({ lignes: p.lignes === 1 ? 1 : 3, accueil: p.accueil !== false, notif: p.notif !== false, lundi: p.lundi !== false });
 export function prefsConseils() {
-  try { const p = JSON.parse(localStorage.getItem(CLE) || "{}"); return { lignes: p.lignes === 1 ? 1 : 3, accueil: p.accueil !== false }; } catch { return { lignes: 3, accueil: true }; }
+  try { return normPrefs(JSON.parse(localStorage.getItem(CLE) || "{}")); } catch { return normPrefs(); }
 }
 export function ecrirePrefs(p) {
-  try { localStorage.setItem(CLE, JSON.stringify({ lignes: p.lignes === 1 ? 1 : 3, accueil: p.accueil !== false })); } catch { /* navigation privée */ }
+  try { localStorage.setItem(CLE, JSON.stringify(normPrefs(p))); } catch { /* navigation privée */ }
+}
+
+/** v5.72 : les conseils qu'API envoie de lui-même (Rappels, notification) ; rien pendant une visite. */
+export function rappels() {
+  if (!S.d) return [];
+  const enVisite = ["visite", "tournee"].includes(S.route) || !!document.querySelector("#alVoix[open], #apiMains[open]");
+  try { return C.rappelsApi({ lignes: lignes({ max: 1 }), aujourdhui: auj(), enVisite, prefs: prefsConseils() }); } catch { return []; }
 }
 
 // ---------- Ce que l'on sait aujourd'hui ----------
@@ -124,7 +133,7 @@ export function completerAccueil() {
 
 // Pour accueil.js et voix.js (scripts classiques) : la carte « Pour aujourd'hui », le réglage qui la montre, et ce
 // qu'API remarque à la relecture d'une visite à la voix.
-if (typeof window != "undefined") { window.Noyau = window.Noyau || {}; window.Noyau.espaceApi = { carteAccueil, prefsConseils, remarquesVoix: C.remarquesVoix }; }
+if (typeof window != "undefined") { window.Noyau = window.Noyau || {}; window.Noyau.espaceApi = { carteAccueil, prefsConseils, remarquesVoix: C.remarquesVoix, rappels }; }
 
 // ---------- Gestes ----------
 export const actions = {

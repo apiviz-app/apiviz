@@ -15,7 +15,7 @@
 //   volet des gouttes dit ce que coûtera la question avant de l'envoyer ; à l'envoi, les gouttes partent vers API.
 //   Feuille du bouton API : grand micro « Parle à API », « Ouvrir l'espace API » ; appui long sur le bouton : API écoute.
 // Globales lues à l'appel : S, sb, esc, shell, render, go, toast, sheet, today, $sheet, $sheetForm, ACT, Apiviz, AC.
-import { connu, demander, etat } from "./client.js";
+import { connu, demander, etat, etaitActif } from "./client.js";
 import { rendreReponse, SUGGESTIONS } from "./rendu.js";
 import { modeParDefaut, majGouttes, offreConnue, charger as chargerOffre } from "../compte/offre.js";
 import { gouttesTexte, etatGouttes } from "../compte/regles-offre.js";
@@ -79,9 +79,67 @@ function echange(x) {
     <div class="as-gestes"><button type="button" class="btn honey" data-act="go" data-v="recharge">Recharger</button><button type="button" class="btn" data-act="go" data-v="offres">Voir les offres</button></div></div></article>`;
   if (x.enCours) return `<article class="as-ech">${q}<div class="as-rep as-attente" aria-busy="true"><i></i><i></i><i></i><span class="small">API lit tes données…</span></div></article>`;
   if (x.erreur) return `<article class="as-ech">${q}<div class="as-rep as-erreur" role="alert"><p>${esc(x.erreur)}</p><button type="button" class="btn" data-act="apireessayer" data-v="${fil.echanges.indexOf(x)}">Réessayer</button></div></article>`;
-  const rep = rendreReponse(x.reponse, { esc, d: S.d }).replace("</p>", `</p>${boutonEcouter(x)}`);
-  return `<article class="as-ech">${q}<div class="as-rep">${rep}${conseilsReponse(x)}${cout(x.gouttes)}</div></article>`;
+  const rep = rendreReponse(x.reponse, { esc, d: S.d }).replace("</p>", `</p>${boutonEcouter(x)}${courbeReponse(x)}`);
+  const local = x.local ? `<p class="as-cout as-local"><span class="as-cout-g">${x.attente ? "En attente du réseau" : "Répondu sur le téléphone"}</span><span>${x.attente ? "Je te réponds dès qu’il revient, sans rien te demander" : "Sans réseau, sans goutte"}</span></p>` : "";
+  return `<article class="as-ech">${q}<div class="as-rep${x.attente ? " as-en-attente" : ""}">${rep}${conseilsReponse(x)}${apprendreHtml(x)}${local || cout(x.gouttes)}</div></article>`;
 }
+
+// ---------- v5.72 : la courbe de la ruche dans la réponse ----------
+const SUJET_POIDS = /poids|pes|r[ée]serve|provision|faible|mange|perd|lourd|l[ée]g[èe]re|nourri|candy|\bkg\b|kilo|hiver/i;
+/** Ruche dont parle l'échange : celle de la conversation, sinon celle nommée dans la question ou la réponse. */
+const rucheEchange = (x) => (fil.ruche ? (S.d?.ruches || []).find((r) => r.id === fil.ruche) : null) || C.rucheDuTexte(`${x.question} ${x.reponse?.resume || ""}`, S.d?.ruches || []);
+function courbeReponse(x) {
+  if (!x.reponse || !S.d || !SUJET_POIDS.test(`${x.question} ${x.reponse.resume || ""}`)) return "";
+  const r = rucheEchange(x), s = r ? C.serieRuche(S.d, r.id) : null;
+  if (!s) return "";
+  const L = 300, Hh = 96, g = 16, n = s.points.length, ecartKg = Math.max(1, s.max - s.min);
+  const X = (i) => Math.round(g + (i * (L - 2 * g)) / Math.max(1, n - 1));
+  const Y = (v) => Math.round(10 + ((s.max - v) * (Hh - 26)) / ecartKg);
+  const chemin = (k) => s.points.map((p, i) => (p[k] === null ? null : `${X(i)},${Y(p[k])}`)).filter(Boolean);
+  const moy = chemin("moyenne"), der = s.points[n - 1], prem = s.points[0];
+  const fr = (v) => String(v).replace(".", ",");
+  const jourC = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  const resume = `Poids de ${s.nom} : ${fr(prem.kg)} kg le ${jourC(prem.date)}, ${fr(der.kg)} kg le ${jourC(der.date)}${der.moyenne !== null ? ` ; moyenne du rucher ${fr(der.moyenne)} kg` : ""}.`;
+  return `<figure class="as-courbe"><svg viewBox="0 0 ${L} ${Hh}" role="img" aria-label="${esc(resume)}">
+    <line x1="${g}" y1="${Hh - 16}" x2="${L - g}" y2="${Hh - 16}" class="as-c-axe"/>
+    ${moy.length > 1 ? `<polyline points="${moy.join(" ")}" class="as-c-moy"/>` : ""}
+    <polyline points="${chemin("kg").join(" ")}" class="as-c-ruche"/>
+    <circle cx="${X(n - 1)}" cy="${Y(der.kg)}" r="4.5" class="as-c-point"/>
+    <text x="${g}" y="${Hh - 3}" class="as-c-date">${esc(jourC(prem.date))}</text><text x="${L - g}" y="${Hh - 3}" text-anchor="end" class="as-c-date">${esc(jourC(der.date))}</text>
+    <text x="${Math.min(X(n - 1), L - g)}" y="${Math.max(12, Y(der.kg) - 9)}" text-anchor="end" class="as-c-val">${esc(fr(der.kg))} kg</text>
+  </svg><figcaption><span class="as-c-l ruche">${esc(s.nom)}</span>${moy.length ? '<span class="as-c-l moy">Moyenne du rucher</span>' : ""}<span class="small">D’après tes pesées</span></figcaption></figure>`;
+}
+
+// ---------- v5.72 : la mémoire qui apprend ----------
+function apprendreHtml(x) {
+  const a = x.apprendre;
+  if (!a || a.fait) return a?.fait === "oui" ? `<p class="as-appris">${Apiviz.compagnon("fait", 26)}C’est noté. Tu le retrouves dans « Ce qu’API sait de toi ».</p>` : "";
+  return `<div class="as-apprendre" role="group" aria-label="API propose de retenir">${Apiviz.compagnon("repond", 30)}<p>${esc(a.texte)}</p>
+    <div class="as-gestes"><button type="button" class="btn sm" data-act="apiretenir" data-v="${esc(x.id)}">Oui, retiens-le</button><button type="button" class="link" data-act="apioublierproposition" data-v="${esc(x.id)}">Non</button></div></div>`;
+}
+/** Ce que la question dit de tes façons de faire, si c'est différent de ce que l'appli sait déjà. */
+function aRetenir(question) {
+  const a = C.apprentissage(question);
+  if (!a || typeof cfg != "function" || document.documentElement.classList.contains("lecteur")) return null;
+  return Number(cfg()[a.cle]) === Number(a.valeur) ? null : a;
+}
+
+// ---------- v5.72 : sans réseau ----------
+const CLE_ATTENTE = "apiviz.api.attente";
+const enAttente = () => { try { const l = JSON.parse(localStorage.getItem(CLE_ATTENTE) || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } };
+const ecrireAttente = (l) => { try { localStorage.setItem(CLE_ATTENTE, JSON.stringify(l.slice(-5))); } catch { /* navigation privée */ } };
+/** Le réseau revient : les questions en attente partent, l'une après l'autre (API disponible seulement). */
+async function reprendreAttente() {
+  const l = enAttente();
+  if (!l.length || !enLigne() || fil.echanges.some((x) => x.enCours)) return;
+  const st = await etat().catch(() => null);
+  if (!st?.actif) return;
+  ecrireAttente([]);
+  fil.echanges = fil.echanges.filter((x) => !x.attente);
+  for (const a of l) await envoyer(a.question, a.ruche || null, { reprise: true });
+  toast(l.length > 1 ? `API a répondu à tes ${l.length} questions en attente` : "API a répondu à ta question en attente");
+}
+if (typeof window != "undefined") window.addEventListener("online", () => { reprendreAttente(); });
 
 const uuid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (Math.random() * 16) >> (c / 4)).toString(16)));
 const absente = (err) => ["42P01", "PGRST205", "PGRST202"].includes(err?.code);
@@ -176,11 +234,15 @@ function envolerGouttes() {
 /** La zone pour écrire : une ligne au repos, elle s'agrandit quand on la touche et suit la longueur du texte. */
 function zoneEcrire(st, { bas = false } = {}) {
   const enCours = fil.echanges.some((x) => x.enCours);
-  const place = fil.echanges.length ? "Une autre question ?" : fil.ruche ? `Une question sur ${nomRuche(fil.ruche)}…` : "Pose ta question à API…";
-  return `<form class="as-form${bas ? " as-bas" : ""}" data-form="api">${st.gouttes !== null && st.gouttes !== undefined ? volet(st, bas) : ""}<label class="sr" for="asTexte">Ta question à API</label>
-    <div class="as-ligne"><div class="as-saisie"><textarea id="asTexte" rows="1" maxlength="1000" enterkeyhint="send" placeholder="${enLigne() ? esc(place) : "Sans réseau, API ne peut pas répondre"}" ${enLigne() ? "" : "disabled"}></textarea>
-    <button type="submit" class="btn main as-envoyer" aria-label="Demander" ${enCours || !enLigne() ? "disabled" : ""}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Demander</span></button></div>
-    ${enLigne() && !enCours ? Ecoute.boutonMicro("apimicro", "Parler à API", "as-micro") : ""}</div></form>`;
+  // v5.72 : sans réseau, le champ reste ouvert (réponses du téléphone, sinon la question attend) ; plus de gouttes : grisé.
+  const epuise = enLigne() && st.gouttes !== null && st.gouttes !== undefined && Number(st.gouttes) <= 0;
+  const place = epuise ? "Plus de gouttes : recharge pour reposer une question" : !enLigne() ? "Sans réseau : je réponds avec ce qu’il y a sur le téléphone"
+    : fil.echanges.length ? "Une autre question ?" : fil.ruche ? `Une question sur ${nomRuche(fil.ruche)}…` : "Pose ta question à API…";
+  const n = enAttente().length;
+  return `<form class="as-form${bas ? " as-bas" : ""}${epuise ? " epuise" : ""}" data-form="api">${enLigne() && st.gouttes !== null && st.gouttes !== undefined ? volet(st, bas) : ""}${n && !enLigne() ? `<p class="as-file small">${n > 1 ? `${n} questions attendent` : "1 question attend"} le réseau</p>` : ""}<label class="sr" for="asTexte">Ta question à API</label>
+    <div class="as-ligne"><div class="as-saisie"><textarea id="asTexte" rows="1" maxlength="1000" enterkeyhint="send" placeholder="${esc(place)}" ${epuise ? "disabled" : ""}></textarea>
+    <button type="submit" class="btn main as-envoyer" aria-label="Demander" ${enCours || epuise ? "disabled" : ""}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Demander</span></button></div>
+    ${enLigne() && !enCours && !epuise ? Ecoute.boutonMicro("apimicro", "Parler à API", "as-micro") : ""}</div></form>`;
 }
 
 function brancherZone() {
@@ -280,12 +342,14 @@ function entete(actif, vide) {
 
 function vue() {
   verifierCle();
-  const st = connu();
+  // v5.72 : sans réseau, si API était disponible ici, l'espace reste ouvert (réponses du téléphone, questions en attente).
+  const st = connu() || (!enLigne() && etaitActif() ? { actif: true, restant: null, plafond: null, gouttes: null, horsLigne: true } : null);
   // v5.71 : l'état d'API peut dater d'avant une recharge ou un changement d'offre (Mon offre) : la pastille et le
   // volet suivent les gouttes de l'offre quand elles sont connues.
   const o = offreConnue();
   if (st && st.gouttes !== null && st.gouttes !== undefined && o && Number.isFinite(Number(o.gouttes?.total))) st.gouttes = Number(o.gouttes.total);
-  if (!st) etat().then(() => { if (S.route === "api") render(); });
+  if (!st && enLigne()) etat().then(() => { if (S.route === "api") render(); });
+  if (enLigne() && enAttente().length) setTimeout(reprendreAttente, 0);
   const vide = !fil.echanges.length;
   const actif = !!(st && st.actif);
   shell("API", vide ? "Tes échanges" : "", entete(actif, vide), vide ? accueil(st, actif) : conversation(st, actif));
@@ -308,7 +372,7 @@ function vue() {
 export async function envoyer(texte, rucheId = null, o = {}) {
   const question = String(texte || "").trim();
   if (!question || fil.echanges.some((x) => x.enCours)) return null;
-  if (!enLigne()) { toast("Sans réseau, API ne peut pas répondre. Réessaie une fois connecté."); return null; }
+  if (!enLigne()) return repondreSansReseau(question, rucheId);
   verifierCle();
   Voix.arreter();
   if (S.route === "api") envolerGouttes();
@@ -322,12 +386,30 @@ export async function envoyer(texte, rucheId = null, o = {}) {
     x.reponse = r.reponse; x.gouttes = r.gouttes || null;
     if (r.gouttes) { majGouttes(r.gouttes.restant); fil.envol = true; }
     x.created_at = new Date().toISOString();
+    x.apprendre = aRetenir(question);
     garder(x);
   }
   catch (e) { x.erreur = e.message || "API n'a pas pu répondre."; x.code = e.code || ""; }
   x.enCours = false;
   if (S.route === "api") render();
   if (x.reponse && !o.silence && Voix.doitLire(Voix.lire(), !!o.dite)) lireReponse(x);
+  return x;
+}
+
+/**
+ * v5.72 : sans réseau, API répond sur le téléphone ce qu'il peut (dernière visite, poids, reine, traitement, stock,
+ * tâches, seuil varroa) ; sinon la question attend le réseau et part toute seule quand il revient.
+ */
+function repondreSansReseau(question, rucheId) {
+  if (!S.d) { toast("Sans réseau, API ne peut pas répondre. Réessaie une fois connecté."); return null; }
+  if (!fil.echanges.length) { fil.conv = uuid(); fil.ruche = rucheId || fil.ruche || null; }
+  const q = H.avecRuche(question, nomRuche(fil.ruche));
+  const rep = C.reponseLocale(q, S.d, { seuil: typeof UX != "undefined" ? UX.seuilVarroa() : 3, aujourdhui: typeof today == "function" ? today() : null });
+  const x = { id: uuid(), question, local: true, conseils_suivis: [], apprendre: aRetenir(question),
+    reponse: rep || { resume: "Pas de réseau ici : je garde ta question et je te réponds dès qu’il revient.", faits: [], hypotheses: [], recommandations: [], manques: [] } };
+  if (!rep) { x.attente = true; ecrireAttente([...enAttente(), { question, ruche: fil.ruche || null }]); }
+  fil.echanges.push(x);
+  if (S.route === "api") render(); else go("api");
   return x;
 }
 
@@ -373,7 +455,8 @@ function poserChamp(st) {
   // v5.71 : en tête, le grand micro « Parle à API » (touche et parle) ; le lien mène à l'espace API, avec ses conseils.
   const n = J.conseilsOuverts().length;
   const parle = Ecoute.peutEcouter() ? `<div class="as-parle"><button type="button" class="as-parle-b" data-act="apiparle" aria-label="${r ? `Parle à API de ${esc(r.nom)}` : "Parle à API"}">${MICRO}</button>
-      <span class="as-parle-t"><b>Parle à API</b><span class="small">Touche et parle${Voix.disponible() ? ", il te répond à voix haute" : ""}</span></span></div>` : "";
+      <span class="as-parle-t"><b>Parle à API</b><span class="small">Touche et parle${Voix.disponible() ? ", il te répond à voix haute" : ""}</span></span>
+      <button type="button" class="as-mains" data-act="apimainsfeuille">Mains libres</button></div>` : "";
   avant.insertAdjacentHTML("beforebegin", `<div class="as-champ-bloc${r ? " sur-ruche" : ""}">${parle}<div class="as-champ"><label class="sr" for="asQ">${r ? `Demande à API sur ${esc(r.nom)}` : "Demande à API"}</label>
     <input id="asQ" type="text" enterkeyhint="send" autocomplete="off" maxlength="1000" placeholder="${r ? `Question sur ${esc(r.nom)}…` : "Demande à API…"}">
     <button type="button" class="btn main" data-act="apiposer">Demander</button></div>
@@ -459,6 +542,17 @@ function ouvrirMains() {
 }
 
 export const actions = {
+  // v5.72 : la mémoire qui apprend.
+  apiretenir: async (id) => {
+    const x = fil.echanges.find((y) => y.id === id), a = x?.apprendre;
+    if (!a) return;
+    const appris = { ...((typeof cfg == "function" && cfg().apiAppris) || {}), [a.cle]: typeof today == "function" ? today() : new Date().toISOString().slice(0, 10) };
+    try { await saveCfg({ [a.cle]: a.valeur, apiAppris: appris }, "API s’en souviendra"); a.fait = "oui"; }
+    catch { toast("Je n’ai pas pu l’enregistrer. Réessaie."); }
+    if (S.route === "api") render();
+  },
+  apioublierproposition: (id) => { const x = fil.echanges.find((y) => y.id === id); if (x?.apprendre) x.apprendre.fait = "non"; render(); },
+  apimainsfeuille: () => { $sheet.close(); ouvrirMains(); },
   // v5.71 : parler à API.
   apiparle: () => { const r = fil.rucheFeuille; $sheet.close(); Ecoute.ecouter({ surTexte: (t) => { nouvelle(r); envoyer(t, r, { dite: true }); } }); },
   apimicro: () => Ecoute.ecouter({ surTexte: (t) => { if (S.route !== "api") nouvelle(); envoyer(t, null, { dite: true }); } }),
