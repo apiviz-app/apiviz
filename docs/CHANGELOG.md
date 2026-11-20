@@ -5,6 +5,44 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.70 · à publier en recette · feuilles du bas qu'on attrape du doigt
+**Aucune migration.** Maquettes « pop-up interactives » du 20 nov. 2026 (canvas
+https://claude.ai/artifact/3SCnXpgUNiDAyfwnwqHgZi) ; Pierre-Louis : « Ok, ça me va. Est-ce que tu peux l'implémenter ».
+Point de départ : rendre les pop-up plus vivantes et pouvoir les cacher en tirant le haut vers le bas, sur toutes les
+fenêtres de l'outil.
+
+Pour l'apiculteur (sur téléphone) :
+1. **Tirer le haut d'une feuille vers le bas la ferme.** Le doigt posé sur la poignée ou le titre, la feuille suit le
+   doigt et le fond s'éclaircit. Relâchée au-delà de 150 px, ou d'un petit coup sec, elle se ferme ; sinon elle remonte.
+   La poignée s'allonge, puis passe au miel (avec une petite vibration) quand relâcher fermera.
+2. **Rien n'est perdu.** Une saisie commencée se range en brouillon, comme avec la croix ou le retour Android ; la
+   pastille dit laquelle (« Brouillon gardé · Ajouter une tâche ») et se touche en entier pour la reprendre. Feuille
+   vide : elle se ferme simplement.
+3. **Les trois premières fois**, la poignée bouge un peu pour qu'on la découvre.
+4. **Enregistrer et Annuler restent collés en bas** de la feuille quand le formulaire défile.
+5. **Un champ obligatoire oublié tremble** (et vibre) en plus du message.
+Sur ordinateur, la fenêtre centrée ne change pas (seul le champ oublié tremble).
+
+Technique :
+- `src/noyau/glisser.js` (démarré par `src/main.js`) : règles pures (seuil, coup sec, résistance vers le haut, opacité du
+  fond, détection d'une feuille du bas) et gestes branchés une fois sur le document : toute `<dialog>` ouverte en
+  feuille du bas (≤ 800 px, pleine largeur, collée en bas) se glisse, sans toucher aux écrans. La fermeture envoie
+  l'événement `cancel`, comme Échap : `#sheet` garde le brouillon (ergonomie.js), les autres se ferment ; une fenêtre
+  qui refuse (enregistrement en cours) remonte. Les vibrations passent par `vibrer()` de `retours/sons.js` (réglages
+  de l'utilisateur respectés).
+- `ergonomie.js` : pastille du brouillon avec le titre de la fenêtre.
+- Styles : `styles/67-glisser.css` ; l'animation d'ouverture des feuilles ne tient plus sa position finale
+  (`animation-fill-mode: backwards`), sinon elle écrasait le déplacement du doigt.
+- Tests : `tests/unitaires/glisser.test.mjs` ; `etapes_gl` (suivre le doigt, revenir, seuil, fermer, brouillon et
+  pastille, coup sec, champ, champ oublié, boutons collés, signal des trois premières fois, ordinateur).
+
+À vérifier :
+- Sur téléphone, Agenda › Ajouter une tâche : tirer la poignée un peu puis lâcher (elle remonte), puis loin (elle se
+  ferme).
+- Taper un nom de tâche, tirer vers le bas : la pastille « Brouillon gardé · Ajouter une tâche » ; la toucher.
+- Essayer sur une autre feuille (filtres de l'agenda, nouvelle dépense, calendrier) et sur iPhone comme sur Android.
+- Long formulaire (Modifier la ruche) : Enregistrer reste visible en défilant.
+
 ## v5.69 · à publier en recette · Ma saison en un écran
 **Aucune migration.** Maquette « Accueil compact » du 20 nov. 2026 (canvas
 https://claude.ai/artifact/Qsrtmc4k4yeRY3nMgSCFP4, écrans « 1 bis ») ; Pierre-Louis : « c'est validé, je veux bien que tu

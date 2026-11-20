@@ -1,0 +1,91 @@
+    # v5.70 — feuilles du bas qu'on attrape du doigt (maquettes du 20 nov. 2026) : tirer le haut vers le bas ferme la
+    # feuille, la saisie commencée se range en brouillon avec son titre, un geste court la fait revenir, un champ oublié
+    # tremble ; rien ne change sur ordinateur. Avec CAPTURES=<dossier>, captures à 390 px.
+    import os
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png"))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("localStorage.removeItem('apiviz-glisser-astuce')")
+
+    def ouvrir():
+        page.evaluate("ACT.newtache()"); page.wait_for_selector("#sheet[open] [name=titre]"); page.wait_for_timeout(350)
+    def tirer(dy, pas=12, depart=None, attente=16):
+        r = page.evaluate("(() => { const b = document.querySelector('#sheet').getBoundingClientRect(); return [b.left + b.width / 2, b.top + 30]; })()")
+        x, y = depart or r
+        page.mouse.move(x, y); page.mouse.down()
+        for i in range(1, pas + 1):
+            page.mouse.move(x, y + dy * i / pas); page.wait_for_timeout(attente)
+        return x, y
+    def lacher():
+        page.mouse.up(); page.wait_for_timeout(450)
+
+    # Aux premières ouvertures, la poignée se signale.
+    ouvrir()
+    verif(page.evaluate("document.querySelector('#sheet').classList.contains('gl-astuce')"), "poignée signalée à la première ouverture")
+    shot("gl-1-feuille")
+
+    # Geste court et lent : la feuille suit le doigt puis revient.
+    tirer(60, pas=10, attente=40)
+    t = page.evaluate("getComputedStyle(document.querySelector('#sheet')).transform")
+    verif(t not in ("none", "") and "matrix" in t, "la feuille suit le doigt (%s)" % t)
+    verif(not page.evaluate("document.querySelector('#sheet').classList.contains('gl-seuil')"), "sous le seuil : poignée normale")
+    lacher()
+    verif(page.locator("#sheet[open]").count() == 1, "geste court : la feuille reste ouverte")
+    verif(page.evaluate("document.querySelector('#sheet').style.transform") == "", "geste court : elle reprend sa place")
+
+    # Au-delà du seuil : la poignée passe au miel, et relâcher ferme. Feuille vide : pas de brouillon.
+    tirer(240)
+    verif(page.evaluate("document.querySelector('#sheet').classList.contains('gl-seuil')"), "au-delà du seuil : poignée au miel")
+    shot("gl-2-seuil")
+    lacher()
+    verif(page.locator("#sheet[open]").count() == 0, "relâchée loin : la feuille se ferme")
+    verif(page.locator(".er-brouillon").count() == 0, "feuille vide : aucun brouillon")
+    verif(page.evaluate("document.querySelector('#sheet').style.transform") == "", "fermée : plus aucun déplacement gardé")
+
+    # Saisie commencée : glisser la range en brouillon, avec le titre de la fenêtre ; toucher la pastille la rouvre.
+    ouvrir()
+    page.fill("#sheet [name=titre]", "Poser les partitions")
+    tirer(240); lacher()
+    verif(page.locator("#sheet[open]").count() == 0, "saisie commencée : la feuille se ferme aussi")
+    verif(page.locator(".er-brouillon").count() == 1 and "Ajouter une tâche" in page.inner_text(".er-brouillon"), "pastille « Brouillon gardé · Ajouter une tâche »")
+    shot("gl-3-brouillon")
+    page.click(".er-brouillon .er-btitre"); page.wait_for_selector("#sheet[open]")
+    verif(page.input_value("#sheet [name=titre]") == "Poser les partitions", "la pastille rouvre la saisie telle quelle")
+
+    # Un coup sec vers le bas ferme même sous le seuil.
+    tirer(90, pas=2, attente=0); lacher()
+    verif(page.locator("#sheet[open]").count() == 0, "coup sec : la feuille se ferme")
+    page.evaluate("ACT.eroublier()")
+
+    # Un doigt posé sur un champ ne lance pas le glissé.
+    ouvrir()
+    b = page.locator("#sheet [name=titre]").bounding_box()
+    tirer(240, depart=(b["x"] + 20, b["y"] + b["height"] / 2)); lacher()
+    verif(page.locator("#sheet[open]").count() == 1, "glisser depuis un champ : la feuille reste")
+
+    # Champ obligatoire oublié : il tremble.
+    page.fill("#sheet [name=titre]", "")
+    page.evaluate("document.querySelector('#sheet [name=titre]').addEventListener('animationstart', () => window.__secoue = true, { once: true })")
+    page.click("#sheet .btn.main"); page.wait_for_timeout(120)
+    verif(page.evaluate("window.__secoue === true"), "Enregistrer sans nom : le champ tremble")
+    verif(page.locator("#sheet[open]").count() == 1, "rien n'est enregistré")
+
+    # Boutons collés en bas de la feuille.
+    verif(page.evaluate("getComputedStyle(document.querySelector('#sheetForm > .actions')).position") == "sticky", "Enregistrer / Annuler collés en bas")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(300)
+
+    # Après trois ouvertures, la poignée ne se signale plus.
+    ouvrir()
+    verif(not page.evaluate("document.querySelector('#sheet').classList.contains('gl-astuce')"), "après trois ouvertures : plus de signal")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(300)
+
+    # Ordinateur : la fenêtre centrée ne se glisse pas.
+    page.set_viewport_size({"width": 1280, "height": 800}); page.wait_for_timeout(200)
+    ouvrir()
+    tirer(240); lacher()
+    verif(page.locator("#sheet[open]").count() == 1, "ordinateur : glisser ne ferme pas la fenêtre")
+    verif(page.evaluate("document.querySelector('#sheet').style.transform") == "", "ordinateur : la fenêtre ne bouge pas")

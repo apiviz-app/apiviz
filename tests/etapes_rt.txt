@@ -41,7 +41,7 @@
     champ.fill("Candy 12 kg")
     retour()
     verif(page.locator("#sheet[open]").count() == 0 and route() == "ruches", "retour : la feuille se ferme, l'écran reste")
-    verif(page.locator(".er-brouillon").is_visible() and "brouillon" in page.locator(".er-brouillon").inner_text(), "la saisie est gardée en brouillon")
+    verif(page.locator(".er-brouillon").is_visible() and "brouillon" in page.locator(".er-brouillon").inner_text().lower(), "la saisie est gardée en brouillon")
     page.locator("[data-act=eroublier]").click()
     # 6. À l'Accueil : un premier appui prévient seulement
     retour()
