@@ -140,7 +140,7 @@ a{color:#245640}
 .bottom{display:none}
 @media (max-width:800px){
   .side{display:none}
-  main{padding:18px 16px 96px}
+  main{padding:18px 16px calc(96px + env(safe-area-inset-bottom))}
   h1{font-size:26px}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid2{grid-template-columns:minmax(0,1fr)}
