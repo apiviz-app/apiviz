@@ -115,6 +115,8 @@
     verif("5 kg mis en pots" in page.locator("#r_pots").inner_text() and "15 kg" in page.locator("#r_pots").inner_text(), "calcul : 5 kg en pots, 15 kg en vrac")
     shot("recolte")
     page.click("form[data-form=v3recolte] .btn.main"); page.wait_for_selector(".toast >> text=Récolte et 1 lot enregistrés", timeout=10000)
+    # v5.68 : l'écran « Belle récolte ! » s'ouvre ; « Continuer » le ferme.
+    page.wait_for_selector(".rt-fete"); page.click(".rt-fete [data-act=rtfermer]")
     rec = [x for b in posts("recoltes") for x in (b if isinstance(b, list) else [b])]
     verif(len(rec) >= 3 and abs(sum(x["kg"] for x in rec) - 20) < 0.001 and len({x["extraction"] for x in rec}) == 1, "récolte répartie par hausses : %s" % [(x["kg"], x["hausses"]) for x in rec])
     lots = [x for b in posts("lots") for x in (b if isinstance(b, list) else [b])]

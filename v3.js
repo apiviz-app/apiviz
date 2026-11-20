@@ -278,6 +278,9 @@ const V3 = (() => {
     for (const g of pots) if (!(Number(R.pots[g].prix) >= 0) || R.pots[g].prix === "") throw new Error(`Indique le prix du pot de ${g} g`);
     if (kgPots(R) > kg + 0.05) throw new Error("Plus de miel en pots que de miel extrait");
     S.busy = true;
+    // v5.68 : l'écran « Belle récolte ! » remplace le petit son de la bulle (src/domaines/retours/retours.js).
+    const fete = { kg, miel: R.miel || "", date: R.date };
+    window.Retours?.taire();
     if (!pots.length) {
       await write(sb.from("recoltes").insert(lignes), `Récolte enregistrée · ${n(kg)} kg`);
     } else {
@@ -292,6 +295,7 @@ const V3 = (() => {
     S.route = pots.length ? "miel" : "ruches";
     await refresh();
     if (pots.length) toast(`Récolte et ${U.pluriel(pots.length, "lot")} enregistrés · extraction ${ext}`);
+    window.Retours?.recolte(fete);
   }
   const lotAvant = window.lotForm;
   window.lotForm = function (l) {

@@ -1,0 +1,159 @@
+/* Apiviz — retours de réussite, rayon de la saison, jalons, sons et vibrations (v5.68, maquettes du 20 nov. 2026).
+   Chaque animation part de l'état final : sans animation (réglage « Aucune » ou « réduire les animations » du
+   téléphone), tout est déjà à sa place. Arrondis et tailles : jetons (styles/jetons.css). */
+
+/* ---------- Niveau 1 : un choix rebondit ---------- */
+.rt-tap{animation:rt-tap .32s var(--ressort)}
+@keyframes rt-tap{0%{transform:scale(.92)}100%{transform:none}}
+.rt-pop{animation:rt-pop .34s var(--ressort) both}
+@keyframes rt-pop{0%{transform:scale(.6)}100%{transform:none}}
+@keyframes rt-fondu{0%{opacity:0}100%{opacity:1}}
+
+/* ---------- Visite express : les points regardés ---------- */
+.rt-progres{display:flex;align-items:center;gap:12px;margin:12px 0;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m)}
+.rt-cases{display:flex;gap:3px;flex:none}
+.rt-cases i{width:18px;height:16px;background:var(--line);clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+.rt-cases i.on{background:var(--honey)}
+.rt-progres b{font-size:var(--t-s)}
+
+/* ---------- Fin de tournée : chaque ruche s'allume ---------- */
+.rt-allume .tn-hex{animation:rt-allume .45s var(--ressort) both;animation-delay:calc(.3s + var(--i, 0) * .15s)}
+@keyframes rt-allume{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+.rt-mieux{width:max-content;max-width:100%;margin:12px auto 0;padding:6px 14px;border-radius:var(--r-pill);background:var(--honeysoft);color:var(--watch);font-weight:700;font-size:var(--t-s);text-align:center;animation:rt-fondu .4s 1.6s both}
+
+/* ---------- Retour du réseau : l'abeille ---------- */
+.rt-abeille{position:fixed;left:16px;bottom:140px;z-index:60;pointer-events:none;animation:rt-vol 1.6s cubic-bezier(.45,0,.3,1) forwards}
+.rt-abeille svg{display:block;fill:var(--pine)}
+.rt-abeille .rt-ailes{fill:#DDE9F0;opacity:.9;transform-origin:50% 100%;animation:rt-ailes .09s ease-in-out infinite alternate}
+.rt-abeille .rt-corps{fill:var(--honey)}
+@keyframes rt-vol{0%{transform:translate(0,0) rotate(0)}30%{transform:translate(28vw,-14vh) rotate(12deg)}60%{transform:translate(52vw,-8vh) rotate(-6deg)}100%{transform:translate(80vw,-70vh) rotate(8deg) scale(.5);opacity:0}}
+@keyframes rt-ailes{to{transform:scaleY(.35)}}
+
+/* ---------- Récolte : « Belle récolte ! » ---------- */
+/* Jamais bloquant : le voile laisse passer les touchers, seule la carte les prend ; elle se ferme seule après 6 s. */
+.rt-fete{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,28,24,.35);pointer-events:none;animation:rt-fondu .25s ease-out both}
+.rt-fete-c{pointer-events:auto}
+.rt-fete-c{width:min(460px,100%);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 20px calc(20px + env(safe-area-inset-bottom));background:var(--card);border-radius:var(--r-l) var(--r-l) 0 0;animation:rt-monte .35s var(--sortie) both}
+@keyframes rt-monte{0%{transform:translateY(40px);opacity:0}100%{transform:none;opacity:1}}
+@media (min-width:801px){.rt-fete{align-items:center}.rt-fete-c{border-radius:var(--r-l)}}
+.rt-fete h2{margin:6px 0 0;font-size:var(--t-xl)}
+.rt-sous{margin:0;color:var(--muted);font-size:var(--t-m);text-align:center}
+.rt-fete .btn.block{align-self:stretch;margin-top:6px}
+.rt-pot{position:relative;width:130px;height:186px;display:flex;flex-direction:column;align-items:center}
+.rt-couvercle{display:block;width:92px;height:20px;border-radius:var(--r-s);background:var(--pine);position:relative;z-index:2}
+.rt-col{display:block;width:100px;height:8px;background:var(--line)}
+.rt-bocal{position:relative;width:130px;flex:1;box-sizing:border-box;overflow:hidden;border:3px solid var(--line2);border-radius:20px 20px 32px 32px;background:var(--card)}
+.rt-miel{position:absolute;left:0;right:0;bottom:0;height:76%;background:var(--honey);animation:rt-remplit 1.6s .2s cubic-bezier(.35,.1,.25,1) both}
+@keyframes rt-remplit{0%{height:0}}
+.rt-vague{position:absolute;top:-9px;left:0;width:200%;height:18px;background:radial-gradient(circle at 25% 100%,var(--honey) 12px,transparent 13px) 0 0/50% 100% repeat-x;animation:rt-vague 3s linear infinite}
+@keyframes rt-vague{to{transform:translateX(-50%)}}
+.rt-coulee{position:absolute;top:-30px;left:61px;width:8px;height:0;border-radius:var(--r-s);background:var(--honey);z-index:1;animation:rt-coulee 1.6s .2s ease-in both}
+@keyframes rt-coulee{0%{height:0;opacity:1}70%{height:150px;opacity:1}100%{height:150px;opacity:0}}
+.rt-kg{position:absolute;left:50%;top:50%;transform:translate(-50%,-30%);padding:6px 12px;border-radius:var(--r-s);background:var(--card);text-align:center;box-shadow:0 2px 0 rgba(30,43,36,.08)}
+.rt-kg b{display:block;font-size:var(--t-xxl);line-height:1;font-variant-numeric:tabular-nums}
+.rt-kg small{font-size:var(--t-xs);font-weight:700;color:var(--muted)}
+.rt-saison{align-self:stretch;display:flex;flex-direction:column;gap:8px;margin-top:8px;padding:14px;border:1px solid var(--line);border-radius:var(--r-m);animation:rt-fondu .4s 1.4s both}
+.rt-saison p{margin:0}
+.rt-saison-l{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rt-saison-l em{margin-right:8px;padding:2px 8px;border-radius:var(--r-pill);background:var(--honeysoft);font-style:normal;font-size:var(--t-s);font-weight:700}
+.rt-jauge{height:12px;overflow:hidden;border-radius:var(--r-pill);background:var(--line)}
+.rt-jauge i{display:block;height:100%;width:var(--a);border-radius:var(--r-pill);background:var(--honey);animation:rt-jauge 1s 1.4s var(--ressort) both}
+@keyframes rt-jauge{0%{width:var(--de)}}
+
+/* ---------- Accueil : ton rayon de la saison ---------- */
+.wrap.ac .rt-rayon-carte{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:16px;box-shadow:none}
+.rt-rayon-carte h2{margin:0}
+.rt-rayon-carte .u-entete{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.rt-rayon-carte .u-entete p{margin:2px 0 0}
+.rt-serie{display:inline-flex;align-items:center;gap:4px;flex:none;padding:4px 10px;border-radius:var(--r-pill);background:var(--honeysoft);color:var(--watch);font-size:var(--t-s);font-weight:700;white-space:nowrap}
+.rt-serie svg{color:var(--honey)}
+.rt-rayon{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.rt-rang{display:flex}
+.rt-rang + .rt-rang{margin-top:-7px}
+.rt-rang.decale{margin-left:28px}
+.rt-c{position:relative;width:28px;height:32px;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rt-c i{position:absolute;inset:2px;display:block;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#EFEDE4;transition:transform var(--duree-rapide) ease}
+.rt-c.n1 i,.rt-legende .n1{background:#F6D47A}
+.rt-c.n2 i,.rt-legende .n2{background:var(--honey)}
+.rt-c.n3 i,.rt-legende .n3{background:#A86F00}
+.rt-c.futur i{background:#F4F3EE}
+.rt-c.ici::after{content:"";position:absolute;inset:9px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--pine);opacity:.85;animation:rt-pouls 1.6s ease-in-out infinite}
+@keyframes rt-pouls{50%{opacity:.25}}
+.rt-c:active i{transform:scale(.85)}
+.rt-c.choisie i{animation:rt-rebond .4s cubic-bezier(.3,1.8,.5,1) both;outline:0}
+.rt-c.choisie{z-index:1}
+@keyframes rt-rebond{0%{transform:scale(.7)}100%{transform:scale(1.15)}}
+.rt-c:focus-visible{outline:2px solid var(--pine);outline-offset:-2px}
+.rt-info{min-height:20px;margin:6px 0 0}
+.rt-legende{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 0;color:var(--muted);font-size:var(--t-xs)}
+.rt-legende span{display:inline-flex;align-items:center;gap:5px}
+.rt-legende i{width:12px;height:14px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#EFEDE4}
+.rt-deux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.rt-tuile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:var(--cible);padding:10px 14px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--ground);color:var(--ink);font:inherit;text-align:left}
+button.rt-tuile{cursor:pointer}
+.rt-tuile b{font-size:var(--t-xl);line-height:1.1}
+.rt-tuile span{font-size:var(--t-s);color:var(--muted)}
+
+/* ---------- Nouveau jalon ---------- */
+.rt-jalon{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:65;max-width:460px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:var(--r-l);background:var(--pine);color:#fff;box-shadow:0 14px 30px rgba(20,28,24,.35);animation:rt-jalon 6.5s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes rt-jalon{0%{transform:translateY(-140%)}7%{transform:none}90%{transform:none;opacity:1}100%{transform:translateY(-140%);opacity:0}}
+.rt-jalon-i{flex:none;width:44px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--honey);color:var(--pine);clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);animation:rt-tourne .8s .3s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes rt-tourne{0%{transform:rotate(-180deg) scale(.3)}100%{transform:none}}
+.rt-jalon-t{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
+.rt-jalon-t small{font-size:var(--t-xs);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--honey-light)}
+.rt-jalon-t b{font-size:var(--t-m)}
+.rt-jalon-b{min-height:var(--cible);padding:0 14px;border:0;border-radius:var(--r-s);background:var(--pine2);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+
+/* ---------- Écran « Jalons » ---------- */
+.rt-barre{height:10px;overflow:hidden;border-radius:var(--r-pill);background:var(--line);margin:4px 0 20px}
+.rt-barre i{display:block;height:100%;border-radius:var(--r-pill);background:var(--honey)}
+.rt-grille{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 10px}
+@media (min-width:801px){.rt-grille{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.rt-badge{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:center;cursor:pointer}
+.rt-badge b{font-size:var(--t-s);line-height:1.25}
+.rt-badge small{margin-top:-3px;font-size:var(--t-xs);font-weight:600;color:var(--muted)}
+.rt-hex{position:relative;display:block;width:78px;height:70px;background:var(--line2);clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+.rt-hex > span{position:absolute;inset:3px;display:flex;align-items:center;justify-content:center;background:var(--ground);color:var(--muted);clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+.gagne .rt-hex{background:var(--honey)}
+.gagne .rt-hex > span{inset:5px;background:var(--pine);color:var(--honey)}
+.rt-badge{position:relative}
+.rt-badge.neuf::after{content:"";position:absolute;top:2px;left:calc(50% + 26px);width:14px;height:14px;box-sizing:border-box;border:2px solid var(--ground);border-radius:50%;background:var(--crit);animation:rt-pouls 1.4s ease-in-out infinite}
+.rt-badge:active .rt-hex{transform:scale(.94)}
+.rt-secoue .rt-hex{animation:rt-secoue .4s ease both}
+@keyframes rt-secoue{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.rt-note{margin-top:22px}
+.rt-feuille-jalon{text-align:center}
+.rt-feuille-jalon h2,.rt-feuille-jalon > p{text-align:center}
+.rt-detail{display:flex;justify-content:center;margin:6px 0 4px}
+.rt-detail .rt-hex{width:120px;height:108px}
+.rt-detail.gagne .rt-hex{animation:rt-retourne .7s .1s cubic-bezier(.3,1.5,.5,1) both}
+.rt-detail.gagne .rt-hex > span{inset:7px}
+@keyframes rt-retourne{0%{transform:rotateY(180deg) scale(.4)}100%{transform:none}}
+.rt-quand{width:max-content;max-width:100%;margin:4px auto 10px;padding:6px 12px;border-radius:var(--r-pill);background:var(--honeysoft);font-weight:700;font-size:var(--t-s)}
+
+/* ---------- Réglages › Sons et vibrations ---------- */
+.rt-reglages{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;text-align:left}
+.rt-reglages .small{margin:6px 0 0}
+.rt-ligne{display:flex;align-items:center;gap:12px;min-height:52px}
+.rt-ligne > span{flex:1;display:flex;flex-direction:column;gap:2px}
+.rt-ligne small{font-size:var(--t-s);color:var(--muted)}
+.rt-terrain{padding:2px 14px;border-radius:var(--r-m);background:var(--pine);color:#fff}
+.rt-terrain small{color:#C9D1CB}
+.rt-inter{position:relative;flex:none;width:52px;height:32px;padding:0;border:0;border-radius:var(--r-pill);background:var(--line2);cursor:pointer;transition:background var(--duree) ease}
+.rt-inter i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left var(--duree) var(--ressort)}
+.rt-inter[aria-checked="true"]{background:var(--honey)}
+.rt-inter[aria-checked="true"] i{left:23px}
+.rt-titre{margin-top:8px;font-size:var(--t-s);font-weight:700;color:var(--muted)}
+.rt-ambiances{display:flex;flex-direction:column;gap:6px}
+.rt-ambiance{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 10px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.rt-ambiance.on{border-color:var(--pine);background:var(--ground)}
+.rt-ambiance > span:last-child{display:flex;flex-direction:column}
+.rt-ambiance small{font-size:var(--t-s);color:var(--muted)}
+.rt-lire{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--honeysoft);color:var(--watch)}
+.rt-seg{display:grid;gap:6px}
+
+/* ---------- Réglage « Animations » ---------- */
+html.rt-anim-discretes .mv-eclats,html.rt-anim-discretes .rt-abeille,html.rt-anim-discretes .rt-vague,html.rt-anim-discretes .rt-coulee{display:none}
+html.rt-anim-discretes :is(.rt-tap,.rt-pop,.rt-allume .tn-hex,.rt-c.choisie i,.rt-jalon-i,.rt-detail.gagne .rt-hex,.rt-secoue .rt-hex){animation-name:rt-fondu}
+html.rt-anim-aucune *,html.rt-anim-aucune *::before,html.rt-anim-aucune *::after{animation:none!important;transition:none!important}
+html.rt-anim-aucune .rt-abeille{display:none}

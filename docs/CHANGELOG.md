@@ -5,6 +5,61 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.68 · à publier en recette · sons, vibrations, rayon de la saison et jalons
+**Aucune migration.** À fusionner après la v5.67 (#104), sur laquelle cette branche repose. Maquettes « APIVIZ —
+Interactivité et satisfaction » du 20 nov. 2026 (canvas https://claude.ai/artifact/JFCEa3cMazu1fwN6HxTQvc, 8 écrans
+jouables) ; Pierre-Louis : « je valide ta proposition sur l'ambiance alvéole et un volume moyen, libre après à
+l'utilisateur de sélectionner ce qu'il souhaite. Est-ce que tu peux m'implémenter tout ce que tu m'as proposé ».
+Point de départ : rendre l'application agréable, avec de petites animations quand on réussit quelque chose et de petits
+sons quand une saisie est validée.
+
+Pour l'apiculteur :
+1. **Trois niveaux de retour, toujours les mêmes.** Un choix (puce, segment, interrupteur, − / +) rebondit et fait un
+   « tic » presque muet ; une saisie enregistrée (visite, vente, note, photo…) joue deux notes qui montent, en plus de la
+   coche et des éclats d'alvéoles déjà là ; les grands moments (tournée bouclée, récolte, jalon gagné) jouent un petit
+   accord. Une erreur joue un son grave, une annulation deux notes qui redescendent. Sur Android, le téléphone vibre
+   aussi (10 ms pour un choix, double tap pour une saisie).
+2. **Visite express** : une rangée d'alvéoles sous le message d'API se remplit à mesure que les points sont regardés
+   (« 6 sur 9 regardés », puis « Tout est regardé »).
+3. **Fin de tournée** : chaque ruche du bilan s'allume en jouant sa note, de plus en plus aiguë, puis un accord ; « 9 min
+   de moins que la dernière fois » quand la tournée du même rucher a été plus rapide.
+4. **« Belle récolte ! »** : après une récolte, le pot se remplit, les kilos défilent, la saison avance vers l'objectif
+   (« ≈ 76 pots de 500 g »).
+5. **Retour du réseau** : une abeille emporte les saisies gardées sur le téléphone vers le nuage.
+6. **Ton rayon** (Accueil) : une alvéole par semaine de mars à novembre, plus remplie selon le nombre de visites, la
+   semaine en cours qui clignote, la série de semaines d'affilée, les visites et les jalons de la saison. Une alvéole
+   touchée dit sa semaine et ses visites.
+7. **Jalons** (nouvel écran, Accueil › Jalons) : douze étapes de la saison en alvéoles (première visite, printemps lancé,
+   100 visites, première récolte, tournée sans oubli, première vente, tous les ruchers vus ce mois-ci, objectif de
+   récolte, 8 semaines d'affilée, 50 ventes, 10 comptages de varroa, 20 pesées), calculées d'après les saisies. Un toucher
+   en donne le détail (« Gagné le 3 mai », ou la progression « 212/300 ») ; un jalon tout juste gagné s'annonce en haut
+   de l'accueil, une seule fois. À la première ouverture, rien n'est annoncé d'un coup.
+8. **Réglages › Sons et vibrations** : mode terrain (pendant une tournée, vibrations seules), sons, ambiance **Alvéole**
+   (par défaut), Bois ou Cristal, volume Discret / **Moyen** (par défaut) / Fort, vibrations, animations Complètes /
+   Discrètes / Aucune. Chaque choix s'essaie tout de suite ; « Annuler » remet comme avant. Propre à chaque appareil.
+   « Réduire les animations » du téléphone coupe les animations quoi qu'il arrive.
+9. **Réglages › Objectif de récolte** : les kilos visés pour la saison, partagés par l'exploitation ; repris par l'écran
+   de récolte et le jalon (100 kg sans objectif).
+
+Technique :
+- `src/domaines/retours/` : `regles.js` (règles pures), `sons.js` (Web Audio, aucun fichier son ; vibrations),
+  `retours.js` (habillage de `toast()`, choix, visite express, tournée, récolte, abeille ; `window.Retours`),
+  `jalons.js` (carte du rayon, écran `jalons`, annonce), `reglages.js` (deux lignes et leurs feuilles), `ecrans.js`.
+  `v3.js` appelle `Retours.taire()` et `Retours.recolte()`. Styles : `styles/66-retours.css`.
+- Préférences : clé `apiviz-retours` de l'appareil ; jalons annoncés et vus : `apidoo-jalons-<exploitation>-<saison>-*` ;
+  durée de la dernière tournée : `apidoo-tournee-<rucher>` (ces deux-là sont effacés à la déconnexion). Objectif : `reglages.data.objectif_recolte` (`regler`).
+- Écran `jalons` : parent Accueil (`PARENTS`, menu de l'ordinateur, barre du bas), ajouté à `etapes_sd`. Actions de
+  consultation ajoutées à `ACTIONS_LECTEUR` (`rtsemaine`, `jlouvrir`, `rtfermer`, `rtsons`, `rtregle`) ; l'objectif reste
+  réservé aux membres qui écrivent.
+- Tests : `tests/unitaires/retours.test.mjs`, scénario `etapes_sa` (sons écoutés par un faux AudioContext).
+
+À vérifier :
+- Sur téléphone, son allumé : une saisie de visite joue deux notes et vibre (Android) ; en silencieux sur iPhone, rien.
+- Fin d'une tournée : les ruches s'allument une à une en musique.
+- Une récolte : écran « Belle récolte ! », « Continuer » le ferme.
+- Accueil : la carte « Ton rayon », puis Jalons ; Réglages › Sons et vibrations, essayer Cristal puis Annuler.
+- Réglages › Objectif de récolte, puis l'écran d'une récolte montre la jauge.
+
 ## v5.67 · à publier en recette · Produits : mise en pots, lots, clients
 **Aucune migration.** Maquettes « apiviz — Produits : mise en pots, lots, clients » du 20 nov. 2026 (canvas
 https://claude.ai/artifact/DYd97j7D1xhMLUJfTDYdkL) ; Pierre-Louis : « je souhaite que tu implémentes ce que tu m'as

@@ -1,0 +1,173 @@
+    # v5.68 — Retours de réussite (maquettes « Interactivité et satisfaction » du 20 nov. 2026, validées) : sons au
+    # niveau 1 (choix), 2 (bulle de réussite), 3 (fête) ; vibrations ; ambiance Alvéole au volume moyen par défaut ;
+    # rayon de la saison sur l'accueil ; écran Jalons et annonce d'un nouveau jalon ; points regardés de la visite
+    # express ; fin de tournée ; « Belle récolte ! » ; abeille au retour du réseau ; Réglages › Sons et vibrations et
+    # objectif de récolte ; mode terrain et animations. Le son est écouté par un faux AudioContext (fréquences jouées).
+    # Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    # Faux AudioContext : chaque oscillateur démarré note sa fréquence ; navigator.vibrate note son motif.
+    ctx.add_init_script("""(() => {
+      window.__notes = []; window.__vib = [];
+      class Osc { constructor() { this.frequency = { setValueAtTime: (f) => { this.f = f; }, exponentialRampToValueAtTime() {} }; this.type = 'sine'; }
+        connect() {} start() { window.__notes.push(Math.round(this.f)); } stop() {} }
+      class Gain { constructor() { this.gain = { setValueAtTime() {}, exponentialRampToValueAtTime() {} }; } connect() {} }
+      class Ctx { constructor() { this.state = 'running'; this.currentTime = 0; this.destination = {}; } resume() { return Promise.resolve(); }
+        createOscillator() { return new Osc(); } createGain() { return new Gain(); } }
+      window.AudioContext = Ctx; window.webkitAudioContext = Ctx;
+      Object.defineProperty(navigator, 'vibrate', { value: (p) => { window.__vib.push(p); return true; }, configurable: true });
+    })()""")
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    notes = lambda: page.evaluate("window.__notes.splice(0)")
+    vib = lambda: page.evaluate("window.__vib.splice(0)")
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.wait_for_timeout(1200)
+
+    # Préférences par défaut
+    p = page.evaluate("JSON.stringify(Object.assign({}, (() => { try { return JSON.parse(localStorage.getItem('apiviz-retours')) } catch (e) { return null } })()))")
+    verif(p == "{}", "rien d'enregistré avant le premier réglage (valeurs de départ)")
+    verif(page.evaluate("document.documentElement.classList.contains('rt-anim-completes')"), "animations complètes par défaut")
+
+    # Accueil : rayon de la saison
+    verif(page.locator("#rtRayon").count() == 1, "carte « Ton rayon » sur l'accueil")
+    nb = page.locator("#rtRayon .rt-c").count()
+    verif(39 <= nb <= 40, "une alvéole par semaine de mars à novembre (%d)" % nb)
+    verif(page.locator("#rtRayon h2").inner_text().startswith("Ton rayon "), "titre « Ton rayon AAAA » (tutoiement)")
+    tuile = page.locator("#rtRayon [data-act=go][data-v=jalons]").inner_text()
+    verif(re.search(r"\d+ / 12", tuile) is not None, "tuile des jalons : « N / 12 » (%s)" % tuile.replace("\n", " "))
+    verif(page.locator(".rt-jalon").count() == 0, "première ouverture : aucun jalon annoncé d'un coup")
+    notes(); vib()
+    page.locator("#rtRayon .rt-c").nth(5).click(); page.wait_for_timeout(200)
+    verif(page.locator("#rtRayon .rt-info").inner_text().startswith("Semaine "), "toucher une alvéole : sa semaine et ses visites (%s)" % page.locator("#rtRayon .rt-info").inner_text())
+    verif(page.locator("#rtRayon .rt-c.choisie").count() == 1, "l'alvéole touchée rebondit")
+    verif(len(notes()) == 1 and vib() == [10], "une note et une vibration courte")
+    shot("sa-accueil")
+
+    # Nouveau jalon : un jalon gagné qui n'avait pas été annoncé
+    page.evaluate("""(() => { const k = Object.keys(localStorage).find((x) => x.startsWith('apidoo-jalons-') && x.endsWith('-annonces'));
+      const l = JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(l.filter((x) => x !== 'premiere-visite'))); })()""")
+    notes(); page.evaluate("ACT.go('ruches')"); page.wait_for_timeout(300); page.evaluate("ACT.go('dash')")
+    page.wait_for_selector(".rt-jalon", timeout=3000)
+    verif("Première visite" in page.locator(".rt-jalon").inner_text(), "bulle « Nouveau jalon : Première visite »")
+    verif(set([523, 659, 784, 1047]) <= set(notes()), "nouveau jalon : l'accord du niveau 3")
+    shot("sa-nouveau-jalon")
+    page.click(".rt-jalon [data-act=go]"); page.wait_for_timeout(400)
+
+    # Écran Jalons
+    verif(page.evaluate("S.route") == "jalons" and page.locator(".wrap > .head h1").inner_text() == "Jalons", "écran « Jalons »")
+    verif(page.locator(".rt-badge").count() == 12, "douze jalons")
+    verif(page.locator(".rt-badge.gagne").count() >= 1, "au moins un jalon gagné")
+    verif(page.locator(".shell > .topbar .g-retour-haut").count() >= 1, "retour vers l'accueil dans la barre du haut")
+    shot("sa-jalons")
+    page.locator(".rt-badge.gagne").first.click(); page.wait_for_selector("#sheet[open] .rt-detail.gagne")
+    verif("Gagné le" in page.locator("#sheet .rt-quand").inner_text(), "détail : « Gagné le … »")
+    verif(page.locator("#sheet .actions [data-act=closesheet]").count() == 0, "détail : un seul bouton, « Fermer »")
+    shot("sa-jalon-detail")
+    page.click("#sheet .btn.main"); page.wait_for_timeout(300)
+    page.locator(".rt-badge:not(.gagne)").first.click(); page.wait_for_selector("#sheet[open] .rt-detail")
+    verif(page.locator(".rt-badge.rt-secoue").count() == 1, "jalon pas encore gagné : il tremble")
+    page.click("#sheet .btn.main"); page.wait_for_timeout(300)
+
+    # Niveau 2 : bulles de réussite, erreur, annulation
+    notes(); vib()
+    page.evaluate("toast('Visite enregistrée en 3 min')"); page.wait_for_timeout(100)
+    verif(notes() == [659, 988] and vib() == [[15, 40, 15]], "bulle de réussite : deux notes montantes (Alvéole) et double vibration")
+    page.evaluate("toast('Impossible d’enregistrer', true)"); page.wait_for_timeout(100)
+    verif(notes() == [220, 196], "erreur : son grave")
+    page.evaluate("toast('Saisie retirée')"); page.wait_for_timeout(100)
+    verif(notes() == [740, 494], "annulation : deux notes qui redescendent")
+
+    # Retour du réseau : l'abeille
+    page.evaluate("toast('2 saisies envoyées')"); page.wait_for_timeout(100)
+    verif(page.locator(".rt-abeille").count() == 1 and notes() == [600], "saisies envoyées : l'abeille s'envole, son qui monte")
+
+    # Visite express : les points regardés
+    rid = page.evaluate("S.d.ruches[0].id")
+    page.evaluate("id => ACT.veruche(id)", rid); page.wait_for_selector(".rt-progres")
+    avant = page.locator(".rt-progres b").inner_text()
+    verif(re.match(r"\d sur 9 regardés", avant) is not None, "visite express : « N sur 9 regardés » (%s)" % avant)
+    notes(); vib()
+    page.click(".ve-tete[data-v=reine]"); page.wait_for_timeout(200)
+    page.click(".ve-choix [data-v='Vue']"); page.wait_for_timeout(300)
+    apres = page.locator(".rt-progres b").inner_text()
+    verif(int(apres[0]) == int(avant[0]) + 1, "regarder la reine remplit une alvéole (%s → %s)" % (avant, apres))
+    verif(page.locator(".rt-progres i.rt-pop").count() == 1, "la nouvelle alvéole rebondit")
+    verif(1500 in notes() and 10 in vib(), "un choix : « tic » et 10 ms de vibration")
+    shot("sa-express")
+
+    # Fin de tournée : chaque ruche s'allume, puis l'accord ; comparaison avec la dernière fois
+    ids = page.evaluate("S.d.ruches.filter((r) => r.rucher === 'Verger').map((r) => r.id)")
+    page.evaluate("localStorage.setItem('apidoo-tournee-Verger', JSON.stringify({ nb: 3, minutes: 21 }))")
+    notes()
+    page.evaluate("""(ids) => { S.ve = null; S.tournee = null;
+      S.tn = { etape: 'bilan', modele: 'complete', mode: 'manuel', fiches: {}, taches: [], bilan: { ids, fiches: Object.fromEntries(ids.map((id) => [id, { etat: 'enregistree' }])), taches: [], minutes: 12, local: false } };
+      go('tournee'); }""", ids)
+    page.wait_for_selector(".tn-remplit.rt-allume")
+    verif(page.locator(".rt-mieux").inner_text() == "9 min de moins que la dernière fois", "fin de tournée : « 9 min de moins que la dernière fois »")
+    page.wait_for_timeout(1300)
+    n = notes()
+    verif(n[:3] == [523, 587, 659] and set([784, 1047]) <= set(n[3:]), "une note par ruche, de plus en plus aiguë, puis l'accord (%s)" % n)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apidoo-tournee-Verger')).minutes") == 12, "durée gardée pour la prochaine tournée")
+    shot("sa-tournee")
+    page.evaluate("S.tn = null; go('dash')"); page.wait_for_timeout(300)
+
+    # Réglages : objectif de récolte, sons et vibrations
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("[data-act=rtsons]")
+    verif("Alvéole · moyen" in page.locator("[data-act=rtsons]").inner_text(), "Sons et vibrations : « Alvéole · moyen » par défaut")
+    verif("À fixer" in page.locator("[data-act=rtobjectif]").inner_text(), "Objectif de récolte : « À fixer »")
+    page.click("[data-act=rtobjectif]"); page.wait_for_selector("#sheet[open] input[name=kg]")
+    page.fill("#sheet input[name=kg]", "300"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=Objectif enregistré")
+    page.wait_for_timeout(300)
+    verif(DATA["reglages"][0]["data"].get("objectif_recolte") == 300, "objectif gardé dans les réglages de l'exploitation (%s)" % DATA["reglages"][0]["data"])
+    verif("300 kg" in page.locator("[data-act=rtobjectif]").inner_text(), "Objectif de récolte : « 300 kg »")
+    page.click("[data-act=rtsons]"); page.wait_for_selector("#sheet[open] .rt-reglages")
+    shot("sa-reglages-sons")
+    notes()
+    page.click("#sheet .rt-ambiance[data-v=cristal]"); page.wait_for_timeout(150)
+    verif(notes() == [1568, 2349] and page.locator("#sheet .rt-ambiance.on").inner_text().startswith("Cristal"), "choisir Cristal : on l'entend tout de suite")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(200)
+    verif(page.evaluate("localStorage.getItem('apiviz-retours')") is None, "Annuler : rien n'est gardé")
+    page.click("[data-act=rtsons]"); page.wait_for_selector("#sheet[open] .rt-reglages")
+    page.click("#sheet .rt-ambiance[data-v=cristal]"); page.click("#sheet .rt-seg [data-v=fort]"); page.click("#sheet .rt-seg [data-v=aucune]")
+    page.click("#sheet .rt-terrain [role=switch]"); page.wait_for_timeout(100)
+    page.click("#sheet .btn.main"); page.wait_for_timeout(400)
+    prefs = page.evaluate("JSON.parse(localStorage.getItem('apiviz-retours'))")
+    verif(prefs == {"sons": True, "ambiance": "cristal", "volume": "fort", "vibrations": True, "animations": "aucune", "terrain": True}, "Enregistrer : réglages gardés sur l'appareil (%s)" % prefs)
+    verif("Cristal · fort · mode terrain" in page.locator("[data-act=rtsons]").inner_text(), "ligne : « Cristal · fort · mode terrain »")
+    verif(page.evaluate("document.documentElement.classList.contains('rt-anim-aucune')"), "animations « Aucune » appliquées")
+    notes()
+    page.evaluate("toast('Vente encaissée')"); page.wait_for_timeout(100)
+    verif(notes() == [1568, 2349], "réussite en Cristal")
+    page.evaluate("S.route = 'tournee'; Retours.niveau(2); S.route = 'reglages'"); page.wait_for_timeout(100)
+    verif(notes() == [] and vib()[-1] == [15, 40, 15], "mode terrain pendant la tournée : pas de son, la vibration reste")
+    page.evaluate("localStorage.removeItem('apiviz-retours'); location.reload()"); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.wait_for_timeout(800)
+
+    # Récolte : « Belle récolte ! »
+    notes()
+    page.evaluate("Retours.recolte({ kg: 38.4, miel: 'Toutes fleurs', date: today() })")
+    page.wait_for_selector(".rt-fete")
+    verif(page.locator(".rt-fete h2").inner_text() == "Belle récolte !", "récolte : écran « Belle récolte ! »")
+    page.wait_for_timeout(2000)
+    verif(page.locator("#rtKg").inner_text() == "38,4", "les kilos défilent jusqu'à 38,4")
+    verif(page.locator(".rt-jauge").count() == 1 and "Objectif : 300 kg" in page.locator(".rt-saison").inner_text(), "la saison avance vers l'objectif")
+    verif("≈ 76 pots de 500 g" in page.locator(".rt-saison").inner_text(), "équivalent en pots de 500 g")
+    n = notes()
+    verif(n[:3] == [220, 280, 340] and set([523, 659, 784, 1047]) <= set(n), "miel qui coule (trois glouglous), puis l'accord")
+    shot("sa-recolte")
+    page.click(".rt-fete [data-act=rtfermer]"); page.wait_for_timeout(200)
+    verif(page.locator(".rt-fete").count() == 0, "« Continuer » referme")
+
+    # Ordinateur : l'accueil garde la carte
+    page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.go('dash')"); page.wait_for_timeout(500)
+    verif(page.locator("#rtRayon").count() == 1, "ordinateur : carte du rayon sur l'accueil")
+    if cap: page.screenshot(path=f"{cap}/sa-accueil-1280.png", full_page=True)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

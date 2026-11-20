@@ -25,6 +25,12 @@ Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 
+Scénario v5.68 : `etapes_sa` (retours de réussite : sons des trois niveaux écoutés par un faux AudioContext,
+vibrations, rayon de la saison sur l'accueil, annonce d'un nouveau jalon, écran Jalons et son détail, bulles de réussite,
+d'erreur et d'annulation, abeille au retour du réseau, points regardés de la visite express, fin de tournée en musique et
+« 9 min de moins », objectif de récolte et feuille « Sons et vibrations » — essai, Annuler, Enregistrer —, mode terrain,
+« Belle récolte ! »). Avec `CAPTURES=<dossier>` : captures à 390 px (accueil aussi à 1 280 px).
+
 Scénario v5.67 : `etapes_po` (Produits : mise en pots au titre fixe avec l'alerte de ce qui manque, miels et formats
 du seul miel, prix proposé ; Stock en cartes produit et vignettes de lots, « Ajouter » ; Clients sans pot ni tuiles ;
 même ligne d'état sur chaque onglet). Avec `CAPTURES=<dossier>` : captures à 390 px.
