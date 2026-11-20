@@ -63,7 +63,7 @@ Préparée le 5 novembre 2026 à partir de l'audit du dépôt (`main` @ `554f98f
 | D-06 | Cible des 12 prochains mois : amateurs et passionnés (recommandé), ou professionnels d'emblée | Ordre des phases 4 à 7 | IT-05 |
 | D-07 | Budget et fournisseur du modèle de langage pour l'assistant | Coût par question | IT-24 |
 | D-08 | Modèle économique (gratuit, freemium, payant) et calendrier ; recommandation : freemium (12 §9) | Phase 9 | IT-27 |
-| D-09 | Usage commercial d'Open-Meteo, Nominatim et des tuiles OpenStreetMap : offres payantes ou alternatives. **20 nov. 2026 : services gratuits et libres d'usage commercial seulement ; carte et adresses passées à l'IGN, polices hébergées (v5.72) ; météo à passer sur Météo-France avant l'offre payante** | Conditions d'usage à respecter dès qu'Apidoo devient payant | IT-22 |
+| D-09 | Usage commercial d'Open-Meteo, Nominatim et des tuiles OpenStreetMap : offres payantes ou alternatives. **20 nov. 2026 : services gratuits et libres d'usage commercial seulement ; carte et adresses passées à l'IGN, polices hébergées (v5.73) ; météo à passer sur Météo-France avant l'offre payante** | Conditions d'usage à respecter dès qu'Apidoo devient payant | IT-22 |
 | D-10 | Ouvrir les inscriptions à tous, ou garder une liste d'adresses autorisées | Charge de support, données de tiers | après IT-04 |
 | D-11 | Nom de domaine d'Apidoo | Adresse définitive du site, des liens d'e-mail et des applications | IT-29 |
 | D-12 | Hébergeur web (recommandé : Cloudflare Workers, fichiers statiques) | GitHub Pages exclut un usage commercial | IT-29 |

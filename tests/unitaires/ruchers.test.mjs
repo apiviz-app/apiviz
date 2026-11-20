@@ -79,7 +79,7 @@ test("nom libre, archivage, infos", () => {
   assert.equal(infosDepuis({ capacite: "" }).capacite, null);
 });
 
-// v5.72 : carte et adresses de l'IGN (Licence Ouverte, usage commercial permis) au lieu d'OpenStreetMap.
+// v5.73 : carte et adresses de l'IGN (Licence Ouverte, usage commercial permis) au lieu d'OpenStreetMap.
 test("fond de carte Plan IGN : tuiles XYZ de la Géoplateforme, source citée", () => {
   assert.match(FOND_CARTE.url, /^https:\/\/data\.geopf\.fr\/wmts\?/);
   for (const p of ["LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "TILEMATRIXSET=PM", "TILEMATRIX={z}", "TILEROW={y}", "TILECOL={x}"]) assert.ok(FOND_CARTE.url.includes(p), p);

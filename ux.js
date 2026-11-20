@@ -457,7 +457,7 @@ const UX = (() => {
     catch { document.getElementById("u_msg").select(); toast("Sélectionne le message pour le copier", true); }
   };
 
-  // ---------- 6. Carte des ruchers (Leaflet + Plan IGN, v5.72) ----------
+  // ---------- 6. Carte des ruchers (Leaflet + Plan IGN, v5.73) ----------
   let promesseCarte = null, choix = null, carteMap = null, visee = null;
   const leaflet = () => promesseCarte || (promesseCarte = new Promise((ok, ko) => {
     const l = document.createElement("link");
@@ -511,7 +511,7 @@ const UX = (() => {
     el.dataset.monte = "1"; el.innerHTML = "";
     const m = L.map(el, { zoomControl: true, attributionControl: true });
     carteMap = m;
-    L.tileLayer(Regles.ruchers.FOND_CARTE.url, Regles.ruchers.FOND_CARTE.options).addTo(m); // Plan IGN (v5.72)
+    L.tileLayer(Regles.ruchers.FOND_CARTE.url, Regles.ruchers.FOND_CARTE.options).addTo(m); // Plan IGN (v5.73)
     const places = ls.filter((l) => l.lat != null);
     const couleur = { good: "#2F6B4F", watch: "#E3A008", crit: "#A61B1B" };
     places.forEach((l) => {
@@ -556,7 +556,7 @@ const UX = (() => {
     if (!q || !carteMap) return;
     const b = e.target.querySelector(".btn"); b.disabled = true;
     try {
-      // Géocodage de l'IGN (v5.72) : gratuit, sans clé, usage commercial permis.
+      // Géocodage de l'IGN (v5.73) : gratuit, sans clé, usage commercial permis.
       const r = await fetch(Regles.ruchers.urlCherche(q));
       const t = Regles.ruchers.lireCherche(r.ok ? await r.json() : null);
       if (!t) toast("Adresse introuvable : essaie avec le nom de la commune", true);

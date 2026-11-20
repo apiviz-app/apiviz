@@ -439,7 +439,7 @@ const V3 = (() => {
     if (communes[k] !== undefined) return communes[k];
     if (!enCours.has(k) && navigator.onLine !== false) {
       enCours.add(k);
-      fetch(Regles.ruchers.urlCommune(lat, lng)) // géocodage inverse de l'IGN (v5.72)
+      fetch(Regles.ruchers.urlCommune(lat, lng)) // géocodage inverse de l'IGN (v5.73)
         .then((r) => (r.ok ? r.json() : null)).then((j) => {
           communes[k] = Regles.ruchers.lireCommune(j);
           memo("apidoo-communes", JSON.stringify(communes));

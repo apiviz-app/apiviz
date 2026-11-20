@@ -6,7 +6,7 @@ PROD=xkucyqzlqfeyuomrtjbu
 TEST=zaaaiqyhxehvgowlgztx
 prod=$(cd "$1" && pwd); rec=$(cd "$2" && pwd); sortie=$3
 
-copier() { # Seuls les fichiers du site sont publiés : premier niveau du dépôt, plus src/ et styles/ (IT-03), polices comprises (v5.72).
+copier() { # Seuls les fichiers du site sont publiés : premier niveau du dépôt, plus src/ et styles/ (IT-03), polices comprises (v5.73).
   mkdir -p "$2"
   for f in "$1"/*.html "$1"/*.js "$1"/*.svg "$1"/*.png "$1"/*.webmanifest; do
     [ -f "$f" ] && cp "$f" "$2"/

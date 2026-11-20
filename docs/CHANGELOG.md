@@ -5,7 +5,7 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.72 · à publier en recette · carte, adresses et polices libres d'usage commercial
+## v5.73 · à publier en recette · carte, adresses et polices libres d'usage commercial
 **Aucune migration.** Décision de Pierre-Louis du 20 nov. 2026 : ne garder que des services gratuits utilisables dans une
 application payante sans risque de la part de leurs éditeurs (décision D-09, première partie). Les tuiles
 `tile.openstreetmap.org` et Nominatim interdisent les applications très utilisées et ne sont pas des services commerciaux ;
@@ -40,6 +40,58 @@ Technique :
 - Tests : `ruchers.test.mjs` (fond de carte, recherche, commune) ; `confidentialite.test.mjs` lit aussi les règles de
   `src/` et refuse tout retour d'`openstreetmap.org` ; scénarios de bout en bout : tuiles IGN coupées au lieu d'OSM,
   `etapes_v3` et `etapes_v4` simulent le géocodage de l'IGN.
+
+## v5.72 · à publier en recette · Espace API, suite : conseils au bon moment, sans réseau, courbe, mémoire
+**Aucune migration** (nouvelle clé de réglage `apiAppris`, écrite par `regler()` comme les autres). Suite de v5.71, dans
+l'ordre d'importance demandé par Pierre-Louis (« Implémente les éléments dans l'ordre d'importance »), d'après la liste
+des écarts avec les maquettes du 20 nov. 2026.
+
+Pour l'apiculteur :
+1. **Conseils qui arrivent seuls** : chaque jour, le premier conseil de « Pour aujourd'hui » arrive dans les Rappels (la
+   cloche) et en notification si elles sont autorisées ; le lundi, « Le point de la semaine avec API » ouvre l'agenda sur
+   ses propositions. Jamais pendant une visite ou une tournée. Réglages : Rappels › « Conseils d'API, un par jour au
+   plus », et Réglages › API › Conseils d'API (prévenir oui ou non, point du lundi oui ou non).
+2. **Sans réseau** : l'espace API reste ouvert si API était disponible sur l'appareil. API répond sur le téléphone ce qu'il
+   peut (dernière visite, poids, reine, traitement et varroa, couvain d'une ruche nommée ; seuil varroa ; stock d'un
+   article ; tâches du jour), sans goutte ; sinon il garde la question (5 au plus) et la pose tout seul quand le réseau
+   revient.
+3. **La courbe dans la réponse** : quand une réponse parle du poids ou des réserves d'une ruche, ses pesées s'affichent
+   en courbe, avec la moyenne des autres ruches du rucher le même mois.
+4. **Mains libres** : bouton « Mains libres » dans la feuille du bouton API ; **écoute continue** (par défaut) : après sa
+   réponse, API écoute de nouveau sans qu'on touche l'écran ; deux silences de suite le mettent en pause.
+5. **La mémoire qui apprend** : « Mon seuil varroa est de 2 % », « en hiver je m'alerte sous 18 kg », « je vise 120 kg » :
+   API propose de le retenir (« Oui, retiens-le ») ; « Ce qu'API sait de toi » montre « Appris le… » et « Oublier ».
+6. **Agenda** : les jours où API propose quelque chose sont marqués dans le calendrier (pointillé miel, nombre), tant que
+   les propositions sont ouvertes.
+7. **Plus de gouttes** : le champ est grisé (« Plus de gouttes : recharge pour reposer une question ») ; sans réseau, le
+   volet des gouttes est masqué.
+
+Technique :
+- `compagnon.js` : `reponseLocale`, `rucheDuTexte`, `apprentissage`, `serieRuche`, `rappelsApi` (pures, testées).
+- `aujourdhui.js` : préférences `notif`, `lundi` ; `rappels()` exposé par `Noyau.espaceApi` ; `essentiels.js` : catégorie
+  « api » des Rappels. `agenda-api.js` : action `apsemaine`, marques du calendrier (suivies par un MutationObserver).
+- `ecrans.js` : `repondreSansReseau`, file `apiviz.api.attente` reprise à l'événement `online` et à l'ouverture de l'écran ;
+  courbe (SVG, `role="img"` avec la phrase qui la résume) ; `apiretenir` / `apioublierproposition` ; `apimainsfeuille`.
+  `client.js` : `etaitActif()` (dernier état connu, sur l'appareil). `ecoute.js` : écoute continue (`apiviz.api.continu`).
+  `reglages-api.js` : « Appris le… », `apioublier`.
+- Styles : suite de `styles/68-espace-api.css`.
+- Tests : unitaires (15 dans `espace-api.test.mjs`) ; `etapes_eb` (nouveau) ; `etapes_ea` (écoute continue).
+
+Reste, et pourquoi :
+- Lire l'agenda du téléphone ou Google Agenda pour éviter les conflits : impossible depuis une application web sans
+  connexion à Google (autorisation OAuth, vérification de l'application par Google) ; à décider.
+- Notifications quand Apiviz est fermée : il faut des notifications poussées (serveur, clés VAPID, abonnement) ;
+  aujourd’hui, comme les autres rappels, la notification part pendant qu’Apiviz est ouverte.
+- Mot de réveil « Api » : écarté (faux déclenchements, micro ouvert en permanence).
+- Proposition du 14 nov. (facture en photo → stock, registre d'élevage, point du lundi détaillé) : en attente de validation.
+
+À vérifier :
+- Le lendemain, ouvrir Apiviz : la cloche montre le conseil d'API du jour (une seule fois).
+- En mode avion sur l'écran API : « Combien pèse Ruche 2 ? » répond ; une question ouverte attend, puis part au retour
+  du réseau.
+- Une réponse sur le poids d'une ruche pesée deux fois : la courbe.
+- Dire « mon seuil varroa est de 2 % » : « Oui, retiens-le », puis Réglages › API › Ce qu'API sait de toi › Oublier.
+- Mains libres depuis la feuille : enchaîner deux questions sans toucher l'écran.
 
 ## v5.71 · à publier en recette · Espace API : parler à API, voix, agenda, gouttes
 **Aucune migration** (préférences sur l'appareil, réglages existants, tâches avec leur échéance). Maquettes « Espace API —

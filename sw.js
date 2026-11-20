@@ -46,7 +46,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Bibliothèques (Supabase, Leaflet, QR) : la copie gardée d'abord. Les polices sont hébergées par Apiviz (v5.72).
+  // Bibliothèques (Supabase, Leaflet, QR) : la copie gardée d'abord. Les polices sont hébergées par Apiviz (v5.73).
   if (url.hostname === "cdn.jsdelivr.net") {
     e.respondWith(enCache(req).then((r) => r || fetch(req).then((x) => garder(req, x))));
   }

@@ -220,3 +220,123 @@ export function texteReponse(rep) {
   const phrase = (s) => (/[.!?…]$/.test(s) ? s : `${s}.`);
   return [rep.resume, ...conseils].map((s) => String(s || "").trim()).filter(Boolean).map(phrase).join(" ");
 }
+
+// ======================================================================
+// v5.72 — suite de l'espace API : réponses sans réseau, mémoire qui apprend, courbe de la ruche, conseil du jour.
+// ======================================================================
+const sansAccent = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "'");
+
+/** La ruche nommée dans un texte (le nom le plus long qui y figure en entier), ou null. */
+export function rucheDuTexte(texte, ruches = []) {
+  const t = ` ${sansAccent(texte).replace(/[^a-z0-9]+/g, " ")} `;
+  return [...ruches].filter((r) => r?.nom).sort((a, b) => b.nom.length - a.nom.length)
+    .find((r) => t.includes(` ${sansAccent(r.nom).replace(/[^a-z0-9]+/g, " ").trim()} `)) || null;
+}
+
+const visitesDe = (d, id) => (d?.visites || []).filter((v) => v.ruche_id === id).sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
+const reponse = (resume, faits = []) => ({ resume: String(resume).replace(/\.\.(?=\s|$)/g, "."), faits, hypotheses: [], recommandations: [], manques: [] });
+const fait = (texte, date, r) => ({ texte, date: date ? jour(date) : undefined, refs: r ? [{ type: "ruche", id: r.id, libelle: r.nom }] : [] });
+
+/**
+ * Sans réseau : une réponse simple, calculée sur le téléphone avec les données déjà chargées (dernière visite, poids,
+ * reine, traitement, couvain d'une ruche nommée ; seuil varroa ; stock d'un article ; tâches du jour). null si la
+ * question demande API (elle est alors mise en attente). o : { seuil, aujourdhui }.
+ */
+export function reponseLocale(question, d = {}, o = {}) {
+  const t = sansAccent(question);
+  if (!t.trim()) return null;
+  if (/seuil/.test(t) && /varroa/.test(t)) return reponse(`Ton seuil d’alerte varroa : ${fr(Number(o.seuil) || 3)} varroas pour 100 abeilles.`);
+  const r = rucheDuTexte(question, d.ruches || []);
+  if (r) {
+    const vs = visitesDe(d, r.id), der = vs[0];
+    if (!der) return reponse(`Je n’ai encore aucune visite de ${r.nom}.`);
+    if (/poids|pese|pesee|kilo|\bkg\b|lourd|leger|reserve|provision/.test(t)) {
+      const p = vs.find((v) => v.poids_kg != null && v.poids_kg !== "");
+      return p ? reponse(`${r.nom} : ${fr(p.poids_kg)} kg le ${dCourte(p.date_visite)}.`, [fait(`Pesée de ${r.nom} : ${fr(p.poids_kg)} kg`, p.date_visite, r)])
+        : reponse(`Je n’ai aucune pesée de ${r.nom}.`);
+    }
+    if (/reine/.test(t)) {
+      const v = vs.find((x) => x.reine);
+      return v ? reponse(`Reine ${String(v.reine).toLowerCase()} le ${dCourte(v.date_visite)}.`, [fait(`${r.nom} : reine ${String(v.reine).toLowerCase()}`, v.date_visite, r)]) : reponse(`Rien de noté sur la reine de ${r.nom}.`);
+    }
+    if (/traite|traitement|varroa|acide|oxalique|apivar/.test(t)) {
+      const v = vs.find((x) => String(x.traitement || "").trim()), c = vs.find((x) => tauxVarroa(x) !== null);
+      const morceaux = [v ? `dernier traitement noté : ${String(v.traitement).trim()} le ${dCourte(v.date_visite)}` : "aucun traitement noté",
+        c ? `varroa à ${fr(tauxVarroa(c))} % le ${dCourte(c.date_visite)}` : ""].filter(Boolean);
+      return reponse(`${r.nom} : ${morceaux.join(" ; ")}.`, [v && fait(`Traitement : ${String(v.traitement).trim()}`, v.date_visite, r), c && fait(`Comptage varroa : ${fr(tauxVarroa(c))} %`, c.date_visite, r)].filter(Boolean));
+    }
+    if (/couvain/.test(t)) {
+      const v = vs.find((x) => x.couvain);
+      return v ? reponse(`Couvain ${String(v.couvain).toLowerCase()} le ${dCourte(v.date_visite)}.`, [fait(`${r.nom} : couvain ${String(v.couvain).toLowerCase()}`, v.date_visite, r)]) : reponse(`Rien de noté sur le couvain de ${r.nom}.`);
+    }
+    const bouts = [der.activite && `activité ${String(der.activite).toLowerCase()}`, der.couvain && `couvain ${String(der.couvain).toLowerCase()}`, der.reine && `reine ${String(der.reine).toLowerCase()}`, der.poids_kg != null && der.poids_kg !== "" && `${fr(der.poids_kg)} kg`].filter(Boolean);
+    return reponse(`Dernière visite de ${r.nom} le ${dCourte(der.date_visite)}${bouts.length ? ` : ${bouts.join(", ")}` : ""}.`, [fait(`Visite de ${r.nom}`, der.date_visite, r)]);
+  }
+  if (/stock|reste|combien|candy|sirop|pot|cadre|cire/.test(t)) {
+    const a = (d.articles || []).filter((x) => x.nom && x.stock != null).find((x) => sansAccent(x.nom).split(/[^a-z0-9]+/).filter((m) => m.length > 2).some((m) => t.includes(m)));
+    if (a) return reponse(`${a.nom} : ${fr(a.stock)}${a.unite && a.unite !== "unité" ? ` ${a.unite}` : ""} en stock${Number(a.seuil) > 0 ? ` (seuil ${fr(a.seuil)})` : ""}.`);
+  }
+  if (/tache|a faire|agenda|aujourd'hui/.test(t)) {
+    const auj = o.aujourdhui;
+    const l = (d.taches || []).filter((x) => !x.faite && x.echeance && auj && x.echeance <= auj);
+    if (!l.length) return reponse("Rien d’urgent dans ton agenda aujourd’hui.");
+    return reponse(`${pl(l.length, "tâche")} pour aujourd’hui ou en retard : ${l.slice(0, 3).map((x) => x.titre).join(", ")}${l.length > 3 ? "…" : "."}`);
+  }
+  return null;
+}
+
+/**
+ * Mémoire qui apprend : ce que l'apiculteur dit de ses façons de faire, qu'API propose de retenir (réglages existants).
+ * « mon seuil varroa est de 2 % », « j'alerte sous 18 kg en hiver », « je vise 120 kg cette année ». null sinon.
+ * Renvoie { cle, valeur, texte } (texte : la question posée à l'apiculteur).
+ */
+export function apprentissage(texte) {
+  const t = sansAccent(texte).replace(",", ".");
+  let m;
+  if (/seuil/.test(t) && /varroa/.test(t) && (m = t.match(/(\d+(?:\.\d+)?)\s*(?:%|pour ?cent|varroas?)/))) {
+    const v = Number(m[1]); if (v > 0 && v <= 20) return { cle: "varroaSeuil", valeur: v, texte: `Je retiens que ton seuil d’alerte varroa est ${fr(v)} % ?` };
+  }
+  if (/hiver|alerte|minimum/.test(t) && /poids|kg|kilo|pese/.test(t) && (m = t.match(/(\d+(?:\.\d+)?)\s*(?:kg|kilos?)/)) && /sous|en dessous|moins de|minimum|alerte/.test(t)) {
+    const v = Number(m[1]); if (v >= 5 && v <= 80) return { cle: "hiverPoids", valeur: v, texte: `Je retiens qu’une ruche sous ${fr(v)} kg en hiver doit t’alerter ?` };
+  }
+  if (/(objectif|je vise|viser|j'espere)/.test(t) && (m = t.match(/(\d+(?:\.\d+)?)\s*(?:kg|kilos?)/))) {
+    const v = Math.round(Number(m[1])); if (v > 0 && v <= 100000) return { cle: "objectif_recolte", valeur: v, texte: `Je retiens que tu vises ${v} kg de miel cette saison ?` };
+  }
+  return null;
+}
+
+/**
+ * Courbe d'une ruche pour une réponse : ses pesées (de la plus ancienne à la plus récente) et, à chaque date, la moyenne
+ * des autres ruches du même rucher pesées le même mois. null s'il y a moins de deux pesées.
+ * Renvoie { nom, points: [{date, kg, moyenne}], min, max }.
+ */
+export function serieRuche(d, rucheId) {
+  const r = (d?.ruches || []).find((x) => x.id === rucheId);
+  if (!r) return null;
+  const pese = (v) => v.poids_kg != null && v.poids_kg !== "" && Number.isFinite(Number(v.poids_kg));
+  const siennes = (d.visites || []).filter((v) => v.ruche_id === r.id && pese(v)).sort((a, b) => String(a.date_visite).localeCompare(String(b.date_visite))).slice(-8);
+  if (siennes.length < 2) return null;
+  const voisines = new Set((d.ruches || []).filter((x) => x.id !== r.id && (x.rucher || "") === (r.rucher || "")).map((x) => x.id));
+  const points = siennes.map((v) => {
+    const mois = String(v.date_visite).slice(0, 7);
+    const autres = (d.visites || []).filter((x) => voisines.has(x.ruche_id) && pese(x) && String(x.date_visite).slice(0, 7) === mois).map((x) => Number(x.poids_kg));
+    return { date: jour(v.date_visite), kg: Number(v.poids_kg), moyenne: autres.length ? Math.round((autres.reduce((a, b) => a + b, 0) / autres.length) * 10) / 10 : null };
+  });
+  const tous = points.flatMap((p) => [p.kg, p.moyenne]).filter((x) => x !== null);
+  return { nom: r.nom, points, min: Math.min(...tous), max: Math.max(...tous) };
+}
+
+/**
+ * Conseil du jour qu'API envoie de lui-même (Rappels, notification) : la première ligne de « Pour aujourd'hui », une
+ * fois par jour au plus ; le lundi, le point de la semaine. Rien pendant une visite.
+ * e : { lignes, aujourdhui, enVisite, prefs: { notif, lundi } }. Renvoie des rappels { cle, titre, sous, tag, act, v }.
+ */
+export function rappelsApi(e = {}) {
+  const p = e.prefs || {}, auj = e.aujourdhui;
+  if (!auj || e.enVisite) return [];
+  const out = [];
+  const l = (e.lignes || [])[0];
+  if (p.notif !== false && l) out.push({ cle: `api-${auj}`, titre: l.titre, sous: `Conseil d’API${l.sous ? ` · ${l.sous}` : ""}`, tag: "API", act: l.act, v: l.v });
+  if (p.lundi !== false && enDate(auj).getDay() === 1) out.push({ cle: `api-lundi-${auj}`, titre: "Le point de la semaine avec API", sous: "Visites, priorités et commandes à placer dans l’agenda", tag: "Lundi", act: "apsemaine", v: "" });
+  return out;
+}

@@ -50,7 +50,7 @@ for m in re.finditer(r'<script\b([^>]*)\bsrc="([^"]+)"', index):
     else:
         ajouter(src)
 for m in re.finditer(r'<link\b[^>]*\brel="(?:stylesheet|icon|apple-touch-icon|manifest)"[^>]*\bhref="([^"]+)"', index):
-    if m.group(1).startswith("http"): continue  # plus aucune feuille externe depuis v5.72 (polices hébergées)
+    if m.group(1).startswith("http"): continue  # plus aucune feuille externe depuis v5.73 (polices hébergées)
     ajouter(m.group(1))
 manifeste = site / "manifest.webmanifest"
 if manifeste.is_file():
@@ -60,7 +60,7 @@ if manifeste.is_file():
 code = "\n".join((site / f[2:]).read_text(encoding="utf-8") for f in fichiers if f.endswith((".js", ".css", ".html")) and f.startswith("./") and (site / f[2:]).is_file())
 for img in sorted({p.name for p in site.glob("*.svg")} | {p.name for p in site.glob("*.png")}):
     if img in code: ajouter("./" + img)
-# Polices hébergées (v5.72) : citées par les feuilles de style, gardées hors ligne dès la première ouverture.
+# Polices hébergées (v5.73) : citées par les feuilles de style, gardées hors ligne dès la première ouverture.
 for pol in sorted(site.glob("styles/polices/*.woff2")):
     if pol.name in code: ajouter("./styles/polices/" + pol.name)
 

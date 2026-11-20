@@ -42,12 +42,17 @@ export function etat() {
       const st = { actif: r.actif === true, restant: Number.isInteger(r.restant) ? r.restant : null, plafond: Number.isInteger(r.plafond) ? r.plafond : null,
         gouttes: typeof r.gouttes === "number" ? r.gouttes : null };
       cache = st; cleCache = cle;
+      // v5.72 : retenu sur l'appareil, pour que l'espace API reste ouvert sans réseau (réponses du téléphone).
+      try { localStorage.setItem(`apiviz.api.actif.${cle}`, st.actif ? "1" : "0"); } catch { /* navigation privée */ }
       return st;
     })
     .catch(() => ({ actif: false, restant: null, plafond: null, gouttes: null }))
     .finally(() => { enVol = null; });
   return enVol;
 }
+
+/** v5.72 : API était disponible pour cette exploitation la dernière fois qu'on l'a demandé (sur cet appareil). */
+export const etaitActif = () => { try { return localStorage.getItem(`apiviz.api.actif.${exploitation()}`) === "1"; } catch { return false; } };
 
 /** Pose une question. Renvoie { reponse, restant, gouttes } ; lève une erreur au message en français (code « gouttes » :
  * plus de gouttes). mode : « rapide » ou « approfondi » (IT-27). */

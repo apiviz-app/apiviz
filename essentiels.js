@@ -130,9 +130,10 @@ const ES = (() => {
   AL.meteoPrete = function () { pret?.(); if (S.route === "meteo") (document.getElementById("mjJour") ? majJour() : render()); };
 
   // ---------- 2. Rappels et notifications ----------
-  const CATS = [["meteo", "Créneau favorable"], ["soins", "Traitements et échéances"], ["ventes", "Paiements en attente, après 7 jours"], ["stock", "Stock bas et DDM proche"]];
+  // v5.72 : « Conseils d'API » (un par jour au plus, le point du lundi ; src/domaines/assistant/aujourdhui.js).
+  const CATS = [["meteo", "Créneau favorable"], ["soins", "Traitements et échéances"], ["ventes", "Paiements en attente, après 7 jours"], ["stock", "Stock bas et DDM proche"], ["api", "Conseils d’API, un par jour au plus"]];
   const lireJson = (k, d) => { try { return JSON.parse(memo(k) || "") ?? d; } catch { return d; } };
-  const prefs = () => ({ meteo: true, soins: true, ventes: true, stock: true, ...lireJson("apidoo-rappels", {}) });
+  const prefs = () => ({ meteo: true, soins: true, ventes: true, stock: true, api: true, ...lireJson("apidoo-rappels", {}) });
   const vus = () => new Set(lireJson("apidoo-rappels-vus", []));
   function rappels() {
     const d = S.d, p = prefs(), l = [], auj = today(), plus = (j) => { const x = new Date(auj + "T12:00:00"); x.setDate(x.getDate() + j); return x.toISOString().slice(0, 10); };
@@ -152,6 +153,7 @@ const ES = (() => {
     d.ventes.filter((v) => !v.paye && days(v.date_vente) >= 7).forEach((v) => ajoute("ventes", `vente-${v.id}`, `${byId(d.clients, v.client_id)?.nom || "Client"} doit ${eur(venteTotal(v))} depuis ${days(v.date_vente)} jours`, `Vente du ${dfr(v.date_vente)}`, "À relancer", "watch", "uvente", v.id));
     d.articles.filter((a) => a.type !== "Équipement" && Number(a.seuil) > 0 && Number(a.stock) <= Number(a.seuil)).forEach((a) => ajoute("stock", `stock-${a.id}-${a.stock}`, `${a.nom} : stock bas`, `${n(a.stock)} ${a.unite} restants`, "Matériel", "neutre", "editarticle", a.id));
     d.lots.filter((x) => x.ddm && x.pots_restants > 0 && x.ddm <= plus(90)).forEach((x) => ajoute("stock", `ddm-${x.id}`, `Lot ${x.code} : DDM proche`, `${x.pots_restants} pots restants`, dfr(x.ddm), "watch", "editlot", x.id));
+    (window.Noyau?.espaceApi?.rappels?.() || []).forEach((r) => ajoute("api", r.cle, r.titre, r.sous, r.tag, "good", r.act, r.v));
     return l;
   }
   const nouveaux = () => { const v = vus(); return rappels().filter((r) => !v.has(r.cle)); };

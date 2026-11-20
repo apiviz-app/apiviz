@@ -4,7 +4,7 @@
 # Source unique : le site assemblé par scripts/assembler-site.sh, copié dans _mobile/ (webDir de capacitor.config.json).
 # scripts/embarquer-mobile.sh copie les bibliothèques jsdelivr dans l'application (elle s'ouvre sans réseau dès le
 # premier lancement, règle 4.2 d'Apple et AP-US-137) et écrit version-mobile.json. Les polices sont hébergées avec le
-# site depuis la v5.72 (styles/polices/) : plus rien n'est chargé chez Google.
+# site depuis la v5.73 (styles/polices/) : plus rien n'est chargé chez Google.
 set -e
 cible=${1:-recette}
 racine=$(cd "$(dirname "$0")/.." && pwd)

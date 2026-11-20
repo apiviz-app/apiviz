@@ -1,6 +1,6 @@
 # Apiviz — confidentialité et services tiers
 
-Version du 20 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.72). Ce texte est la source de la page publiée `confidentialite.html`
+Version du 20 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.73). Ce texte est la source de la page publiée `confidentialite.html`
 (racine du site) : toute modification se fait dans les deux fichiers, dans la même pull request
 (contrôlé par `tests/unitaires/confidentialite.test.mjs`).
 

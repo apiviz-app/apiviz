@@ -11,7 +11,7 @@
     ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
     cherches = []
-    def geocodage(rt):  # géocodage de l'IGN (v5.72)
+    def geocodage(rt):  # géocodage de l'IGN (v5.73)
         cherches.append(rt.request.url)
         rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
                    body=json.dumps({"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [5.0012, 47.3501]},

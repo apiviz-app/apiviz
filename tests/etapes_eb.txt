@@ -1,0 +1,120 @@
+    # v5.71 — Espace API dans l'appli actuelle (maquettes du 20 nov. 2026) : « Pour aujourd'hui » sur l'Accueil, espace API
+    # (bonjour, liste du jour, haut-parleur, volet des gouttes), parler à API (micro, appui long sur le bouton API, mains
+    # libres), lecture à voix haute, « Ajouter à l'agenda » d'un conseil daté, feuille du bouton API, Réglages › API,
+    # Ce qu'API sait de toi, Voix d'API, agenda organisé avec API, avis d'API dans la visite à la voix.
+    # Fonction « assistant », reconnaissance vocale et synthèse vocale simulées. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os, datetime
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    DATA["api_echanges"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=False: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    IA = {"recus": [], "gouttes": 28.0}
+    def fonction_ia(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}
+        IA["recus"].append(corps)
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps({"actif": True, "plafond": 30, "restant": 30, "gouttes": IA["gouttes"]}))
+        cout = 0.4 if corps.get("mode") == "rapide" else 2.8
+        IA["gouttes"] = round(IA["gouttes"] - cout, 1)
+        return route.fulfill(status=200, headers=h, body=json.dumps({"reponse": {"resume": "Elle mange ses réserves.", "faits": [], "hypotheses": [],
+            "recommandations": [{"texte": "Pèse Ruche 5 avant samedi. Donne du candy sous 30 kg."}], "manques": []}, "restant": 29,
+            "gouttes": {"cout": cout, "restant": IA["gouttes"], "mode": corps.get("mode") or "approfondi"}}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/assistant", fonction_ia)
+    # Reconnaissance vocale et synthèse vocale simulées : window.__dicte est « dit », window.__lu reçoit ce qui est lu.
+    ctx.add_init_script("""
+      window.__dicte = "Comment va Ruche 5 ?"; window.__lu = [];
+      class FauxReco {
+        dire() { const r = [{ transcript: window.__dicte }]; r.isFinal = true; this.onresult && this.onresult({ resultIndex: 0, results: [r] }); }
+        start() { this.m = setTimeout(() => { this.m = null; this.dire(); setTimeout(() => this.onend && this.onend(), 60); }, window.__retard || 150); }
+        stop() { if (this.m) { clearTimeout(this.m); this.m = null; this.dire(); } setTimeout(() => this.onend && this.onend(), 10); } abort() {} }
+      window.SpeechRecognition = FauxReco; window.webkitSpeechRecognition = FauxReco;
+      Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speak(u) { window.__lu.push(u.text); setTimeout(() => { u.onstart && u.onstart(); setTimeout(() => u.onend && u.onend(), 250); }, 10); }, cancel() {}, getVoices() { return []; } } });
+      window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+      try { localStorage.setItem("apidoo-dictee-info", "1"); } catch (e) {}
+    """)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+
+    # 1. Rappels : le conseil d'API du jour, une fois.
+    page.evaluate("ACT.errappels()"); page.wait_for_selector("#sheet[open] .er-fliste")
+    verif("Conseil d’API" in page.locator("#sheet .er-fliste").inner_text(), "Rappels : le conseil d'API du jour")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(300)
+    page.evaluate("ACT.go('rappels')"); page.wait_for_selector(".er-liste-r")
+    verif("Conseils d’API, un par jour au plus" in page.locator("#app").inner_text(), "Rappels › De quoi te prévenir : Conseils d'API")
+
+    # 2. Point de la semaine : l'agenda s'ouvre sur les propositions, marquées dans le calendrier.
+    page.evaluate("ACT.apsemaine()"); page.wait_for_selector("#apAgenda.ouverte")
+    verif(page.evaluate("S.route") == "agenda", "le point de la semaine ouvre l'agenda, propositions ouvertes")
+    demain = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+    if page.locator(f'.ag-page [data-cp="agjour"][data-v="{demain}"]').count():
+        verif(page.locator(f'.ag-page [data-cp="agjour"][data-v="{demain}"] .ap-marque').count() >= 1, "le jour proposé est marqué dans le calendrier")
+        verif("proposition" in (page.locator(f'.ag-page [data-cp="agjour"][data-v="{demain}"]').first.get_attribute("aria-label") or ""), "et annoncé aux lecteurs d'écran")
+    shot("eb-agenda")
+
+    # 3. La courbe de la ruche dans la réponse.
+    page.evaluate("ACT.go('api')"); page.wait_for_selector(".as-accueil #asTexte")
+    page.fill("#asTexte", "Pourquoi Ruche 5 perd du poids ?"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-resume", timeout=8000)
+    c = page.locator(".as-courbe svg")
+    verif(c.count() == 1 and "Poids de Ruche 5" in (c.get_attribute("aria-label") or ""), "courbe de Ruche 5 dans la réponse : " + (c.get_attribute("aria-label") or "") if c.count() else "courbe absente")
+    shot("eb-courbe")
+
+    # 4. La mémoire qui apprend.
+    page.fill("#asTexte", "Mon seuil varroa est de 2 %"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-apprendre", timeout=8000)
+    verif("Je retiens que ton seuil d’alerte varroa est 2 %" in page.locator(".as-apprendre").inner_text(), "API propose de retenir le seuil")
+    page.click(".as-apprendre [data-act=apiretenir]"); page.wait_for_selector(".as-appris", timeout=5000)
+    regler = [b for nm, b in recu["rpc"] if nm == "regler"]
+    verif(regler and regler[-1]["p_modifs"].get("varroaSeuil") == 2 and "varroaSeuil" in regler[-1]["p_modifs"].get("apiAppris", {}), "seuil retenu, avec sa date")
+    page.evaluate("ACT.go('apimemoire')"); page.wait_for_selector(".mm-ecran")
+    verif("Appris le" in page.locator(".mm-ecran").inner_text() and page.locator(".mm-ecran [data-act=apioublier]").count() == 1, "Ce qu'API sait de toi : « Appris le… », « Oublier »")
+    shot("eb-memoire", True)
+    page.click(".mm-ecran [data-act=apioublier]"); page.wait_for_timeout(600)
+    regler = [b for nm, b in recu["rpc"] if nm == "regler"]
+    verif(regler[-1]["p_modifs"].get("varroaSeuil", "x") is None, "Oublier remet le réglage par défaut")
+
+    # 5. Sans réseau : réponse du téléphone, sinon la question attend et part au retour du réseau.
+    page.evaluate("ACT.go('api')"); page.evaluate("ACT.apinouveau()"); page.wait_for_selector(".as-accueil #asTexte")
+    ctx.set_offline(True); page.wait_for_timeout(300); page.evaluate("render()")
+    verif(page.locator("#asTexte").is_enabled() and "Sans réseau" in (page.locator("#asTexte").get_attribute("placeholder") or ""), "sans réseau : le champ reste ouvert")
+    page.fill("#asTexte", "Combien pèse Ruche 5 ?"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-local", timeout=4000)
+    verif("Répondu sur le téléphone" in page.locator(".as-local").inner_text() and "Ruche 5 :" in page.locator(".as-resume").last.inner_text(), "réponse calculée sur le téléphone : " + page.locator(".as-resume").last.inner_text())
+    nq = len(IA["recus"])
+    page.fill("#asTexte", "Pourquoi mes abeilles sont nerveuses ?"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-en-attente", timeout=4000)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apiviz.api.attente')).length") == 1 and page.locator(".as-file").count() == 1, "question gardée en attente du réseau")
+    shot("eb-sans-reseau")
+    ctx.set_offline(False); page.evaluate("window.dispatchEvent(new Event('online'))")
+    page.wait_for_function("!document.querySelector('.as-en-attente') && !document.querySelector('.as-attente') && JSON.parse(localStorage.getItem('apiviz.api.attente') || '[]').length === 0", timeout=8000)
+    page.wait_for_timeout(500)
+    verif(len(IA["recus"]) > nq and IA["recus"][-1].get("question") == "Pourquoi mes abeilles sont nerveuses ?", "au retour du réseau, la question part toute seule")
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apiviz.api.attente') || '[]').length") == 0, "file d'attente vidée")
+
+    # 6. Plus de gouttes : le champ est grisé.
+    IA["gouttes"] = 0.3
+    page.fill("#asTexte", "Et Ruche 1 ?"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-ech:nth-last-child(1) .as-resume, .as-ech .as-resume", timeout=8000)
+    page.wait_for_timeout(400)
+    verif(page.locator("#asTexte").is_disabled() and "Plus de gouttes" in (page.locator("#asTexte").get_attribute("placeholder") or ""), "plus de gouttes : champ grisé")
+    shot("eb-epuise")
+    IA["gouttes"] = 25.0
+
+    # 7. Mains libres depuis la feuille du bouton API.
+    page.evaluate("window.__dicte = ''"); page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-hero")
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-mains", timeout=5000)
+    page.click("#sheet .as-mains"); page.wait_for_selector("#apiMains[open]", timeout=4000)
+    verif(page.locator("#apiMains .am-continu[aria-checked=true]").count() == 1, "mains libres ouvert depuis la feuille, écoute continue active")
+    page.click("#apiMains [data-act=amfin]"); page.wait_for_timeout(300)
+
+    # 8. Réglages › API › Conseils d'API.
+    page.evaluate("ACT.apiconseilsreglage()"); page.wait_for_selector("#sheet[open] .ac-reglages")
+    t = page.locator("#sheet .ac-reglages").inner_text()
+    verif("Me prévenir d’un conseil" in t and "Le point de la semaine" in t, "Conseils d'API : prévenir, point du lundi")
+    page.click("#sheet [data-act=apiconseilsregle][data-k=lundi][data-v=non]"); page.click("#sheet .actions .btn.main"); page.wait_for_timeout(300)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apiviz.api.conseils')).lundi") is False, "point du lundi coupé")
+    verif(not erreurs, "aucune erreur JavaScript : %s" % erreurs[:3])

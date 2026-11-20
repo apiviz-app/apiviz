@@ -1,7 +1,7 @@
     # IT-24 — Assistant API : lecture. Fonction serveur « assistant » simulée (aucun appel au modèle).
     # Feuille du bouton API : champ « Demande à API… » quand la fonction est disponible ; écran API : question, attente
     # (compagnon qui réfléchit), réponse en quatre blocs avec liens vers les fiches, suite de conversation (historique
-    # envoyé), erreur en français avec « Réessayer », plafond atteint, sans réseau ; en-têtes jeton et exploitation ;
+    # envoyé), erreur en français avec « Réessayer », plafond atteint, sans réseau (v5.72 : la question attend) ; en-têtes jeton et exploitation ;
     # aucune écriture en base pendant l'échange. Avec CAPTURES=<dossier>, captures à 375 et 1 280 px.
     import pathlib as _pl, os
     _ici = _pl.Path(__file__).parent
@@ -135,13 +135,12 @@
     gardes = [r for t, u, rows in recu["upsert"] if t == "api_echanges" for r in rows]
     verif(len(gardes) == 4 and gardes[-1]["conversation_id"] != gardes[0]["conversation_id"], "nouvelle conversation, rangée à part")
 
-    # 7. Sans réseau : le champ est désactivé, aucune requête.
+    # 7. Sans réseau (v5.72) : le champ reste ouvert, API dort ; rien ne part, la question attend le réseau.
     n = len(IA["recus"])
     ctx.set_offline(True); page.evaluate("render()"); page.wait_for_timeout(200)
-    verif(page.locator("#asTexte").is_disabled() and page.locator(".as-tete api-compagnon").get_attribute("etat") == "horsligne", "sans réseau : champ désactivé, API dort")
-    page.evaluate("document.getElementById('asTexte').disabled = false")
+    verif(page.locator("#asTexte").is_enabled() and page.locator(".as-tete api-compagnon").get_attribute("etat") == "horsligne", "sans réseau : champ ouvert, API dort")
     page.fill("#asTexte", "Test"); page.locator("#asTexte").press("Enter"); page.wait_for_timeout(300)
-    verif(len(IA["recus"]) == n and "Sans réseau" in page.locator(".toast").last.inner_text(), "sans réseau : rien n'est envoyé, message clair")
+    verif(len(IA["recus"]) == n and page.locator(".as-en-attente").count() == 1, "sans réseau : rien n'est envoyé, la question attend le réseau")
     ctx.set_offline(False); page.evaluate("render()")
 
     # 8. API ne modifie rien : en dehors de son historique (api_echanges), aucune écriture en base pendant tout l'échange.

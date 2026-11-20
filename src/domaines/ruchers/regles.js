@@ -83,7 +83,7 @@ export function lienTel(tel) {
 /** Itinéraire vers une position (Google Maps, comme les autres boutons « Itinéraire » de l'application). */
 export const lienItineraire = (p) => (p && p.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` : null);
 
-// ---------- Carte et adresses : services publics de l'IGN (v5.72) ----------
+// ---------- Carte et adresses : services publics de l'IGN (v5.73) ----------
 // Plan IGN et le géocodage de la Géoplateforme sont gratuits, sans clé, sous Licence Ouverte (usage commercial permis,
 // source à citer). Ils remplacent tile.openstreetmap.org et nominatim.openstreetmap.org, interdits aux applications
 // très utilisées ou commerciales. Limite : 50 requêtes par seconde et par adresse IP, donc par téléphone.
