@@ -10,7 +10,7 @@
     DATA["clients"][0]["telephone"] = "0612345678"
     DATA["taches"] = [{"id": str(uuid.uuid4()), "titre": "Peser les ruches", "echeance": J(-4), "ruche_id": None, "faite": False, "assigne": ""}]
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     LF = _ici / "leaflet" / "package" / "dist"
     ctx.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/**", lambda rt: rt.fulfill(status=200, path=str(LF / ("leaflet.css" if rt.request.url.endswith(".css") else "leaflet.js")),
               headers={"Content-Type": "text/css" if rt.request.url.endswith(".css") else "application/javascript", "Access-Control-Allow-Origin": "*"}))

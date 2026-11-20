@@ -83,6 +83,48 @@ export function lienTel(tel) {
 /** Itinéraire vers une position (Google Maps, comme les autres boutons « Itinéraire » de l'application). */
 export const lienItineraire = (p) => (p && p.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` : null);
 
+// ---------- Carte et adresses : services publics de l'IGN (v5.73) ----------
+// Plan IGN et le géocodage de la Géoplateforme sont gratuits, sans clé, sous Licence Ouverte (usage commercial permis,
+// source à citer). Ils remplacent tile.openstreetmap.org et nominatim.openstreetmap.org, interdits aux applications
+// très utilisées ou commerciales. Limite : 50 requêtes par seconde et par adresse IP, donc par téléphone.
+
+/** Fond de carte Plan IGN (WMTS de la Géoplateforme, grille Web Mercator, lu par Leaflet comme des tuiles XYZ). */
+export const FOND_CARTE = Object.freeze({
+  url: "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"
+    + "&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+  options: Object.freeze({ minZoom: 0, maxZoom: 19, attribution: "© IGN – Plan IGN" }),
+  mention: "Fond de carte © IGN (Plan IGN), adresses : Géoplateforme de l'IGN.",
+});
+
+const GEOCODAGE = "https://data.geopf.fr/geocodage";
+
+/** Recherche d'une commune ou d'une adresse (France). */
+export function urlCherche(texte) {
+  const p = new URLSearchParams({ q: String(texte ?? "").trim(), limit: "1" });
+  return `${GEOCODAGE}/search?${p}`;
+}
+
+/** Réponse de la recherche (GeoJSON) → { lat, lng, libelle } ou null. */
+export function lireCherche(json) {
+  const f = json?.features?.[0], c = f?.geometry?.coordinates;
+  if (!Array.isArray(c) || !isFinite(Number(c[0])) || !isFinite(Number(c[1]))) return null;
+  const p = f.properties || {};
+  const libelle = p.type === "municipality" ? [p.city || p.name, p.postcode].filter(Boolean).join(" ") : (p.label || p.name || "");
+  return { lat: Number(c[1]), lng: Number(c[0]), libelle: String(libelle).trim() };
+}
+
+/** Commune la plus proche d'un point (déclaration annuelle des ruches). */
+export function urlCommune(lat, lng) {
+  const p = new URLSearchParams({ lat: String(lat), lon: String(lng), limit: "1" });
+  return `${GEOCODAGE}/reverse?${p}`;
+}
+
+/** Réponse de la recherche inverse → « Commune · code postal » (« » si rien). */
+export function lireCommune(json) {
+  const p = json?.features?.[0]?.properties || {};
+  return [p.city || p.municipality || "", p.postcode || ""].map((x) => String(x).trim()).filter(Boolean).join(" · ");
+}
+
 /** Un nom de rucher est-il libre ? (sans tenir compte de la casse ni des espaces ; `sauf` : le rucher renommé). */
 export function nomLibre(ruchers, nom, sauf = null) {
   const k = cle(nom);

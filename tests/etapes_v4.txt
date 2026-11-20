@@ -17,9 +17,10 @@
     meteo = {"current": {"temperature_2m": 17, "wind_speed_10m": 8, "precipitation": 0}, "hourly": {"precipitation_probability": [0] * 96},
              "daily": {"time": jours, "temperature_2m_max": [17, 12, 19, 21], "precipitation_probability_max": [5, 80, 10, 40], "wind_speed_10m_max": [10, 30, 8, 12]}}
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, body=json.dumps(meteo)))
-    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
-    ctx.route("https://nominatim.openstreetmap.org/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
-              body=json.dumps({"address": {"village": "Plombières-lès-Dijon", "postcode": "21370"}})))
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/geocodage/**", lambda rt: rt.fulfill(status=200, headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+              body=json.dumps({"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [5.0, 47.33]},
+                               "properties": {"type": "street", "city": "Plombières-lès-Dijon", "postcode": "21370", "label": "Rue X 21370 Plombières-lès-Dijon"}}]})))
     requetes = []
     page.on("request", lambda r: requetes.append((r.method, r.url, r.post_data)))
     posts = lambda t: [json.loads(b) for m, u, b in requetes if m == "POST" and f"/rest/v1/{t}" in u and b]

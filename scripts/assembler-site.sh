@@ -6,14 +6,14 @@ PROD=xkucyqzlqfeyuomrtjbu
 TEST=zaaaiqyhxehvgowlgztx
 prod=$(cd "$1" && pwd); rec=$(cd "$2" && pwd); sortie=$3
 
-copier() { # Seuls les fichiers du site sont publiés : premier niveau du dépôt, plus src/ et styles/ (IT-03).
+copier() { # Seuls les fichiers du site sont publiés : premier niveau du dépôt, plus src/ et styles/ (IT-03), polices comprises (v5.73).
   mkdir -p "$2"
   for f in "$1"/*.html "$1"/*.js "$1"/*.svg "$1"/*.png "$1"/*.webmanifest; do
     [ -f "$f" ] && cp "$f" "$2"/
   done
   for d in src styles; do
     [ -d "$1/$d" ] || continue
-    (cd "$1" && find "$d" -type f \( -name '*.js' -o -name '*.css' \)) | while read -r f; do
+    (cd "$1" && find "$d" -type f \( -name '*.js' -o -name '*.css' -o -name '*.woff2' -o -name 'OFL-*.txt' \)) | while read -r f; do
       mkdir -p "$2/$(dirname "$f")" && cp "$1/$f" "$2/$f"
     done
   done

@@ -5,6 +5,42 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.73 · à publier en recette · carte, adresses et polices libres d'usage commercial
+**Aucune migration.** Décision de Pierre-Louis du 20 nov. 2026 : ne garder que des services gratuits utilisables dans une
+application payante sans risque de la part de leurs éditeurs (décision D-09, première partie). Les tuiles
+`tile.openstreetmap.org` et Nominatim interdisent les applications très utilisées et ne sont pas des services commerciaux ;
+Google Fonts envoie l'adresse IP de chaque utilisateur à Google.
+
+Pour l'apiculteur :
+1. **Carte des ruchers sur Plan IGN** : le fond de carte de l'IGN (noms de lieux-dits, chemins, relief léger), mention
+   « © IGN – Plan IGN » sur la carte et sous la carte.
+2. **« Chercher une commune ou une adresse »** (placer un rucher) et le **nom de la commune** sur l'écran Déclaration
+   annuelle passent par le géocodage de l'IGN, déjà utilisé pour les adresses des clients (Base Adresse Nationale).
+3. **Polices hébergées par Apiviz** (appli et site apiviz.fr) : rien n'est plus chargé chez Google ; les polices sont là
+   hors ligne et dans les applications dès le premier lancement.
+4. **Confidentialité** (page et `docs/CONFIDENTIALITE.md`, version du 20 nov. 2026) : Cloudflare au lieu de GitHub Pages
+   (hébergement depuis la v5.34), IGN au lieu d'OpenStreetMap, Google Fonts retiré. Le responsable du traitement et
+   l'adresse de contact restent « [à compléter] » (D-13).
+
+Services gardés, et pourquoi : Plan IGN et géocodage de la Géoplateforme (Licence Ouverte Etalab, gratuits, sans clé,
+usage commercial permis, source à citer ; limite 50 requêtes par seconde et par adresse IP, donc par téléphone) ; polices
+Bricolage Grotesque et Instrument Sans (SIL Open Font License 1.1). **Reste à faire avant que l'appli soit payante** :
+la météo. L'offre gratuite d'Open-Meteo est réservée à un usage non commercial ; remplacement prévu par l'API publique de
+Météo-France (Licence Ouverte), qui demande un compte gratuit sur portail-api.meteofrance.fr.
+
+Technique :
+- `src/domaines/ruchers/regles.js` (exposé par `Regles.ruchers`) : `FOND_CARTE` (WMTS `GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2`,
+  grille `PM`, zooms 0 à 19, lu par Leaflet comme des tuiles XYZ), `urlCherche`/`lireCherche` (`/geocodage/search`),
+  `urlCommune`/`lireCommune` (`/geocodage/reverse`). `ux.js` (carte, recherche) et `v3.js` (déclaration) s'en servent.
+  Les communes déjà trouvées restent gardées sur l'appareil (`apidoo-communes`).
+- Polices : `styles/00-polices.css` (première feuille d'`index.html`), `styles/polices/*.woff2` (fichiers variables,
+  sous-ensemble latin, @fontsource-variable 5.3.0) et leurs licences ; `assembler-site.sh` publie les `.woff2` et les
+  licences de `styles/`, `generer-coquille.py` les garde hors ligne ; `sw.js` ne connaît plus Google Fonts.
+  Landing : `landing/public/polices/` et `@font-face` dans la page (à publier par « Mise en ligne de la landing »).
+- Tests : `ruchers.test.mjs` (fond de carte, recherche, commune) ; `confidentialite.test.mjs` lit aussi les règles de
+  `src/` et refuse tout retour d'`openstreetmap.org` ; scénarios de bout en bout : tuiles IGN coupées au lieu d'OSM,
+  `etapes_v3` et `etapes_v4` simulent le géocodage de l'IGN.
+
 ## v5.72 · à publier en recette · Espace API, suite : conseils au bon moment, sans réseau, courbe, mémoire
 **Aucune migration** (nouvelle clé de réglage `apiAppris`, écrite par `regler()` comme les autres). Suite de v5.71, dans
 l'ordre d'importance demandé par Pierre-Louis (« Implémente les éléments dans l'ordre d'importance »), d'après la liste

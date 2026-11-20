@@ -457,7 +457,7 @@ const UX = (() => {
     catch { document.getElementById("u_msg").select(); toast("Sélectionne le message pour le copier", true); }
   };
 
-  // ---------- 6. Carte des ruchers (Leaflet + OpenStreetMap) ----------
+  // ---------- 6. Carte des ruchers (Leaflet + Plan IGN, v5.73) ----------
   let promesseCarte = null, choix = null, carteMap = null, visee = null;
   const leaflet = () => promesseCarte || (promesseCarte = new Promise((ok, ko) => {
     const l = document.createElement("link");
@@ -497,7 +497,7 @@ const UX = (() => {
       ls.length ? `<div id="uCarte" class="u-carte" role="region" aria-label="Carte des ruchers"><p class="small u-carte-msg">Chargement de la carte…</p></div>
        <div id="uPanneau">${panneau(ls.find((l) => l.cle === choix))}</div>
        <section class="card u-liste"><h2>Ruchers</h2>${liste}</section>
-       <p class="small">Fond de carte © contributeurs OpenStreetMap. Pour placer un rucher : touche-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
+       <p class="small">${esc(Regles.ruchers.FOND_CARTE.mention)} Pour placer un rucher : touche-le dans la liste, puis « Placer sur la carte » (n’importe où) ou « Ma position » (sur place).</p>`
         : emptyState("Aucune ruche", "Ajoute tes ruches pour les voir sur la carte.", "Ajouter des ruches", "newruches"));
     if (ls.length) monter(ls);
     if (visee) setTimeout(() => ACT.uplacermain(visee), 0);
@@ -511,7 +511,7 @@ const UX = (() => {
     el.dataset.monte = "1"; el.innerHTML = "";
     const m = L.map(el, { zoomControl: true, attributionControl: true });
     carteMap = m;
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(m);
+    L.tileLayer(Regles.ruchers.FOND_CARTE.url, Regles.ruchers.FOND_CARTE.options).addTo(m); // Plan IGN (v5.73)
     const places = ls.filter((l) => l.lat != null);
     const couleur = { good: "#2F6B4F", watch: "#E3A008", crit: "#A61B1B" };
     places.forEach((l) => {
@@ -556,10 +556,11 @@ const UX = (() => {
     if (!q || !carteMap) return;
     const b = e.target.querySelector(".btn"); b.disabled = true;
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&accept-language=fr&q=${encodeURIComponent(q)}`);
-      const j = r.ok ? await r.json() : [];
-      if (!j.length) toast("Adresse introuvable : essaie avec le nom de la commune", true);
-      else { carteMap.setView([Number(j[0].lat), Number(j[0].lon)], 15); toast(j[0].display_name.split(",").slice(0, 2).join(",")); }
+      // Géocodage de l'IGN (v5.73) : gratuit, sans clé, usage commercial permis.
+      const r = await fetch(Regles.ruchers.urlCherche(q));
+      const t = Regles.ruchers.lireCherche(r.ok ? await r.json() : null);
+      if (!t) toast("Adresse introuvable : essaie avec le nom de la commune", true);
+      else { carteMap.setView([t.lat, t.lng], 15); toast(t.libelle || q); }
     } catch { toast("Recherche indisponible sans réseau", true); }
     finally { b.disabled = false; }
   });

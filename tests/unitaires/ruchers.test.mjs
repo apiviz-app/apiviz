@@ -1,7 +1,8 @@
 // Règles des ruchers (IT-05). Lancer : npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cle, nomPropre, nomAffiche, pire, position, rucherDe, rucherParCle, lieux, lienTel, lienItineraire, nomLibre, archivable, infosDepuis } from "../../src/domaines/ruchers/regles.js";
+import { cle, nomPropre, nomAffiche, pire, position, rucherDe, rucherParCle, lieux, lienTel, lienItineraire, nomLibre, archivable, infosDepuis,
+  FOND_CARTE, urlCherche, lireCherche, urlCommune, lireCommune } from "../../src/domaines/ruchers/regles.js";
 
 const V = { id: "v", nom: "Verger", lat: 47.4, lng: 5.1 }, B = { id: "b", nom: "Bois du Roi", lat: null, lng: null };
 
@@ -76,4 +77,40 @@ test("nom libre, archivage, infos", () => {
   assert.equal(i.capacite, 12);
   assert.equal(i.notes, "");
   assert.equal(infosDepuis({ capacite: "" }).capacite, null);
+});
+
+// v5.73 : carte et adresses de l'IGN (Licence Ouverte, usage commercial permis) au lieu d'OpenStreetMap.
+test("fond de carte Plan IGN : tuiles XYZ de la Géoplateforme, source citée", () => {
+  assert.match(FOND_CARTE.url, /^https:\/\/data\.geopf\.fr\/wmts\?/);
+  for (const p of ["LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "TILEMATRIXSET=PM", "TILEMATRIX={z}", "TILEROW={y}", "TILECOL={x}"]) assert.ok(FOND_CARTE.url.includes(p), p);
+  assert.equal(FOND_CARTE.options.maxZoom, 19);
+  assert.match(FOND_CARTE.options.attribution, /IGN/);
+  assert.match(FOND_CARTE.mention, /IGN/);
+  assert.ok(!/openstreetmap/i.test(JSON.stringify(FOND_CARTE)));
+});
+
+test("recherche d'une commune ou d'une adresse : géocodage de l'IGN", () => {
+  const u = new URL(urlCherche("  Fontaine-lès-Dijon "));
+  assert.equal(u.origin + u.pathname, "https://data.geopf.fr/geocodage/search");
+  assert.equal(u.searchParams.get("q"), "Fontaine-lès-Dijon");
+  assert.equal(u.searchParams.get("limit"), "1");
+  const commune = { features: [{ geometry: { type: "Point", coordinates: [5.025275, 47.344925] },
+    properties: { type: "municipality", name: "Fontaine-lès-Dijon", city: "Fontaine-lès-Dijon", postcode: "21121", label: "Fontaine-lès-Dijon" } }] };
+  assert.deepEqual(lireCherche(commune), { lat: 47.344925, lng: 5.025275, libelle: "Fontaine-lès-Dijon 21121" });
+  const adresse = { features: [{ geometry: { coordinates: [5.000451, 47.349936] }, properties: { type: "housenumber", label: "20 Rue de Dijon 21121 Daix" } }] };
+  assert.equal(lireCherche(adresse).libelle, "20 Rue de Dijon 21121 Daix");
+  assert.equal(lireCherche({ features: [] }), null);
+  assert.equal(lireCherche(null), null);
+  assert.equal(lireCherche({ features: [{ geometry: { coordinates: ["x", 1] } }] }), null);
+});
+
+test("commune d'un rucher : géocodage inverse de l'IGN", () => {
+  const u = new URL(urlCommune(47.35, 5));
+  assert.equal(u.origin + u.pathname, "https://data.geopf.fr/geocodage/reverse");
+  assert.equal(u.searchParams.get("lat"), "47.35");
+  assert.equal(u.searchParams.get("lon"), "5");
+  assert.equal(lireCommune({ features: [{ properties: { city: "Daix", postcode: "21121", label: "20 Rue de Dijon 21121 Daix" } }] }), "Daix · 21121");
+  assert.equal(lireCommune({ features: [{ properties: { municipality: "Plombières-lès-Dijon" } }] }), "Plombières-lès-Dijon");
+  assert.equal(lireCommune({ features: [] }), "");
+  assert.equal(lireCommune(null), "");
 });

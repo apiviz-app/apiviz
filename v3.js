@@ -439,10 +439,9 @@ const V3 = (() => {
     if (communes[k] !== undefined) return communes[k];
     if (!enCours.has(k) && navigator.onLine !== false) {
       enCours.add(k);
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=${lat}&lon=${lng}`)
+      fetch(Regles.ruchers.urlCommune(lat, lng)) // géocodage inverse de l'IGN (v5.73)
         .then((r) => (r.ok ? r.json() : null)).then((j) => {
-          const a = j?.address || {};
-          communes[k] = [a.city || a.town || a.village || a.municipality || "", a.postcode || ""].filter(Boolean).join(" · ");
+          communes[k] = Regles.ruchers.lireCommune(j);
           memo("apidoo-communes", JSON.stringify(communes));
           if (S.route === "declaration") vueDeclaration();
         }).catch(() => {}).finally(() => enCours.delete(k));
