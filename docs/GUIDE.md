@@ -27,14 +27,18 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Accueil
 
-- Une phrase donne la priorité du jour, avec ses boutons.
+- Une phrase donne la priorité du jour, avec ses boutons. *(v5.70)* La carte d'API devient **Pour aujourd'hui** : la
+  priorité, puis jusqu'à deux autres choses utiles (créneau, saison, stock, tâches en retard, conseils d'API), la tournée
+  proposée et un micro pour parler à API. Réglages › API › Conseils d'API remet la priorité seule si tu préfères.
 - Un rucher par colonne : alvéoles des ruches (couleur selon l'état), météo, meilleur créneau, tournée.
 - **Météo** *(v5.35)* : les heures du jour d'emblée, le bon créneau, le choix du jour et du rucher ; « 5 jours » et le
   bouton agrandir (détail heure par heure dans un panneau). Sur ordinateur, l'accueil tient sur un écran, en trois
   colonnes : ruches, météo, à faire.
 - **À faire**, **Agenda** et **Activité** ; **Ce mois-ci** propose les travaux du mois, à ajouter à l'agenda.
 - **Agenda** *(v5.35)* : un calendrier (mois ou semaine) avec tâches, visites, ventes et récoltes ; un clic sur un jour
-  affiche son détail et permet d'y ajouter une tâche.
+  affiche son détail et permet d'y ajouter une tâche. *(v5.70)* « Organiser avec API » : API propose ce qu'il placerait
+  dans les sept prochains jours (visites selon la météo, priorités de la saison, conseils, commandes), en pointillé ;
+  garde ou écarte chacun, puis « Tout ajouter ».
 - **Dates** *(v5.35)* : chaque champ date ouvre le calendrier d'Apiviz, avec des raccourcis (aujourd'hui, hier…).
 - **Bien démarrer** guide les premiers pas ; le bouton Masquer le retire.
 - **Ton rayon** *(v5.68)* : une alvéole par semaine de mars à novembre, plus remplie quand tu as fait plus de visites ;
@@ -75,8 +79,22 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 
 ## Saisir (API)
 
+- **Parler à API** *(v5.70)* : le bouton API (au centre de la barre du bas) ouvre la feuille avec le grand micro
+  « Parle à API » : touche, pose ta question à voix haute, API répond et te lit sa réponse. **Reste appuyé** sur le
+  bouton API pour lui parler tout de suite, sans ouvrir la feuille ; relâche pour envoyer. « Ouvrir l'espace API » mène
+  à l'écran API.
+- **Espace API** *(v5.70)* : « Pour aujourd'hui » (la priorité du jour, un bon créneau météo, ce que la saison demande,
+  le matériel sous le seuil), tes échanges, le micro à côté du champ. Avant d'envoyer, le **volet des gouttes** dit ce que
+  coûtera la question (Rapide : moins d'1 goutte ; Approfondie : 2 à 4) et ce qu'il te restera ; touche-le pour changer.
+  Sous chaque réponse : **Écouter**, le coût réel, et **Ajouter à l'agenda** quand un conseil donne sa date (« avant
+  samedi »). Le haut-parleur, en haut, fait lire chaque réponse. ⋯ › **Mains libres** : pour le rucher, avec des gants :
+  on parle, API répond en réponse rapide et lit sa réponse ; touche n'importe où pour reparler.
+
 - **Visite** : au doigt, ou « Visiter à la voix » (dire par exemple « activité faible, reine vue, 38 kilos, c'est
-  bon »). Photos réduites avant l'envoi, 10 au plus par visite.
+  bon »). Photos réduites avant l'envoi, 10 au plus par visite. À la relecture *(v5.70)*, « API a remarqué » signale ce
+  qui a changé depuis la dernière visite (poids en baisse, couvain réduit, reine non vue deux fois, cellules royales,
+  varroa au-dessus du seuil sans traitement) ; « Ajouter à l'agenda » crée la tâche avec la visite. Un poids très
+  différent de la dernière pesée est demandé une fois (« C'est bien ça ? »).
 - **Faire la tournée** d'un rucher : ruches par priorité, trois modes (je parle librement, API me pose les questions,
   je remplis moi-même), vérification avant d'enregistrer. Une tournée quittée en cours reprend à la réouverture.
 - **Visite express** *(v5.32)* : sur la fiche d'une ruche déjà visitée. La visite précédente est reprise (activité,
@@ -177,7 +195,7 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   aide sans utiliser Apiviz. Les associés proposés dans les achats et les ventes sont ces personnes : rien à retaper.
 - **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) *(v5.38)* : cinq groupes. **Toi** (Mon profil),
   **L'exploitation** (NAPI, SIRET, adresse ; membres et associés ; factures ; objectif de récolte *(v5.68)*), **Sur le terrain** (météo, rappels, caisses
-  numérotées), **Affichage** (couleur du bandeau ; sons et vibrations *(v5.68)*), **Tes données** (fichier comptable de l'année, sauvegarde, autres
+  numérotées), **API** *(v5.70 : offre et gouttes, Ce qu'API sait de toi, Voix d'API, Conseils d'API)*, **Affichage** (couleur du bandeau ; sons et vibrations *(v5.68)*), **Tes données** (fichier comptable de l'année, sauvegarde, autres
   fichiers). Plus de « Listes » : la catégorie d'une dépense vient de l'article, les clients ont des étiquettes libres.
   À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
 - **Inscription et Mon profil** *(v5.38)* : à la première connexion, ton prénom et ton nom (une seule fois, ils suivent

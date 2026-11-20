@@ -1,0 +1,220 @@
+/* Apiviz — v5.70 (maquettes « Espace API dans l'appli actuelle » du 20 nov. 2026) : parler à API (micro, feuille du
+   bouton API, « API t'écoute », mains libres), « Pour aujourd'hui » (Accueil, écran API), lecture à voix haute, volet des
+   gouttes, agenda organisé avec API, avis d'API dans la visite à la voix, Réglages › API et « Ce qu'API sait de toi ».
+   Écrans : src/domaines/assistant/*.js, accueil.js, voix.js. */
+
+/* ---------- Micro ---------- */
+.ae-micro{flex:none;width:52px;height:52px;min-height:52px;border-radius:50%;border:0;background:var(--honey);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--duree-rapide) var(--sortie)}
+.ae-micro:active{transform:scale(.94)}
+.ae-micro:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.as-ligne{display:flex;gap:8px;align-items:flex-end}
+.as-ligne .as-saisie{flex:1;min-width:0}
+.as-form.grand .as-micro{display:none}
+
+/* ---------- Feuille du bouton API ---------- */
+.as-parle{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r-l);background:var(--honeysoft);margin-bottom:10px}
+.as-parle-b{flex:none;width:64px;height:64px;border-radius:50%;border:0;background:var(--honey);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px var(--card);cursor:pointer}
+.as-parle-b:active{transform:scale(.95)}
+.as-parle-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.as-parle-t b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:19px;line-height:1.2}
+.as-parle-t .small{color:var(--muted)}
+.as-champ-bloc .as-vers{width:100%;min-height:50px;margin-top:10px;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.as-champ-bloc .as-vers>span:first-child{flex:1}
+.as-nb{font-size:13px;font-weight:700;color:var(--watch);background:var(--honeysoft);border-radius:var(--r-pill);padding:3px 9px}
+
+/* ---------- « Pour aujourd'hui » (Accueil) ---------- */
+.ac-api.ac-jour{display:flex;flex-direction:column;gap:4px;padding:14px 14px 8px}
+.aj-tete{display:flex;align-items:center;gap:10px}
+.aj-tete h2{flex:1;margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:19px;line-height:1.2}
+.aj-tete .ae-micro{width:44px;height:44px;min-height:44px}
+.aj-l{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(125,82,0,.16)}
+.aj-tete+.aj-lignes .aj-l:first-child{border-top:0}
+.aj-ic{width:32px;height:32px;border-radius:var(--r-s);background:var(--card);color:var(--watch);display:inline-flex;align-items:center;justify-content:center}
+.aj-t{display:flex;flex-direction:column;gap:1px;min-width:0}
+.aj-t b{font-size:15px;line-height:1.3;font-weight:700;color:var(--ink)}
+.ac-jour .aj-t b{font-family:inherit}
+.aj-t .small{color:var(--muted)}
+.aj-b{min-height:40px;padding:0 12px;white-space:nowrap}
+/* La tournée : ses deux gestes passent sous le texte, pour ne pas l'écraser. */
+.aj-l.aj-tournee{grid-template-columns:32px minmax(0,1fr)}
+.aj-deux{grid-column:2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.aj-pied{display:flex;justify-content:flex-end}
+.aj-tout{display:inline-flex;align-items:center;gap:4px;min-height:44px;font-weight:700;color:var(--ink);text-decoration:none}
+.ac-api.ac-jour.calme .aj-l{border-top-color:var(--line)}
+.ac-api.ac-jour.calme .aj-ic{background:var(--ground)}
+@media (max-width:380px){.aj-l{grid-template-columns:28px minmax(0,1fr)}.aj-l .aj-b,.aj-l .aj-deux{grid-column:2;justify-self:start}}
+
+/* ---------- Écran API : bonjour, pour aujourd'hui, haut-parleur ---------- */
+.as-bonjour{display:block;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;line-height:1.15;margin-bottom:4px;color:var(--ink)}
+.as-jour{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:6px 14px}
+.as-jour-t{margin:8px 0 2px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.as-jour .aj-l{border-top-color:var(--line)}
+.as-jour .aj-ic{background:var(--honeysoft)}
+.as-hp{width:44px;min-width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.as-hp.on{background:var(--honeysoft);border-color:var(--honey);color:var(--watch)}
+
+/* ---------- Écouter une réponse ---------- */
+.as-ecouter{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:8px 0 2px;padding:3px 14px 3px 3px;border:0;border-radius:var(--r-pill);background:var(--ground);color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.as-ec-ic{width:34px;height:34px;border-radius:50%;background:var(--pine);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.as-onde{display:inline-flex;align-items:center;gap:2px;height:20px}
+.as-onde i{width:3px;height:6px;border-radius:2px;background:var(--line2)}
+.as-ecouter.on .as-onde i{background:var(--honey);animation:ae-onde .9s ease-in-out infinite}
+.as-onde i:nth-child(3n){animation-delay:.15s}.as-onde i:nth-child(3n+1){animation-delay:.3s}.as-onde i:nth-child(4n){animation-delay:.45s}
+@keyframes ae-onde{0%,100%{height:5px}50%{height:18px}}
+
+/* ---------- Coût réel, agenda ---------- */
+.as-cout{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;justify-content:space-between}
+.as-cout .as-cout-g{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)}
+.as-cout .as-cout-g svg{color:var(--honey)}
+.as-taches .btn.as-agenda{border:1.5px solid var(--ink);background:var(--card);color:var(--ink)}
+
+/* ---------- Volet des gouttes ---------- */
+.gv{border:1.5px solid var(--honey);border-radius:18px;background:var(--card);overflow:hidden}
+.gv-tete{width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:0;background:#FFFBEF;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.gv-gouttes{display:flex;align-items:flex-end;gap:2px;min-width:56px;height:30px}
+.gv-g{display:inline-flex;width:var(--t,22px);height:var(--t,22px);animation:gv-flotte 1.9s ease-in-out infinite;transform-origin:50% 90%}
+.gv-g svg{width:100%;height:100%}
+.gv-g path{fill:var(--honey)}
+.gv-g ellipse{fill:var(--cire);opacity:.9}
+.gv-gouttes .gv-g:nth-child(2){animation-delay:.22s}.gv-gouttes .gv-g:nth-child(3){animation-delay:.44s}
+.gv-gouttes.sec .gv-g{animation:none;filter:grayscale(1);opacity:.45}
+@keyframes gv-flotte{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-4deg)}}
+.gv-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.gv-t b{font-size:15px;line-height:1.3}
+.gv-t span{font-size:13px;color:var(--muted)}
+.gv-chev{flex:none;color:var(--muted);transition:transform var(--duree) var(--sortie)}
+.gv.ouvert .gv-chev{transform:rotate(180deg)}
+.gv-corps{display:flex;flex-direction:column;gap:12px;padding:10px 12px 12px;border-top:1px solid var(--line)}
+.gv-corps[hidden]{display:none}
+.as-form .gv-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0}
+.gv-mode{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;padding:10px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.as-form .as-mode.gv-mode.on{border:2px solid var(--ink);background:var(--honeysoft);color:var(--ink);padding:9px}
+.as-form .as-mode.gv-mode{color:var(--ink)}
+.gv-mode b{display:flex;align-items:center;gap:6px;font-size:15px}
+.gv-mini{display:inline-flex;gap:1px}.gv-mini .gv-g{animation:none}
+.gv-est{font-size:13px;font-weight:700;color:var(--watch)}
+.gv-det{font-size:12px;color:var(--muted)}
+.gv-jauge{display:flex;flex-direction:column;gap:6px}
+.gv-jl{display:flex;justify-content:space-between;font-size:13px}
+.gv-jl span{color:var(--muted)}
+.gv-barre{position:relative;height:14px;border-radius:var(--r-pill);background:#EEF0EA;overflow:hidden}
+.gv-barre i{position:absolute;top:0;bottom:0;border-radius:var(--r-pill)}
+.gv-reste{left:0;background:var(--honey);transition:width .9s var(--sortie)}
+.gv-pris{background:repeating-linear-gradient(135deg,var(--watch) 0 4px,#B07A10 4px 8px);animation:gv-brille 1.4s ease-in-out infinite}
+@keyframes gv-brille{0%,100%{opacity:.45}50%{opacity:1}}
+.gv-jauge .small{margin:0;color:var(--muted)}
+.gv-alerte{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--honeysoft);font-size:13px;line-height:1.35}
+.gv-alerte span{flex:1}
+.gv-alerte .btn{flex:none;background:var(--pine);color:#fff;border-color:var(--pine);white-space:nowrap}
+.gv-deux{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gv-puces{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.gv-puces span{font-size:12px;font-weight:600;color:#3F4A44;background:var(--ground);border-radius:var(--r-pill);padding:4px 9px}
+.gv.gv-epuise{border-color:#E8B4AC}
+.gv.gv-epuise .gv-tete{background:#FDF3F1}
+.as-form.as-bas .gv{margin-bottom:2px}
+.as-conv{padding-bottom:calc(var(--as-h,130px) + 24px)}
+.as-form.as-bas .gv-corps{max-height:46vh;overflow:auto}
+/* À l'envoi : chaque goutte s'envole vers la pastille de l'en-tête. */
+.gv-vol{position:fixed;z-index:60;pointer-events:none;animation:gv-vol .95s cubic-bezier(.55,0,.75,.2) both}
+@keyframes gv-vol{0%{transform:translate(0,0) scale(1);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.35);opacity:0}}
+.as-gouttes.gv-saute{animation:gv-saute .6s ease-out 2}
+@keyframes gv-saute{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}60%{transform:scale(.94)}}
+
+/* ---------- « API t'écoute » ---------- */
+.ae-dlg{border:0;padding:0;background:transparent;width:min(100% - 24px,460px);max-width:none;margin:auto auto 96px}
+.ae-dlg::backdrop{background:rgba(20,29,24,.55)}
+.ae-carte{background:var(--pine);color:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 40px -18px rgba(0,0,0,.5)}
+.ae-tete{display:flex;align-items:center;gap:12px}
+.ae-tete b{display:block;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px}
+.ae-tete .small{color:#C9D2CB}
+.ae-dit{margin:0;font-size:18px;line-height:1.35;min-height:24px}
+.ae-dit.vide{color:#C9D2CB;font-size:16px}
+.ae-onde{display:flex;align-items:center;gap:3px;height:24px}
+.ae-onde i{width:4px;height:6px;border-radius:2px;background:var(--honey-light);animation:ae-onde .9s ease-in-out infinite}
+.ae-onde i:nth-child(2n){animation-delay:.12s}.ae-onde i:nth-child(3n){animation-delay:.24s}.ae-onde i:nth-child(5n){animation-delay:.4s}
+.ae-pied{display:flex;gap:8px}
+.ae-pied .btn{flex:1;min-height:48px}
+.ae-pied .btn:not(.main){background:transparent;color:#fff;border-color:#55625B}
+.ae-pied .btn.main{background:var(--honey);color:var(--ink);border-color:var(--honey)}
+
+/* ---------- Mains libres ---------- */
+.am-dlg{border:0;padding:0;margin:0;width:100%;max-width:none;height:100%;max-height:none;background:#141D18;color:#fff}
+.am-dlg[open]{display:flex;flex-direction:column}
+.am-dlg::backdrop{background:#141D18}
+.am-haut{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:max(18px,env(safe-area-inset-top)) 18px 0}
+.am-puce{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 12px;border-radius:var(--r-pill);background:rgba(255,255,255,.08);font-size:13px;font-weight:600}
+.am-puce i{width:8px;height:8px;border-radius:50%;background:var(--honey-light)}
+.am-cout{font-size:13px;color:#C9D2CB;text-align:right}
+.am-dit{padding:20px 22px 0;min-height:70px}
+.am-dit p{margin:4px 0 0;font-size:19px;line-height:1.35}
+.am-lab{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#C9D2CB}
+.am-aide{color:#C9D2CB;font-size:17px}
+.am-scene{position:relative;display:flex;justify-content:center;align-items:center;padding:18px 0 8px;min-height:180px}
+.am-ondes{position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(227,160,8,.22) 0 40%,rgba(227,160,8,.08) 41% 70%,transparent 71%);opacity:.5}
+.am-ondes.on{animation:am-onde 1.6s ease-in-out infinite;opacity:1}
+@keyframes am-onde{0%,100%{transform:scale(.92)}50%{transform:scale(1.06)}}
+.am-scene api-compagnon{position:relative}
+.am-rep{margin:0 16px;padding:16px;border-radius:20px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:8px}
+.am-rep p{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:21px;line-height:1.3}
+.am-src{font-size:13px;color:#C9D2CB}
+.am-touche{margin:auto 0 0;padding:12px 16px 10px;text-align:center;font-size:14px;color:#C9D2CB}
+.am-gros{display:flex;gap:10px;padding:0 16px max(20px,env(safe-area-inset-bottom))}
+.am-b{flex:1;min-height:80px;border:0;border-radius:20px;background:rgba(255,255,255,.1);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.am-b:disabled{opacity:.4}
+.am-b.am-fin{background:var(--honey);color:var(--ink)}
+
+/* ---------- Agenda : organiser avec API ---------- */
+.ap-carte{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;background:var(--honeysoft);border:0}
+.ap-t{flex:1;min-width:180px;display:flex;flex-direction:column;gap:2px}
+.ap-t b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:17px}
+.ap-t .small{color:var(--muted)}
+.ap-go{background:var(--pine);color:#fff;border-color:var(--pine)}
+.ap-carte.ouverte{flex-direction:column;align-items:stretch;background:var(--card);border:1px solid var(--line)}
+.ap-tete{display:flex;align-items:center;gap:12px}
+.ap-liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ap-jour h3{margin:0 0 6px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:16px}
+.ap-prop{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;border:2px dashed var(--honey);border-radius:12px;background:#FFFBEF;margin-bottom:6px}
+.ap-prop.ecartee{opacity:.5;border-style:dotted;background:var(--card)}
+.ap-prop.ecartee b{text-decoration:line-through}
+.ap-pt{flex:1;min-width:0;display:flex;flex-direction:column}
+.ap-pt b{font-size:15px}
+.ap-pt b span{font-weight:500;color:var(--watch)}
+.ap-pt .small{color:var(--watch)}
+.ap-oui,.ap-non{flex:none;width:44px;height:44px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ap-oui[aria-pressed=true]{background:var(--pine);border-color:var(--pine);color:#fff}
+.ap-non[aria-pressed=true]{color:var(--crit);border-color:var(--crit)}
+.ap-pied{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.ap-pied .ap-ajouter{min-width:180px;background:var(--pine);border-color:var(--pine);color:#fff}
+.ap-pied .ap-ajouter:disabled{opacity:.5}
+
+/* ---------- Visite à la voix : l'avis d'API ---------- */
+.vx-avis{margin-top:12px;padding:12px 14px;border-radius:18px;background:var(--honeysoft);color:var(--ink)}
+.vx-avis-t{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.vx-avis-t b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:17px}
+.vx-avis ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.vx-avis li{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vx-avis li span{flex:1;min-width:160px;font-size:15px;line-height:1.35}
+.vx-avis .btn.on{background:var(--pine);border-color:var(--pine);color:#fff}
+.vx-doute{margin-top:12px;padding:12px 14px;border-radius:18px;background:var(--card);border:1px solid var(--line);color:var(--ink);display:flex;flex-direction:column;gap:8px}
+.vx-doute p{margin:0;font-size:15px;line-height:1.4}
+.vx-corr{display:flex;flex-direction:column;gap:4px;font-weight:700}
+.vx-corr input{min-height:44px;font-size:17px}
+
+/* ---------- Réglages › API, Ce qu'API sait de toi ---------- */
+.rg-g.rg-g-api{display:flex;align-items:center;gap:8px}
+.mm-ecran{display:flex;flex-direction:column;gap:10px}
+.mm-intro{display:flex;gap:12px;align-items:center;background:var(--honeysoft);border:0}
+.mm-intro p{margin:0;font-size:15px;line-height:1.45}
+.mm-l{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+.mm-bloc .mm-l:first-child{border-top:0}
+.mm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mm-t b{font-size:15px}
+.mm-t .small{color:var(--muted)}
+.mm-geste{flex:none;min-height:44px;font-weight:700;color:var(--watch)}
+
+/* Animations coupées : réglage de l'appareil (Sons et vibrations) ou du téléphone. */
+html.rt-anim-aucune :is(.gv-g,.gv-pris,.as-onde i,.ae-onde i,.am-ondes,.as-gouttes.gv-saute){animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .gv-g,.gv-pris,.as-onde i,.ae-onde i,.am-ondes,.as-gouttes.gv-saute{animation:none!important}
+  .gv-vol{display:none}
+}

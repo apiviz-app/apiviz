@@ -30,6 +30,8 @@ export const PARENTS = {
   etiquettesqr: ["ruches", "Ruchers"], caisse: ["clients", "Produits"],
   // Offres et gouttes d'API (IT-27).
   offre: ["reglages", "Réglages"], offres: ["offre", "Mon offre"], recharge: ["offre", "Mon offre"],
+  // Espace API (v5.70) : ce qu'API sait de toi, rangé dans Réglages › API.
+  apimemoire: ["reglages", "Réglages"],
 };
 
 /**

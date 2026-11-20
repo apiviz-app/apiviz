@@ -150,9 +150,34 @@ const VX = (() => {
       (E.v.force ? ligne("Force", `${E.v.force} sur 5`) : "") + (E.v.oeufs_vus ? ligne("Œufs vus", E.v.oeufs_vus) : "") +
       (E.v.cellules_royales ? ligne("Cellules royales", E.v.cellules_royales) : "");
     d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div class="vx-api">${Apiviz.compagnon("repond", 30).replace("<api-compagnon ", "<api-compagnon muet ")}API</div></header>
-      <div class="vx-relire"><h2>Voilà ce que j’ai noté pour ${esc(E.nom)}. Vérifie avant d’enregistrer.</h2><div class="vx-t">${lignes}</div>
+      <div class="vx-relire"><h2>Voilà ce que j’ai noté pour ${esc(E.nom)}. Vérifie avant d’enregistrer.</h2><div class="vx-t">${lignes}</div>${avisApi()}
       ${E.final ? `<label class="vx-note">Note<textarea id="vx_note" rows="3">${esc(E.final)}</textarea></label>` : ""}</div>
       <div class="vx-pied"><div class="vx-deux"><button type="button" class="btn main" data-act="vxenreg">${typeof HL != "undefined" && HL.horsLigne() ? "Enregistrer sur le téléphone" : "Enregistrer la visite"}</button><button type="button" class="btn" data-act="vxcorriger">Au doigt</button></div></div>`;
+  }
+  // v5.70 (maquette « Visiter à la voix, avec l'avis d'API ») : à la relecture, ce qu'API remarque en comparant aux
+  // visites précédentes et au seuil varroa, chaque remarque avec « Ajouter à l'agenda » (la tâche est créée avec la
+  // visite) ; et une seule question en cas de doute (un poids très différent de la dernière pesée). Règles :
+  // src/domaines/assistant/compagnon.js (remarquesVoix).
+  function avisApi() {
+    const EA = window.Noyau?.espaceApi;
+    if (!EA?.remarquesVoix || !E) return "";
+    const prec = S.d.visites.filter((v) => v.ruche_id === S.visite.ruche_id).sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
+    const R = EA.remarquesVoix(E.v, prec, { nom: E.nom, seuil: typeof UX != "undefined" ? UX.seuilVarroa() : 3, aujourdhui: today() });
+    E.remarques = R.remarques;
+    E.agenda = E.agenda || new Set();
+    const doute = R.doute && !E.douteVu ? `<div class="vx-doute" role="group" aria-label="Question d’API">${E.corrige
+      ? `<label class="vx-corr">Poids (kg)<input id="vx_poids" type="number" inputmode="decimal" step="0.1" min="0" value="${esc(E.v.poids_kg ?? "")}"></label><button type="button" class="btn main" data-act="vxdoutevalider">Valider</button>`
+      : `<p>${esc(R.doute.texte)}</p><div class="vx-deux"><button type="button" class="btn main" data-act="vxdouteoui">Oui</button><button type="button" class="btn" data-act="vxdoutecorr">Corriger</button></div>`}</div>` : "";
+    const rem = R.remarques.length ? `<section class="vx-avis" aria-label="API a remarqué"><div class="vx-avis-t">${Apiviz.compagnon("attention", 34).replace("<api-compagnon ", "<api-compagnon muet ")}<b>API a remarqué</b></div>
+      <ul>${R.remarques.map((r, i) => `<li><span>${esc(r.texte)}</span><button type="button" class="btn sm${E.agenda.has(i) ? " on" : ""}" data-act="vxagenda" data-v="${i}" aria-pressed="${E.agenda.has(i)}">${E.agenda.has(i) ? "Ajoutée à l’agenda ✓" : "Ajouter à l’agenda"}</button></li>`).join("")}</ul>
+      ${E.agenda.size ? '<p class="small">Les tâches sont créées avec la visite.</p>' : ""}</section>` : "";
+    return doute + rem;
+  }
+  const relire = () => { const d = document.getElementById("alVoix"); if (d && E?.phase === "relire") { const note = document.getElementById("vx_note")?.value; relecture(d); const n = document.getElementById("vx_note"); if (n && note !== undefined) n.value = note; } };
+  /** Les tâches gardées depuis « API a remarqué », créées une fois la visite enregistrée. */
+  function tachesApi() {
+    const l = [...(E?.agenda || [])].map((i) => E.remarques?.[i]?.tache).filter(Boolean).map((t) => ({ id: globalThis.crypto?.randomUUID?.(), titre: t.titre, echeance: t.echeance, ruche_id: S.visite?.ruche_id || null }));
+    return l;
   }
   // Reporte ce qui a été dit dans le formulaire. Ce qui n'a pas été dit reste tel quel.
   function reporter() {
@@ -215,9 +240,18 @@ const VX = (() => {
     vxfin: () => terminer(),
     vxcorriger: () => { reporter(); fermer(); },
     vxenreg: () => {
+      const taches = tachesApi();
       reporter();
       fermer();
       document.querySelector('form[data-form="visite"]')?.requestSubmit();
+      if (taches.length && typeof write == "function") setTimeout(() => write(sb.from("taches").insert(taches), `${taches.length} tâche${taches.length > 1 ? "s" : ""} ajoutée${taches.length > 1 ? "s" : ""} à l’agenda`), 400);
+    },
+    vxagenda: (i) => { const k = Number(i); E.agenda = E.agenda || new Set(); E.agenda.has(k) ? E.agenda.delete(k) : E.agenda.add(k); relire(); },
+    vxdouteoui: () => { E.douteVu = true; relire(); },
+    vxdoutecorr: () => { E.corrige = true; relire(); setTimeout(() => document.getElementById("vx_poids")?.focus(), 30); },
+    vxdoutevalider: () => {
+      const v = Number(String(document.getElementById("vx_poids")?.value || "").replace(",", "."));
+      E.v.poids_kg = v > 0 ? v : null; E.douteVu = true; E.corrige = false; relire();
     },
   });
   // Écran « visite » : complément de l'écran, appelé par src/domaines/ (IT-03).

@@ -5,6 +5,72 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.70 · à publier en recette · Espace API : parler à API, voix, agenda, gouttes
+**Aucune migration** (préférences sur l'appareil, réglages existants, tâches avec leur échéance). Maquettes « Espace API —
+le compagnon dédié » (https://claude.ai/artifact/GtLtFmbMQ155gGf8dQ9iRo) et « Espace API dans l'appli actuelle »
+(https://claude.ai/artifact/DnHUL3VyUo3y6ksv6WDkUQ, écrans 1 à 8) du 20 nov. 2026 ; Pierre-Louis : « je souhaite que tu
+implémentes tout cela ». Point de départ : un compagnon qui sert vraiment (il parle, il écoute, il agit dans l'agenda,
+il conseille d'après les données), pas un gadget ; on y accède en un geste, sans nouvelle entrée de menu.
+
+Pour l'apiculteur :
+1. **Bouton API** : en tête de la feuille, le grand micro « Parle à API » ; « Ouvrir l'espace API » (avec le nombre de
+   conseils pas encore faits). **Appui long** sur le bouton API : API écoute tout de suite, relâcher envoie.
+2. **Accueil** : la carte d'API devient **Pour aujourd'hui** : la priorité du jour, puis jusqu'à deux autres choses utiles
+   (bon créneau météo, priorités de la saison, matériel sous le seuil, tâches en retard, conseils d'API), la tournée
+   proposée (trois lignes au plus en tout), un micro, « Tout voir dans l'espace API ».
+3. **Espace API** (écran API) : bonjour et « Pour aujourd'hui », micro à côté du champ, haut-parleur dans l'en-tête (lire
+   chaque réponse), ⋯ : Mains libres, Ce qu'API sait de toi, Voix d'API.
+4. **Conversation** : « Écouter » sous chaque réponse ; une question dite au micro est répondue à voix haute ; « Ajouter à
+   l'agenda · samedi 22 nov. » quand un conseil donne sa date ; coût réel et ce qui était prévu. **Mains libres** : plein
+   écran sombre, gros boutons Pause, Répéter, Terminer, réponses rapides lues à voix haute, toucher n'importe où pour
+   reparler, écran gardé allumé.
+5. **Visite à la voix** : à la relecture, « API a remarqué » (poids en baisse, couvain réduit, reine non vue deux fois,
+   cellules royales, provisions faibles avant l'hiver, varroa au-dessus du seuil sans traitement), chaque remarque avec
+   « Ajouter à l'agenda » (tâche créée avec la visite) ; un poids très différent de la dernière pesée est demandé une fois.
+6. **Agenda** : carte « Organiser avec API » : propositions des sept prochains jours en pointillé (visites selon la météo
+   connue, colonies à surveiller d'abord, priorités de la saison, conseils, commande du matériel sous le seuil), garder ou
+   écarter, « Tout ajouter ».
+7. **Réglages** : groupe **API** entre L'exploitation et Sur le terrain : Offre et gouttes d'API (déplacée), **Ce qu'API sait
+   de toi** (nouvel écran : seuil varroa, dernier traitement, poids d'hiver, objectif, météo de visite ; ce qu'API lit et
+   garde ; tout effacer), **Voix d'API** (feuille : quand lire, voix posée ou vive, vitesse, essai immédiat), **Conseils
+   d'API** (Pour aujourd'hui ou la priorité seule ; une ou trois lignes).
+8. **Volet des gouttes** au-dessus du champ : « Cette question : moins d'1 goutte » (une goutte qui flotte) ou « 2 à 4
+   gouttes » (trois gouttes) ; ouvert : Rapide ou Approfondie, jauge avec la part prévue qui clignote, « il t'en restera
+   environ 27 » ; peu de gouttes : « Passer en Rapide » ; plus de gouttes : Recharger ou Voir les offres. À l'envoi, les
+   gouttes s'envolent vers la pastille, qui rebondit quand la réponse arrive. Ouvert sur la page de tes échanges, replié
+   dans une conversation (chaque endroit garde le dernier choix). Animations coupées si le téléphone ou Sons et
+   vibrations le demandent.
+
+Technique :
+- `src/domaines/assistant/compagnon.js` : règles pures (lignesDuJour, dateConseil, voletGouttes, coutTexte, remarquesVoix,
+  propositionsSemaine, texteReponse) ; `voix-api.js` : lecture à voix haute par le téléphone (`speechSynthesis`, gratuite,
+  sans réseau), préférences `apiviz.api.voix` (« Quand je parle » par défaut) ; `ecoute.js` : « API t'écoute » et mains
+  libres (reconnaissance du navigateur, après l'information « Avant de dicter ») ; `aujourdhui.js` : données de « Pour
+  aujourd'hui », carte de l'Accueil (exposée à accueil.js par `Noyau.espaceApi`), préférences `apiviz.api.conseils` ;
+  `agenda-api.js` (crochet après le rendu de l'agenda) ; `reglages-api.js` (groupe API, écran `apimemoire`, feuilles).
+- `ecrans.js` (assistant) : volet, micro, haut-parleur, en-tête (⋯ par le gabarit), « Écouter », appui long (événements de
+  pointeur sur `.bottom [data-v=saisir]`, le clic qui suit est absorbé) ; la pastille suit les gouttes de Mon offre quand
+  elles sont connues (elle pouvait dater d'avant une recharge). `envoyer(texte, ruche, { dite, mode, silence })`.
+- `voix.js` : `avisApi()` à la relecture ; `accueil.js` : `priorite()` passe par `Noyau.espaceApi.carteAccueil`.
+- Gabarit : parent `apimemoire` → Réglages. Arborescence : `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` (v5.70), `docs/GUIDE.md`,
+  une astuce de l'Accueil (« Parle à API »).
+- Styles : `styles/67-espace-api.css`.
+- Tests : `tests/unitaires/espace-api.test.mjs` ; `etapes_ea` (nouveau : Accueil, micro, voix, agenda d'un conseil, volet,
+  peu de gouttes, feuille, appui long, mains libres, Réglages, mémoire, voix, agenda, visite à la voix, ordinateur) ;
+  `etapes_of` (volet replié dans la conversation), `etapes_nk` (54 écrans), `etapes_sd` (`apimemoire`, niveau 2).
+- Pas fait : notifications poussées des conseils d'API (les conseils restent dans « Pour aujourd'hui », l'agenda et
+  l'écran API) ; mot de réveil « Api » (trop de déclenchements à tort) ; propositions placées dans les jours du
+  calendrier (elles sont dans la carte d'API, rangées par jour) ; réponses calculées sur le téléphone sans réseau.
+
+À vérifier :
+- Sur téléphone, rester appuyé sur API, poser une question, relâcher : la réponse arrive et est lue à voix haute.
+- Feuille du bouton API : « Parle à API », puis « Ouvrir l'espace API ».
+- Écran API : changer Rapide / Approfondie dans le volet, envoyer : les gouttes partent, la pastille baisse.
+- ⋯ › Mains libres au rucher (gants) ; Pause, Répéter, Terminer.
+- Visite à la voix sur une ruche pesée : « API a remarqué », « Ajouter à l'agenda », puis l'agenda.
+- Agenda : « Organiser avec API », écarter une proposition, « Tout ajouter ».
+- Réglages › API : Voix d'API (essayer les deux voix), Conseils d'API (une ligne), Ce qu'API sait de toi.
+
 ## v5.69 · à publier en recette · Ma saison en un écran
 **Aucune migration.** Maquette « Accueil compact » du 20 nov. 2026 (canvas
 https://claude.ai/artifact/Qsrtmc4k4yeRY3nMgSCFP4, écrans « 1 bis ») ; Pierre-Louis : « c'est validé, je veux bien que tu

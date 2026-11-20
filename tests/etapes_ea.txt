@@ -1,0 +1,175 @@
+    # v5.70 — Espace API dans l'appli actuelle (maquettes du 20 nov. 2026) : « Pour aujourd'hui » sur l'Accueil, espace API
+    # (bonjour, liste du jour, haut-parleur, volet des gouttes), parler à API (micro, appui long sur le bouton API, mains
+    # libres), lecture à voix haute, « Ajouter à l'agenda » d'un conseil daté, feuille du bouton API, Réglages › API,
+    # Ce qu'API sait de toi, Voix d'API, agenda organisé avec API, avis d'API dans la visite à la voix.
+    # Fonction « assistant », reconnaissance vocale et synthèse vocale simulées. Avec CAPTURES=<dossier>, captures à 390 px.
+    import pathlib as _pl, os, datetime
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []
+    DATA["api_echanges"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://tile.openstreetmap.org/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=False: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    IA = {"recus": [], "gouttes": 28.0}
+    def fonction_ia(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        corps = req.post_data_json or {}
+        IA["recus"].append(corps)
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps({"actif": True, "plafond": 30, "restant": 30, "gouttes": IA["gouttes"]}))
+        cout = 0.4 if corps.get("mode") == "rapide" else 2.8
+        IA["gouttes"] = round(IA["gouttes"] - cout, 1)
+        return route.fulfill(status=200, headers=h, body=json.dumps({"reponse": {"resume": "Elle mange ses réserves.", "faits": [], "hypotheses": [],
+            "recommandations": [{"texte": "Pèse Ruche 5 avant samedi. Donne du candy sous 30 kg."}], "manques": []}, "restant": 29,
+            "gouttes": {"cout": cout, "restant": IA["gouttes"], "mode": corps.get("mode") or "approfondi"}}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/assistant", fonction_ia)
+    # Reconnaissance vocale et synthèse vocale simulées : window.__dicte est « dit », window.__lu reçoit ce qui est lu.
+    ctx.add_init_script("""
+      window.__dicte = "Comment va Ruche 5 ?"; window.__lu = [];
+      class FauxReco {
+        dire() { const r = [{ transcript: window.__dicte }]; r.isFinal = true; this.onresult && this.onresult({ resultIndex: 0, results: [r] }); }
+        start() { this.m = setTimeout(() => { this.m = null; this.dire(); setTimeout(() => this.onend && this.onend(), 60); }, window.__retard || 150); }
+        stop() { if (this.m) { clearTimeout(this.m); this.m = null; this.dire(); } setTimeout(() => this.onend && this.onend(), 10); } abort() {} }
+      window.SpeechRecognition = FauxReco; window.webkitSpeechRecognition = FauxReco;
+      Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speak(u) { window.__lu.push(u.text); setTimeout(() => { u.onstart && u.onstart(); setTimeout(() => u.onend && u.onend(), 250); }, 10); }, cancel() {}, getVoices() { return []; } } });
+      window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+      try { localStorage.setItem("apidoo-dictee-info", "1"); } catch (e) {}
+    """)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Accueil : « Pour aujourd'hui » à la place de la priorité seule.
+    carte = page.locator(".ac-api.ac-jour")
+    verif(carte.count() == 1 and "Pour aujourd’hui" in carte.inner_text(), "Accueil : carte « Pour aujourd'hui »")
+    verif(carte.locator(".btn.main").inner_text() == "Voir Ruche 5" and "D’après 3 pesées de Ruche 5" in carte.inner_text(), "la priorité du jour reste en tête, avec sa source")
+    lignes = carte.locator(".aj-l").all_inner_texts()
+    verif(2 <= len(lignes) <= 3 and any("+ Agenda" in l for l in lignes) and any("Tournée « Bois »" in l for l in lignes), "trois lignes au plus, tournée comprise : " + " | ".join(l.replace("\n", " ") for l in lignes))
+    page.wait_for_selector(".ac-jour .aj-micro", timeout=6000)
+    verif(page.locator(".ac-jour .aj-micro").count() == 1, "micro sur la carte (API disponible)")
+    shot("ea-accueil")
+
+    # 2. Micro de l'Accueil : API écoute, la question part, la réponse est lue à voix haute (question dite).
+    page.click(".ac-jour .aj-micro"); page.wait_for_selector("#apiEcoute[open]", timeout=4000)
+    verif("API t’écoute" in page.locator("#apiEcoute").inner_text(), "« API t'écoute… »")
+    page.wait_for_selector(".as-resume", timeout=8000)
+    verif(page.evaluate("S.route") == "api" and IA["recus"][-1].get("question", "").startswith("Comment va Ruche 5"), "la question dite est envoyée à API")
+    page.wait_for_function("window.__lu.length > 0", timeout=4000)
+    verif("Elle mange ses réserves." in page.evaluate("window.__lu[0]") and "Pèse Ruche 5 avant samedi" in page.evaluate("window.__lu[0]"), "réponse lue à voix haute : résumé et conseil")
+
+    # 3. Sous la réponse : Écouter, coût réel, Ajouter à l'agenda (conseil daté).
+    verif(page.locator(".as-ecouter").count() == 1, "bouton « Écouter » sous la réponse")
+    verif("Coût réel" in page.locator(".as-cout").inner_text(), "coût réel sous la réponse")
+    ag = page.locator(".as-agenda")
+    verif(ag.count() == 1 and ag.inner_text().startswith("Ajouter à l’agenda · samedi"), "conseil « avant samedi » : Ajouter à l'agenda · samedi")
+    n = page.evaluate("window.__lu.length"); page.click(".as-ecouter"); page.wait_for_function(f"window.__lu.length > {n}", timeout=3000)
+    verif(True, "Écouter relit la réponse")
+    shot("ea-conversation")
+    page.click(".as-agenda"); page.wait_for_selector("#sheet[open] [name=echeance]")
+    d = datetime.date.today(); sam = d + datetime.timedelta(days=((5 - d.weekday()) % 7) or 7)
+    verif(page.input_value("#sheet [name=echeance]") == sam.isoformat() and "Pèse Ruche 5 avant samedi" in page.input_value("#sheet [name=titre]"), "tâche préremplie, échéance samedi " + page.input_value("#sheet [name=echeance]"))
+    page.keyboard.press("Escape"); page.wait_for_timeout(300)
+
+    # 4. Volet des gouttes : replié dans la conversation, ouvert sur la page de tes échanges.
+    verif(page.locator(".as-bas .gv-corps").is_hidden(), "conversation : volet replié")
+    cliquer(page, "[data-act=apinouveau]"); page.wait_for_selector(".as-accueil")
+    verif(page.locator(".as-bonjour").count() == 1 and page.locator(".as-jour .aj-l").count() >= 1, "espace API : bonjour et « Pour aujourd'hui »")
+    verif(page.locator(".as-hp").count() == 1, "haut-parleur dans l'en-tête")
+    gv = page.locator(".as-accueil .gv")
+    verif(gv.count() == 1 and not page.locator(".as-accueil .gv-corps").is_hidden(), "volet des gouttes ouvert sur la page de tes échanges")
+    page.click(".as-mode[data-v=approfondi]"); page.wait_for_timeout(200)
+    verif("2 à 4 gouttes" in page.locator(".gv-tete").inner_text() and page.locator(".gv-tete .gv-g").count() == 3, "Approfondie : 2 à 4 gouttes, trois gouttes")
+    page.click(".as-mode[data-v=rapide]"); page.wait_for_timeout(200)
+    verif("moins d’1 goutte" in page.locator(".gv-tete").inner_text() and page.locator(".gv-tete .gv-g").count() == 1, "Rapide : moins d'1 goutte, une goutte")
+    verif(page.locator(".gv-barre[role=meter]").count() == 1 and "il t’en restera environ" in page.locator(".gv").inner_text(), "jauge et gouttes restantes après la question")
+    shot("ea-espace-api", True)
+
+    # 5. Peu de gouttes : Approfondie peut tout prendre, « Passer en Rapide ».
+    IA["gouttes"] = 3.4
+    page.fill("#asTexte", "Et Ruche 2 ?"); page.locator("#asTexte").press("Enter"); page.wait_for_selector(".as-resume", timeout=8000)
+    verif(page.locator(".as-gouttes").inner_text().strip() == "3", "pastille : 3 gouttes après la réponse")
+    page.click(".as-bas .gv-tete"); page.click(".as-mode[data-v=approfondi]"); page.wait_for_timeout(200)
+    verif(page.locator(".gv-alerte").count() == 1 and "Passer en Rapide" in page.locator(".gv-alerte").inner_text(), "peu de gouttes : alerte et « Passer en Rapide »")
+    page.click(".gv-alerte .btn"); page.wait_for_timeout(200)
+    verif(page.locator(".as-mode.on").get_attribute("data-v") == "rapide", "« Passer en Rapide » choisit Rapide")
+    IA["gouttes"] = 27.6
+
+    # 6. Feuille du bouton API : grand micro et « Ouvrir l'espace API ».
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-hero")
+    page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-champ input", timeout=5000)
+    verif(page.locator("#sheet .as-parle-b").count() == 1 and "Parle à API" in page.locator("#sheet .as-parle").inner_text(), "feuille : grand micro « Parle à API »")
+    verif("Ouvrir l’espace API" in page.locator("#sheet .as-vers").inner_text(), "feuille : « Ouvrir l'espace API »")
+    pos = page.evaluate("[...document.querySelectorAll('#sheet .as-champ-bloc > *')].map(e => e.className)")
+    verif(pos and pos[0] == "as-parle", "le micro est en tête de la feuille : " + ", ".join(pos))
+    shot("ea-feuille")
+    page.click("#sheet [data-act=closesheet]"); page.wait_for_timeout(300)
+
+    # 7. Appui long sur le bouton API : API écoute sans ouvrir la feuille, relâcher envoie.
+    avant = len(IA["recus"]); page.evaluate("window.__dicte = 'Faut-il nourrir ?'; window.__retard = 5000")
+    b = page.locator(".bottom [data-v=saisir]").bounding_box()
+    page.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2); page.mouse.down(); page.wait_for_timeout(700)
+    verif(page.locator("#apiEcoute[open]").count() == 1 and "Relâche pour envoyer" in page.locator("#apiEcoute").inner_text(), "appui long : API écoute")
+    page.mouse.up(); page.wait_for_selector(".as-resume", timeout=8000); page.evaluate("window.__retard = 0")
+    verif(len(IA["recus"]) > avant and IA["recus"][-1].get("question") == "Faut-il nourrir ?" and not page.locator("#sheet[open]").count(), "relâcher envoie la question, sans ouvrir la feuille")
+
+    # 8. Mains libres : réponse rapide, lue à voix haute, gros boutons.
+    page.evaluate("window.__dicte = 'Combien de cadres de couvain ?'"); n = page.evaluate("window.__lu.length")
+    page.evaluate("ACT.apimains()"); page.wait_for_selector("#apiMains[open]", timeout=4000)
+    page.wait_for_selector("#apiMains .am-rep p", timeout=8000)
+    verif(IA["recus"][-1].get("mode") == "rapide" and IA["recus"][-1].get("question") == "Combien de cadres de couvain ?", "mains libres : question en réponse rapide")
+    page.wait_for_function(f"window.__lu.length > {n}", timeout=4000)
+    verif(page.locator("#apiMains .am-b").count() == 3 and "Rapide" in page.locator("#apiMains .am-cout").inner_text(), "Pause, Répéter, Terminer ; coût annoncé")
+    shot("ea-mains-libres")
+    page.click("#apiMains [data-act=amfin]"); page.wait_for_timeout(300)
+    verif(page.locator("#apiMains[open]").count() == 0, "Terminer ferme le mode mains libres")
+
+    # 9. Réglages › API, Ce qu'API sait de toi, Voix d'API.
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-api")
+    g = page.locator(".rg-api").inner_text()
+    verif(page.locator(".rg-api .rg-l[data-v=offre]").count() == 1 and "Ce qu’API sait de toi" in g and "Voix d’API" in g and "Conseils d’API" in g, "Réglages : groupe API (offre, mémoire, voix, conseils)")
+    titres = page.evaluate("[...document.querySelectorAll('.rg-groupes h2.rg-g')].map(h => h.textContent.trim())")
+    verif(titres.index("API") == titres.index("L’exploitation") + 1, "le groupe API suit « L'exploitation » : " + ", ".join(titres))
+    shot("ea-reglages", True)
+    page.click(".rg-api [data-v=apimemoire]"); page.wait_for_selector(".mm-ecran")
+    verif("Seuil d’alerte varroa" in page.locator(".mm-ecran").inner_text() and "6 ruches" in page.locator(".mm-ecran").inner_text(), "Ce qu'API sait de toi : seuil varroa, exploitation")
+    shot("ea-memoire", True)
+    page.evaluate("ACT.apivoix()"); page.wait_for_selector("#sheet[open] .av-reglages")
+    page.click("#sheet [data-act=apivoixregle][data-v=toujours]")
+    page.click("#sheet .actions .btn.main"); page.wait_for_timeout(300)
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apiviz.api.voix')).lecture") == "toujours", "Voix d'API : « Toujours » gardé sur l'appareil")
+
+    # 10. Agenda : organiser avec API.
+    page.evaluate("ACT.go('agenda')"); page.wait_for_selector("#apAgenda")
+    page.click("#apAgenda [data-act=apagenda]"); page.wait_for_selector("#apAgenda.ouverte")
+    props = page.locator("#apAgenda .ap-prop").all_inner_texts()
+    verif(len(props) >= 1 and any("Visite · Bois" in p for p in props), "propositions d'API : " + " | ".join(p.replace("\n", " ") for p in props))
+    shot("ea-agenda", True)
+    nb = len(DATA["taches"])
+    page.click("#apAgenda [data-act=apajouter]"); page.wait_for_timeout(800)
+    verif(len(DATA["taches"]) == nb + len(props), "« Tout ajouter » crée les tâches proposées")
+
+    # 11. Visite à la voix : l'avis d'API à la relecture.
+    page.evaluate("window.__dicte = 'activité normale couvain réduit reine vue 41 kilos c\\'est bon'")
+    page.evaluate("id => ACT.newvisite(id)", R[4]); page.wait_for_selector(".vx-entree")
+    page.click(".vx-entree"); page.wait_for_selector("#alVoix .vx-relire", timeout=8000)
+    avis = page.locator("#alVoix .vx-avis")
+    verif(avis.count() == 1 and "1 kg de moins" in avis.inner_text() and "Couvain réduit" in avis.inner_text(), "API a remarqué : poids et couvain")
+    shot("ea-visite-voix")
+    avis.locator("[data-act=vxagenda]").first.click(); page.wait_for_timeout(200)
+    verif("Ajoutée à l’agenda" in page.locator("#alVoix .vx-avis").inner_text(), "remarque gardée pour l'agenda")
+    nb = len(DATA["taches"])
+    page.click("#alVoix [data-act=vxenreg]"); page.wait_for_timeout(1500)
+    verif(any(t.get("titre") == "Peser Ruche 5" for t in DATA["taches"][nb:]), "la tâche « Peser Ruche 5 » est créée avec la visite")
+
+    # 12. Ordinateur : l'espace API et la carte de l'Accueil tiennent.
+    page.set_viewport_size({"width": 1280, "height": 900})
+    page.evaluate("ACT.go('dash')"); page.wait_for_selector(".ac-haut .ac-jour")
+    verif(page.locator(".ac-haut .ac-jour").count() == 1, "ordinateur : « Pour aujourd'hui » à côté du bonjour")
+    if cap: page.screenshot(path=f"{cap}/ea-accueil-1280.png")
+    page.evaluate("ACT.go('api')"); page.evaluate("ACT.apinouveau()"); page.wait_for_selector(".as-accueil")
+    if cap: page.screenshot(path=f"{cap}/ea-espace-api-1280.png")
+    verif(not erreurs, "aucune erreur JavaScript : %s" % erreurs[:3])
