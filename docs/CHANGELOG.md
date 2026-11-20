@@ -5,16 +5,48 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## Correctif · à publier en recette · le bas de l'accueil caché sous la barre du bas
-**Aucune migration.** Signalé par Pierre-Louis le 20 nov. 2026 : « sur le menu d'accueil, je ne peux pas descendre
-jusqu'en bas ». Sur téléphone, la barre du bas grandit de la hauteur de la barre système (gestes ou boutons
-Android, trait de l'iPhone), mais la marge sous le contenu restait fixe (96 px). Avec une barre
-système de 48 px, la dernière ligne de « Bien démarrer » restait derrière la barre, même tout en bas.
+## v5.69 · à publier en recette · Ma saison en un écran
+**Aucune migration.** Maquette « Accueil compact » du 20 nov. 2026 (canvas
+https://claude.ai/artifact/Qsrtmc4k4yeRY3nMgSCFP4, écrans « 1 bis ») ; Pierre-Louis : « c'est validé, je veux bien que tu
+l'implémentes ». Point de départ : que l'apiculteur suive vraiment sa saison, sans tout afficher ni trop défiler, et
+arrive vite à l'écran qu'il cherche, comme sur l'accueil.
 
-- `styles/01-base.css` : `main` garde 96 px **plus** `env(safe-area-inset-bottom)` sous le contenu (téléphone).
+Pour l'apiculteur :
+1. **Bandeau de la saison** : la phase en cours (« Saison 2026 · mise en hivernage »), les kilos récoltés et la part de
+   l'objectif, l'écart avec l'an dernier à la même date.
+2. **Frise des sept moments** (hivernage, reprise, développement, miellées, récolte et traitement, mise en hivernage,
+   hivernage), un trait pour aujourd'hui. Toucher un moment le résume d'après les saisies (« Première visite le 14/03,
+   14 jours plus tôt qu'en 2025 », « 216 kg récoltés, 14 ruches sur 14 traitées ») ; un moment à venir dit ce qui
+   l'attend.
+3. **Une priorité d'API à la fois** (« Priorité 1 sur 3 ») : varroa au-dessus du seuil, cellules royales, réserves
+   faibles, traitement pas noté, miel à mettre en pots, ruches oubliées, déclaration des ruches. « + Agenda » en fait une
+   tâche ; « Suivant » passe à la suivante. Une priorité déjà dans l'agenda le dit ; une tâche terminée la fait
+   disparaître.
+4. **Quatre chiffres** : Récolte, Colonies (départ, entrées, sorties), Varroa (sous le seuil), et un quatrième qui suit
+   la saison : Ruches visitées en mars, Essaimage en avril-mai, Hausses de juin à septembre, **Hiver** (ruches prêtes :
+   réserves, traitement, reine ou ponte) d'octobre à février. Toucher un chiffre ouvre son aperçu dans une feuille du
+   bas (les ruches concernées, touchables) et un bouton vers l'écran complet.
+5. **Six raccourcis** : Récoltes, Santé, Agenda, Finances, Jalons, Bilan ; celui du moment porte « Du moment ».
+6. **Bilan de la saison** : l'ancien écran Ma saison (kilos, pots, argent, kilos par ruche, ce qu'API retient, partager,
+   imprimer), ouvert par le raccourci « Bilan ». Une saison passée (puce de l'année) s'affiche terminée, avec le bilan
+   proposé.
+
+Technique :
+- `src/domaines/equipe/suivi-saison.js` : règles pures (phases, frise, chiffres, aperçus, priorités, rubrique du moment),
+  tirées des visites, récoltes, `evenements`, tâches et réglages (`objectif_recolte`, `varroaSeuil`, `hiverPoids`
+  facultatif) ; rien d'inventé, ce qui n'est pas noté est « à vérifier ».
+- `src/domaines/equipe/saison.js` : écran `masaison` refait, écran `msbilan` (ancien contenu). Parent « ‹ Ma saison »
+  (`PARENTS`), rangé derrière Menu. Actions de consultation ajoutées à `ACTIONS_LECTEUR` (`msphase`, `msapisuivant`,
+  `msapercu`, `msruche`, `msaller`) ; « + Agenda » (`msagenda`) reste réservé aux membres qui écrivent.
+- Styles : `styles/62-equipe-saison.css` (`.msc-*`). Tient sur 390 × 844 sans défiler ; deux colonnes sur ordinateur.
+- Tests : `tests/unitaires/suivi-saison.test.mjs` ; `etapes_fs` (frise, Suivant, aperçu, hauteur, bilan), `etapes_sd`
+  (`msbilan`, niveau 2), `etapes_nk` (53 écrans).
 
 À vérifier :
-- Appli Android (gestes et trois boutons) et iPhone : accueil tout en bas, la dernière ligne est entière au-dessus de la barre.
+- Menu › Ma saison sur téléphone : tout tient sans défiler ; toucher chaque moment de la frise.
+- « + Agenda » sur une priorité, puis Agenda : la tâche y est ; revenir : « Dans l'agenda ✓ ».
+- Toucher chaque chiffre : l'aperçu, une ruche ouvre sa fiche, le bouton ouvre l'écran complet.
+- Raccourci Bilan, puis Partager et Imprimer ; puce de l'année sur 2025.
 
 ## v5.68 · à publier en recette · sons, vibrations, rayon de la saison et jalons
 **Aucune migration.** À fusionner après la v5.67 (#104), sur laquelle cette branche repose. Maquettes « APIVIZ —

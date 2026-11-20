@@ -36,7 +36,7 @@ const NL = (() => {
   const VOLET = [
     ["agenda", "Agenda", "Tâches, visites prévues, idées de saison"],
     ["fil", "Fil de l’équipe", "Ce que chacun a fait, notes et demandes"],
-    ["masaison", "Ma saison", "Kilos, pots vendus, argent, ce qu’API retient"],
+    ["masaison", "Ma saison", "Où en est ta saison, ce qu’API conseille"],
     ["pilotage", "Finances", "Bilan, dépenses, factures, budget, entre associés"],
     ["materiel", "Matériel", "Stock, liste de courses, fournisseurs"],
     ["registre", "Registre et déclaration", "Traitements, ordonnances, déclaration annuelle"],
@@ -60,7 +60,7 @@ const NL = (() => {
   const i = BOTTOM.findIndex(([k]) => k === "plus");
   if (i >= 0) BOTTOM[i] = ["menu", "Menu"];
   // Écrans rangés derrière « Menu » dans la barre du bas.
-  ["fil", "masaison", "pilotage", "compta", "factures", "achatfacture", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "synchronisation", "agenda", "saison"]
+  ["fil", "masaison", "msbilan", "pilotage", "compta", "factures", "achatfacture", "previsions", "associes", "materiel", "fournisseurs", "courses", "inventaire", "registre", "declaration", "membres", "reglages", "profil", "plus", "rappels", "synchronisation", "agenda", "saison"]
     .forEach((r) => (GROUP[r] = "menu"));
 
   const goAvant = ACT.go;
