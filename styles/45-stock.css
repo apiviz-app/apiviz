@@ -81,3 +81,16 @@ label.st-sortie-l select{color:var(--ink)}
 .st-et div{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
 .st-et .small{color:var(--muted)}
 .st-et .link{margin-top:2px}
+/* v5.67 : chiffres du miel en une rangée (onglet Stock) ; mise en pots : ce qui manque en alerte, prix proposé. */
+.st-chiffres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.st-chiffres>span{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);min-width:0}
+.st-chiffres b{font-size:var(--t-m);font-variant-numeric:tabular-nums}
+.st-chiffres .small{line-height:1.25}
+.st-chiffres .st-chiffre-miel{background:var(--honeysoft);border-color:transparent}
+.st-chiffres .st-chiffre-miel .small{color:var(--watch)}
+.st-manque{display:flex;gap:12px;align-items:flex-start;margin:0 0 12px;padding:16px;border-radius:var(--r-l);background:var(--critbg);color:var(--ink)}
+.st-manque-i{flex:none;width:32px;height:32px;border-radius:var(--r-pill);background:var(--crit);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.st-manque-t{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:var(--t-m);line-height:1.4}
+.st-manque-t b{font-size:var(--t-l)}
+.st-manque-a{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.st-prixd{display:block;margin-top:4px;font-weight:400}

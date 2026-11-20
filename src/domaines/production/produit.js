@@ -157,6 +157,10 @@ async function supprimer() {
 /** Actions ; « editlot » ouvre ce même écran pour un produit qui n'est pas du miel, l'ancienne fiche sinon. */
 export const actions = {
   newproduit: () => ouvrir(),
+  // v5.67 : « Ajouter » de l'onglet Stock (feuille), et le nouveau lot d'un produit depuis sa carte.
+  stajouter: () => feuilleAjouter(),
+  stchoix: (act) => { if ($sheet.open) $sheet.close(); ACT[act]?.(); },
+  stnouveau: (categorie) => { if (categorie === "Miel") return ACT.newlot(); S.pr = nouveau(); go("produit"); choisir(categorie); },
   prmodele: (v) => choisir(v),
   prunite: (u) => { lire(); S.pr.unite = u; render(); },
   prretour: () => { lire(); S.pr.etape = 1; render(); },
@@ -172,25 +176,59 @@ export const actions = {
 export const remplace = ["editlot"];
 
 /**
- * Complément de l'écran « miel » (onglet Stock, ex-« Stock et récoltes ») : les produits par catégorie, avant le tableau des lots, et
- * « Ajouter un produit ». Le miel garde ses chiffres (récolté, mis en pots, kilos en stock) au-dessus.
+ * Complément de l'écran « miel » (onglet Stock). v5.67 (maquettes « Produits : mise en pots, lots, clients » du 20 nov.
+ * 2026) : une carte par produit avec ses lots en vignettes, deux par ligne (numéro, prix, jauge de ce qui reste, DDM) ;
+ * un toucher ouvre la fiche du lot. Remplace « Tes produits » suivi du tableau des lots, qui répétait les mêmes produits
+ * et faisait une fiche de cinq lignes par lot sur téléphone. La vignette pointillée ajoute un lot du produit (le miel :
+ * la mise en pots).
  */
 export function completerStock() {
   if (S.route !== "miel") return;
   const wrap = document.querySelector(".wrap");
   if (!wrap || wrap.querySelector(".pr-catalogue")) return;
   const groupes = P.catalogue(S.d.lots);
-  const ligne = (g) => {
-    const lot = g.lots[0], bas = g.bas ? `<span class="tag watch">${g.bas > 1 ? `${g.bas} lots bas` : "Stock bas"}</span>` : "";
-    const sous = P.estMiel(lot) ? [...new Set(g.lots.map(P.formatLot))].join(", ") : [...new Set(g.lots.map((l) => [P.nomLot(l), P.formatLot(l)].filter(Boolean).join(" ")))].slice(0, 3).join(", ");
-    return `<div class="pr-ligne"><span class="pr-alv" aria-hidden="true">${icone(iconeDe(g.categorie), 20)}</span>
-      <span class="pr-ligne-t"><b>${e(g.categorie)}</b><span class="small">${e(sous)}</span></span>
-      <span class="pr-ligne-q"><b>${e(P.quantiteLot(lot, g.restants))}</b>${bas}</span></div>`;
-  };
-  const ajouter = lecteur() ? "" : `<button type="button" class="pr-ajout" data-act="newproduit">${icone("plus", 20)}Ajouter un produit</button>`;
-  const html = `<section class="card pr-catalogue" aria-label="Tes produits"><div class="u-entete"><h2>Tes produits</h2></div>
-    ${groupes.length ? groupes.map(ligne).join("") : '<p class="small">Miel, hydromel, cire, bougies, propolis… ajoute ce que tu vends.</p>'}${ajouter}</section>`;
-  const avant = wrap.querySelector("section.card.tbl");
-  if (avant) avant.insertAdjacentHTML("beforebegin", html);
+  const tableau = wrap.querySelector("section.card.tbl");
+  if (!groupes.length && !tableau) return;
+  const html = `<div class="pr-catalogue" aria-label="Tes produits">${groupes.map(carteProduit).join("")}</div>`;
+  if (tableau) tableau.replaceWith(...gabarit(html));
   else wrap.insertAdjacentHTML("beforeend", html);
+}
+const gabarit = (html) => { const t = document.createElement("template"); t.innerHTML = html; return [...t.content.childNodes]; };
+const ddmCourte = (d) => (d ? `${d.slice(5, 7)}/${d.slice(2, 4)}` : "");
+
+/** Une carte produit : en-tête (alvéole, nom, formats, quantité) et vignettes des lots, les plus récents d'abord. */
+function carteProduit(g) {
+  const miel = g.categorie === "Miel", lots = [...g.lots].reverse();
+  const formats = [...new Set(g.lots.map(P.formatLot).filter(Boolean))].join(", ");
+  const sous = [`${g.lots.length} lot${g.lots.length > 1 ? "s" : ""}`, formats].filter(Boolean).join(" · ");
+  const bas = g.bas ? `<span class="tag watch">${g.bas > 1 ? `${g.bas} lots bas` : "Stock bas"}</span>` : "";
+  const ajout = lecteur() ? "" : `<button type="button" class="pr-lot pr-lot-ajout" data-act="${miel ? "newlot" : "stnouveau"}" data-v="${e(g.categorie)}">${icone("plus", 18)}<span>${miel ? "Mettre en pots" : "Nouveau lot"}</span></button>`;
+  return `<section class="card pr-produit">
+    <div class="pr-ligne"><span class="pr-alv" aria-hidden="true">${icone(iconeDe(g.categorie), 20)}</span>
+      <span class="pr-ligne-t"><b class="pr-cat">${e(g.categorie)}</b><span class="small">${e(sous)}</span></span>
+      <span class="pr-ligne-q"><b>${e(P.quantiteLot(g.lots[0], g.restants))}</b>${bas}</span></div>
+    <div class="pr-lots">${lots.map(vignette).join("")}${ajout}</div></section>`;
+}
+
+/** Vignette d'un lot : numéro et prix, nom et format, jauge de ce qui reste, restants et DDM. */
+function vignette(l) {
+  const reste = Math.max(0, Number(l.pots_restants ?? 0)), total = Math.max(reste, Number(l.pots_initiaux || 0), 1);
+  const nom = [P.nomLot(l), P.formatLot(l)].filter(Boolean).join(" · ");
+  const ddm = ddmCourte(l.ddm);
+  return `<button type="button" class="pr-lot${P.stockBas(l) ? " pr-lot-bas" : ""}${reste ? "" : " pr-lot-vide"}" data-act="erlot" data-v="${e(l.id)}" aria-label="Lot ${e(l.code)}, ${e(nom)}, ${e(P.quantiteLot(l, reste))} sur ${e(n(total, 0))}">
+    <span class="pr-lot-h"><b>${e(l.code)}</b><span class="small">${Number(l.prix) > 0 ? e(eur(l.prix)) : "Prix à fixer"}</span></span>
+    <span class="pr-lot-n">${e(nom)}</span>
+    <span class="pr-jauge" aria-hidden="true"><i style="width:${Math.round((reste / total) * 100)}%"></i></span>
+    <span class="pr-lot-b"><span>${e(n(reste, 0))} / ${e(n(total, 0))}</span>${ddm ? `<span>DDM ${e(ddm)}</span>` : ""}</span></button>`;
+}
+
+/** Feuille « Ajouter au stock » (v5.67) : la seule porte pour créer, à la place de « Nouveau lot » et « Ajouter un produit ». */
+function feuilleAjouter() {
+  const opt = (act, ic, t, s, cls = "") => `<button type="button" class="pr-choix${cls}" data-act="stchoix" data-v="${act}"><span class="pr-alv" aria-hidden="true">${icone(ic, 22)}</span><span class="pr-choix-t"><b>${t}</b><span class="small">${s}</span></span><span aria-hidden="true">›</span></button>`;
+  $sheetForm.onsubmit = (ev) => ev.preventDefault();
+  $sheetForm.innerHTML = `<div class="u-entete"><h2>Ajouter au stock</h2><button type="button" class="link" data-act="closesheet">Fermer</button></div>
+    <div class="pr-choix-l">${opt("newlot", "pot", "Mettre du miel en pots", "Le miel récolté, les pots vides, couvercles et étiquettes deviennent des pots de miel.")}
+    ${opt("newproduit", "bouteille", "Autre produit", "Hydromel, pain d’épices, cire, bougies… : un nouveau produit ou un nouveau lot.")}
+    ${opt("mpdeja", "pot", "Pots de miel déjà prêts", "Sans rien retirer du stock de matériel.", " pr-choix-discret")}</div>`;
+  if (!$sheet.open) $sheet.showModal();
 }

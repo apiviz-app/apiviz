@@ -25,6 +25,10 @@ Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 
+Scénario v5.67 : `etapes_po` (Produits : mise en pots au titre fixe avec l'alerte de ce qui manque, miels et formats
+du seul miel, prix proposé ; Stock en cartes produit et vignettes de lots, « Ajouter » ; Clients sans pot ni tuiles ;
+même ligne d'état sur chaque onglet). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.66 : `etapes_vc` (ventes, clients et récolte, migration 033 : vitrine des produits sans aucun client, onglets
 de Produits, « + » d'une carte, vente sans client, feuille « Pour qui ? » et sa recherche, fiche client créée depuis la
 vente avec adresses proposées — clients puis service de l'IGN simulé —, goûts et « prévenir », onglet Récoltes et

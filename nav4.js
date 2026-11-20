@@ -24,11 +24,9 @@ const N4 = (() => {
   Noyau.crochets.sur("avantCoquille", "nav4.titres", (a) => {
     const [titre, ...reste] = a;
     if (S.route === "materiel") reste[0] = "";
-    // Miel (v5.50) : une ligne d'état commune aux trois onglets.
-    if ((S.route === "miel" || S.route === "clients") && S.d) {
-      const du = S.d.ventes.filter((v) => !v.paye).reduce((t, v) => t + venteTotal(v), 0);
-      reste[0] = [`${stock().pots} pot${stock().pots > 1 ? "s" : ""} en stock`, du ? `${eur(du)} à encaisser` : ""].filter(Boolean).join(" · ");
-    }
+    // Miel (v5.50) : une ligne d'état commune aux onglets. v5.67 : les mêmes chiffres que la tuile « en stock » (tous les
+    // produits, pas seulement les pots de miel : « 26 pots » d'un côté, « 56 » de l'autre se contredisaient).
+    if ((S.route === "miel" || S.route === "clients") && S.d) reste[0] = Regles.produits.ligneEtat(S.d.lots, S.d.ventes.filter((v) => !v.paye).reduce((t, v) => t + venteTotal(v), 0));
     return [TITRES[S.route] || titre, ...reste];
   });
   Noyau.crochets.sur("apresCoquille", "nav4", () => {

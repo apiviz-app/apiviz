@@ -338,9 +338,10 @@ const UX = (() => {
     const d = S.d, imp = d.ventes.filter((v) => !v.paye), al = d.ventes.filter((v) => v.livre === false).length;
     const tuile = (act, v, nb, lab, on, ton = "") => `<button type="button" class="u-tuile ${on ? "on " + ton : ""}" aria-pressed="${on}" data-act="${act}" data-v="${v}"><b>${esc(nb)}</b><span>${lab}</span></button>`;
     const st = stock(); // v5.65 : les autres produits comptent aussi (bouteilles, bougies…).
-    return `<div class="u-tuiles">${tuile("uonglet", "stock", String(st.pots + (st.autres || 0)), st.autres ? "en stock" : "pots en stock", actif === "stock")}
-      ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", actif === "ventes" && S.venteFiltre === "impayees", "watch")}
-      ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer" && actif === "ventes", "watch")}</div>
+    // v5.67 : les trois chiffres ne servent qu'à vendre ; ils restent sur l'onglet Ventes (plus sur Clients ni Stock).
+    return `${actif !== "ventes" ? "" : `<div class="u-tuiles">${tuile("uonglet", "stock", String(st.pots + (st.autres || 0)), st.autres ? "en stock" : "pots en stock", false)}
+      ${tuile("uafiltre", "", eur0(sum(imp, venteTotal)), "à encaisser", S.venteFiltre === "impayees", "watch")}
+      ${tuile("uonglet", "livrer", String(al), "à livrer", onglet === "livrer", "watch")}</div>`}
       ${subtabs([["ventes", "Ventes"], ["clients", "Clients"], ["stock", "Stock"], ["recoltes", "Récoltes"]], actif, "uonglet")}`;
   }
   const aLivrer = () => S.d.ventes.filter((v) => v.livre === false);

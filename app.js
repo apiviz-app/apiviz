@@ -845,11 +845,10 @@ function viewMiel() {
     contenu =
       donnees.lots.length || kgRecoltes
         ? `
-    <div class="grid">
-      ${kpi("R\xE9colt\xE9", n(kgRecoltes) + " kg", "")}
-      ${kpi("Mis en pots", n(stockMiel.kgPots) + " kg", resteAMettreEnPots > 0.05 ? n(resteAMettreEnPots) + " kg \xE0 mettre en pots" : resteAMettreEnPots < -0.05 ? "Plus que la r\xE9colte saisie" : "Tout est en pots")}
-      ${kpi("En stock", n(stockMiel.kg) + " kg", stockMiel.pots + " pots")}
-      ${kpi("Valeur \xE0 vendre", eur0(stockMiel.valeur), rythmeVentes.moisRestants !== null ? `Environ ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "")}
+    <div class="st-chiffres" aria-label="Miel">
+      <span><b>${n(kgRecoltes)} kg</b><span class="small">r\xE9colt\xE9</span></span>
+      <span><b>${n(stockMiel.kg)} kg</b><span class="small">en pots</span></span>
+      ${resteAMettreEnPots > 0.05 ? `<span class="st-chiffre-miel"><b>${n(resteAMettreEnPots)} kg</b><span class="small">\xE0 mettre en pots</span></span>` : `<span><b>${eur0(stockMiel.valeur)}</b><span class="small">${rythmeVentes.moisRestants !== null ? `\u2248 ${n(rythmeVentes.moisRestants, 0)} mois de ventes` : "\xE0 vendre"}</span></span>`}
     </div>
     <section class="card tbl">${table(["Lot", "Produit", "Format", "#Prix", "#Restants", "DDM", "#"], lignesLots, "Aucun lot. Cr\xE9e un lot par format de pot ou ajoute un produit.")}</section>`
         : emptyState(
@@ -862,7 +861,7 @@ function viewMiel() {
   shell(
     "Stocks",
     "Produits et mat\xE9riel",
-    '<button class="btn main" data-act="newlot">Nouveau lot</button><button class="btn" data-act="newrecolte">R\xE9colte</button>',
+    '<button class="btn main" data-act="stajouter">Ajouter</button><button class="btn" data-act="newrecolte">Saisir une r\xE9colte</button>',
     subtabs(
       [
         ["miel", "Produits"],

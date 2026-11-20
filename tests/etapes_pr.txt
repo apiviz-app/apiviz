@@ -21,7 +21,11 @@
     page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue")
     verif(page.locator(".head h1").inner_text() == "Produits", "titre de la rubrique : Produits")
     verif("Miel" in page.locator(".pr-catalogue").inner_text(), "Tes produits : le miel y est")
-    page.click(".pr-ajout"); page.wait_for_selector(".pr-modeles")
+    # v5.67 : un seul bouton « Ajouter » (bas de l'écran), qui ouvre la feuille « Ajouter au stock ».
+    verif(page.locator(".g-barre.g-tel [data-act=stajouter]").inner_text().strip() == "Ajouter" and page.locator(".pr-ajout").count() == 0, "Stock : un seul bouton, « Ajouter »")
+    page.click(".g-barre.g-tel [data-act=stajouter]"); page.wait_for_selector("#sheet[open] .pr-choix")
+    verif(page.locator("#sheet[open] .pr-choix").count() == 3, "feuille : mise en pots, autre produit, pots déjà prêts")
+    page.click("#sheet[open] [data-act=stchoix][data-v=newproduit]"); page.wait_for_selector(".pr-modeles")
     verif(page.evaluate("S.route") == "produit" and page.locator(".pr-modele").count() == 13, "Que veux-tu vendre ? 12 modèles et un produit libre")
     verif(page.locator(".head h1").inner_text() == "Que veux-tu vendre ?", "titre de l'étape 1")
     shot("produits-modeles")
@@ -52,7 +56,7 @@
     page.evaluate("ACT.go('miel')"); page.wait_for_selector(".pr-catalogue:has-text('Hydromel')", timeout=5000)
     cat = page.locator(".pr-catalogue").inner_text()
     verif("Hydromel" in cat and "12 bouteilles" in cat, "Tes produits : Hydromel, 12 bouteilles")
-    verif("Hydromel sec" in page.locator(".wrap .tbl").first.inner_text() or "Hydromel sec" in page.locator(".wrap").inner_text(), "tableau des lots : l'hydromel y est")
+    verif(page.locator(".pr-produit", has_text="Hydromel").locator(".pr-lot[data-act=erlot]", has_text="Hydromel sec").count() == 1, "vignette du lot d'hydromel dans sa carte (v5.67)")
 
     # Vente qui mélange miel et hydromel.
     page.evaluate("ACT.newvente()"); page.wait_for_selector('form[data-form="vente"]')
