@@ -18,7 +18,7 @@ Inspiration Linear, Stripe, Qonto, Pennylane : peu d'éléments, hiérarchie net
 
 ```text
 Accueil
- ├─ Priorité du jour · Mes ruchers (alvéoles, météo) · À faire · Activité (détail : Activité récente)
+ ├─ Priorité du jour · Ton rayon (saison en alvéoles) · Mes ruchers (alvéoles, météo) · À faire · Activité (détails : Activité récente, Jalons)
 Ruchers
  ├─ Liste / Carte / Santé (liste, alvéoles ou tableau ; seuil varroa dans ⋯)
  ├─ Fiche rucher : colonies · météo 5 j (détail : Météo heure par heure) · tâches · historique · infos
@@ -37,6 +37,12 @@ API (bouton central) : rechercher · saisir (visite, tournée, récolte, vente, 
 Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.68 (20 nov. 2026)** : carte **Ton rayon** sur l'Accueil (une alvéole par semaine de mars à novembre, série de
+semaines, visites et jalons) et écran **Jalons** (niveau 2 sous Accueil, ouvert depuis la carte et l'annonce d'un nouveau
+jalon ; retour « ‹ Accueil »). Réglages › Affichage gagne **Sons et vibrations** (feuille), L'exploitation gagne
+**Objectif de récolte** (feuille). Pas de nouvelle rubrique. Décision de Pierre-Louis (20 nov. 2026, maquettes
+« Interactivité et satisfaction » : ambiance Alvéole et volume moyen validés, « implémente tout ce que tu m'as proposé »).
 
 **v5.66 (18 nov. 2026)** : l'onglet « Stock et récoltes » de Produits se sépare en **Stock** et **Récoltes** (saison,
 miel à mettre en pots, récoltes et productions, clients à prévenir) : point d'entrée de la production de miel. La

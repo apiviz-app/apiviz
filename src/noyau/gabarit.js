@@ -20,7 +20,7 @@ export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", 
 export const PARENTS = {
   ruche: ["ruches", "Ruchers"], rucher: ["ruches", "Ruchers"], meteo: ["ruches", "Ruchers"],
   lot: ["miel", "Produits"], facture: ["clients", "Produits"], produit: ["miel", "Produits"], inventaire: ["materiel", "Matériel"],
-  saison: ["agenda", "Agenda"], activite: ["dash", "Accueil"], recherche: ["dash", "Accueil"], profil: ["reglages", "Réglages"],
+  saison: ["agenda", "Agenda"], activite: ["dash", "Accueil"], jalons: ["dash", "Accueil"], recherche: ["dash", "Accueil"], profil: ["reglages", "Réglages"],
   rappels: ["reglages", "Réglages"], synchronisation: ["reglages", "Réglages"],
   // Factures (17 nov. 2026) : le détail d'une facture d'achat revient à la liste des factures.
   achatfacture: ["factures", "Factures"],

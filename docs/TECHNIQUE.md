@@ -184,6 +184,17 @@
   `essaimage`) pour `visites-groupees.js` et `nav4.js`. Tournée : `MODELES` de `tournee.js` (Standard, Hiver) ; en Hiver,
   les champs non demandés sont repris de la dernière visite et `observes` ne contient que ce qui a été touché ; durée
   par ruche (`duree_ms` de chaque fiche, comptée en modes questions et manuel ; inconnue en dictée libre).
+- **Retours de réussite** (v5.68, sans migration) : `src/domaines/retours/`. Règles pures `regles.js` (préférences,
+  sons de chaque ambiance en notes `[Hz, départ, durée, onde, volume]`, motifs de vibration, `estReussite`, rayon de la
+  saison, 12 jalons calculés depuis visites, récoltes et ventes ; tests `tests/unitaires/retours.test.mjs`). `sons.js` :
+  préférences de l'appareil (clé `apiviz-retours`), sons fabriqués par Web Audio (aucun fichier, marche hors ligne ; le
+  contexte est réveillé au premier toucher), `navigator.vibrate`, classe `rt-anim-*` sur `<html>`. `retours.js` habille
+  `toast()` (réussite → niveau 2, erreur, annulation, « saisies envoyées » → abeille), écoute les choix (niveau 1),
+  ajoute les points regardés de la visite express et la fin de tournée en musique (crochet `apresRendu` « retours »),
+  et expose `window.Retours` (`v3.js` appelle `Retours.taire()` puis `Retours.recolte()`). `jalons.js` : carte du
+  rayon (complément de l'accueil), écran `jalons`, annonce d'un nouveau jalon (ids annoncés et vus gardés sur l'appareil,
+  par exploitation et saison). `reglages.js` : « Sons et vibrations » et « Objectif de récolte »
+  (`reglages.data.objectif_recolte`, par `saveCfg`). Styles : `styles/66-retours.css`.
 - **Fond de carte OpenStreetMap** (AP-TECH-099, politique lue le 6 nov. 2026 sur
   <https://operations.osmfoundation.org/policies/tiles/>, page non datée) : `tile.openstreetmap.org` est un service
   sans garantie ; l'usage commercial n'y est ni permis ni interdit explicitement, mais un service commercial doit

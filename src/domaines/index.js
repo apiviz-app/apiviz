@@ -16,5 +16,6 @@ import registre from "./registre/ecrans.js";
 import compte from "./compte/ecrans.js";
 import assistant from "./assistant/ecrans.js";
 import equipe from "./equipe/ecrans.js";
+import retours from "./retours/ecrans.js";
 
-export const ecrans = [...accueil, ...ruchers, ...colonies, ...visites, ...sante, ...meteo, ...production, ...ventes, ...materiel, ...finances, ...agenda, ...registre, ...compte, ...assistant, ...equipe];
+export const ecrans = [...accueil, ...ruchers, ...colonies, ...visites, ...sante, ...meteo, ...production, ...ventes, ...materiel, ...finances, ...agenda, ...registre, ...compte, ...assistant, ...equipe, ...retours];

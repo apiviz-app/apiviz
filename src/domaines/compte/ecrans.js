@@ -5,13 +5,15 @@ import { ecranProfil, completerMembres, actions as actionsProfil } from "./profi
 import { completerGestion, actions as actionsAssocies } from "../finances/entre-associes.js";
 import { ecranSynchronisation } from "./synchronisation.js";
 import { ecrans as ecransOffre } from "./offre.js";
+import { completerReglages as completerSons, actions as actionsSons } from "../retours/reglages.js";
 export default [
   // Gestion (route « plus ») : ergonomie.js (blocs), complétée par la carte « Entre associés » (v5.29). Les actions
   // déclarées ici servent aussi à l'écran « Entre associés » (src/domaines/finances/ecrans.js).
   { id: "plus", titre: "Gestion", rubrique: "plus", rendu: () => { ER.ecranGestion(); completerGestion(); }, actions: actionsAssocies },
   // Réglages : essentiels.js. v5.38 : cinq groupes en lignes (Toi, L'exploitation, Sur le terrain, Affichage, Tes
   // données) ; plus de « Listes », ni de bloc « Toi » ou « Associés ». Couleur du bandeau : apparence.js (aperçu).
-  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => ES.ecranReglages(), actions: { ...actionsReglages, ...actionsDonnees }, remplace },
+  // v5.68 : « Objectif de récolte » (L'exploitation) et « Sons et vibrations » (Affichage), src/domaines/retours/reglages.js.
+  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons }, remplace },
   // Exploitation et membres : exploitations.js.
   // v5.38 : prénom et nom des membres (noms_membres, migration 021) et personnes sans compte (profil.js).
   { id: "membres", titre: "Exploitation et membres", rubrique: "plus", rendu: () => { EX.vue(); completerMembres(); }, actions: actionsProfil },

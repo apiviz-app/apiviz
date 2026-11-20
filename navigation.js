@@ -49,7 +49,7 @@ const NL = (() => {
     compta: "pilotage", factures: "pilotage", achatfacture: "pilotage", previsions: "pilotage", associes: "pilotage", plus: "pilotage",
     courses: "materiel", inventaire: "materiel", fournisseurs: "materiel", declaration: "registre",
     membres: "reglages", profil: "reglages", rappels: "reglages", synchronisation: "reglages",
-    activite: "dash", saison: "agenda", recherche: "dash" };
+    activite: "dash", saison: "agenda", recherche: "dash", jalons: "dash" };
   const actif = (route) => PARENT[route] || route;
   const categorieDe = (route) => CATEGORIES.find(([, l]) => l.some(([r]) => r === actif(route)))?.[0] || "";
 

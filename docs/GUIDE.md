@@ -37,6 +37,15 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   affiche son détail et permet d'y ajouter une tâche.
 - **Dates** *(v5.35)* : chaque champ date ouvre le calendrier d'Apiviz, avec des raccourcis (aujourd'hui, hier…).
 - **Bien démarrer** guide les premiers pas ; le bouton Masquer le retire.
+- **Ton rayon** *(v5.68)* : une alvéole par semaine de mars à novembre, plus remplie quand tu as fait plus de visites ;
+  la semaine en cours clignote, une alvéole touchée dit sa semaine et ses visites. La pastille donne le nombre de
+  semaines d'affilée avec une visite. « Jalons gagnés » ouvre l'écran **Jalons** : douze étapes de la saison (première
+  visite, printemps lancé, tournée sans oubli, objectif de récolte…), gagnées d'après tes visites, récoltes et ventes ;
+  un toucher en donne le détail. Un jalon tout juste gagné s'annonce en haut de l'accueil.
+- **Sons, vibrations et petites animations** *(v5.68)* : un choix fait « tic » et rebondit, une saisie enregistrée joue
+  deux notes (et vibre sur Android), une fin de tournée allume chaque ruche en musique, une récolte remplit un pot, et une
+  abeille emporte tes saisies au retour du réseau. Tout se règle dans Réglages › Sons et vibrations (ambiance Alvéole,
+  Bois ou Cristal, volume, vibrations, animations, **mode terrain** : vibrations seules pendant une tournée).
 
 ## Ruchers
 
@@ -164,8 +173,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Chaque membre apparaît avec son prénom et son nom *(v5.38)* ; « Ajouter une personne sans compte » pour quelqu'un qui
   aide sans utiliser Apiviz. Les associés proposés dans les achats et les ventes sont ces personnes : rien à retaper.
 - **Réglages** (catégorie Équipe et compte, ou depuis l'avatar) *(v5.38)* : cinq groupes. **Toi** (Mon profil),
-  **L'exploitation** (NAPI, SIRET, adresse ; membres et associés ; factures), **Sur le terrain** (météo, rappels, caisses
-  numérotées), **Affichage** (couleur du bandeau), **Tes données** (fichier comptable de l'année, sauvegarde, autres
+  **L'exploitation** (NAPI, SIRET, adresse ; membres et associés ; factures ; objectif de récolte *(v5.68)*), **Sur le terrain** (météo, rappels, caisses
+  numérotées), **Affichage** (couleur du bandeau ; sons et vibrations *(v5.68)*), **Tes données** (fichier comptable de l'année, sauvegarde, autres
   fichiers). Plus de « Listes » : la catégorie d'une dépense vient de l'article, les clients ont des étiquettes libres.
   À plusieurs, deux réglages changés en même temps ne s'écrasent plus *(v5.16)*.
 - **Inscription et Mon profil** *(v5.38)* : à la première connexion, ton prénom et ton nom (une seule fois, ils suivent
