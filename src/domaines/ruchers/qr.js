@@ -48,7 +48,7 @@ export function apresRendu() {
   let p = null;
   try { p = JSON.parse(sessionStorage.getItem(CLE) || "null"); } catch { return; }
   if (!p || !S.session || !Array.isArray(S.d?.ruches) || !S.d.ruches.length || $sheet.open) return;
-  const r = T.trouverRuche(S.d.ruches, p);
+  const r = T.trouverRuche(S.d.ruches, p, exploitation());
   const pourquoi = r ? null : T.raisonIntrouvable(p, exploitation(), horsLigne());
   // Hors ligne et pas encore sur ce téléphone : on garde la demande, la fiche s'ouvrira après la synchronisation.
   if (pourquoi?.raison === "attente") {
@@ -62,7 +62,7 @@ export function apresRendu() {
 
 /** Ouvre la colonie lue (QR ou code tapé) ; sinon dit pourquoi, dans la zone d'aide de la feuille. */
 function ouvrirLu(p, aide) {
-  const r = T.trouverRuche(S.d.ruches || [], p);
+  const r = T.trouverRuche(S.d.ruches || [], p, exploitation());
   if (r) { arreter(); feuille(r.id); return true; }
   const pourquoi = T.raisonIntrouvable(p, exploitation(), horsLigne());
   if (pourquoi.raison === "attente") { try { sessionStorage.setItem(CLE, JSON.stringify({ ...p, dit: true })); } catch { /* rien */ } }

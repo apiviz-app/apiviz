@@ -33,6 +33,9 @@ test("retrouver la colonie scannée, ou dire pourquoi on ne la trouve pas", () =
   assert.equal(T.trouverRuche(ruches, T.lireQr("K7M2"))?.nom, "Ruche 5");
   assert.equal(T.trouverRuche(ruches, { ruche: R, code: "", ex: null })?.nom, "Ruche 5");
   assert.equal(T.trouverRuche(ruches, T.lireQr("X4QP")), null);
+  const ailleurs = "22222222-2222-4222-8222-222222222222";
+  assert.equal(T.trouverRuche(ruches, { ruche: "", code: "K7M2", ex: ailleurs }, E), null, "même code, autre exploitation : pas cette ruche");
+  assert.equal(T.trouverRuche(ruches, { ruche: "", code: "K7M2", ex: E }, E)?.nom, "Ruche 5");
   const autre = "22222222-2222-4222-8222-222222222222";
   assert.equal(T.raisonIntrouvable({ code: "X4QP", ex: autre }, E, false).raison, "autre");
   assert.match(T.raisonIntrouvable({ code: "X4QP", ex: autre }, E, false).texte, /pas dans ton exploitation/);

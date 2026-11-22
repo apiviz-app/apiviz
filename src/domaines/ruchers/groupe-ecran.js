@@ -82,15 +82,17 @@ function lancer(p) {
   if (enCours) envoyer(); // une action précédente encore dans son délai part tout de suite
   const { apres, avant } = G.effet(S.d.ruches, p);
   G.appliquer(S.d.ruches, apres);
-  garder(p);
-  render();
-  const b = bulle(G.message(p));
+  // L'action est marquée « dans son délai » AVANT le rendu : sinon reprendre() (après chaque rendu) la trouverait
+  // gardée sur le téléphone sans délai en cours et l'enverrait aussitôt, sans laisser le temps d'annuler.
   let reste = G.DELAI_ANNULER_MS / 1000;
   enCours = {
     p, avant,
-    decompte: setInterval(() => { reste -= 1; const s = b.querySelector(".ag-s"); if (s) s.textContent = String(Math.max(reste, 0)); }, 1000),
+    decompte: setInterval(() => { reste -= 1; const s = document.querySelector(".ag-toast .ag-s"); if (s) s.textContent = String(Math.max(reste, 0)); }, 1000),
     minuterie: setTimeout(envoyer, G.DELAI_ANNULER_MS),
   };
+  garder(p);
+  render();
+  bulle(G.message(p));
 }
 
 function finir() {

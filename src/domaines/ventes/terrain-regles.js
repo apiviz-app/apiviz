@@ -64,10 +64,15 @@ export function lireQr(texte) {
   } catch { return null; }
 }
 
-/** La colonie désignée par ce que lireQr a rendu, parmi celles de l'exploitation ouverte ; null si aucune. */
-export function trouverRuche(ruches, p) {
+/**
+ * La colonie désignée par ce que lireQr a rendu, parmi celles de l'exploitation ouverte ; null si aucune.
+ * Un code n'est unique que dans son exploitation : un QR d'une autre exploitation ne désigne jamais une colonie
+ * d'ici, même si elle porte le même code.
+ */
+export function trouverRuche(ruches, p, exploitation = "") {
   if (!p || !Array.isArray(ruches)) return null;
   if (p.ruche) return ruches.find((r) => String(r.id).toLowerCase() === p.ruche) || null;
+  if (p.ex && exploitation && p.ex !== exploitation) return null;
   if (p.code) return ruches.find((r) => String(r.code_qr || "").toUpperCase() === p.code) || null;
   return null;
 }
