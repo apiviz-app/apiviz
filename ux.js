@@ -227,7 +227,7 @@ const UX = (() => {
        ${taches.length ? `<section class="card"><h2>Tâches prévues</h2>${taches.map(taskRow).join("")}</section>` : ""}
        ${poids}
        ${subtabs([["journal", "Journal"], ["courbes", "Courbes"], ["sante", "Santé"], ["reine", "Reine & lignée"], ["colonie", "Colonie"], ["photos", "Photos"]].filter(([k]) => k !== "colonie" || typeof V3 != "undefined"), ongletRuche.v, "uronglet")}
-       ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis)
+       ${ongletRuche.v === "colonie" && typeof V3 != "undefined" ? V3.colonie(r) : ongletRuche.v === "photos" ? photosRuche(vis, r)
          : ongletRuche.v === "courbes" ? '<div class="cb-onglet"></div>' // rempli par src/domaines/colonies/courbes.js (v5.61)
          : ongletRuche.v === "sante" || ongletRuche.v === "reine" ? `<div class="cl-onglet" data-o="${ongletRuche.v}"></div>` // rempli par src/domaines/colonies/lignee.js (IT-07)
          : `<h2 class="u-titre">Journal</h2>${vis.length ? "" : '<p class="small">Aucune visite enregistrée.</p>'}${journalRuche(r)}`}
@@ -251,11 +251,14 @@ const UX = (() => {
 
   let ongletRuche = { id: null, v: "journal" };
   ACT.uronglet = (v) => { ongletRuche.v = v; redessiner("ruche"); };
-  function photosRuche(vis) {
+  // IT-11 : « Photos de la colonie » en tête (photos.js, PH.galerie : photos de la fiche, ajout direct), puis les
+  // photos des visites par date, comme avant.
+  function photosRuche(vis, r) {
     if (typeof PH == "undefined") return "";
+    const fiche = PH.galerie && r ? PH.galerie("colonie", r.id) : "";
     const blocs = vis.map((v) => [v, PH.vignettes(v.id)]).filter(([, h]) => h);
-    return blocs.length ? blocs.map(([v, h]) => `<section class="card"><h2>${esc(dateCourte(v.date_visite))}</h2>${h}</section>`).join("")
-      : '<p class="small">Aucune photo pour cette ruche. Ajoutes-en pendant une visite.</p>';
+    return fiche + (blocs.length ? blocs.map(([v, h]) => `<section class="card"><h2>${esc(dateCourte(v.date_visite))}</h2>${h}</section>`).join("")
+      : fiche ? "" : '<p class="small">Aucune photo pour cette ruche. Ajoutes-en pendant une visite.</p>');
   }
 
   // ---------- 3. Visite ----------

@@ -1,0 +1,124 @@
+    # IT-11 — Photos fiables sur téléphone (AP-FEAT-047, AP-US-053) : photo HEIC illisible expliquée, photo prise sans
+    # réseau réduite et « en attente » puis envoyée au retour du réseau, rattachement Visite / Colonie / Rucher
+    # (AP-TECH-165, migration 034), photos ajoutées depuis la fiche colonie et la fiche rucher par la même file d'envoi.
+    # Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
+    RV = str(uuid.uuid4())
+    DATA["ruchers"] = [{"id": RV, "nom": "Verger", "lat": None, "lng": None, **vide}]
+    DATA["ruches"][0].update({"rucher_id": RV})
+    envoyes = []
+    def stockage(route):
+        rq = route.request
+        if etat["coupe"]: return route.abort("internetdisconnected")
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if rq.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        if rq.method in ("POST", "PUT") and "/object/photos-visites/" in rq.url and "/sign/" not in rq.url:
+            envoyes.append(urlparse(rq.url).path.split("/object/photos-visites/", 1)[1])
+            return route.fulfill(status=200, headers=h, body=json.dumps({"Key": "photos-visites/x"}))
+        return route.fulfill(status=200, headers=h, body="[]")
+    page.route("**/storage/v1/object/**", stockage)
+    FICHIER = """async ([sel, heic]) => {
+      let f;
+      if (heic) f = new File([new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112, 104, 101, 105, 99, 0, 0, 0, 0])], 'IMG_0042.HEIC', { type: 'image/heic' });
+      else {
+        const c = document.createElement('canvas'); c.width = 640; c.height = 480; const g = c.getContext('2d');
+        g.fillStyle = '#E3A008'; g.fillRect(0, 0, 640, 480); g.fillStyle = '#1E2B24'; g.fillRect(100, 100, 200, 120);
+        const b = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.95)); f = new File([b], 'cadre.jpg', { type: 'image/jpeg' });
+      }
+      const dt = new DataTransfer(); dt.items.add(f); const i = document.querySelector(sel);
+      i.files = dt.files; i.dispatchEvent(new Event('change', { bubbles: true }));
+    }"""
+    def lignes(): return [r for t, u, rows in recu["upsert"] if t == "visite_photos" for r in rows]
+    def attendre(cond, ms=20000):
+        for _ in range(ms // 250):
+            if cond(): return True
+            page.wait_for_timeout(250)
+        return cond()
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("typeof PH != 'undefined' && PH.pret()", timeout=10000)
+    verif(page.evaluate("PH.v034()"), "base avec la migration 034 reconnue")
+
+    # 1. Sans réseau : visite de Ruche 1 avec photos.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.wait_for_timeout(300)
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true")
+    verif(page.locator(".ph-liens .ph-lien").count() == 3, "trois rattachements proposés : Visite, Colonie, Rucher")
+    verif(page.locator(".ph-lien.on").inner_text() == "Visite", "par défaut : la visite seule")
+    page.click(".ph-lien[data-v=colonie]")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true")
+    verif(page.locator(".ph-lien[data-v=colonie]").get_attribute("aria-pressed") == "true", "Colonie choisie")
+    verif("Ruche 1" in page.locator(".ph-liens .small").inner_text(), "aide : « Aussi sur la fiche de Ruche 1 »")
+
+    # 2. HEIC illisible (Chrome ne décode pas le HEIC) : message clair, rien n'est ajouté.
+    page.evaluate(FICHIER, ["input[data-photo][capture]", True])
+    page.wait_for_selector(".toast >> text=HEIC", timeout=8000)
+    t = page.locator(".toast").last.inner_text()
+    verif("Prendre une photo" in t and "Le plus compatible" in t, "HEIC illisible : on explique quoi faire (%s)" % t[:120])
+    verif(page.locator("details[data-sec=photos] .ph-grid .ph-th").count() == 0, "HEIC illisible : aucune vignette fantôme")
+
+    # 3. Photo lisible : réduite, ajoutée au brouillon.
+    page.evaluate(FICHIER, ["input[data-photo][capture]", False])
+    page.wait_for_selector("details[data-sec=photos] .ph-grid .ph-th", timeout=8000)
+    if cap: page.screenshot(path=f"{cap}/pc-visite-375.png", full_page=True)
+    page.fill("#v_note", "Visite avec photo de colonie")
+    page.click("form[data-form=visite] .btn.main")
+    page.wait_for_selector(".toast >> text=Visite gardée sur le téléphone", timeout=10000)
+    verif(page.evaluate("PH.nbAttente()") == 1, "photo gardée sur le téléphone (file d'envoi)")
+    verif(not lignes() and not envoyes, "rien n'est parti sans réseau")
+
+    # 4. Fiche colonie, onglet Photos : la photo y est déjà, « en attente ».
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_timeout(300); page.evaluate("ACT.uronglet('photos')")
+    page.wait_for_selector(".ph-fiche[data-fiche=colonie]", timeout=5000)
+    verif(page.locator(".ph-fiche[data-fiche=colonie] .ph-wait").count() == 1, "fiche colonie : la photo de la visite y est, « en attente »")
+    verif(page.locator(".ph-fiche[data-fiche=colonie] input[data-photo-fiche=colonie]").count() == 2, "fiche colonie : Prendre une photo et Galerie")
+
+    # 5. Retour du réseau : la visite part, puis la photo, avec sa colonie.
+    etat["coupe"] = False; ctx.set_offline(False)
+    verif(attendre(lambda: len(lignes()) >= 1), "photo envoyée au retour du réseau")
+    vid = DATA["visites"][0]["id"] if DATA["visites"] else None
+    l = lignes()[0] if lignes() else {}
+    verif(l.get("visite_id") == vid and l.get("colonie_id") == R1 and not l.get("rucher_id"), "fiche envoyée : visite + colonie (%s)" % {k: l.get(k) for k in ("visite_id", "colonie_id", "rucher_id")})
+    verif(envoyes and envoyes[0] == "%s/%s/%s.jpg" % (E1, vid, l.get("id")), "fichier rangé sous l'exploitation puis la visite : %s" % envoyes[:1])
+    verif(0 < (l.get("octets") or 0) <= 320 * 1024, "photo réduite avant l'envoi (%s octets)" % l.get("octets"))
+    page.wait_for_timeout(600)
+    verif(page.evaluate("PH.nbAttente()") == 0, "plus rien en attente")
+
+    # 6. Photo ajoutée depuis la fiche colonie, sans visite.
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_timeout(300); page.evaluate("ACT.uronglet('photos')")
+    page.wait_for_selector(".ph-fiche[data-fiche=colonie]", timeout=5000)
+    page.evaluate(FICHIER, [".ph-fiche[data-fiche=colonie] input[data-photo-fiche=colonie][capture]", False])
+    verif(attendre(lambda: len(lignes()) >= 2), "photo de colonie envoyée")
+    l = lignes()[-1] if lignes() else {}
+    verif(l.get("visite_id") is None and l.get("colonie_id") == R1, "photo de colonie : pas de visite, la colonie seule")
+    verif(envoyes[-1] == "%s/colonies/%s/%s.jpg" % (E1, R1, l.get("id")), "fichier rangé sous colonies/ : %s" % envoyes[-1:])
+    if cap: page.screenshot(path=f"{cap}/pc-colonie-375.png", full_page=True)
+
+    # 7. Fiche rucher : section « Photos du rucher », avant « Gérer ce rucher ».
+    page.evaluate("ACT.alrucher('Verger')"); page.wait_for_selector(".ph-fiche[data-fiche=rucher]", timeout=8000)
+    ordre = page.evaluate("[...document.querySelectorAll('.ph-fiche[data-fiche=rucher], .rc-gestion')].map(e => e.className)")
+    verif(len(ordre) == 2 and "ph-fiche" in ordre[0], "fiche rucher : photos avant « Gérer ce rucher » (%s)" % ordre)
+    page.evaluate(FICHIER, [".ph-fiche[data-fiche=rucher] input[data-photo-fiche=rucher]:not([capture])", False])
+    verif(attendre(lambda: len(lignes()) >= 3), "photo de rucher envoyée")
+    l = lignes()[-1] if lignes() else {}
+    verif(l.get("rucher_id") == RV and l.get("visite_id") is None and not l.get("colonie_id"), "photo de rucher : le rucher seul")
+    verif(envoyes[-1].startswith("%s/ruchers/%s/" % (E1, RV)), "fichier rangé sous ruchers/")
+    DATA["visite_photos"][-1]["created_at"] = "2026-11-22T10:00:00Z"
+    page.evaluate("PH.load().then(() => render())"); page.wait_for_timeout(600)
+    verif(page.locator(".ph-fiche[data-fiche=rucher] .ph-th").count() == 1, "fiche rucher : la photo envoyée s'affiche")
+    if cap:
+        page.screenshot(path=f"{cap}/pc-rucher-375.png", full_page=True)
+        page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_timeout(400)
+        page.screenshot(path=f"{cap}/pc-rucher-1280.png", full_page=True)
+        page.evaluate("ACT.newvisite()"); page.wait_for_timeout(300); page.locator("details[data-sec=photos]").evaluate("d => d.open = true")
+        page.screenshot(path=f"{cap}/pc-visite-1280.png", full_page=True)
+        page.set_viewport_size({"width": 375, "height": 812})
+
+    # 8. Suppression de la colonie : les fichiers de ses photos (visite et fiche) sont effacés aussi (AP-BUG-004).
+    ch = page.evaluate("PH.cheminsRuche('%s').chemins" % R1)
+    verif(len(ch) == 2 and any("/colonies/" in c for c in ch), "suppression de la ruche : photos de visite et de colonie retrouvées (%s)" % ch)
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

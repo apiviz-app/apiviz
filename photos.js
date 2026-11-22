@@ -1,10 +1,14 @@
-// Apiviz — photos de visite.
+// Apiviz — photos de visite, de colonie et de rucher.
 // Prise de photo, réduction automatique, envoi différé si le réseau manque,
 // vignettes dans le journal de la ruche. S'appuie sur app.js (S, sb, esc, toast…).
+// IT-11 (migration 034) : rattachement Visite / Colonie / Rucher, photos ajoutées depuis la fiche d'une colonie ou d'un
+// rucher (même file d'envoi), message clair quand une photo HEIC ne se lit pas, espace surveillé avec alerte à 80 %.
+// Règles pures : src/domaines/photos/regles.js (window.Regles.photos). Écrans : src/domaines/photos/.
 const PH = (() => {
   const BUCKET = "photos-visites";
   const MAX_PAR_VISITE = 10;
-  const QUOTA = 1024 ** 3; // 1 Go, offre gratuite Supabase
+  const R = () => window.Regles?.photos;
+  const QUOTA = 1024 ** 3; // 1 Go, offre gratuite Supabase (R().QUOTA)
   const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID()
     : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
   const st = {
@@ -15,6 +19,8 @@ const PH = (() => {
     urls: new Map(),    // chemin -> { url, exp } (liens temporaires)
     espace: null,       // octets utilisés dans le stockage
     envoi: false,
+    v034: false,        // la base connaît les photos de colonie et de rucher (migration 034)
+    lien: "visite",     // rattachement choisi pour les photos de la visite en cours (IT-11)
   };
 
   // ---------- Petit stockage local (IndexedDB), avec repli en mémoire ----------
@@ -68,7 +74,8 @@ const PH = (() => {
       }
       return { blob, largeur: w, hauteur: h, octets: blob.size };
     } catch {
-      throw new Error("Cette photo n’a pas pu être lue. Essaie d’en prendre une nouvelle.");
+      // Chrome sur Android ne lit pas le HEIC des iPhone : on le dit clairement (AP-TECH-164).
+      throw new Error(R()?.messageIllisible(fichier) || "Cette photo n’a pas pu être lue. Essaie d’en prendre une nouvelle.");
     } finally { URL.revokeObjectURL(src); }
   }
 
@@ -85,14 +92,54 @@ const PH = (() => {
       st.pret = !error;
       S.d.photos = error ? [] : data;
       memoPret(st.pret ? "1" : "0");
+      if (st.pret) st.v034 = await connait034(data);
     }
+    if (error && memo034() === "1") st.v034 = true;
     const att = await qTous().catch(() => []);
     st.attente.forEach((p) => p.apercu && URL.revokeObjectURL(p.apercu));
     st.attente = att.map((p) => ({ ...p, apercu: URL.createObjectURL(p.blob) }));
     if (st.pret) {
-      sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
+      lireEspace();
       if (st.attente.length) setTimeout(envoyer, 500);
     }
+  }
+
+  // Migration 034 : les lignes lues portent colonie_id ; sans ligne, une lecture de la colonne le dit (erreur sinon).
+  const memo034 = (v) => { try { if (v === undefined) return localStorage.getItem("apidoo-photos-034"); localStorage.setItem("apidoo-photos-034", v); } catch { return null; } };
+  async function connait034(lignes) {
+    let ok;
+    if (lignes?.length) ok = "colonie_id" in lignes[0];
+    else {
+      const { error } = await sb.from("visite_photos").select("colonie_id").limit(1);
+      if (error && typeof HL != "undefined" && HL.reseau(error)) return memo034() === "1";
+      ok = !error;
+    }
+    memo034(ok ? "1" : "0");
+    return ok;
+  }
+
+  // ---------- Espace photos (AP-FEAT-048) ----------
+  function lireEspace() {
+    return sb.rpc("photos_espace").then(({ data: o }) => {
+      if (typeof o !== "number") return;
+      st.espace = o;
+      prevenir();
+      if (S.route === "reglages" || S.route === "stockage") window.Noyau?.photosEcrans?.rafraichir?.();
+    }, () => {});
+  }
+  /** État de l'espace : utilisé, restant, moyenne d'une photo (règles pures), ou null si la base n'a pas répondu. */
+  function etatEspace() {
+    if (st.espace === null || !R()) return null;
+    const avecTaille = (S.d?.photos || []).filter((p) => Number(p.octets) > 0);
+    return R().espace(st.espace, { nbPhotos: avecTaille.length, octetsPhotos: avecTaille.reduce((s, p) => s + Number(p.octets), 0) });
+  }
+  // Le responsable est prévenu une fois par jour sur cet appareil quand 80 % sont atteints (AP-US-054, AP-TECH-167).
+  function prevenir() {
+    const e = etatEspace();
+    if (!e?.alerte || typeof EX == "undefined" || !EX.responsable?.()) return;
+    const cle = "apiviz-alerte-espace-" + (EX.courante?.() || ""), jour = new Date().toISOString().slice(0, 10);
+    try { if (localStorage.getItem(cle) === jour) return; localStorage.setItem(cle, jour); } catch { return; }
+    if (typeof toast == "function") toast(`Espace photos utilisé à ${e.pourcent} % : ${R().octets(e.restant)} restants. Détails dans Réglages.`, true);
   }
 
   // ---------- Formulaire de visite ----------
@@ -110,17 +157,39 @@ const PH = (() => {
     const b = brouillon();
     const vign = b.map((p) => `<div class="ph-th"><img src="${p.apercu}" alt="Photo ajoutée"><button type="button" class="ph-x" aria-label="Retirer cette photo" data-act="phretirer" data-v="${p.id}">×</button></div>`).join("");
     const plein = b.length >= MAX_PAR_VISITE;
-    const espace = st.espace !== null ? `<p class="small">Espace photos utilisé : ${mo(st.espace)} sur 1 Go.</p>` : "";
+    const e = etatEspace();
+    const espace = e ? (e.alerte ? `<p class="small ph-alerte" role="status">${esc(R().avertissement(e))}</p>` : `<p class="small">Espace photos utilisé : ${mo(st.espace)} sur 1 Go.</p>`) : "";
     return `<section class="card ph-sec"><h2>Photos</h2>
       ${b.length ? `<div class="ph-grid">${vign}</div>` : '<p class="small">Cadres, couvain, entrée… Les photos sont réduites avant l’envoi.</p>'}
+      ${choixLien()}
       ${plein ? `<p class="small">${MAX_PAR_VISITE} photos maximum par visite.</p>` : `<div class="ph-add">
         <label class="btn">Prendre une photo<input type="file" accept="image/*" capture="environment" data-photo hidden></label>
         <label class="btn">Galerie<input type="file" accept="image/*" multiple data-photo hidden></label>
       </div>`}${espace}</section>`;
   }
 
+  // Rattachement Visite / Colonie / Rucher (AP-TECH-165) : seulement avec la migration 034 et pour une seule colonie.
+  function choixLien() {
+    if (!st.v034 || !R() || !S.visite?.ruche_id || S.visite.multi) return "";
+    const ruche = byId(S.d.ruches, S.visite.ruche_id);
+    if (st.lien === "rucher" && !ruche?.rucher_id) st.lien = "visite";
+    const boutons = R().LIENS.map(([k, nom]) => {
+      const off = k === "rucher" && !ruche?.rucher_id;
+      return `<button type="button" class="ph-lien${st.lien === k ? " on" : ""}" data-act="phlien" data-v="${k}" aria-pressed="${st.lien === k}"${off ? " disabled" : ""}>${esc(nom)}</button>`;
+    }).join("");
+    const aide = st.lien === "colonie" ? `Aussi sur la fiche de ${esc(ruche?.nom || "la colonie")}.`
+      : st.lien === "rucher" ? `Aussi sur la fiche du rucher ${esc((S.d.ruchers || []).find((x) => x.id === ruche?.rucher_id)?.nom || "")}.`
+      : "Dans le journal de la visite.";
+    return `<div class="ph-liens"><span class="ph-liens-t" id="phLiensT">Rattacher à</span><div class="ph-seg" role="group" aria-labelledby="phLiensT">${boutons}</div><p class="small">${aide}</p></div>`;
+  }
+
   document.addEventListener("change", async (e) => {
     const inp = e.target;
+    if (inp.matches?.("input[data-photo-fiche]") && inp.files?.length) {
+      const fichiers = [...inp.files];
+      inp.value = "";
+      return ajouterFiche(inp.dataset.photoFiche, inp.dataset.id, fichiers);
+    }
     if (!inp.matches?.("input[data-photo]") || !inp.files?.length) return;
     const fichiers = [...inp.files];
     inp.value = "";
@@ -147,12 +216,38 @@ const PH = (() => {
       visiteId = data?.[0]?.id;
       if (!visiteId) return toast("Visite enregistrée, mais les photos n’ont pas pu y être rattachées", true);
     }
+    // Colonie ou rucher en plus de la visite (migration 034) ; sans 034, la visite seule comme avant.
+    const lien = st.v034 && R() && !S.visite?.multi ? R().fiches(st.lien, visiteId, byId(S.d.ruches, S.visite?.ruche_id)) : { visite_id: visiteId };
     for (const p of b) {
-      const o = { id: p.id, ex: typeof EX != "undefined" ? EX.courante() : "", visite_id: visiteId, blob: p.blob, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets, cree: Date.now() };
+      const o = { id: p.id, ex: typeof EX != "undefined" ? EX.courante() : "", ...lien, blob: p.blob, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets, cree: Date.now() };
       await qMettre(o).catch(() => memoire.set(o.id, o));
       st.attente.push({ ...o, apercu: p.apercu });
     }
-    st.brouillon = []; st.pour = null;
+    st.brouillon = []; st.pour = null; st.lien = "visite";
+    setTimeout(envoyer, 0);
+  }
+
+  // Photo ajoutée depuis la fiche d'une colonie ou d'un rucher, sans visite (AP-TECH-165). Même file d'envoi : la photo
+  // est gardée sur le téléphone avant tout envoi, et part au retour du réseau.
+  async function ajouterFiche(type, ficheId, fichiers) {
+    if (!st.v034 || !["colonie", "rucher"].includes(type) || !ficheId) return;
+    const place = MAX_PAR_VISITE;
+    if (fichiers.length > place) toast(`${place} photos à la fois au plus`, true);
+    let n = 0;
+    for (const f of fichiers.slice(0, place)) {
+      try {
+        const r = await reduire(f);
+        const o = { id: nouvelId(), ex: typeof EX != "undefined" ? EX.courante() : "", visite_id: null,
+          colonie_id: type === "colonie" ? ficheId : null, rucher_id: type === "rucher" ? ficheId : null,
+          blob: r.blob, largeur: r.largeur, hauteur: r.hauteur, octets: r.octets, cree: Date.now() };
+        await qMettre(o).catch(() => memoire.set(o.id, o));
+        st.attente.push({ ...o, apercu: URL.createObjectURL(r.blob) });
+        n++;
+      } catch (err) { fail(err); }
+    }
+    if (!n) return;
+    if (["ruche", "rucher"].includes(S.route)) render();
+    if (navigator.onLine === false) toast(n > 1 ? `${n} photos gardées sur le téléphone : envoi au retour du réseau` : "Photo gardée sur le téléphone : envoi au retour du réseau");
     setTimeout(envoyer, 0);
   }
 
@@ -164,14 +259,17 @@ const PH = (() => {
     let ok = 0, echec = 0;
     try {
       for (const p of [...st.attente]) {
-        if (typeof HL != "undefined" && HL.enAttente(p.visite_id)) continue; // la visite part d’abord
+        // La visite, la colonie ou le rucher partent d’abord.
+        if (typeof HL != "undefined" && [p.visite_id, p.colonie_id, p.rucher_id].some((x) => x && HL.enAttente(x))) continue;
         if (p.ex && typeof EX != "undefined" && p.ex !== EX.courante()) continue; // photo d’une autre exploitation
-        const chemin = `${p.ex ? p.ex + "/" : ""}${p.visite_id}/${p.id}.jpg`;
+        if (!p.visite_id && !st.v034) continue; // photo de fiche gardée : la base n'a pas encore 034
+        const chemin = R() ? R().chemin(p) : `${p.ex ? p.ex + "/" : ""}${p.visite_id}/${p.id}.jpg`;
         const up = await sb.storage.from(BUCKET).upload(chemin, p.blob, { contentType: "image/jpeg", upsert: true });
         if (up.error) { echec++; break; }
-        const { error } = await sb.from("visite_photos").upsert(
-          { id: p.id, visite_id: p.visite_id, chemin, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets },
-          { onConflict: "id", ignoreDuplicates: true });
+        const ligne = { id: p.id, visite_id: p.visite_id || null, chemin, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets };
+        if (p.colonie_id) ligne.colonie_id = p.colonie_id;
+        if (p.rucher_id) ligne.rucher_id = p.rucher_id;
+        const { error } = await sb.from("visite_photos").upsert(ligne, { onConflict: "id", ignoreDuplicates: true });
         if (error && /foreign key/i.test(error.message)) {
           await sb.storage.from(BUCKET).remove([chemin]); // visite supprimée entre-temps
         } else if (error) { echec++; break; }
@@ -184,8 +282,8 @@ const PH = (() => {
     if (ok) {
       const data = await lireTout("visite_photos", "created_at").catch(() => null);
       if (data && S.d) S.d.photos = data;
-      sb.rpc("photos_espace").then(({ data: o }) => { if (typeof o === "number") st.espace = o; });
-      if (["ruche", "ruches"].includes(S.route)) render();
+      lireEspace();
+      if (["ruche", "ruches", "rucher"].includes(S.route)) render();
       toast(ok > 1 ? `${ok} photos envoyées` : "Photo envoyée");
     }
     if (echec && st.attente.length) toast(`${st.attente.length} photo(s) en attente : envoi dès que le réseau revient`);
@@ -203,6 +301,26 @@ const PH = (() => {
     if (!planif) planif = setTimeout(() => { planif = 0; afficher(); }, 0);
     return `<div class="ph-grid ph-mini">${enLigne.map((p) => `<button type="button" class="ph-th" data-act="phvoir" data-v="${p.id}" aria-label="Voir la photo"><img data-ph="${esc(p.chemin)}" alt=""></button>`).join("")}${local.map((p) => `<button type="button" class="ph-th" data-act="phvoir" data-v="${p.id}" aria-label="Voir la photo en attente d’envoi"><img src="${p.apercu}" alt=""><span class="ph-wait">en attente</span></button>`).join("")}</div>`;
   }
+  // Photos d'une fiche colonie ou rucher (IT-11) : celles de la fiche (envoyées et en attente) et le bouton d'ajout.
+  // Les photos des visites restent montrées par date, comme avant, par l'écran lui-même (ux.js pour la colonie).
+  function galerie(type, ficheId) {
+    if (!st.pret || !ficheId) return "";
+    const col = type === "rucher" ? "rucher_id" : "colonie_id";
+    const enLigne = (S.d.photos || []).filter((p) => p[col] === ficheId);
+    const local = st.attente.filter((p) => p[col] === ficheId);
+    if (!planif && enLigne.length) planif = setTimeout(() => { planif = 0; afficher(); }, 0);
+    const vign = [...local.map((p) => `<button type="button" class="ph-th" data-act="phvoir" data-v="${p.id}" aria-label="Voir la photo en attente d’envoi"><img src="${p.apercu}" alt=""><span class="ph-wait">en attente</span></button>`),
+      ...enLigne.map((p) => `<button type="button" class="ph-th" data-act="phvoir" data-v="${p.id}" aria-label="Voir la photo"><img data-ph="${esc(p.chemin)}" alt=""></button>`)].join("");
+    const nom = type === "rucher" ? "du rucher" : "de la colonie";
+    const lecteur = typeof EX != "undefined" && EX.lecteur?.();
+    const ajout = !st.v034 ? '<p class="small">Les photos de fiche arrivent avec la prochaine mise à jour de la base.</p>'
+      : lecteur ? "" : `<div class="ph-add">
+        <label class="btn">Prendre une photo<input type="file" accept="image/*" capture="environment" data-photo-fiche="${type}" data-id="${esc(ficheId)}" hidden></label>
+        <label class="btn">Galerie<input type="file" accept="image/*" multiple data-photo-fiche="${type}" data-id="${esc(ficheId)}" hidden></label></div>`;
+    return `<section class="card ph-fiche" data-fiche="${type}"><h2>Photos ${nom}</h2>
+      ${vign ? `<div class="ph-grid ph-mini">${vign}</div>` : `<p class="small">Aucune photo ${nom} pour l’instant : entrée, emplacement, plateau…</p>`}${ajout}</section>`;
+  }
+
   async function liens(chemins) {
     const now = Date.now();
     const manque = [...new Set(chemins)].filter((c) => !(st.urls.get(c)?.exp > now + 60000));
@@ -228,12 +346,14 @@ const PH = (() => {
     const p = (S.d.photos || []).find((x) => x.id === id);
     const l = st.attente.find((x) => x.id === id);
     if (!p && !l) return;
-    const visite = byId(S.d.visites, (p || l).visite_id);
-    const ruche = visite && byId(S.d.ruches, visite.ruche_id);
+    const x = p || l, visite = x.visite_id ? byId(S.d.visites, x.visite_id) : null;
+    const ruche = byId(S.d.ruches, visite?.ruche_id || x.colonie_id);
+    const rucher = !ruche && x.rucher_id ? (S.d.ruchers || []).find((r) => r.id === x.rucher_id) : null;
     let src = l?.apercu;
     if (p) { await liens([p.chemin]); src = st.urls.get(p.chemin)?.url; }
     if (!src) throw new Error("Photo indisponible pour le moment");
-    $v.innerHTML = `<figure><img src="${src}" alt="Photo de visite"><figcaption>${esc(ruche?.nom || "")}${visite ? " · " + dfr(visite.date_visite) : ""}${l ? " · en attente d’envoi" : ""}</figcaption></figure>
+    const quand = visite ? " · " + dfr(visite.date_visite) : x.created_at ? " · " + dfr(String(x.created_at).slice(0, 10)) : "";
+    $v.innerHTML = `<figure><img src="${src}" alt="${visite ? "Photo de visite" : rucher ? "Photo du rucher" : "Photo de la colonie"}"><figcaption>${esc(ruche?.nom || rucher?.nom || "")}${quand}${l ? " · en attente d’envoi" : ""}</figcaption></figure>
       <div class="ph-bar"><button type="button" class="btn" data-act="phfermer">Fermer</button>${p ? `<button type="button" class="btn" data-act="phsuppr" data-v="${p.id}">Supprimer</button>` : ""}</div>`;
     $v.showModal();
   }
@@ -246,6 +366,12 @@ const PH = (() => {
       redessiner("visite");
     },
     phvoir: (id) => voir(id),
+    phlien: (v) => {
+      if (!R()?.LIENS.some(([k]) => k === v)) return;
+      readVisitForm();
+      st.lien = v;
+      redessiner("visite");
+    },
     phfermer: () => $v.close(),
     // Recommandation UX n° 8 : la photo disparaît tout de suite, « Annuler » reste 5 secondes (N4.plusTard),
     // et la suppression n'est faite qu'ensuite. Sans nav4.js, l'ancienne confirmation en deux temps reste.
@@ -283,9 +409,10 @@ const PH = (() => {
   // Suppression d'une ruche (AP-BUG-004) : chemins de toutes les photos de ses visites, envoyées ou en attente.
   function cheminsRuche(rucheId) {
     const visites = new Set((S.d?.visites || []).filter((v) => v.ruche_id === rucheId).map((v) => v.id));
+    const deLaRuche = (p) => visites.has(p.visite_id) || p.colonie_id === rucheId; // IT-11 : photos de la colonie aussi
     return {
-      chemins: (S.d?.photos || []).filter((p) => visites.has(p.visite_id)).map((p) => p.chemin),
-      locales: st.attente.filter((p) => visites.has(p.visite_id)).map((p) => p.id),
+      chemins: (S.d?.photos || []).filter(deLaRuche).map((p) => p.chemin),
+      locales: st.attente.filter(deLaRuche).map((p) => p.id),
     };
   }
   async function effacer({ chemins, locales }) {
@@ -307,5 +434,7 @@ const PH = (() => {
     st.attente = []; st.brouillon = []; memoire.clear(); st.urls.clear();
   }
 
-  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA, nbAttente: () => st.attente.length };
+  return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA, nbAttente: () => st.attente.length,
+    // IT-11 : galerie d'une fiche, état de l'espace, base à jour (034), relecture de l'espace.
+    galerie, etatEspace, lireEspace, pret: () => st.pret, v034: () => st.v034 };
 })();
