@@ -1650,7 +1650,7 @@ Enchaîner les colonies d'un rucher.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-011 |
-| Statut actuel | EXISTANT ET COHÉRENT |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-10, migration 034, branche `claude/it-10-qr-tournee-groupe`) : ordre de passage Ordre de pose / Priorité au départ de la tournée, prioritaires signalées, 3 modes conservés ; ruches.ordre_pose et feuille « Ordre de pose » (↑ ↓, ranger_ruches, hors ligne) ; scénario etapes_ip ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -1686,7 +1686,7 @@ Enchaîner les colonies d'un rucher.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-011 |
-| Statut actuel | PARTIEL |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-10, migration 034) : bouton Actions dans la sélection des colonies (+1 hausse, état, tâche), effet immédiat et Annuler pendant 5 s avant envoi, appliquer_action_groupee idempotente par la file d'envoi ; scénario etapes_ag ; en attente de fusion |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -1881,7 +1881,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-10, migration 034 ; QR et planche existaient depuis la v5.57) : code court ruches.code_qr, lien ?c=CODE (hors ligne compris, ?ruche= toujours lu), code tapé à la main, étiquette unitaire 100 × 60 mm, seulement les nouvelles / tout le rucher / choisies ; scénario etapes_qc ; lecture sur iPhone et Android à faire en recette ; en attente de fusion |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | M |
@@ -1919,7 +1919,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | FAIT — à publier en recette (v5.74, IT-11, migration 034, branche `claude/it-11-photos-voix`) : message clair pour une HEIC illisible, rattachement Visite / Colonie / Rucher, photos des fiches colonie et rucher par la file d'envoi ; scénario etapes_pc. Recette sur vrai iPhone et vrai Android : à faire (docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md) |
+| Statut actuel | FAIT — à publier en recette (v5.75, IT-11, migration 035, branche `claude/it-11-photos-voix`) : message clair pour une HEIC illisible, rattachement Visite / Colonie / Rucher, photos des fiches colonie et rucher par la file d'envoi ; scénario etapes_pc. Recette sur vrai iPhone et vrai Android : à faire (docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md) |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -1955,7 +1955,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | FAIT — à publier en recette (v5.74, IT-11, migration 034) : Espace photos dans les Réglages, alerte à 80 % (responsable prévenu une fois par jour), fonction serveur nettoyer-stockage et action GitHub de nuit (7 jours de délai), journal nettoyages_stockage ; scénario etapes_es. Fonction à déployer et secrets à créer (voir CHANGELOG) |
+| Statut actuel | FAIT — à publier en recette (v5.75, IT-11, migration 035) : Espace photos dans les Réglages, alerte à 80 % (responsable prévenu une fois par jour), fonction serveur nettoyer-stockage et action GitHub de nuit (7 jours de délai), journal nettoyages_stockage ; scénario etapes_es. Fonction à déployer et secrets à créer (voir CHANGELOG) |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -1991,7 +1991,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | FAIT — à publier en recette (v5.74, IT-11) : alvéoles Force, Œufs vus, Cellules royales pendant la dictée, repli « micro du clavier » sans reconnaissance vocale ; scénario etapes_dv. Recette sur vrais téléphones : à faire |
+| Statut actuel | FAIT — à publier en recette (v5.75, IT-11) : alvéoles Force, Œufs vus, Cellules royales pendant la dictée, repli « micro du clavier » sans reconnaissance vocale ; scénario etapes_dv. Recette sur vrais téléphones : à faire |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |

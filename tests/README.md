@@ -22,7 +22,7 @@ Scénario IT-07 : `etapes_rn` (en-tête de la fiche colonie, nouvelle reine qui 
 Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie sans réseau, aucune écriture directe de
 `annee_reine`, base sans 019). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.
 
-Scénarios IT-11 (v5.74, migration 034) : `etapes_pc` (photo HEIC illisible expliquée, photo prise sans réseau puis
+Scénarios IT-11 (v5.75, migration 035) : `etapes_pc` (photo HEIC illisible expliquée, photo prise sans réseau puis
 envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et rucher), `etapes_es` (alerte du responsable
 à 80 %, avertissement des Réglages avec espace restant et taille moyenne, écran Espace photos et journal du nettoyage),
 `etapes_dv` (dictée : Force et Cellules royales à la voix, alvéoles touchées, repli « micro du clavier » sans
@@ -110,3 +110,11 @@ défaut ; refuse la production).
 
 `tests/production/` ne contient pas de test automatique : ce sont les données d'essai à charger à la main dans la base
 de production pour vérifier les parcours qui n'ont pas de base simulée fidèle (voir son README).
+
+Scénarios IT-10 (v5.74, migration 034) : `etapes_qc` (QR à code court : lien `?c=` en minuscules compris, ancien lien
+`?ruche=` toujours lu, QR d'une autre exploitation, code inconnu, code tapé à la main, hors ligne avec le service worker,
+étiquettes nouvelles / toutes / choisies, une par page, date d'impression notée), `etapes_ag` (actions groupées : +1
+hausse sur 3 colonies, Annuler pendant 5 s sans rien envoyer, envoi à la fin du délai une seule fois, état, tâche sans
+réseau puis retour du réseau), `etapes_ip` (tournée dans l'ordre de pose, prioritaires signalées, bascule Priorité
+retenue, feuille « Ordre de pose » et ranger_ruches, sans réseau, rucher pas encore rangé en Priorité comme avant).
+Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.

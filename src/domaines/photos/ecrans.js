@@ -2,7 +2,7 @@
 //   - Réglages › L'exploitation : ligne « Espace photos » et, à 80 % du quota, l'avertissement (espace restant, taille
 //     moyenne d'une photo ; AP-US-054). Appelé par l'écran « reglages » (src/domaines/compte/ecrans.js).
 //   - Écran « stockage » (Espace photos) : jauge, moyenne, photos qui tiennent encore, journal du nettoyage de nuit
-//     (table nettoyages_stockage, migration 034). Enregistré dans la table des écrans : aucune surcharge.
+//     (table nettoyages_stockage, migration 035). Enregistré dans la table des écrans : aucune surcharge.
 //   - Fiche rucher : section « Photos du rucher » (photos.js, PH.galerie), appelée par l'écran « rucher ».
 // La fiche colonie montre ses photos dans son onglet Photos (ux.js, photosRuche, qui appelle PH.galerie).
 // Globales d'app.js lues à l'appel seulement : S, sb, esc, shell, render, PH, EX.

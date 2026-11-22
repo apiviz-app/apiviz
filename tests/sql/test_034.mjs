@@ -1,4 +1,4 @@
-// Tests SQL de la migration 034 : photos de colonie et de rucher, journal du nettoyage, fichiers à nettoyer (IT-11).
+// Tests SQL de la migration 034 : ordre de pose, code court des QR, actions groupées, étiquettes imprimées.
 // Usage (depuis la racine du dépôt) : node tests/sql/test_034.mjs
 import fs from "node:fs";
 import { base, deuxExploitations, donnees, en, verificateur, erreur, id, E1, E2 } from "./socle.mjs";
@@ -7,82 +7,96 @@ const { verif, fin } = verificateur();
 const db = await base({ jusqua: "033-clients-gouts.sql" });
 await deuxExploitations(db);
 await donnees(db);
-const sql = fs.readFileSync("migrations/034-photos-colonie-rucher.sql", "utf8");
+const sql = fs.readFileSync("migrations/034-tournee-qr-groupe.sql", "utf8");
 try { await db.exec(sql); verif(true, "034 appliquée sur une base avec données"); } catch (e) { verif(false, "034 : " + e.message); fin("Migration 034"); }
 try { await db.exec(sql); verif(true, "034 relançable"); } catch (e) { verif(false, "034 relancée : " + e.message); }
 
 const val = async (q) => (await db.query(q)).rows[0];
-const R1 = id(1, 3), V1 = id(1, 4), RC1 = id(1, 16), R2 = id(2, 3), RC2 = id(2, 16);
+const lignes = async (q) => (await db.query(q)).rows;
+const R1 = id(1, 3), R1b = id(1, 13), R2 = id(2, 3);
+const A = (n) => `aaaaaaaa-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const appel = (f, p) => `select public.${f}('${JSON.stringify(p).replace(/'/g, "''")}'::jsonb) as n`;
 
-// La photo existante reste rattachée à sa visite.
-await en(db, "a@x.fr", E1);
-const p = await val(`select visite_id, colonie_id, rucher_id from public.visite_photos where id = '${id(1, 14)}'`);
-verif(p && p.visite_id === V1 && p.colonie_id === null && p.rucher_id === null, "photo existante : visite gardée, pas de colonie ni de rucher");
+// Colonies existantes : un code court chacune, au bon format, sans doublon dans l'exploitation.
+await db.exec("reset role");
+const codes = await lignes(`select id, code_qr, ordre_pose, etiquette_imprimee_le from public.ruches order by id`);
+verif(codes.length === 4 && codes.every((r) => /^[2-9A-HJKMNP-Z]{4}$/.test(r.code_qr)), `reprise : 4 colonies, 4 codes courts (${codes.map((r) => r.code_qr).join(", ")})`);
+verif(codes.every((r) => r.ordre_pose === null && r.etiquette_imprimee_le === null), "reprise : ordre de pose et impression vides");
+const avant = codes.map((r) => r.code_qr).join();
+await db.exec(sql);
+verif((await lignes(`select code_qr from public.ruches order by id`)).map((r) => r.code_qr).join() === avant, "relance : les codes donnés ne changent pas");
 
-// Un membre ajoute une photo de colonie, de rucher, et une photo de visite marquée pour la colonie.
+// Nouvelle colonie (ancienne version comprise) : le code est donné tout seul ; un code saisi en minuscules passe en capitales.
 await en(db, "a2@x.fr", E1);
-verif(!(await erreur(db, `insert into public.visite_photos (colonie_id, chemin) values ('${R1}', '${E1}/colonies/${R1}/c.jpg')`)), "photo de colonie sans visite");
-verif(!(await erreur(db, `insert into public.visite_photos (rucher_id, chemin) values ('${RC1}', '${E1}/ruchers/${RC1}/r.jpg')`)), "photo de rucher sans visite");
-verif(!(await erreur(db, `insert into public.visite_photos (visite_id, colonie_id, chemin) values ('${V1}', '${R1}', '${E1}/${V1}/vc.jpg')`)), "photo de visite gardée aussi pour la colonie");
-verif(!(await erreur(db, `insert into public.visite_photos (visite_id, chemin) values ('${V1}', '${E1}/${V1}/ancienne.jpg')`)), "ancienne version : photo de visite seule");
-verif(!!(await erreur(db, `insert into public.visite_photos (chemin) values ('${E1}/rien.jpg')`)), "photo rattachée à rien : refusée");
-
-// Autre exploitation : impossible d'accrocher une photo à sa colonie ou à son rucher.
-verif(!!(await erreur(db, `insert into public.visite_photos (colonie_id, chemin) values ('${R2}', '${E1}/colonies/x.jpg')`)), "colonie d'une autre exploitation : refusée");
-verif(!!(await erreur(db, `insert into public.visite_photos (rucher_id, chemin) values ('${RC2}', '${E1}/ruchers/x.jpg')`)), "rucher d'une autre exploitation : refusé");
+verif(!(await erreur(db, `insert into public.ruches (nom) values ('Ancienne version')`)), "ancienne version : insertion sans les nouvelles colonnes");
+const nv = await val(`select code_qr from public.ruches where nom = 'Ancienne version'`);
+verif(/^[2-9A-HJKMNP-Z]{4}$/.test(nv?.code_qr || ""), `nouvelle colonie : code ${nv?.code_qr}`);
+verif(!(await erreur(db, `insert into public.ruches (nom, code_qr) values ('Saisie', 'zz99')`)), "code saisi accepté");
+verif((await val(`select code_qr from public.ruches where nom = 'Saisie'`)).code_qr === "ZZ99", "code saisi mis en capitales");
+verif(!!(await erreur(db, `insert into public.ruches (nom, code_qr) values ('Doublon', 'ZZ99')`)), "même code dans l'exploitation : refusé");
+verif(!!(await erreur(db, `insert into public.ruches (nom, code_qr) values ('Ambigu', 'K0O1')`)), "code avec 0, O ou 1 : refusé");
 await en(db, "b@x.fr", E2);
-verif((await val(`select count(*)::int n from public.visite_photos where colonie_id = '${R1}' or rucher_id = '${RC1}'`)).n === 0, "autre exploitation : ne voit pas ces photos");
+verif(!(await erreur(db, `insert into public.ruches (nom, code_qr) values ('Ailleurs', 'ZZ99')`)), "même code dans une autre exploitation : accepté");
 
-// Lecteur : lit, n'écrit pas.
+// Action groupée : +1 hausse sur les deux colonies de A.
+await en(db, "a2@x.fr", E1);
+const h0 = await lignes(`select id, hausses from public.ruches where id in ('${R1}', '${R1b}') order by id`);
+const p1 = { id: A(1), action: "hausse", ruches: [R1, R1b], valeur: { delta: 1 } };
+verif((await val(appel("appliquer_action_groupee", p1))).n === 2, "+1 hausse : 2 colonies touchées");
+const h1 = await lignes(`select id, hausses from public.ruches where id in ('${R1}', '${R1b}') order by id`);
+verif(h1.every((r, i) => r.hausses === h0[i].hausses + 1), "+1 hausse : chacune a une hausse de plus");
+verif((await val(appel("appliquer_action_groupee", p1))).n === 2, "même action rejouée par la file d'envoi : rend 2");
+verif((await lignes(`select hausses from public.ruches where id in ('${R1}', '${R1b}') order by id`)).every((r, i) => r.hausses === h1[i].hausses), "rejouée : rien n'est compté deux fois");
+verif((await val(`select count(*)::int n from public.actions_groupees`)).n === 1, "journal : une seule ligne");
+verif(!(await erreur(db, appel("appliquer_action_groupee", { id: A(2), action: "hausse", ruches: [R1], valeur: { delta: -5 } }))), "retrait de hausses : accepté");
+verif((await val(`select hausses from public.ruches where id = '${R1}'`)).hausses === 0, "hausses jamais sous zéro");
+
+// État et tâche.
+verif((await val(appel("appliquer_action_groupee", { id: A(3), action: "etat", ruches: [R1, R1b], valeur: { etat: "À surveiller" } }))).n === 2, "état groupé : 2 colonies");
+verif((await lignes(`select etat from public.ruches where id in ('${R1}', '${R1b}')`)).every((r) => r.etat === "À surveiller"), "état groupé : appliqué");
+verif((await val(appel("appliquer_action_groupee", { id: A(4), action: "tache", ruches: [R1, R1b], valeur: { titre: "Poser la grille", echeance: "2026-12-01" } }))).n === 2, "tâche groupée : 2 colonies");
+const t = await lignes(`select ruche_id, echeance::text, exploitation_id from public.taches where titre = 'Poser la grille' order by ruche_id`);
+verif(t.length === 2 && t.every((x) => x.echeance === "2026-12-01" && x.exploitation_id === E1), "tâche groupée : une tâche par colonie, dans l'exploitation");
+
+// Refus, avec un message en français.
+const msg = async (q) => (await erreur(db, q)) || "";
+verif(/pas dans ton exploitation/.test(await msg(appel("appliquer_action_groupee", { id: A(5), action: "hausse", ruches: [R1, R2] }))), "colonie d'une autre exploitation : refusé");
+verif((await val(`select count(*)::int n from public.actions_groupees where id = '${A(5)}'`)).n === 0, "refusé : rien de journalisé");
+verif(/au moins une colonie/.test(await msg(appel("appliquer_action_groupee", { id: A(6), action: "hausse", ruches: [] }))), "aucune colonie : refusé");
+verif(/Choisis un état/.test(await msg(appel("appliquer_action_groupee", { id: A(7), action: "etat", ruches: [R1], valeur: { etat: "Parfaite" } }))), "état inconnu : refusé");
+verif(/Indique la tâche/.test(await msg(appel("appliquer_action_groupee", { id: A(8), action: "tache", ruches: [R1], valeur: { titre: " " } }))), "tâche vide : refusé");
+verif(/Action inconnue/.test(await msg(appel("appliquer_action_groupee", { id: A(9), action: "nourrir", ruches: [R1] }))), "action inconnue : refusé");
+verif(/Identifiant/.test(await msg(appel("appliquer_action_groupee", { action: "hausse", ruches: [R1] }))), "sans identifiant : refusé");
+verif(/introuvable/.test(await msg(appel("appliquer_action_groupee", { id: A(10), action: "hausse", ruches: ["pas-un-uuid"] }))), "identifiant de colonie mal formé : refusé");
+
+// Ordre de pose.
+verif((await val(appel("ranger_ruches", { ruches: [R1b, R1] }))).n === 2, "ordre de pose : 2 colonies rangées");
+const o = await lignes(`select id, ordre_pose from public.ruches where id in ('${R1}', '${R1b}') order by ordre_pose`);
+verif(o[0].id === R1b && o[0].ordre_pose === 1 && o[1].id === R1 && o[1].ordre_pose === 2, "ordre de pose : 1 puis 2, dans l'ordre donné");
+verif(/deux fois/.test(await msg(appel("ranger_ruches", { ruches: [R1, R1] }))), "ordre de pose : doublon refusé");
+verif(/pas dans ton exploitation/.test(await msg(appel("ranger_ruches", { ruches: [R1, R2] }))), "ordre de pose : colonie d'ailleurs refusée");
+
+// Étiquettes imprimées.
+verif((await val(appel("noter_etiquettes", { ruches: [R1], date: "2026-11-22" }))).n === 1, "étiquette notée");
+verif((await val(`select etiquette_imprimee_le::text d from public.ruches where id = '${R1}'`)).d === "2026-11-22", "date d'impression enregistrée");
+
+// Lecteur : rien ne s'écrit.
 await en(db, "l@x.fr", E1);
-verif((await val(`select count(*)::int n from public.visite_photos where colonie_id = '${R1}'`)).n === 2, "lecteur : voit les photos de la colonie");
-verif(!!(await erreur(db, `insert into public.visite_photos (colonie_id, chemin) values ('${R1}', '${E1}/colonies/l.jpg')`)), "lecteur : ne peut pas ajouter de photo");
+verif(/lecture seule/.test(await msg(appel("appliquer_action_groupee", { id: A(11), action: "hausse", ruches: [R1] }))), "lecteur : action groupée refusée");
+verif(/lecture seule/.test(await msg(appel("ranger_ruches", { ruches: [R1] }))), "lecteur : ordre de pose refusé");
+verif(/lecture seule/.test(await msg(appel("noter_etiquettes", { ruches: [R1] }))), "lecteur : étiquettes refusées");
+verif((await val(`select count(*)::int n from public.actions_groupees`)).n >= 1, "lecteur : voit le journal");
+verif(!!(await erreur(db, `insert into public.actions_groupees (id, action, ruches) values ('${A(12)}', 'hausse', array['${R1}']::uuid[])`)), "lecteur : ne peut pas écrire le journal");
 
-// Supprimer la colonie retire ses photos (le fichier devient sans fiche : le nettoyage s'en charge).
-await db.exec("reset role");
-const avant = (await val(`select count(*)::int n from public.visite_photos where rucher_id = '${RC1}'`)).n;
-verif(avant === 1, "une photo de rucher en place");
-const inc = (await db.query(`select enfant, colonne, nombre::int n from public.incoherences_exploitation()`)).rows;
-verif(inc.some((x) => x.enfant === "visite_photos" && x.colonne === "colonie_id") && inc.some((x) => x.colonne === "rucher_id" && x.enfant === "visite_photos"), "contrôle des incohérences : couvre colonie_id et rucher_id");
-verif(inc.every((x) => x.n === 0), "aucune incohérence d'exploitation");
-
-// Journal du nettoyage : écrit par la clé de service, lu par l'exploitation, jamais écrit par l'application.
-await db.exec(`reset role; alter role service_role bypassrls;
-  grant usage on schema public, storage to service_role; grant select on storage.objects to service_role;
-  grant select on public.visite_photos, public.exploitations to service_role;`);
-await db.exec(`set role service_role; insert into public.nettoyages_stockage (exploitation_id, statut, fichiers, octets) values ('${E1}', 'fait', 2, 2048), ('${E2}', 'rien', 0, 0); reset role;`);
-await en(db, "a@x.fr", E1);
-const j = await val(`select count(*)::int n, max(fichiers) f from public.nettoyages_stockage`);
-verif(j.n === 1 && j.f === 2, `responsable A : voit son passage seulement (${JSON.stringify(j)})`);
-verif(!!(await erreur(db, `insert into public.nettoyages_stockage (exploitation_id, statut) values ('${E1}', 'fait')`)), "application : ne peut pas écrire au journal");
-verif(!!(await erreur(db, `delete from public.nettoyages_stockage`)) || (await (async () => { await db.exec("reset role"); return (await val(`select count(*)::int n from public.nettoyages_stockage`)).n === 2; })()), "application : ne peut pas effacer le journal");
-await en(db, "l@x.fr", E1);
-verif((await val(`select count(*)::int n from public.nettoyages_stockage`)).n === 1, "lecteur : voit le journal de son exploitation");
+// Autre exploitation : ne voit ni ne touche rien de A.
 await en(db, "b@x.fr", E2);
-verif((await val(`select count(*)::int n, max(statut) s from public.nettoyages_stockage`)).s === "rien", "exploitation B : voit son passage seulement");
-verif(!!(await erreur(db, `insert into public.nettoyages_stockage (exploitation_id, statut) values ('${E1}', 'bidon')`)), "statut inconnu : refusé");
-
-// Fichiers à nettoyer : sans fiche, rangés sous une exploitation, plus vieux que le délai.
-await db.exec(`reset role;
-  insert into storage.objects (bucket_id, name, metadata, created_at) values
-    ('photos-visites', '${E1}/vieux-orphelin.jpg', '{"size": 3000}', now() - interval '10 days'),
-    ('photos-visites', '${E1}/recent-orphelin.jpg', '{"size": 3000}', now() - interval '2 days'),
-    ('photos-visites', '${E2}/vieux-orphelin-b.jpg', '{"size": 500}', now() - interval '30 days'),
-    ('photos-visites', 'sans-dossier/vieux.jpg', '{"size": 500}', now() - interval '30 days'),
-    ('factures', '${E1}/facture.pdf', '{"size": 500}', now() - interval '30 days'),
-    ('photos-visites', '${E1}/colonies/${R1}/c.jpg', '{"size": 800}', now() - interval '30 days');`);
+verif((await val(`select count(*)::int n from public.actions_groupees`)).n === 0, "autre exploitation : ne voit pas le journal de A");
+verif(/pas dans ton exploitation/.test(await msg(appel("appliquer_action_groupee", { id: A(13), action: "etat", ruches: [R1], valeur: { etat: "Critique" } }))), "autre exploitation : ne touche pas les colonies de A");
+verif(/pas dans ton exploitation/.test(await msg(appel("noter_etiquettes", { ruches: [R1] }))), "autre exploitation : étiquettes de A refusées");
 await en(db, "a@x.fr", E1);
-verif(!!(await erreur(db, `select * from public.photos_a_nettoyer(7)`)), "application : ne peut pas lister les fichiers à nettoyer");
-await db.exec("reset role; set role service_role;");
-const l = (await db.query(`select exploitation_id, chemin, octets from public.photos_a_nettoyer(7)`)).rows;
-const ch = l.map((x) => x.chemin).sort();
-verif(ch.join() === [`${E1}/vieux-orphelin.jpg`, `${E2}/vieux-orphelin-b.jpg`].sort().join(), `seuls les vieux fichiers sans fiche sont listés : ${ch.join(" | ")}`);
-verif(!ch.some((c) => c.includes("recent")), "fichier de moins de 7 jours : protégé (envoi peut-être en cours)");
-verif(!ch.some((c) => c.includes("/colonies/")), "photo de colonie avec sa fiche : jamais listée");
-verif(!ch.some((c) => c.startsWith("sans-dossier")), "fichier hors dossier d'exploitation : jamais listé");
-verif(!ch.some((c) => c.endsWith(".pdf")), "autre stockage (factures) : jamais listé");
-verif(l.find((x) => x.chemin.endsWith("vieux-orphelin.jpg"))?.exploitation_id === E1, "chaque fichier porte son exploitation");
-verif((await db.query(`select * from public.photos_a_nettoyer(1)`)).rows.length === 3, "délai d'un jour : le fichier récent devient candidat");
-verif((await db.query(`select * from public.photos_a_nettoyer(0)`)).rows.length === 3, "délai de 0 : ramené à 1 jour au moins");
-await db.exec("reset role");
+verif((await val(`select etat from public.ruches where id = '${R1}'`)).etat === "À surveiller", "colonie de A intacte");
+// Journal : ni modification ni suppression.
+await db.exec(`update public.actions_groupees set action = 'etat'`).catch(() => {});
+await db.exec(`delete from public.actions_groupees`).catch(() => {});
+verif((await val(`select count(*)::int n from public.actions_groupees where action = 'hausse'`)).n === 2, "journal : ni modifié ni supprimé");
 fin("Migration 034");

@@ -1,0 +1,68 @@
+    # IT-10 (v5.74, migration 034) — tournée dans l'ordre de pose (AP-US-045) : proposée dès qu'un rucher est rangé,
+    # prioritaires signalées, bascule Priorité, feuille « Ordre de pose » (↑ ↓, ranger_ruches), sans réseau compris.
+    # Avec CAPTURES=<dossier>, captures à 375 et 1 280 px.
+    import datetime, os
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    J = lambda n: (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+    noms = [("Ruche 1", "Verger", "Bonne", 3), ("Ruche 2", "Verger", "À surveiller", 1), ("Ruche 3", "Verger", "Critique", 4), ("Ruche 4", "Verger", "Bonne", 2), ("Ruche 5", "Bois", "Bonne", None)]
+    DATA["ruches"] = [{"id": str(uuid.uuid4()), "nom": a, "rucher": b, "etat": c, "ordre_pose": o, "code_qr": "", "type_ruche": "Dadant", "annee_reine": 2025, "notes": "", "hausses": 0} for a, b, c, o in noms]
+    R = [r["id"] for r in DATA["ruches"]]
+    DATA["visites"] = []
+    page.add_init_script("localStorage.setItem('apidoo-tournee-modele', 'standard')")
+    rangements = []
+    def rpc_ranger(route):
+        p = (route.request.post_data_json or {}).get("p", {}); rangements.append(p["ruches"])
+        for i, rid in enumerate(p["ruches"]):
+            for r in DATA["ruches"]:
+                if r["id"] == rid: r["ordre_pose"] = i + 1
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=json.dumps(len(p["ruches"])))
+    ctx.route("**/rest/v1/rpc/ranger_ruches", lambda r: r.abort("internetdisconnected") if etat["coupe"] else rpc_ranger(r))
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    ids = lambda: page.evaluate("S.tournee.ids")
+    noms_tn = lambda: [page.evaluate("byId(S.d.ruches, '%s').nom" % i) for i in ids()]
+
+    # 1. Rucher rangé : la tournée part dans l'ordre de pose, les prioritaires restent signalées.
+    page.evaluate("ACT.v3tournee('Verger')"); page.wait_for_selector(".tn-e-depart")
+    verif(noms_tn() == ["Ruche 2", "Ruche 4", "Ruche 1", "Ruche 3"], "ordre de pose : %s" % noms_tn())
+    verif(page.locator(".tn-ordre [data-act=tnordre][data-v=pose].on").count() == 1, "« Ordre de pose » choisi")
+    verif(page.locator(".tn-liste .tn-tag.c").count() == 1 and page.locator(".tn-liste .tn-tag.w").count() == 1, "Ruche 3 « Urgent » et Ruche 2 « Priorité » signalées")
+    verif(page.locator(".tn-modes .tn-mode").count() == 3, "les 3 modes de saisie sont toujours là")
+    shot("op-depart-375")
+
+    # 2. Priorité : critiques, puis à surveiller, puis les autres ; le choix est retenu.
+    page.click(".tn-ordre [data-act=tnordre][data-v=priorite]")
+    verif(noms_tn()[:2] == ["Ruche 3", "Ruche 2"], "priorité : Ruche 3 puis Ruche 2 (%s)" % noms_tn())
+    verif(page.evaluate("localStorage.getItem('apidoo-tournee-ordre')") == "priorite", "choix retenu sur le téléphone")
+    page.click(".tn-ordre [data-act=tnordre][data-v=pose]")
+
+    # 3. Ordre de pose : Ruche 3 monte de deux places, enregistrement par ranger_ruches, la tournée suit.
+    page.click(".tn-ordre [data-act=oprangement]"); page.wait_for_selector("#sheet[open] .op-ordre", timeout=3000)
+    verif([x.strip() for x in page.locator("#sheet .op-ligne b").all_inner_texts()] == ["Ruche 2", "Ruche 4", "Ruche 1", "Ruche 3"], "feuille : l'ordre actuel")
+    verif(page.locator("#sheet .op-ligne").first.locator("[data-act=opmonter]").is_disabled(), "la première ne monte pas")
+    shot("op-feuille-375")
+    page.click("#sheet [data-act=opmonter][data-v='3']"); page.click("#sheet [data-act=opmonter][data-v='2']")
+    verif([x.strip() for x in page.locator("#sheet .op-ligne b").all_inner_texts()] == ["Ruche 2", "Ruche 3", "Ruche 4", "Ruche 1"], "Ruche 3 est montée de deux places")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Ordre de pose enregistré", timeout=5000)
+    verif(rangements and rangements[-1] == [R[1], R[2], R[3], R[0]], "ranger_ruches reçoit le nouvel ordre")
+    verif(noms_tn() == ["Ruche 2", "Ruche 3", "Ruche 4", "Ruche 1"], "la tournée suit le nouvel ordre : %s" % noms_tn())
+
+    # 4. Sans réseau : l'ordre est gardé sur le téléphone, puis part au retour du réseau.
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.click(".tn-ordre [data-act=oprangement]"); page.wait_for_selector("#sheet[open] .op-ordre")
+    page.click("#sheet [data-act=opdescendre][data-v='0']"); page.click("#sheet .btn.main")
+    page.wait_for_selector(".toast >> text=gardé sur le téléphone", timeout=5000)
+    verif(noms_tn()[:2] == ["Ruche 3", "Ruche 2"], "hors ligne : la tournée suit déjà")
+    n = len(rangements)
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_function("HL.nb() === 0", timeout=20000)
+    verif(len(rangements) == n + 1 and rangements[-1][:2] == [R[2], R[1]], "retour du réseau : l'ordre est parti")
+
+    # 5. Rucher pas encore rangé : la priorité reste proposée, comme avant (Tournée v5.11).
+    page.evaluate("localStorage.removeItem('apidoo-tournee-ordre'); TN && 0"); page.evaluate("ACT.tnquitter()")
+    page.evaluate("ACT.v3tournee('Bois')"); page.wait_for_selector(".tn-e-depart")
+    verif(page.locator(".tn-ordre [data-v=priorite].on").count() == 1, "rucher sans ordre de pose : Priorité par défaut")
+    page.set_viewport_size({"width": 1280, "height": 860}); shot("op-depart-1280")
+    verif(page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "1 280 px : rien ne déborde")

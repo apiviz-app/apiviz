@@ -5,8 +5,8 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
-## v5.74 · à publier en recette · photos et voix consolidées (IT-11)
-**Migration 034** (`034-photos-colonie-rucher.sql`), **additive, ne casse pas l'ancienne version** : à appliquer sur
+## v5.75 · à publier en recette · photos et voix consolidées (IT-11)
+**Migration 035** (`035-photos-colonie-rucher.sql`), **additive, ne casse pas l'ancienne version** : à appliquer sur
 `apidoo-test` (fait par Claude le 22 nov. 2026, voir `migrations/README.md`), puis sur `apidoo` avec l'accord de
 Pierre-Louis. Sans elle, l'application fonctionne comme avant : pas de choix Colonie / Rucher, pas de photo de fiche,
 journal du nettoyage annoncé « avec la prochaine mise à jour de la base ».
@@ -32,16 +32,16 @@ Technique :
 - `src/domaines/photos/regles.js` (`Regles.photos`) : HEIC, message de repli, chemins (`<exploitation>/<visite>/…`,
   `…/colonies/<id>/…`, `…/ruchers/<id>/…`), rattachement, espace et alerte à 80 %, libellés du journal.
   `src/domaines/photos/ecrans.js` : complément des Réglages, écran `stockage` (table des écrans, parent Réglages dans
-  `gabarit.js`), complément de la fiche rucher. `photos.js` : rattachement, `PH.galerie`, détection de 034, alerte.
+  `gabarit.js`), complément de la fiche rucher. `photos.js` : rattachement, `PH.galerie`, détection de 035, alerte.
   `ux.js` (onglet Photos de la colonie) et `voix.js` (alvéoles, repli) modifiés là où l'écran est rendu ; aucune
   nouvelle surcharge de `render`, `shell` ou `view*`.
-- Migration 034 : `visite_photos.colonie_id`, `visite_photos.rucher_id` (facultatives, même exploitation), `visite_id`
+- Migration 035 : `visite_photos.colonie_id`, `visite_photos.rucher_id` (facultatives, même exploitation), `visite_id`
   facultatif avec au moins un rattachement ; table `nettoyages_stockage` (RLS, lecture par l'exploitation, écriture par la
   clé de service seule) ; `photos_a_nettoyer(p_jours)` (clé de service seule, security invoker).
 - Fonction serveur `supabase/functions/nettoyer-stockage` (secrets `NETTOYAGE_CLE`, `NETTOYAGE_ACTIF`) et action GitHub
   « Nettoyage du stockage » (chaque nuit ; ne tourne pour une base que si `NETTOYAGE_CLE_RECETTE` ou
   `NETTOYAGE_CLE_PRODUCTION` existe). Retour arrière : désactiver l'action, ou `NETTOYAGE_ACTIF=non`.
-- Tests : SQL `test_034.mjs` (31 vérifications), unitaires `photos.test.mjs` (14 tests, nettoyage compris), scénarios
+- Tests : SQL `test_035.mjs` (31 vérifications), unitaires `photos.test.mjs` (14 tests, nettoyage compris), scénarios
   `etapes_pc` (photos), `etapes_es` (espace et alerte), `etapes_dv` (dictée et repli) ; `etapes_sd` connaît l'écran
   `stockage`. Recette sur téléphone : `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
@@ -55,6 +55,71 @@ Technique :
 - Dictée sur Android en ligne : « force quatre, cellules royales ouvertes, c'est bon » ; la visite enregistrée a Force 4
   et Cellules royales ouvertes. Sur un navigateur sans dictée (Firefox), toucher « Visiter à la voix ».
 - Le lendemain du déploiement de la fonction : Espace photos › Nettoyage automatique montre un passage.
+
+Numérotation (22 nov. 2026) : la tournée et les QR (#112) ont pris v5.74 et la migration 034 ; cette PR passe en
+v5.75 avec la migration 035 (après 034). Sur apidoo-test, la migration photos était déjà appliquée sous le nom 034.
+Pour que la mise en ligne retrouve la base de recette, la 034 de la tournée y a été appliquée aussi (22 nov. 2026) :
+apidoo-test est à 035, structure identique au rejeu des fichiers.
+
+## v5.74 · à publier en recette · QR à code court, tournée dans l'ordre de pose, actions groupées (IT-10)
+**Migration 034** (`034-tournee-qr-groupe.sql`), additive : **ne casse pas l'ancienne version**. Maquette « IT-10 — QR et
+tournée » du 22 nov. 2026. Itération IT-10 : AP-FEAT-041, AP-FEAT-042, AP-FEAT-046 (AP-US-045, AP-US-046, AP-US-052).
+
+Pour l'apiculteur :
+1. **Tournée dans l'ordre de pose** : au départ d'une tournée, « Ordre de passage » : **Ordre de pose** (les ruches dans
+   l'ordre où elles sont posées, pour ne pas marcher pour rien) ou **Priorité** (critiques, à surveiller, puis les moins
+   récemment vues : l'ordre d'avant). La pose est proposée dès qu'une ruche du rucher est rangée ; le choix est retenu
+   sur le téléphone. Les ruches urgentes ou prioritaires restent signalées dans les deux cas. Les trois façons de noter
+   (dicter, questions, au doigt) ne changent pas.
+2. **Ordre de pose** : depuis la tournée ou la fiche du rucher, une feuille liste les ruches ; ↑ ↓ pour les mettre dans
+   l'ordre, puis « Enregistrer l'ordre ». Sans réseau, l'ordre part au retour du réseau.
+3. **Actions groupées** : dans Ruchers, cocher des colonies, puis **Actions** : Poser une hausse, Changer l'état ou
+   Ajouter une tâche. Le bouton dit ce qui va se passer (« Poser une hausse sur 10 colonies »). L'effet se voit tout de
+   suite et un message « Annuler · 5 s » reste en haut de l'écran : rien n'est envoyé avant la fin du délai. Sans réseau,
+   l'action part au retour du réseau ; si l'application se ferme pendant les 5 s, elle part au prochain lancement.
+4. **QR à code court** : chaque ruche reçoit un code de 4 caractères (« K7M2 », sans 0, O, 1, I ni L), imprimé en gros
+   sous le QR. Le QR mène à « ?c=K7M2 » : plus court, donc moins dense et mieux lu au soleil. Les étiquettes déjà
+   collées (v5.57) restent lues.
+5. **Étiquette abîmée ?** Dans « Scanner une ruche », le code se tape à la main, même sans réseau. Un QR d'une autre
+   exploitation dit « Cette ruche n'est pas dans ton exploitation » ; un code inconnu, « Aucune de tes ruches n'a le
+   code X4QP » ; hors ligne, une ruche pas encore sur le téléphone s'ouvre dès le retour du réseau.
+6. **Étiquettes QR** (Ruchers › ⋯, ou la fiche du rucher) : seulement les nouvelles (jamais imprimées), tout le rucher,
+   ou les ruches choisies ; **planche A4** (3 × 7) ou **une par page** (étiquette unitaire de 100 × 60 mm). La date
+   d'impression est notée pour savoir lesquelles sont nouvelles.
+
+Technique :
+- Migration 034 : `ruches.ordre_pose`, `ruches.code_qr` (unique par exploitation, rempli par le déclencheur `code_qr` et
+  par la reprise), `ruches.etiquette_imprimee_le` ; table `actions_groupees` (journal, RLS : lecture exploitation
+  courante, ajout responsable ou membre, ni modification ni suppression) ; fonctions `appliquer_action_groupee(p)`
+  (hausse, état, tâche, une transaction, idempotente par identifiant client), `ranger_ruches(p)`, `noter_etiquettes(p)`,
+  `colonies_de(e, p)` (toutes les colonies citées dans l'exploitation ouverte) et `code_qr_libre(e)`. Toutes en security
+  invoker, search_path vide.
+- Règles pures : `src/domaines/visites/ordre-tournee.js` (`Regles.tournee`), `src/domaines/colonies/groupe.js`
+  (`Regles.groupe`), `src/domaines/ventes/terrain-regles.js` (`normaliserCode`, `lienCode`, `lireQr`, `trouverRuche`,
+  `raisonIntrouvable`, `aImprimer`).
+- Écrans : `tournee.js` (ordre de passage, implémentation effective de la tournée, pas de nouvelle surcharge),
+  `src/domaines/ruchers/ordre-pose.js` (feuille, actions `oprangement`, `opmonter`, `opdescendre`, déclarées par l'écran
+  `rucher`), `src/domaines/ruchers/groupe-ecran.js` (feuille et délai, actions `agchoix`, `agetat`, `agannuler`,
+  déclarées par l'écran `ruches` ; bouton `tbgroupe` dans `vue-tableau.js`), `src/domaines/ruchers/qr.js` (lien court,
+  saisie du code, choix et format des étiquettes ; actions `qrcode`, `qrformat`, `qrquoi`, `qrcoche`, permises en lecture
+  seule). `offline.js` montre les trois nouvelles saisies en attente. Styles : `styles/69-tournee-qr-groupe.css`.
+- Sur l'appareil : `apidoo-tournee-ordre` (ordre choisi), `apiviz-groupe-attente` (action dans son délai d'annulation).
+- Sans la migration 034 : la tournée reste en priorité (aucune ruche rangée), les étiquettes gardent le lien `?ruche=`
+  et proposent tout le rucher, et les actions groupées comme l'ordre de pose disent « La base doit être mise à jour ».
+- Tests : `tests/sql/test_034.mjs` (47 vérifications), `ordre-tournee.test.mjs`, `groupe.test.mjs`, `terrain.test.mjs` ;
+  scénarios de bout en bout `etapes_qc` (QR), `etapes_ag` (actions groupées), `etapes_ip` (ordre de pose et tournée).
+- Hors périmètre : NFC.
+
+À vérifier :
+- Imprimer une planche A4 sur papier, la coller, la scanner avec l'appareil photo d'un iPhone et d'un Android : la
+  feuille de la bonne ruche s'ouvre. Au soleil aussi.
+- Imprimer une étiquette « une par page » : 100 × 60 mm, QR lisible.
+- En mode avion, viser une étiquette (application installée) : la fiche s'ouvre ; taper le code à la main : pareil.
+- Ranger un rucher (Ordre de pose), lancer la tournée : elle suit cet ordre ; basculer sur Priorité puis revenir.
+- Cocher 10 colonies, Actions › Poser une hausse : 10 hausses de plus ; recommencer et toucher « Annuler » avant 5 s :
+  rien ne change, en base non plus.
+- Une tournée commencée avant la mise à jour reprend normalement (même ordre).
+- Tournée v5.11 : dictée libre, questions et saisie au doigt, vérification, bilan.
 
 ## v5.73 · à publier en recette · carte, adresses et polices libres d'usage commercial
 **Aucune migration.** Décision de Pierre-Louis du 20 nov. 2026 : ne garder que des services gratuits utilisables dans une

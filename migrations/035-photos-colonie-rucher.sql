@@ -1,4 +1,4 @@
--- Apiviz — migration 034 : photos de colonie et de rucher, journal du nettoyage du stockage (IT-11, v5.74).
+-- Apiviz — migration 035 : photos de colonie et de rucher, journal du nettoyage du stockage (IT-11, v5.75 ; numérotée 034 avant le 22 nov. 2026).
 --
 -- Contenu :
 --   1. visite_photos : colonnes facultatives colonie_id et rucher_id (AP-TECH-165). visite_id devient facultatif ; une

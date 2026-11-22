@@ -1,7 +1,7 @@
 # Recette manuelle IT-11 — photos et voix sur de vrais téléphones
 
 Tâches AP-TECH-163 (photos) et AP-TECH-169 (dictée). À dérouler en **recette** (`https://recette.apiviz.fr`, base
-`apidoo-test`, migration 034 appliquée), sur au moins **un iPhone (Safari, application installée sur l'écran
+`apidoo-test`, migration 035 appliquée), sur au moins **un iPhone (Safari, application installée sur l'écran
 d'accueil)** et **un Android (Chrome)**. Noter pour chaque ligne : OK, KO (avec capture) ou non testé, le modèle et la
 version du système.
 

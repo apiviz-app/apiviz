@@ -3,6 +3,8 @@ import { completerFiche, actions } from "./fiche.js";
 import { ecran as ecranDeplacer, actions as actionsDeplacer } from "./deplacer.js";
 import * as Tableau from "./vue-tableau.js";
 import { ecranEtiquettes, actions as actionsQr } from "./qr.js";
+import { actions as actionsOrdre } from "./ordre-pose.js";
+import { actions as actionsGroupe } from "./groupe-ecran.js";
 import { completerRucher as completerPhotos } from "../photos/ecrans.js";
 
 export default [
@@ -16,13 +18,14 @@ export default [
       if (S.d?.ruches?.length || UX.lieux().some((l) => l.cle)) return Tableau.ecran();
       N4.ecranRuchers(); AL.completerRuchers();
     },
-    actions: { clfsortie: (v) => { S.filtreSortie = v; render(); }, ...Tableau.actions } },
+    actions: { clfsortie: (v) => { S.filtreSortie = v; render(); }, ...Tableau.actions, ...actionsGroupe } },
   // Carte des ruchers : ux.js (UX.carte), un repère par rucher à la position du rucher (IT-05).
   { id: "carte", titre: "Carte", rubrique: "ruches", rendu: () => UX.carte() },
   // Fiche d'un rucher : alveoles.js (AL.vueRucher), complétée par fiche.js (Infos, renommer, archiver ; IT-05).
   // Ses actions (rc*) sont déclarées ici, une seule fois. IT-11 : « Photos du rucher » (src/domaines/photos/ecrans.js),
   // avant « Gérer ce rucher ».
-  { id: "rucher", titre: "Rucher", rubrique: "ruches", rendu: () => { AL.vueRucher(); completerFiche(); completerPhotos(); }, actions },
+  // Ordre de pose (IT-10, ordre-pose.js) : feuille ouverte depuis cette fiche et depuis le départ de la tournée.
+  { id: "rucher", titre: "Rucher", rubrique: "ruches", rendu: () => { AL.vueRucher(); completerFiche(); completerPhotos(); }, actions: { ...actions, ...actionsOrdre } },
   // Déplacer des colonies (IT-06, transhumance) : deplacer.js, seule implémentation. L'ancienne fenêtre de la v5.10
   // (essentiels.js, ACT.erdeplacer) reste derrière le drapeau « apidoo-deplacement-v510 » pour le retour arrière.
   { id: "deplacer", titre: "Déplacer des colonies", rubrique: "ruches", rendu: ecranDeplacer, actions: actionsDeplacer },

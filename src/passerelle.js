@@ -17,12 +17,15 @@ import * as assemblage from "./domaines/colonies/regles-assemblage.js";
 import * as produits from "./domaines/production/produits.js";
 // Photos (IT-11) : HEIC, rattachement, espace et alerte à 80 %, lues par photos.js.
 import * as photos from "./domaines/photos/regles.js";
+// Tournée et actions groupées (IT-10, migration 034) : ordre de passage, actions sur plusieurs colonies.
+import * as tournee from "./domaines/visites/ordre-tournee.js";
+import * as groupe from "./domaines/colonies/groupe.js";
 // File d'opérations hors ligne v2 (IT-09), lue par offline.js.
 import * as file from "./donnees/file.js";
 import { creerFile } from "./noyau/erreurs.js";
 import * as crochets from "./noyau/crochets.js";
 
-window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, assemblage, produits, photos, file });
+window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, assemblage, produits, photos, file, tournee, groupe });
 
 // Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
 // S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.

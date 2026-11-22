@@ -300,9 +300,9 @@ enregistré par `enregistrer_achat()` (migration 018), exactement comme une sais
 **Déploiement** : comme `assistant`, par Claude (accès Supabase), `apidoo-test` d'abord, `apidoo` après accord.
 **Coût** : une facture d'une page coûte de l'ordre de 2 à 5 centimes avec Sonnet ; jetons écrits dans le journal de la fonction.
 
-## Photos de fiche et nettoyage du stockage (IT-11, v5.74)
+## Photos de fiche et nettoyage du stockage (IT-11, v5.75)
 
-Une photo (`visite_photos`, migration 034) est rattachée à une **visite**, une **colonie** (`colonie_id`) ou un
+Une photo (`visite_photos`, migration 035) est rattachée à une **visite**, une **colonie** (`colonie_id`) ou un
 **rucher** (`rucher_id`), au moins un des trois. Pendant une visite, « Rattacher à » garde la visite et ajoute la colonie
 ou le rucher de la colonie ; depuis une fiche, la photo n'a pas de visite. Toutes passent par la même file d'envoi
 (`photos.js`, IndexedDB `apidoo-photos`) : fichier d'abord, puis ligne, après la visite, la colonie ou le rucher s'ils
@@ -314,7 +314,7 @@ stockage (014, `peut_photo_ecrire`) lisent le premier dossier.
 |---|---|---|
 | Règles | `src/domaines/photos/regles.js` (`Regles.photos`) | HEIC, message de repli, chemin, rattachement, espace et alerte à 80 %, libellés du journal |
 | Écrans | `src/domaines/photos/ecrans.js` | Ligne et avertissement des Réglages, écran `stockage` (Espace photos), photos de la fiche rucher |
-| Photos | `photos.js` | Réduction, file d'envoi, `PH.galerie(type, id)` (fiches), détection de 034 (`apidoo-photos-034`), alerte du responsable une fois par jour et par appareil |
+| Photos | `photos.js` | Réduction, file d'envoi, `PH.galerie(type, id)` (fiches), détection de 035 (clé `apidoo-photos-034`, nom d'avant la renumérotation), alerte du responsable une fois par jour et par appareil |
 | Fonction serveur | `supabase/functions/nettoyer-stockage/index.ts` et `regles.js` | Liste `photos_a_nettoyer(7)`, retire par lots de 100 par l'API du stockage, écrit une ligne par exploitation dans `nettoyages_stockage`, efface le journal de plus de 90 jours ; ne renvoie que des nombres |
 | Planification | `.github/workflows/nettoyer-stockage.yml` | Chaque nuit (2 h 23 UTC) ; à la main avec « Simuler » (coché par défaut) |
 
@@ -328,7 +328,7 @@ existante (anciens chemins d'avant 008) ; tout autre stockage (factures). Double
 `parExploitation()` côté serveur.
 
 **Mise en service, par base** (`apidoo-test` d'abord, `apidoo` avec l'accord de Pierre-Louis) :
-1. Migration 034 appliquée.
+1. Migration 035 appliquée.
 2. `supabase functions deploy nettoyer-stockage --no-verify-jwt --project-ref <ref>` (la clé partagée remplace le jeton).
 3. Secret de la fonction : `NETTOYAGE_CLE` = une valeur aléatoire d'au moins 24 caractères (`openssl rand -hex 24`),
    jamais écrite dans le dépôt ni dans une conversation.

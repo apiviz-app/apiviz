@@ -1,6 +1,6 @@
     # IT-11 — Photos fiables sur téléphone (AP-FEAT-047, AP-US-053) : photo HEIC illisible expliquée, photo prise sans
     # réseau réduite et « en attente » puis envoyée au retour du réseau, rattachement Visite / Colonie / Rucher
-    # (AP-TECH-165, migration 034), photos ajoutées depuis la fiche colonie et la fiche rucher par la même file d'envoi.
+    # (AP-TECH-165, migration 035), photos ajoutées depuis la fiche colonie et la fiche rucher par la même file d'envoi.
     # Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
     import os
     cap = os.environ.get("CAPTURES")
@@ -40,11 +40,11 @@
     page.set_viewport_size({"width": 375, "height": 812})
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_function("typeof PH != 'undefined' && PH.pret()", timeout=10000)
-    # Sans aucune photo, la migration 034 n'est vérifiée qu'au premier besoin (rien de plus à l'ouverture, etapes_dl).
-    verif(page.evaluate("PH.v034()") is False, "ouverture : 034 pas encore vérifiée, aucune lecture en plus")
+    # Sans aucune photo, la migration 035 n'est vérifiée qu'au premier besoin (rien de plus à l'ouverture, etapes_dl).
+    verif(page.evaluate("PH.v034()") is False, "ouverture : 035 pas encore vérifiée, aucune lecture en plus")
     page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_timeout(300); page.evaluate("ACT.uronglet('photos')")
     page.wait_for_function("PH.v034()", timeout=8000)
-    verif(page.evaluate("localStorage.getItem('apidoo-photos-034')") == "1", "base avec la migration 034 reconnue, et retenue sur l'appareil")
+    verif(page.evaluate("localStorage.getItem('apidoo-photos-034')") == "1", "base avec la migration 035 reconnue, et retenue sur l'appareil")
 
     # 1. Sans réseau : visite de Ruche 1 avec photos.
     etat["coupe"] = True; ctx.set_offline(True)

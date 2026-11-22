@@ -1,5 +1,5 @@
 # IT-11 (AP-TECH-166) : nettoyage de nuit du stockage des photos, par la fonction serveur « nettoyer-stockage ».
-# Retire les fichiers photo qu'aucune fiche n'utilise depuis plus de 7 jours et écrit le journal (migration 034).
+# Retire les fichiers photo qu'aucune fiche n'utilise depuis plus de 7 jours et écrit le journal (migration 035).
 # Chaque base ne tourne que si son secret existe : NETTOYAGE_CLE_RECETTE (apidoo-test), NETTOYAGE_CLE_PRODUCTION (apidoo).
 # Le secret de production n'est créé qu'avec l'accord de Pierre-Louis (CLAUDE.md). Retour arrière : désactiver cette
 # action (Actions › Nettoyage du stockage › Disable workflow), ou NETTOYAGE_ACTIF=non dans les secrets de la fonction.

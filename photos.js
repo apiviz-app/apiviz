@@ -1,7 +1,7 @@
 // Apiviz — photos de visite, de colonie et de rucher.
 // Prise de photo, réduction automatique, envoi différé si le réseau manque,
 // vignettes dans le journal de la ruche. S'appuie sur app.js (S, sb, esc, toast…).
-// IT-11 (migration 034) : rattachement Visite / Colonie / Rucher, photos ajoutées depuis la fiche d'une colonie ou d'un
+// IT-11 (migration 035) : rattachement Visite / Colonie / Rucher, photos ajoutées depuis la fiche d'une colonie ou d'un
 // rucher (même file d'envoi), message clair quand une photo HEIC ne se lit pas, espace surveillé avec alerte à 80 %.
 // Règles pures : src/domaines/photos/regles.js (window.Regles.photos). Écrans : src/domaines/photos/.
 const PH = (() => {
@@ -19,7 +19,7 @@ const PH = (() => {
     urls: new Map(),    // chemin -> { url, exp } (liens temporaires)
     espace: null,       // octets utilisés dans le stockage
     envoi: false,
-    v034: null,         // la base connaît les photos de colonie et de rucher (migration 034) ; null : pas encore su
+    v034: null,         // la base connaît les photos de colonie et de rucher (migration 035) ; null : pas encore su
     lien: "visite",     // rattachement choisi pour les photos de la visite en cours (IT-11)
   };
 
@@ -104,7 +104,7 @@ const PH = (() => {
     }
   }
 
-  // Migration 034 : les lignes lues portent colonie_id. Sans aucune photo, on le saura au premier besoin (une lecture
+  // Migration 035 : les lignes lues portent colonie_id. Sans aucune photo, on le saura au premier besoin (une lecture
   // de la colonne, une fois), pour ne rien ajouter aux lectures de l'ouverture (etapes_dl).
   const memo034 = (v) => { try { if (v === undefined) return localStorage.getItem("apidoo-photos-034"); localStorage.setItem("apidoo-photos-034", v); } catch { return null; } };
   function connait034(lignes) {
@@ -176,7 +176,7 @@ const PH = (() => {
       </div>`}${espace}</section>`;
   }
 
-  // Rattachement Visite / Colonie / Rucher (AP-TECH-165) : seulement avec la migration 034 et pour une seule colonie.
+  // Rattachement Visite / Colonie / Rucher (AP-TECH-165) : seulement avec la migration 035 et pour une seule colonie.
   function choixLien() {
     if (!R() || !S.visite?.ruche_id || S.visite.multi || !sait034()) return "";
     const ruche = byId(S.d.ruches, S.visite.ruche_id);
@@ -224,7 +224,7 @@ const PH = (() => {
       visiteId = data?.[0]?.id;
       if (!visiteId) return toast("Visite enregistrée, mais les photos n’ont pas pu y être rattachées", true);
     }
-    // Colonie ou rucher en plus de la visite (migration 034) ; sans 034, la visite seule comme avant.
+    // Colonie ou rucher en plus de la visite (migration 035) ; sans 035, la visite seule comme avant.
     const lien = st.v034 === true && R() && !S.visite?.multi ? R().fiches(st.lien, visiteId, byId(S.d.ruches, S.visite?.ruche_id)) : { visite_id: visiteId };
     for (const p of b) {
       const o = { id: p.id, ex: typeof EX != "undefined" ? EX.courante() : "", ...lien, blob: p.blob, largeur: p.largeur, hauteur: p.hauteur, octets: p.octets, cree: Date.now() };
@@ -270,7 +270,7 @@ const PH = (() => {
         // La visite, la colonie ou le rucher partent d’abord.
         if (typeof HL != "undefined" && [p.visite_id, p.colonie_id, p.rucher_id].some((x) => x && HL.enAttente(x))) continue;
         if (p.ex && typeof EX != "undefined" && p.ex !== EX.courante()) continue; // photo d’une autre exploitation
-        if (!p.visite_id && st.v034 !== true) continue; // photo de fiche gardée : la base n'a pas encore 034
+        if (!p.visite_id && st.v034 !== true) continue; // photo de fiche gardée : la base n'a pas encore 035
         const chemin = R() ? R().chemin(p) : `${p.ex ? p.ex + "/" : ""}${p.visite_id}/${p.id}.jpg`;
         const up = await sb.storage.from(BUCKET).upload(chemin, p.blob, { contentType: "image/jpeg", upsert: true });
         if (up.error) { echec++; break; }
@@ -443,6 +443,6 @@ const PH = (() => {
   }
 
   return { cheminsRuche, effacer, fermer, load, formSection, rattacher, vignettes, oterVisite, envoyer, QUOTA, nbAttente: () => st.attente.length,
-    // IT-11 : galerie d'une fiche, état de l'espace, base à jour (034), relecture de l'espace.
+    // IT-11 : galerie d'une fiche, état de l'espace, base à jour (035), relecture de l'espace.
     galerie, etatEspace, lireEspace, pret: () => st.pret, v034: () => st.v034 === true };
 })();

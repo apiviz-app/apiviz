@@ -1,7 +1,7 @@
 // Apiviz — fonction serveur « nettoyer-stockage » (IT-11, AP-FEAT-048, AP-TECH-166 et AP-TECH-168).
 // Chaque nuit (action GitHub « Nettoyage du stockage »), retire du stockage des photos les fichiers qu'aucune fiche
 // n'utilise depuis plus de 7 jours (visite supprimée, envoi interrompu), et écrit un passage par exploitation dans
-// le journal nettoyages_stockage (migration 034). Les fiches (visite_photos) ne sont jamais modifiées.
+// le journal nettoyages_stockage (migration 035). Les fiches (visite_photos) ne sont jamais modifiées.
 //
 // Secrets (un jeu par projet Supabase, jamais dans le dépôt) :
 //   NETTOYAGE_CLE      clé partagée avec l'action GitHub (24 caractères au moins) ; sans elle, la fonction refuse tout
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   ]);
   if (cand.error || ex.error) {
     console.error("nettoyer-stockage: lecture impossible", cand.error?.message || ex.error?.message);
-    return json({ erreur: "Lecture impossible : migration 034 appliquée ?" }, 500);
+    return json({ erreur: "Lecture impossible : migration 035 appliquée ?" }, 500);
   }
   const groupes = parExploitation(cand.data);
   const resultats = new Map<string, { fichiers: number; octets: number; erreur?: string }>();

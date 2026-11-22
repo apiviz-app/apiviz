@@ -1,6 +1,6 @@
     # IT-11 — Surveillance du stockage (AP-FEAT-048, AP-US-054) : à 80 % du quota, le responsable est prévenu ; les
     # Réglages montrent l'espace restant et la taille moyenne d'une photo ; l'écran « Espace photos » montre la jauge,
-    # le seuil et le journal du nettoyage de nuit (migration 034, AP-TECH-168). Sous 80 % : aucune alerte.
+    # le seuil et le journal du nettoyage de nuit (migration 035, AP-TECH-168). Sous 80 % : aucune alerte.
     # Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
     import os
     cap = os.environ.get("CAPTURES")

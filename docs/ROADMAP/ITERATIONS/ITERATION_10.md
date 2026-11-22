@@ -8,7 +8,7 @@
 | Phase | Phase 2 — Expérience terrain |
 | Taille | M |
 | Hypothèse de taille | Génération et impression de QR + lecture par l'appareil photo ; amélioration de l'enchaînement. |
-| Migration | aucune |
+| Migration | 034 (`034-tournee-qr-groupe.sql`, additive) — corrigé le 22 nov. 2026 : la colonne `code` de 016 est le numéro peint, libre et non unique ; l'ordre de pose et la fonction groupée (AP-TECH-145) demandaient aussi une migration |
 
 ## 1. Objectif
 
@@ -55,6 +55,8 @@ Scanner → fiche → visite → suivante, au rucher, en quelques secondes.
 
 Colonne code unique par colonie/contenant (déjà prévue en 016).
 
+Réalisé (22 nov. 2026, migration 034) : `ruches.code_qr` (4 caractères, unique par exploitation, rempli tout seul), `ruches.ordre_pose`, `ruches.etiquette_imprimee_le`, table `actions_groupees` et fonctions `appliquer_action_groupee`, `ranger_ruches`, `noter_etiquettes`. La colonne `code` de 016 reste le numéro peint sur la caisse.
+
 ## 8. Dépendances
 
 - Itérations préalables : IT-03, IT-05, IT-06, IT-08.
@@ -92,7 +94,7 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 ## 13. Livrables
 
 - Code sur une branche `claude/…` et pull request vers `main`.
-- Aucune migration.
+- Migration 034 (additive, ne casse pas l'ancienne version).
 - Entrée du CHANGELOG avec rubrique « À vérifier ».
 - Statuts mis à jour dans le backlog master.
 - Version publiée en recette.
