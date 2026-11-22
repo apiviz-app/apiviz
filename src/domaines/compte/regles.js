@@ -25,6 +25,7 @@ export const ACTIONS_LECTEUR = Object.freeze([
   "eadetail", // écran « Entre associés » (v5.32) : consultation
   "fafiltre", "faouvrir", "favoir", // Finances › Factures (v5.55) : consultation et fichier
   "qrscanner", "qrfiche", "qretiquettes", "qrrucher", "qrimprimer", "cmpartager", // outils de terrain (v5.57) : lire, imprimer, partager
+  "qrcode", "qrformat", "qrquoi", "qrcoche", // QR (IT-10) : code tapé à la main, format et choix des étiquettes à imprimer
   "fefiltre", "cbmesure", "mspartager", "msimprimer", // fil de l'équipe, courbes, Ma saison (v5.61) : consultation
   "msphase", "msapisuivant", "msapercu", "msruche", "msaller", // Ma saison en un écran (v5.69) : frise, priorités, aperçus
   "rtsemaine", "jlouvrir", "rtfermer", "rtsons", "rtregle", // rayon de la saison, jalons, sons et vibrations de l'appareil (v5.68)
