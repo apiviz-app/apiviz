@@ -1,0 +1,43 @@
+# IT-11 (AP-TECH-166) : nettoyage de nuit du stockage des photos, par la fonction serveur « nettoyer-stockage ».
+# Retire les fichiers photo qu'aucune fiche n'utilise depuis plus de 7 jours et écrit le journal (migration 034).
+# Chaque base ne tourne que si son secret existe : NETTOYAGE_CLE_RECETTE (apidoo-test), NETTOYAGE_CLE_PRODUCTION (apidoo).
+# Le secret de production n'est créé qu'avec l'accord de Pierre-Louis (CLAUDE.md). Retour arrière : désactiver cette
+# action (Actions › Nettoyage du stockage › Disable workflow), ou NETTOYAGE_ACTIF=non dans les secrets de la fonction.
+name: Nettoyage du stockage
+
+on:
+  schedule:
+    - cron: "23 2 * * *" # 3 h 23 à Paris en hiver, 4 h 23 en été
+  workflow_dispatch:
+    inputs:
+      simuler:
+        description: "Simuler (compter sans rien supprimer)"
+        type: boolean
+        default: true
+
+permissions: {}
+
+jobs:
+  nettoyer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recette (apidoo-test)
+        env:
+          CLE: ${{ secrets.NETTOYAGE_CLE_RECETTE }}
+          SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
+        run: |
+          if [ -z "$CLE" ]; then echo "Secret NETTOYAGE_CLE_RECETTE absent : recette ignorée."; exit 0; fi
+          curl -fsS -X POST "https://zaaaiqyhxehvgowlgztx.supabase.co/functions/v1/nettoyer-stockage" \
+            -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
+            -d "{\"simuler\": $SIMULER}"
+          echo
+      - name: Production (apidoo)
+        env:
+          CLE: ${{ secrets.NETTOYAGE_CLE_PRODUCTION }}
+          SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
+        run: |
+          if [ -z "$CLE" ]; then echo "Secret NETTOYAGE_CLE_PRODUCTION absent : production ignorée."; exit 0; fi
+          curl -fsS -X POST "https://xkucyqzlqfeyuomrtjbu.supabase.co/functions/v1/nettoyer-stockage" \
+            -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
+            -d "{\"simuler\": $SIMULER}"
+          echo
