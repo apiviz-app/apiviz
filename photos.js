@@ -119,8 +119,9 @@ const PH = (() => {
     sonde = sb.from("visite_photos").select("colonie_id").limit(1).then(({ error }) => {
       if (error && typeof HL != "undefined" && HL.reseau(error)) return; // sans réseau : on reposera la question
       st.v034 = !error; memo034(st.v034 ? "1" : "0");
-      if (!st.v034) return;
-      if (S.route === "visite") { readVisitForm(); redessiner("visite"); } else if (["ruche", "rucher"].includes(S.route)) render();
+      // Seule une section photos de fiche affichée est redessinée ; la visite en cours n'est jamais redessinée sous les
+      // doigts (le choix « Rattacher à » apparaît au prochain affichage de la section Photos).
+      if (st.v034 && ["ruche", "rucher"].includes(S.route) && document.querySelector(".ph-fiche")) render();
     }, () => {}).finally(() => { sonde = null; });
   }
   const sait034 = () => { if (st.v034 === null) sonder034(); return st.v034 === true; };
