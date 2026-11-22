@@ -40,7 +40,11 @@
     page.set_viewport_size({"width": 375, "height": 812})
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_function("typeof PH != 'undefined' && PH.pret()", timeout=10000)
-    verif(page.evaluate("PH.v034()"), "base avec la migration 034 reconnue")
+    # Sans aucune photo, la migration 034 n'est vérifiée qu'au premier besoin (rien de plus à l'ouverture, etapes_dl).
+    verif(page.evaluate("PH.v034()") is False, "ouverture : 034 pas encore vérifiée, aucune lecture en plus")
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_timeout(300); page.evaluate("ACT.uronglet('photos')")
+    page.wait_for_function("PH.v034()", timeout=8000)
+    verif(page.evaluate("localStorage.getItem('apidoo-photos-034')") == "1", "base avec la migration 034 reconnue, et retenue sur l'appareil")
 
     # 1. Sans réseau : visite de Ruche 1 avec photos.
     etat["coupe"] = True; ctx.set_offline(True)
