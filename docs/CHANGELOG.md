@@ -5,6 +5,62 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.75 · à publier en recette · photos et voix consolidées (IT-11)
+**Migration 035** (`035-photos-colonie-rucher.sql`), **additive, ne casse pas l'ancienne version** : à appliquer sur
+`apidoo-test` (fait par Claude le 22 nov. 2026, voir `migrations/README.md`), puis sur `apidoo` avec l'accord de
+Pierre-Louis. Sans elle, l'application fonctionne comme avant : pas de choix Colonie / Rucher, pas de photo de fiche,
+journal du nettoyage annoncé « avec la prochaine mise à jour de la base ».
+
+Pour l'apiculteur :
+1. **Photo d'iPhone au rucher sans réseau** (AP-US-053) : la photo est réduite, marquée « en attente » et part au retour
+   du réseau. Une photo HEIC que le téléphone ne sait pas lire (Chrome sur Android) donne un message clair : la reprendre
+   avec « Prendre une photo », ou choisir « Le plus compatible » dans Réglages › Appareil photo › Formats de l'iPhone.
+2. **Rattacher une photo** de visite à la visite seule, à la **colonie** ou au **rucher** (« Rattacher à »). Les fiches
+   colonie (onglet Photos) et rucher (« Photos du rucher ») montrent leurs photos et en ajoutent directement, sans visite,
+   par la même file d'envoi.
+3. **Espace photos surveillé** (AP-US-054) : Réglages › L'exploitation › « Espace photos ». À 80 % du quota de 1 Go,
+   un avertissement donne l'espace restant, le nombre de photos qui tiennent encore et la taille moyenne d'une photo ;
+   le responsable est prévenu une fois par jour sur son téléphone. L'écran « Espace photos » montre la jauge, le seuil
+   et le journal du nettoyage.
+4. **Nettoyage de nuit** : les fichiers photo qu'aucune fiche n'utilise depuis plus de 7 jours (visite supprimée, envoi
+   interrompu) sont retirés ; les fiches et leurs photos ne sont jamais touchées. Chaque passage est noté au journal.
+5. **Dictée** (AP-US-055) : Force, Œufs vus et Cellules royales ont leur alvéole pendant la dictée (« force quatre,
+   cellules royales ouvertes » les remplit) ; touchées avec des gants, elles passent au choix suivant puis se vident.
+   Sans reconnaissance vocale, « Visiter à la voix » reste et explique comment dicter la note avec le micro du clavier.
+
+Technique :
+- `src/domaines/photos/regles.js` (`Regles.photos`) : HEIC, message de repli, chemins (`<exploitation>/<visite>/…`,
+  `…/colonies/<id>/…`, `…/ruchers/<id>/…`), rattachement, espace et alerte à 80 %, libellés du journal.
+  `src/domaines/photos/ecrans.js` : complément des Réglages, écran `stockage` (table des écrans, parent Réglages dans
+  `gabarit.js`), complément de la fiche rucher. `photos.js` : rattachement, `PH.galerie`, détection de 035, alerte.
+  `ux.js` (onglet Photos de la colonie) et `voix.js` (alvéoles, repli) modifiés là où l'écran est rendu ; aucune
+  nouvelle surcharge de `render`, `shell` ou `view*`.
+- Migration 035 : `visite_photos.colonie_id`, `visite_photos.rucher_id` (facultatives, même exploitation), `visite_id`
+  facultatif avec au moins un rattachement ; table `nettoyages_stockage` (RLS, lecture par l'exploitation, écriture par la
+  clé de service seule) ; `photos_a_nettoyer(p_jours)` (clé de service seule, security invoker).
+- Fonction serveur `supabase/functions/nettoyer-stockage` (secrets `NETTOYAGE_CLE`, `NETTOYAGE_ACTIF`) et action GitHub
+  « Nettoyage du stockage » (chaque nuit ; ne tourne pour une base que si `NETTOYAGE_CLE_RECETTE` ou
+  `NETTOYAGE_CLE_PRODUCTION` existe). Retour arrière : désactiver l'action, ou `NETTOYAGE_ACTIF=non`.
+- Tests : SQL `test_035.mjs` (31 vérifications), unitaires `photos.test.mjs` (14 tests, nettoyage compris), scénarios
+  `etapes_pc` (photos), `etapes_es` (espace et alerte), `etapes_dv` (dictée et repli) ; `etapes_sd` connaît l'écran
+  `stockage`. Recette sur téléphone : `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
+
+À vérifier :
+- Sur iPhone, en mode avion : prendre une photo dans une visite, enregistrer ; la photo est « en attente » dans le
+  journal ; au retour du réseau, elle part (Synchronisation : plus rien en attente).
+- Sur Android (Chrome) : choisir une photo HEIC dans la galerie ; le message dit quoi faire.
+- Visite avec « Rattacher à : Colonie » : la photo apparaît dans l'onglet Photos de la colonie. Même chose pour le rucher.
+- Fiche rucher : « Photos du rucher » › Prendre une photo, puis la toucher et la supprimer.
+- Réglages › L'exploitation › Espace photos : chiffres cohérents avec Supabase › Storage.
+- Dictée sur Android en ligne : « force quatre, cellules royales ouvertes, c'est bon » ; la visite enregistrée a Force 4
+  et Cellules royales ouvertes. Sur un navigateur sans dictée (Firefox), toucher « Visiter à la voix ».
+- Le lendemain du déploiement de la fonction : Espace photos › Nettoyage automatique montre un passage.
+
+Numérotation (22 nov. 2026) : la tournée et les QR (#112) ont pris v5.74 et la migration 034 ; cette PR passe en
+v5.75 avec la migration 035 (après 034). Sur apidoo-test, la migration photos était déjà appliquée sous le nom 034.
+Pour que la mise en ligne retrouve la base de recette, la 034 de la tournée y a été appliquée aussi (22 nov. 2026) :
+apidoo-test est à 035, structure identique au rejeu des fichiers.
+
 ## v5.74 · à publier en recette · QR à code court, tournée dans l'ordre de pose, actions groupées (IT-10)
 **Migration 034** (`034-tournee-qr-groupe.sql`), additive : **ne casse pas l'ancienne version**. Maquette « IT-10 — QR et
 tournée » du 22 nov. 2026. Itération IT-10 : AP-FEAT-041, AP-FEAT-042, AP-FEAT-046 (AP-US-045, AP-US-046, AP-US-052).

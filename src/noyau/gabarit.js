@@ -32,6 +32,8 @@ export const PARENTS = {
   offre: ["reglages", "Réglages"], offres: ["offre", "Mon offre"], recharge: ["offre", "Mon offre"],
   // Espace API (v5.71) : ce qu'API sait de toi, rangé dans Réglages › API.
   apimemoire: ["reglages", "Réglages"],
+  // Espace photos (IT-11) : espace utilisé, alerte à 80 %, journal du nettoyage de nuit.
+  stockage: ["reglages", "Réglages"],
 };
 
 /**

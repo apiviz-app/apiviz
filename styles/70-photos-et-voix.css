@@ -1,0 +1,42 @@
+/* IT-11 — photos de colonie et de rucher, espace photos, dictée (v5.75). Jetons : styles/jetons.css. */
+
+/* Rattachement Visite / Colonie / Rucher (formulaire de visite) */
+.ph-liens{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px}
+.ph-liens-t{font-size:var(--t-s);font-weight:600}
+.ph-liens .small{margin:0}
+.ph-seg{display:flex;gap:4px;padding:4px;border-radius:var(--r-m);background:#E7EAE1}
+.ph-lien{flex:1;min-height:36px;border:0;border-radius:var(--r-s);background:transparent;color:var(--muted);font:inherit;font-size:var(--t-m);font-weight:500;cursor:pointer}
+.ph-lien.on{background:var(--card);color:var(--ink);font-weight:600}
+.ph-lien:disabled{opacity:.45;cursor:not-allowed}
+.ph-lien:focus-visible{outline:2px solid var(--pine);outline-offset:1px;box-shadow:0 0 0 4px var(--honeysoft)}
+
+/* Photos d'une fiche colonie ou rucher */
+.ph-fiche .ph-grid{margin-top:8px}
+
+/* Avertissement d'espace (Réglages, écran Espace photos, formulaire) */
+.ph-avert{display:flex;flex-direction:column;gap:2px;margin:0 0 10px;padding:12px 14px;border-radius:var(--r-m);background:var(--honeysoft);color:var(--ink);font-size:var(--t-s)}
+.ph-avert b{font-size:var(--t-m)}
+.ph-alerte{color:var(--watch);font-weight:600}
+.rg-alerte-v{color:var(--watch);font-weight:700}
+
+/* Écran Espace photos */
+.ph-stockage{display:flex;flex-direction:column;gap:14px}
+.ph-chiffre{font-size:var(--t-xl);font-variant-numeric:tabular-nums}
+.ph-chiffre .small{font-weight:400}
+.ph-jauge{position:relative;height:12px;margin:12px 0 6px;border-radius:var(--r-pill);background:#E3E6DC}
+.ph-jauge i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-pill);background:var(--honey)}
+.ph-jauge b{position:absolute;top:-4px;width:2px;height:20px;margin-left:-1px;background:var(--ink)}
+.ph-legende{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+
+/* Dictée : feuille « micro du clavier » (AP-US-055) */
+.vx-clavier{display:flex;flex-direction:column;gap:12px}
+.vx-clavier .vx-maquette{border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.vx-clavier .vx-maquette p{margin:0;padding:12px 14px;min-height:44px;font-size:var(--t-m)}
+.vx-clavier .vx-touches{display:flex;gap:6px;align-items:center;padding:10px 12px;background:#E7EAE1}
+.vx-clavier .vx-touches i{flex:1;height:34px;border-radius:var(--r-s);background:var(--card)}
+.vx-clavier .vx-micro{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--honey);color:var(--ink)}
+
+/* Dictée : huit alvéoles depuis IT-11 (Force, Œufs vus, Cellules royales) ; la grille défile plutôt que de passer
+   sous les boutons sur un petit téléphone. */
+#alVoix .vx-champs{overflow-y:auto;padding-bottom:20px;-webkit-overflow-scrolling:touch}
+#alVoix .vx-c{min-height:88px;text-align:center;line-height:1.2}

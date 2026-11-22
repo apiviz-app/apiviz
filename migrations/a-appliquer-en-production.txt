@@ -43,6 +43,13 @@
 #   enregistre tout sauf les goûts et « prévenir », et le dit.
 # 034-tournee-qr-groupe.sql (PR claude/it-10-qr-tournee-groupe, v5.74) : ordre de pose, code court des QR, date
 #   d'impression des étiquettes, actions groupées (table actions_groupees, appliquer_action_groupee, ranger_ruches,
-#   noter_etiquettes). Additive, ne casse pas l'ancienne version. Après 033. À appliquer sur apidoo-test par la mise en
-#   ligne en recette, puis sur apidoo avec l'accord de Pierre-Louis. Sans elle, la v5.74 garde l'ordre par priorité,
+#   noter_etiquettes). Additive, ne casse pas l'ancienne version. Après 033. APPLIQUÉE sur apidoo-test le 22 nov. 2026
+#   par Claude (accès Supabase), après la migration photos (structure identique à l'ordre 034 puis 035). À appliquer sur
+#   apidoo avec l'accord de Pierre-Louis. Sans elle, la v5.74 garde l'ordre par priorité,
 #   les liens ?ruche= et dit « La base doit être mise à jour » pour les actions groupées et l'ordre de pose.
+# 035-photos-colonie-rucher.sql (PR claude/it-11-photos-voix, v5.75, IT-11) : photos de colonie et de rucher
+#   (visite_photos.colonie_id, rucher_id ; visite_id facultatif), journal nettoyages_stockage, photos_a_nettoyer().
+#   Additive, ne casse pas l'ancienne version. Après 034 (renumérotée : elle s'appelait 034, numéro pris par la
+#   tournée, #112). APPLIQUÉE sur apidoo-test le 22 nov. 2026 par Claude (accès Supabase). À appliquer sur apidoo par la mise en ligne en production, avec l'accord de Pierre-Louis.
+#   Ensuite, toujours avec son accord : déployer la fonction nettoyer-stockage sur apidoo (--no-verify-jwt), créer ses
+#   secrets NETTOYAGE_CLE et le secret GitHub NETTOYAGE_CLE_PRODUCTION (voir docs/TECHNIQUE.md, « Nettoyage du stockage »).

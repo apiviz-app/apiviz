@@ -1,0 +1,72 @@
+    # IT-11 — Surveillance du stockage (AP-FEAT-048, AP-US-054) : à 80 % du quota, le responsable est prévenu ; les
+    # Réglages montrent l'espace restant et la taille moyenne d'une photo ; l'écran « Espace photos » montre la jauge,
+    # le seuil et le journal du nettoyage de nuit (migration 035, AP-TECH-168). Sous 80 % : aucune alerte.
+    # Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    Mo = 1048576
+    espace = {"o": 820 * Mo}
+    def rpc_espace(route):
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if route.request.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        return route.fulfill(status=200, headers=h, body=str(espace["o"]))
+    page.route("**/rest/v1/rpc/photos_espace", rpc_espace)
+    V1 = str(uuid.uuid4())
+    DATA["visites"].append({"id": V1, "ruche_id": R1, "date_visite": "2026-10-01", "activite": "Normale", "provisions": "Moyennes", "reine": "Vue", "couvain": "", "poids_kg": None, "varroa": None, "note": ""})
+    DATA["visite_photos"] = [{"id": str(uuid.uuid4()), "visite_id": V1, "colonie_id": None, "rucher_id": None, "chemin": "%s/%s/%d.jpg" % (E1, V1, i),
+                              "largeur": 1600, "hauteur": 1200, "octets": 290 * 1024, "created_at": "2026-10-01T10:00:00Z"} for i in range(10)]
+    DATA["nettoyages_stockage"] = [
+        {"fait_le": "2026-11-22T02:23:00Z", "statut": "fait", "fichiers": 12, "octets": 48 * Mo},
+        {"fait_le": "2026-11-21T02:23:00Z", "statut": "rien", "fichiers": 0, "octets": 0},
+        {"fait_le": "2026-11-20T02:23:00Z", "statut": "echec", "fichiers": 0, "octets": 0}]
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Responsable : prévenu une fois par jour sur cet appareil.
+    page.wait_for_selector(".toast >> text=Espace photos utilisé à 80 %", timeout=10000)
+    verif("Réglages" in page.locator(".toast").last.inner_text(), "alerte du responsable : où voir le détail")
+    verif(page.evaluate("PH.etatEspace().alerte && PH.etatEspace().pourcent === 80"), "état de l'espace : 80 %, alerte")
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_timeout(1500)
+    verif(page.locator(".toast >> text=Espace photos utilisé").count() == 0, "pas de seconde alerte le même jour")
+
+    # 2. Réglages : avertissement avec l'espace restant et la taille moyenne d'une photo (critère d'AP-US-054).
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-photos", timeout=8000)
+    verif("80 %" in page.locator(".rg-photos").inner_text() and "820 Mo sur 1 Go" in page.locator(".rg-photos").inner_text(), "ligne « Espace photos » : 820 Mo sur 1 Go, 80 %")
+    a = page.locator(".ph-avert").inner_text() if page.locator(".ph-avert").count() else ""
+    verif("Il reste 204 Mo" in a and "environ 700 photos" in a and "290 Ko" in a, "avertissement : espace restant et taille moyenne (%s)" % a.replace("\n", " "))
+    if cap: page.screenshot(path=f"{cap}/es-reglages-375.png", full_page=True)
+
+    # 3. Écran « Espace photos » : jauge, seuil, journal.
+    page.click(".rg-photos"); page.wait_for_selector(".ph-stockage", timeout=8000)
+    verif(page.evaluate("S.route") == "stockage", "écran Espace photos ouvert depuis les Réglages")
+    verif("Il te reste 204 Mo" in entete(page), "phrase de tête : ce qui reste (%s)" % entete(page).replace("\n", " "))
+    verif(page.locator(".ph-jauge[aria-label*='alerte à 80 %']").count() == 1, "jauge lisible : 80 % utilisés, alerte à 80 %")
+    page.wait_for_selector(".ph-stockage .hl-row >> text=12 fichiers sans fiche retirés", timeout=8000)
+    j = page.locator(".ph-stockage").inner_text()
+    verif("12 fichiers sans fiche retirés, 48 Mo libérés." in j, "journal : passage avec fichiers retirés")
+    verif("Rien à retirer" in j and "! Échec" in j and "Rien n’a été retiré" in j, "journal : passage sans rien et passage en échec")
+    verif("22 novembre, 3 h 23" in j, "heure à la française, heure de Paris (%s)" % [x for x in j.split("\n") if "novembre" in x][:1])
+    verif("plus de 7 jours" in j and "jamais touchés" in j, "le nettoyage dit ce qu'il retire et ce qu'il ne touche pas")
+    verif(page.locator(".wrap > .head .g-retour, .shell > .topbar .g-retour-haut").count() >= 1, "retour vers les Réglages")
+    if cap:
+        page.screenshot(path=f"{cap}/es-stockage-375.png", full_page=True)
+        page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_timeout(400)
+        page.screenshot(path=f"{cap}/es-stockage-1280.png", full_page=True)
+        page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-photos", timeout=8000)
+        page.screenshot(path=f"{cap}/es-reglages-1280.png", full_page=True)
+        page.set_viewport_size({"width": 375, "height": 812})
+
+    # 4. Sous 80 % : la ligne reste, sans avertissement.
+    espace["o"] = 500 * Mo
+    page.evaluate("PH.lireEspace()"); page.wait_for_timeout(500)
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-photos", timeout=8000)
+    verif(page.locator(".ph-avert").count() == 0 and "48 %" in page.locator(".rg-photos").inner_text(), "sous 80 % : pas d’avertissement, 48 %")
+
+    # 5. Formulaire de visite à 80 % : l'avertissement y est aussi, à la place du simple compteur.
+    espace["o"] = 900 * Mo
+    page.evaluate("PH.lireEspace()"); page.wait_for_timeout(500)
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
+    page.locator("details[data-sec=photos]").evaluate("d => d.open = true")
+    verif("Il reste 124 Mo" in page.locator(".ph-sec .ph-alerte").inner_text(), "visite : avertissement d'espace à 88 %")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

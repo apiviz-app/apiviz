@@ -8,7 +8,7 @@
 | Phase | Phase 2 — Expérience terrain |
 | Taille | S |
 | Hypothèse de taille | Fonctions existantes à fiabiliser et à étendre aux colonies et ruchers. |
-| Migration | `020` |
+| Migration | `035` (le numéro 020 était déjà pris à la rédaction de la fiche, puis 034 par la tournée, #112) |
 
 ## 1. Objectif
 
@@ -91,7 +91,7 @@ Les critères GIVEN/WHEN/THEN des user stories listées au §4, tels qu'écrits 
 ## 13. Livrables
 
 - Code sur une branche `claude/…` et pull request vers `main`.
-- Migration `migrations/020-….sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
+- Migration `migrations/035-photos-colonie-rucher.sql` relançable, appliquée sur apidoo-test, inscrite dans `a-appliquer-en-production.txt`.
 - Entrée du CHANGELOG avec rubrique « À vérifier ».
 - Statuts mis à jour dans le backlog master.
 - Version publiée en recette.

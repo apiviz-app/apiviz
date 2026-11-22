@@ -22,6 +22,13 @@ Scénario IT-07 : `etapes_rn` (en-tête de la fiche colonie, nouvelle reine qui 
 Ruche 2 le 12 mai », onglets Santé et Reine & lignée, journal unifié, saisie sans réseau, aucune écriture directe de
 `annee_reine`, base sans 019). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.
 
+Scénarios IT-11 (v5.75, migration 035) : `etapes_pc` (photo HEIC illisible expliquée, photo prise sans réseau puis
+envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et rucher), `etapes_es` (alerte du responsable
+à 80 %, avertissement des Réglages avec espace restant et taille moyenne, écran Espace photos et journal du nettoyage),
+`etapes_dv` (dictée : Force et Cellules royales à la voix, alvéoles touchées, repli « micro du clavier » sans
+reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
+`docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
+
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 

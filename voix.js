@@ -8,6 +8,13 @@ const VX = (() => {
     ["couvain", "Couvain", ["Réduit", "Normal", "Abondant"]],
     ["provisions", "Provisions", ["Faibles", "Moyennes", "Bonnes"]],
   ];
+  // IT-11 (AP-TECH-170) : les champs de la visite ajoutés en v5.49 (migration 023) ont aussi leur alvéole pendant la
+  // dictée. Une alvéole touchée passe au choix suivant ; après le dernier, elle se vide (pas regardé).
+  const EXTRAS = [
+    ["force", "Force", ["1", "2", "3", "4", "5"]],
+    ["oeufs_vus", "Œufs vus", ["Oui", "Non"]],
+    ["cellules_royales", "Cellules royales", ["Aucune", "Ouvertes", "Operculées"]],
+  ];
   const UNITES = { un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9 };
   const DIZAINES = { vingt: 20, trente: 30, quarante: 40, cinquante: 50, soixante: 60 };
   function kilos(t) {
@@ -48,7 +55,8 @@ const VX = (() => {
   function dessinerChamps() {
     const z = $(".vx-champs");
     if (!z) return;
-    const cases = [...CHAMPS.map(([k, nom]) => [k, nom, E.v[k] || ""]), ["poids_kg", "Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : ""]];
+    const cases = [...CHAMPS.map(([k, nom]) => [k, nom, E.v[k] || ""]), ["poids_kg", "Poids", E.v.poids_kg != null ? n(E.v.poids_kg) + " kg" : ""],
+      ...EXTRAS.map(([k, nom]) => [k, nom, E.v[k] ? (k === "force" ? `${E.v[k]}/5` : E.v[k]) : ""])];
     if (!z.children.length) z.innerHTML = cases.map(([k, nom]) => `<button type="button" class="vx-c" data-act="vxchamp" data-v="${k}"><span class="vx-hex"><b></b></span>${esc(nom)}</button>`).join("");
     cases.forEach(([k, nom, v], i) => {
       const b = z.children[i];
@@ -115,7 +123,7 @@ const VX = (() => {
     const e = S.visite, r = e && byId(S.d.ruches, e.ruche_id);
     if (!r) return toast("Choisis d’abord une ruche", true);
     // Rien n'est présumé : seules les valeurs dites comptent.
-    E = { phase: "ecoute", final: "", prov: "", pause: false, alerte: "", v: { activite: "", reine: "", couvain: "", provisions: "", poids_kg: null }, nom: r.nom };
+    E = { phase: "ecoute", final: "", prov: "", pause: false, alerte: "", v: { activite: "", reine: "", couvain: "", provisions: "", poids_kg: null, force: "", oeufs_vus: "", cellules_royales: "" }, nom: r.nom };
     let d = document.getElementById("alVoix");
     if (!d) { d = document.createElement("dialog"); d.id = "alVoix"; d.className = "vx"; document.body.append(d); d.addEventListener("cancel", (ev) => { ev.preventDefault(); ACT.vxquitter(); }); }
     d.innerHTML = `<header class="vx-haut"><button type="button" class="vx-x" data-act="vxquitter" aria-label="Quitter la dictée">×</button><div><b>${esc(r.nom)}</b><span class="small">Visite à la voix</span></div></header>
@@ -231,6 +239,9 @@ const VX = (() => {
       if (k === "poids_kg") {
         const d = S.d.visites.find((v) => v.ruche_id === S.visite.ruche_id && v.poids_kg);
         E.v.poids_kg = E.v.poids_kg == null ? Number(d?.poids_kg ?? 40) : E.v.poids_kg + 1;
+      } else if (EXTRAS.some((c) => c[0] === k)) {
+        const l = [...EXTRAS.find((c) => c[0] === k)[2], ""], i = l.indexOf(E.v[k] || "");
+        E.v[k] = l[(i + 1) % l.length];
       } else {
         const l = CHAMPS.find((c) => c[0] === k)[2], i = l.indexOf(E.v[k]);
         E.v[k] = l[(i + 1) % l.length];
@@ -255,9 +266,27 @@ const VX = (() => {
     },
   });
   // Écran « visite » : complément de l'écran, appelé par src/domaines/ (IT-03).
+  // IT-11 (AP-US-055, AP-TECH-171) : le bouton reste là même sans reconnaissance vocale ; il explique alors comment
+  // dicter la note avec le micro du clavier (iPhone et Android en ont un), au lieu de disparaître sans rien dire.
   function completerVisite(...a) {
-    if (!Reco() || !S.visite?.ruche_id || S.visite.multi) return;
-    document.querySelector('form[data-form="visite"]')?.insertAdjacentHTML("afterbegin", `<button type="button" class="btn honey block vx-entree" data-act="vxouvrir">Visiter à la voix</button>`);
+    if (!S.visite?.ruche_id || S.visite.multi) return;
+    document.querySelector('form[data-form="visite"]')?.insertAdjacentHTML("afterbegin", `<button type="button" class="btn honey block vx-entree" data-act="${Reco() ? "vxouvrir" : "vxrepli"}">Visiter à la voix</button>`);
   }
-  return { lire, completerVisite, avantDictee, dicteeAcceptee };
+  function repli() {
+    $sheetForm.onsubmit = (e) => e.preventDefault();
+    $sheetForm.innerHTML = `<div class="vx-clavier"><h2>Ce navigateur ne sait pas écouter. Le clavier, si.</h2>
+      <p>Touche la note de visite, puis le micro de ton clavier, et parle : ta note s’écrit toute seule, même avec des gants fins.</p>
+      <div class="vx-maquette" aria-hidden="true"><p>Couvain abondant, force quatre…</p><div class="vx-touches"><i></i><i></i><span class="vx-micro"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><i></i></div></div>
+      <p class="small">La note ne remplit pas les alvéoles : relis-la, puis touche Force, Couvain ou Reine dans la visite.</p>
+      <div class="actions"><button type="button" class="btn main" data-act="vxnote">Écrire dans la note</button><button type="button" class="btn" data-act="closesheet">Remplir au doigt</button></div></div>`;
+    $sheet.showModal();
+  }
+  Object.assign(ACT, {
+    vxrepli: () => repli(),
+    vxnote: () => {
+      $sheet.close();
+      setTimeout(() => { const n = document.getElementById("v_note"); n?.scrollIntoView({ block: "center" }); n?.focus(); }, 60);
+    },
+  });
+  return { lire, completerVisite, avantDictee, dicteeAcceptee, EXTRAS };
 })();
