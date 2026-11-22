@@ -1919,7 +1919,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | À VÉRIFIER |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-11, migration 034, branche `claude/it-11-photos-voix`) : message clair pour une HEIC illisible, rattachement Visite / Colonie / Rucher, photos des fiches colonie et rucher par la file d'envoi ; scénario etapes_pc. Recette sur vrai iPhone et vrai Android : à faire (docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md) |
 | Priorité | P1 |
 | Valeur métier | 4/5 |
 | Complexité | S |
@@ -1955,7 +1955,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | PARTIEL |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-11, migration 034) : Espace photos dans les Réglages, alerte à 80 % (responsable prévenu une fois par jour), fonction serveur nettoyer-stockage et action GitHub de nuit (7 jours de délai), journal nettoyages_stockage ; scénario etapes_es. Fonction à déployer et secrets à créer (voir CHANGELOG) |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |
@@ -1991,7 +1991,7 @@ Les outils du terrain.
 | Type | Fonctionnalité |
 | Domaine | D05 Visites et terrain |
 | Epic parent | AP-EPIC-013 |
-| Statut actuel | À VÉRIFIER |
+| Statut actuel | FAIT — à publier en recette (v5.74, IT-11) : alvéoles Force, Œufs vus, Cellules royales pendant la dictée, repli « micro du clavier » sans reconnaissance vocale ; scénario etapes_dv. Recette sur vrais téléphones : à faire |
 | Priorité | P2 |
 | Valeur métier | 3/5 |
 | Complexité | S |

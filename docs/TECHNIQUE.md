@@ -299,3 +299,41 @@ enregistré par `enregistrer_achat()` (migration 018), exactement comme une sais
 `ASSISTANT_ACTIF=non` la coupe aussi. **Aucune écriture** par la fonction ; la facture n'est pas conservée.
 **Déploiement** : comme `assistant`, par Claude (accès Supabase), `apidoo-test` d'abord, `apidoo` après accord.
 **Coût** : une facture d'une page coûte de l'ordre de 2 à 5 centimes avec Sonnet ; jetons écrits dans le journal de la fonction.
+
+## Photos de fiche et nettoyage du stockage (IT-11, v5.74)
+
+Une photo (`visite_photos`, migration 034) est rattachée à une **visite**, une **colonie** (`colonie_id`) ou un
+**rucher** (`rucher_id`), au moins un des trois. Pendant une visite, « Rattacher à » garde la visite et ajoute la colonie
+ou le rucher de la colonie ; depuis une fiche, la photo n'a pas de visite. Toutes passent par la même file d'envoi
+(`photos.js`, IndexedDB `apidoo-photos`) : fichier d'abord, puis ligne, après la visite, la colonie ou le rucher s'ils
+sont eux-mêmes en attente. Chemins du stockage `photos-visites` : `<exploitation>/<visite>/<photo>.jpg` (inchangé),
+`<exploitation>/colonies/<colonie>/<photo>.jpg`, `<exploitation>/ruchers/<rucher>/<photo>.jpg` ; les règles d'accès du
+stockage (014, `peut_photo_ecrire`) lisent le premier dossier.
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Règles | `src/domaines/photos/regles.js` (`Regles.photos`) | HEIC, message de repli, chemin, rattachement, espace et alerte à 80 %, libellés du journal |
+| Écrans | `src/domaines/photos/ecrans.js` | Ligne et avertissement des Réglages, écran `stockage` (Espace photos), photos de la fiche rucher |
+| Photos | `photos.js` | Réduction, file d'envoi, `PH.galerie(type, id)` (fiches), détection de 034 (`apidoo-photos-034`), alerte du responsable une fois par jour et par appareil |
+| Fonction serveur | `supabase/functions/nettoyer-stockage/index.ts` et `regles.js` | Liste `photos_a_nettoyer(7)`, retire par lots de 100 par l'API du stockage, écrit une ligne par exploitation dans `nettoyages_stockage`, efface le journal de plus de 90 jours ; ne renvoie que des nombres |
+| Planification | `.github/workflows/nettoyer-stockage.yml` | Chaque nuit (2 h 23 UTC) ; à la main avec « Simuler » (coché par défaut) |
+
+**Quota** : 1 Go, celui de l'offre gratuite Supabase pour **tout le projet**. `photos_espace()` (008) mesure la part de
+l'exploitation choisie : l'alerte à 80 % est donc par exploitation. Avec plusieurs exploitations sur un même projet, la
+somme peut dépasser le quota avant qu'une exploitation n'atteigne 80 % (limite connue, à revoir avec l'offre payante).
+
+**Ce que le nettoyage ne touche jamais** : un fichier qui a une ligne dans `visite_photos` ; un fichier de moins de
+7 jours (une photo en cours d'envoi a son fichier avant sa ligne) ; un fichier hors du dossier d'une exploitation
+existante (anciens chemins d'avant 008) ; tout autre stockage (factures). Double contrôle : la fonction SQL, puis
+`parExploitation()` côté serveur.
+
+**Mise en service, par base** (`apidoo-test` d'abord, `apidoo` avec l'accord de Pierre-Louis) :
+1. Migration 034 appliquée.
+2. `supabase functions deploy nettoyer-stockage --no-verify-jwt --project-ref <ref>` (la clé partagée remplace le jeton).
+3. Secret de la fonction : `NETTOYAGE_CLE` = une valeur aléatoire d'au moins 24 caractères (`openssl rand -hex 24`),
+   jamais écrite dans le dépôt ni dans une conversation.
+4. Secret GitHub de même valeur : `NETTOYAGE_CLE_RECETTE` ou `NETTOYAGE_CLE_PRODUCTION`.
+5. Actions › Nettoyage du stockage › Run workflow, « Simuler » coché : le journal de l'écran Espace photos montre un essai.
+
+**Retour arrière** : Actions › Nettoyage du stockage › Disable workflow, ou `NETTOYAGE_ACTIF=non` dans les secrets de la
+fonction (effet immédiat, sans redéploiement). L'application continue sans journal ; rien d'autre ne dépend de la fonction.
