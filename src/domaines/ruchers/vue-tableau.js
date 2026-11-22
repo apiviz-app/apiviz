@@ -7,11 +7,13 @@
 //   - Liste : une ligne de 54 px par colonie (état, nom, raison ou force et reine, varroa et jours), rangée par rucher
 //     sous un en-tête fin (nom, nombre, « Tournée » ou « Visiter », météo en une ligne). Toucher ouvre la fiche.
 //   - Alvéoles : une tuile par colonie, couleur de l'état, raison en clair ; même rangement par rucher.
-//   - Sélection par appui long (ou ⋯ › Sélectionner) : la barre devient « N sélectionnées · Déplacer · Visite groupée ».
+//   - Sélection par appui long (ou ⋯ › Sélectionner) : la barre devient « N sélectionnées · Actions · Déplacer ·
+//     Visite groupée » (Actions : +1 hausse, état ou tâche sur toutes, IT-10).
 //   - Sur téléphone, le titre laisse la place : Nouveau rucher, Ajouter des ruches, Déplacer, Sélectionner et Exporter
 //     passent dans le bouton ⋯ des onglets.
 // Règles (lignes, filtres, tri, synthèse, regroupement) : src/domaines/colonies/tableau.js. Les globales d'app.js
 // (S, shell, esc, render, ACT, toast, csv, redessiner, UX, MT, N4) ne sont lues qu'à l'appel.
+import * as Groupe from "./groupe-ecran.js";
 import * as T from "../colonies/tableau.js";
 import { MARQUAGES, couleurMarquage } from "../colonies/reines.js";
 import { tauxVarroa } from "../sante/regles.js";
@@ -303,7 +305,7 @@ export function ecran() {
   const barre = enSelection ? `<div class="tb-barre tb-selection" role="region" aria-label="Sélection">
       <button type="button" class="tb-x" data-act="tbvider" aria-label="Quitter la sélection">${svg(I.croix)}</button>
       <span class="tb-sel-t">${sel.size ? `${sel.size} ${sel.size > 1 ? "sélectionnées" : "sélectionnée"}` : "Touche les colonies"}</span>
-      ${sel.size ? `<button type="button" class="btn" data-act="tbdeplacer">Déplacer</button><button type="button" class="btn honey" data-act="tbvisite">${sel.size > 1 ? "Visite groupée" : "Visiter"}</button>` : ""}</div>`
+      ${sel.size ? `<button type="button" class="btn" data-act="tbgroupe">Actions</button><button type="button" class="btn" data-act="tbdeplacer">Déplacer</button><button type="button" class="btn honey" data-act="tbvisite">${sel.size > 1 ? "Visite groupée" : "Visiter"}</button>` : ""}</div>`
     : `<div class="tb-barre">
       <button type="button" class="tb-bouton tb-bfiltres" data-act="tbfeuille" data-v="filtres" aria-haspopup="dialog" aria-expanded="${t.feuille === "filtres" || (t.epingle && ordinateur())}" aria-label="Filtrer et trier${nf ? ` (${nf} filtre${nf > 1 ? "s" : ""})` : ""}">${svg(I.filtres)}<span class="tb-bf-t" aria-hidden="true">Filtrer et trier</span>${nf ? `<span class="tb-nb">${nf}</span>` : ""}</button>
       <label class="tb-cherche tb-ordi">${svg(I.cherche)}<span class="tb-cache">Chercher une colonie</span><input id="tb_q" type="search" value="${e(t.q)}" placeholder="Nom ou code…" autocomplete="off" enterkeyhint="search"></label>
@@ -478,6 +480,8 @@ export const actions = {
     ACT.newvisite(ids[0]);
     if (ids.length > 1 && S.visite) { S.visite.multi = true; S.visite.ruches = [...ids]; S.visite.ruche_id = ids[0]; redessiner("visite"); }
   },
+  // Actions groupées (IT-10) : +1 hausse, état, tâche, avec 5 s pour annuler (groupe-ecran.js).
+  tbgroupe: () => { const ids = idsVus(); if (ids.length) Groupe.ouvrir(ids); },
   tbdeplacer: () => {
     const ids = idsVus();
     if (!ids.length) return;

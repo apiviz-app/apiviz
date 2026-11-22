@@ -60,6 +60,36 @@ export function effet(ruches, p) {
   return { apres, avant };
 }
 
+/**
+ * Une saisie d'IT-10 encore dans la file d'envoi, ajoutée aux données affichées (offline.js), comme le fera la base :
+ * appliquer_action_groupee, ranger_ruches ou noter_etiquettes (migration 034).
+ */
+export function appliquerEnAttente(d, nom, p) {
+  const ruches = d?.ruches || [];
+  if (nom === "appliquer_action_groupee") {
+    if (p.action === "tache") {
+      d.taches = d.taches || [];
+      p.ruches.forEach((r, i) => {
+        const id = `${p.id}-${i}`;
+        if (!d.taches.some((t) => t.id === id)) d.taches.push({ id, titre: p.valeur.titre, echeance: p.valeur.echeance || null, ruche_id: r, assigne: "", faite: false, faite_le: null, _attente: true });
+      });
+    } else appliquer(ruches, effet(ruches, p).apres);
+  } else if (nom === "ranger_ruches") {
+    appliquer(ruches, (p.ruches || []).map((id, i) => ({ id, champs: { ordre_pose: i + 1 } })));
+  } else if (nom === "noter_etiquettes") {
+    appliquer(ruches, (p.ruches || []).map((id) => ({ id, champs: { etiquette_imprimee_le: p.date || new Date().toISOString().slice(0, 10) } })));
+  }
+  return d;
+}
+
+/** Libellé d'une saisie en attente, pour la liste « À envoyer ». */
+export function libelleEnAttente(nom, p) {
+  const n = (p.ruches || []).length, col = `${n} colonie${n > 1 ? "s" : ""}`;
+  if (nom === "appliquer_action_groupee") return [`${ACTIONS[p.action] || "Action groupée"} · ${col}`, message(p).replace(/\.$/, "").toLowerCase()];
+  if (nom === "ranger_ruches") return ["Ordre de pose", col + " rangées"];
+  return ["Étiquettes QR", col + " imprimées"];
+}
+
 /** Applique une liste { id, champs } aux colonies (en place), comme le fait l'écran. */
 export function appliquer(ruches, changements) {
   const par = new Map((ruches || []).map((r) => [r.id, r]));
