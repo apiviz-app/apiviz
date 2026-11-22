@@ -1,0 +1,86 @@
+    # IT-10 (v5.74, migration 034) — actions groupées (AP-US-046) : +1 hausse sur plusieurs colonies, Annuler pendant
+    # 5 s (rien n'est envoyé), envoi à la fin du délai, état et tâche, sans réseau puis retour du réseau.
+    # Avec CAPTURES=<dossier>, captures à 375 et 1 280 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    for r in DATA["ruches"]: r["hausses"] = 1
+    actions = []
+    def rpc_groupe(route):
+        p = (route.request.post_data_json or {}).get("p", {}); h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if any(a["id"] == p["id"] for a in actions): return route.fulfill(status=200, headers=h, body=json.dumps(len(p["ruches"])))
+        actions.append(p)
+        for r in DATA["ruches"]:
+            if r["id"] not in p["ruches"]: continue
+            if p["action"] == "hausse": r["hausses"] = max(0, r["hausses"] + p["valeur"]["delta"])
+            if p["action"] == "etat": r["etat"] = p["valeur"]["etat"]
+        if p["action"] == "tache":
+            for rid in p["ruches"]: DATA["taches"].append({"id": str(uuid.uuid4()), "titre": p["valeur"]["titre"], "echeance": p["valeur"].get("echeance"), "ruche_id": rid, "faite": False, "assigne": ""})
+        return route.fulfill(status=200, headers=h, body=json.dumps(len(p["ruches"])))
+    ctx.route("**/rest/v1/rpc/appliquer_action_groupee", lambda r: r.abort("internetdisconnected") if etat["coupe"] else rpc_groupe(r))
+    page.set_viewport_size({"width": 375, "height": 812})
+    hausses = lambda ids: [page.evaluate("byId(S.d.ruches, '%s').hausses" % i) for i in ids]
+    trois = R[:3]
+
+    def choisir(ids):
+        page.evaluate("ACT.go('ruches')"); page.wait_for_timeout(300)
+        for i in ids: page.evaluate("ACT.tbcoche('%s')" % i)
+        page.wait_for_selector(".tb-selection [data-act=tbgroupe]", timeout=3000)
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Trois colonies cochées · Actions · Poser une hausse : le bouton dit ce qui va se passer.
+    choisir(trois)
+    verif("3 sélectionnées" in page.locator(".tb-selection").inner_text(), "barre : 3 sélectionnées, avec Actions")
+    page.click(".tb-selection [data-act=tbgroupe]"); page.wait_for_selector("#sheet[open] .ag-actions", timeout=3000)
+    verif(page.locator("#sheet .btn.main").inner_text() == "Poser une hausse sur 3 colonies", "bouton : « Poser une hausse sur 3 colonies »")
+    shot("ag-feuille-375")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".ag-toast", timeout=3000)
+    verif("Hausse posée sur 3 colonies." in page.locator(".ag-toast").inner_text() and "Annuler" in page.locator(".ag-toast").inner_text(), "toast : « Hausse posée sur 3 colonies. » avec Annuler")
+    verif(hausses(trois) == [2, 2, 2], "l'effet se voit tout de suite : 2 hausses chacune")
+    shot("ag-toast-375")
+
+    # 2. Annuler pendant le délai : rien n'est envoyé, tout revient comme avant.
+    page.click(".ag-toast [data-act=agannuler]"); page.wait_for_timeout(5600)
+    verif(not actions and hausses(trois) == [1, 1, 1], "Annuler : rien n'est envoyé, hausses revenues à 1")
+    verif(page.locator(".ag-toast").count() == 0, "le toast disparaît")
+
+    # 3. Sans Annuler : l'action part à la fin des 5 s, une seule fois.
+    choisir(trois); page.click(".tb-selection [data-act=tbgroupe]"); page.wait_for_selector("#sheet[open] .ag-actions")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".ag-toast", timeout=3000)
+    page.wait_for_timeout(1500)
+    verif(not actions, "pendant le délai : rien n'est encore envoyé")
+    page.wait_for_function("!document.querySelector('.ag-toast')", timeout=8000); page.wait_for_timeout(800)
+    verif(len(actions) == 1 and actions[0]["action"] == "hausse" and sorted(actions[0]["ruches"]) == sorted(trois), "après 5 s : appliquer_action_groupee, +1 hausse sur les 3")
+    verif([r["hausses"] for r in DATA["ruches"][:3]] == [2, 2, 2] and DATA["ruches"][3]["hausses"] == 1, "en base : les 3 ont une hausse de plus, pas les autres")
+
+    # 4. Changer l'état de deux colonies.
+    choisir(R[3:5]); page.click(".tb-selection [data-act=tbgroupe]"); page.wait_for_selector("#sheet[open] .ag-actions")
+    page.click("#sheet [data-act=agchoix][data-v=etat]"); page.click("#sheet [data-act=agetat][data-v='À surveiller']")
+    verif(page.locator("#sheet .btn.main").inner_text() == "Passer 2 colonies en « À surveiller »", "bouton : « Passer 2 colonies en « À surveiller » »")
+    page.click("#sheet .btn.main"); page.wait_for_function("!document.querySelector('.ag-toast')", timeout=9000); page.wait_for_timeout(800)
+    verif(DATA["ruches"][3]["etat"] == "À surveiller" and DATA["ruches"][4]["etat"] == "À surveiller", "état changé sur les 2")
+
+    # 5. Sans réseau : une tâche pour deux colonies, gardée sur le téléphone, envoyée au retour du réseau.
+    etat["coupe"] = True; ctx.set_offline(True)
+    choisir(R[:2]); page.click(".tb-selection [data-act=tbgroupe]"); page.wait_for_selector("#sheet[open] .ag-actions")
+    page.click("#sheet [data-act=agchoix][data-v=tache]"); page.fill("#ag_titre", "Poser la grille à reine")
+    page.click("#sheet .btn.main"); page.wait_for_function("!document.querySelector('.ag-toast')", timeout=9000); page.wait_for_timeout(800)
+    verif(page.evaluate("HL.nb()") == 1, "hors ligne : l'action attend dans la file d'envoi")
+    verif(page.evaluate("S.d.taches.filter(t => t.titre === 'Poser la grille à reine').length") == 2, "hors ligne : les 2 tâches se voient déjà")
+    n = len(actions)
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_function("HL.nb() === 0", timeout=20000)
+    verif(len(actions) == n + 1 and actions[-1]["action"] == "tache", "retour du réseau : la tâche groupée est partie")
+    verif(len([t for t in DATA["taches"] if t["titre"] == "Poser la grille à reine"]) == 2, "en base : une tâche par colonie")
+
+    # 6. Lecture seule : pas de sélection, donc pas d'action groupée ; ordinateur : la barre tient sur une ligne.
+    page.set_viewport_size({"width": 1280, "height": 860}); choisir(R[:2]); shot("ag-barre-1280")
+    verif(page.locator(".tb-selection [data-act=tbgroupe]").is_visible(), "1 280 px : Actions visible dans la barre")
+    verif(not [e for e in erreurs if "groupe" in e.lower()], "aucune erreur de page (%s)" % erreurs[:2])

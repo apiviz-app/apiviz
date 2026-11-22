@@ -137,6 +137,9 @@ const HL = (() => {
         Regles.stock.appliquerAchat(d, it.args.p, { _attente: true });
       } else if (it.type === "rpc" && it.nom === "mettre_en_pots") {
         Regles.stock.appliquerMiseEnPots(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && ["appliquer_action_groupee", "ranger_ruches", "noter_etiquettes"].includes(it.nom)) {
+        // IT-10 (migration 034) : action groupée, ordre de pose ou étiquettes notés sans réseau, montrés tout de suite.
+        Regles.groupe.appliquerEnAttente(d, it.nom, it.args.p);
       } else if (it.type === "rpc" && it.nom === "assembler_ruches") {
         // Ruches physiques assemblées sans réseau (migration 028) : caisses ajoutées, pièces retirées du stock.
         Regles.assemblage.appliquer(d, it.args.p, { _attente: true });
@@ -419,6 +422,7 @@ const HL = (() => {
       return ["Vente · " + (byId(d.clients || [], p.client_id)?.nom || "client"), dfr(p.date_vente) + " · " + pluriel(pots, "pot")];
     }
     if (it.type === "rpc" && it.nom === "creer_rucher") return ["Rucher · " + (it.args.p.nom || ""), "créé"];
+    if (it.type === "rpc" && ["appliquer_action_groupee", "ranger_ruches", "noter_etiquettes"].includes(it.nom)) return Regles.groupe.libelleEnAttente(it.nom, it.args.p);
     if (it.type === "rpc" && it.nom === "placer_rucher") {
       return ["Position · " + ((d.ruchers || []).find((x) => x.id === it.args.p.id)?.nom || "rucher"), "placé sur la carte"];
     }

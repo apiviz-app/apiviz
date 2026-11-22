@@ -1,0 +1,96 @@
+    # IT-10 (v5.74, migration 034) — QR à code court (AP-US-052) : lien ?c=, hors ligne compris, code tapé à la main,
+    # QR d'une autre exploitation, choix des étiquettes (nouvelles, toutes, choisies), une par page, date d'impression.
+    # Avec CAPTURES=<dossier>, captures à 375 et 1 280 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
+    CODES = ["H3PV", "Q8TX", "B2HN", "W9DF", "K7M2", "R4ZC"]
+    for r, c in zip(DATA["ruches"], CODES): r["code_qr"] = c; r["etiquette_imprimee_le"] = J(30); r["ordre_pose"] = None
+    DATA["ruches"][4]["etiquette_imprimee_le"] = None; DATA["ruches"][5]["etiquette_imprimee_le"] = None
+    notees = []
+    def rpc_noter(route):
+        p = (route.request.post_data_json or {}).get("p", {}); notees.append(p)
+        for r in DATA["ruches"]:
+            if r["id"] in p.get("ruches", []): r["etiquette_imprimee_le"] = p.get("date")
+        return route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=json.dumps(len(p.get("ruches", []))))
+    ctx.route("**/rest/v1/rpc/noter_etiquettes", lambda r: r.abort("internetdisconnected") if etat["coupe"] else rpc_noter(r))
+    page.set_viewport_size({"width": 375, "height": 812})
+    titre = lambda: page.locator("#sheet .g-ftete h2").inner_text()
+
+    # 1. Lien court scanné avec l'appareil photo (code en minuscules compris) : la feuille de Ruche 5 s'ouvre.
+    page.goto(url + "?c=k7m2&ex=" + E1); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_selector("#sheet .qr-feuille", timeout=5000)
+    verif(titre() == "Ruche 5", "?c=K7M2 : la feuille de Ruche 5 s'ouvre (%s)" % titre())
+    verif("c=" not in page.url, "le lien est retiré de l'adresse après lecture")
+    page.click("#sheet [data-act=closesheet]")
+
+    # 2. Les étiquettes déjà collées (?ruche=, v5.57) restent lues.
+    page.goto(url + "?ruche=" + R[1] + "&ex=" + E1); page.wait_for_selector("#sheet .qr-feuille", timeout=15000)
+    verif(titre() == "Ruche 2", "ancienne étiquette ?ruche= : Ruche 2")
+    page.click("#sheet [data-act=closesheet]")
+
+    # 3. QR d'une autre exploitation, puis code inconnu : un message clair, pas de feuille.
+    page.goto(url + "?c=K7M2&ex=" + str(uuid.uuid4())); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_selector(".toast >> text=pas dans ton exploitation", timeout=5000)
+    verif(page.locator("#sheet[open]").count() == 0, "autre exploitation : « Cette ruche n’est pas dans ton exploitation », rien ne s'ouvre")
+    page.goto(url + "?c=X4QP&ex=" + E1); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_selector(".toast >> text=X4QP", timeout=5000)
+    verif("Aucune de tes ruches" in page.locator(".toast").inner_text(), "code inconnu : « Aucune de tes ruches n’a le code X4QP. »")
+
+    # 4. Scanner une ruche : le code tapé à la main ouvre la feuille ; un code mal formé est expliqué.
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.evaluate("ACT.qrscanner()"); page.wait_for_selector("#sheet #qr_code", timeout=3000)
+    verif(page.locator("#sheet .qr-saisie >> text=Étiquette abîmée").count() == 1, "Scanner : « Étiquette abîmée ? » et le champ du code")
+    shot("qc-scanner-375")
+    page.fill("#qr_code", "K0"); page.click("#sheet .qr-saisie .btn.main"); page.wait_for_timeout(200)
+    verif("pas la bonne forme" in page.locator("#sheet .qr-aide").first.inner_text(), "code mal formé : expliqué sous le champ")
+    page.fill("#qr_code", "b2-hn"); page.click("#sheet .qr-saisie .btn.main")
+    page.wait_for_selector("#sheet .qr-feuille", timeout=3000)
+    verif(titre() == "Ruche 3", "code tapé « b2-hn » : la feuille de Ruche 3")
+    page.click("#sheet [data-act=closesheet]")
+
+    # 5. Sans réseau : le lien court ouvre la fiche depuis les données du téléphone.
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.goto(url + "?c=W9DF&ex=" + E1); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    page.wait_for_selector("#sheet .qr-feuille", timeout=8000)
+    verif(titre() == "Ruche 4", "hors ligne : ?c=W9DF ouvre Ruche 4")
+    page.click("#sheet [data-act=closesheet]")
+    page.evaluate("ACT.qrscanner()"); page.wait_for_selector("#sheet #qr_code", timeout=3000)
+    page.fill("#qr_code", "X4QP"); page.click("#sheet .qr-saisie .btn.main"); page.wait_for_timeout(200)
+    verif("pas encore sur ton téléphone" in page.locator("#sheet .qr-aide").first.inner_text(), "hors ligne, code inconnu : « pas encore sur ton téléphone »")
+    page.click("#sheet [data-act=closesheet]")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 6. Étiquettes : seulement les nouvelles par défaut, lien court dans le QR, code imprimé en gros.
+    page.evaluate("ACT.qretiquettes('Bois')"); page.wait_for_selector(".qr-planche .qr-etiquette svg", timeout=8000)
+    verif(page.locator(".qr-etiquette").count() == 2, "Bois : 2 ruches sans étiquette proposées (%d)" % page.locator(".qr-etiquette").count())
+    verif("n’ont pas encore d’étiquette" in page.locator(".qr-say").inner_text(), "phrase du jour : %s" % page.locator(".qr-say").inner_text())
+    verif(page.locator(".qr-court >> text=K7M2").count() == 1, "le code court K7M2 est imprimé sous le QR")
+    lien = page.evaluate("Regles && window.qrcode ? true : false")
+    verif(lien, "QR dessinés")
+    shot("qc-etiquettes-375")
+    page.click("[data-act=qrquoi][data-v=toutes]")
+    verif(page.locator(".qr-etiquette").count() == 3, "Tout le rucher : 3 étiquettes")
+    page.click("[data-act=qrquoi][data-v=choix]")
+    verif(page.locator(".qr-etiquette").count() == 0 and page.locator("[data-act=qrcoche]").count() == 3, "Choisir : aucune, puis on coche")
+    page.click("[data-act=qrcoche] >> text=Ruche 6")
+    verif(page.locator(".qr-etiquette").count() == 1, "une ruche choisie : une étiquette")
+    page.click("[data-act=qrformat][data-v=une]")
+    verif(page.locator(".qr-planche.qr-une").count() == 1, "Une par page : planche en étiquettes unitaires")
+    page.set_viewport_size({"width": 1280, "height": 860}); shot("qc-etiquettes-1280"); page.set_viewport_size({"width": 375, "height": 812})
+
+    # 7. Imprimer : la date d'impression est notée pour les étiquettes imprimées, puis elles ne sont plus « nouvelles ».
+    page.evaluate("window.print = () => {}")
+    page.click("[data-act=qrquoi][data-v=nouvelles]"); page.locator("[data-act=qrimprimer]:visible").first.click(); page.wait_for_timeout(600)
+    verif(len(notees) == 1 and sorted(notees[0]["ruches"]) == sorted([R[4], R[5]]), "noter_etiquettes : Ruche 5 et Ruche 6")
+    page.evaluate("render()"); page.wait_for_timeout(200)
+    verif(page.locator("[data-act=qrquoi][data-v=nouvelles]").inner_text().endswith("(0)"), "plus aucune nouvelle dans Bois")
+    verif(not [e for e in erreurs if "noter" in e or "qr" in e.lower()], "aucune erreur de page (%s)" % erreurs[:2])

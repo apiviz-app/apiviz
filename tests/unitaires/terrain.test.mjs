@@ -14,6 +14,42 @@ test("lien d'une ruche : écrit puis relu", () => {
   assert.equal(T.lireLienRuche("bonjour"), null);
 });
 
+test("code court : forme, lien ?c= écrit puis relu, étiquettes déjà collées toujours lues (IT-10)", () => {
+  assert.equal(T.normaliserCode(" k7-m2 "), "K7M2");
+  assert.equal(T.normaliserCode("K0M1"), "", "0 et 1 n'existent pas dans les codes");
+  assert.equal(T.normaliserCode("KIL2"), "");
+  assert.ok([...T.ALPHABET_CODE].every((c) => !"01OIL".includes(c)));
+  const l = T.lienCode("https://apiviz.fr/recette/?x=1#a", E, "K7M2");
+  assert.equal(l, `https://apiviz.fr/recette/?c=K7M2&ex=${E}`);
+  assert.deepEqual(T.lireQr(l), { ruche: "", code: "K7M2", ex: E });
+  assert.deepEqual(T.lireQr("k7m2"), { ruche: "", code: "K7M2", ex: null });
+  assert.deepEqual(T.lireQr(T.lienRuche("https://apiviz.fr/", E, R)), { ruche: R, code: "", ex: E });
+  assert.equal(T.lireQr("https://exemple.fr/?c=bonjour"), null);
+  assert.equal(T.lireQr("bonjour"), null);
+});
+
+test("retrouver la colonie scannée, ou dire pourquoi on ne la trouve pas", () => {
+  const ruches = [{ id: R, nom: "Ruche 5", code_qr: "K7M2" }];
+  assert.equal(T.trouverRuche(ruches, T.lireQr("K7M2"))?.nom, "Ruche 5");
+  assert.equal(T.trouverRuche(ruches, { ruche: R, code: "", ex: null })?.nom, "Ruche 5");
+  assert.equal(T.trouverRuche(ruches, T.lireQr("X4QP")), null);
+  const ailleurs = "22222222-2222-4222-8222-222222222222";
+  assert.equal(T.trouverRuche(ruches, { ruche: "", code: "K7M2", ex: ailleurs }, E), null, "même code, autre exploitation : pas cette ruche");
+  assert.equal(T.trouverRuche(ruches, { ruche: "", code: "K7M2", ex: E }, E)?.nom, "Ruche 5");
+  const autre = "22222222-2222-4222-8222-222222222222";
+  assert.equal(T.raisonIntrouvable({ code: "X4QP", ex: autre }, E, false).raison, "autre");
+  assert.match(T.raisonIntrouvable({ code: "X4QP", ex: autre }, E, false).texte, /pas dans ton exploitation/);
+  assert.equal(T.raisonIntrouvable({ code: "X4QP", ex: E }, E, true).raison, "attente");
+  assert.equal(T.raisonIntrouvable({ code: "X4QP", ex: null }, E, false).texte, "Aucune de tes ruches n’a le code X4QP.");
+});
+
+test("étiquettes à imprimer : nouvelles, toutes ou choisies", () => {
+  const rs = [{ id: "a", etiquette_imprimee_le: "2026-11-01" }, { id: "b", etiquette_imprimee_le: null }, { id: "c" }];
+  assert.deepEqual(T.aImprimer(rs, "nouvelles").map((r) => r.id), ["b", "c"]);
+  assert.deepEqual(T.aImprimer(rs, "toutes").map((r) => r.id), ["a", "b", "c"]);
+  assert.deepEqual(T.aImprimer(rs, "choix", ["a", "c"]).map((r) => r.id), ["a", "c"]);
+});
+
 const lots = [
   { id: "l1", miel: "Printemps", format_g: 500, prix: 10, pots_restants: 2, date_mise_en_pot: "2026-06-01" },
   { id: "l2", miel: "Printemps", format_g: 500, prix: 10, pots_restants: 5, date_mise_en_pot: "2026-07-01" },
