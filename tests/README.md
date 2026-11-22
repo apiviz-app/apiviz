@@ -103,3 +103,11 @@ défaut ; refuse la production).
 
 `tests/production/` ne contient pas de test automatique : ce sont les données d'essai à charger à la main dans la base
 de production pour vérifier les parcours qui n'ont pas de base simulée fidèle (voir son README).
+
+Scénarios IT-10 (v5.74, migration 034) : `etapes_qc` (QR à code court : lien `?c=` en minuscules compris, ancien lien
+`?ruche=` toujours lu, QR d'une autre exploitation, code inconnu, code tapé à la main, hors ligne avec le service worker,
+étiquettes nouvelles / toutes / choisies, une par page, date d'impression notée), `etapes_ag` (actions groupées : +1
+hausse sur 3 colonies, Annuler pendant 5 s sans rien envoyer, envoi à la fin du délai une seule fois, état, tâche sans
+réseau puis retour du réseau), `etapes_ip` (tournée dans l'ordre de pose, prioritaires signalées, bascule Priorité
+retenue, feuille « Ordre de pose » et ranger_ruches, sans réseau, rucher pas encore rangé en Priorité comme avant).
+Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.

@@ -14,8 +14,10 @@ const ic = (d, t = 20) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" f
 const CROIX = "M18 6L6 18M6 6l12 12", COCHE = "M5 12l5 5 9-10";
 const BASE_ANCIENNE = /PGRST202|Could not find the function|appliquer_action_groupee/;
 const pluriel = (n) => `${n} colonie${n > 1 ? "s" : ""}`;
+const exCourante = () => (typeof EX != "undefined" && EX.courante?.()) || "";
+// Gardée avec son exploitation : elle ne part que dans celle où elle a été faite.
 const lire = () => { try { return JSON.parse(localStorage.getItem(CLE) || "null"); } catch { return null; } };
-const garder = (p) => { try { p ? localStorage.setItem(CLE, JSON.stringify(p)) : localStorage.removeItem(CLE); } catch { /* navigation privée */ } };
+const garder = (p) => { try { p ? localStorage.setItem(CLE, JSON.stringify({ p, ex: exCourante() })) : localStorage.removeItem(CLE); } catch { /* navigation privée */ } };
 
 let enCours = null; // { p, avant, minuterie, decompte }
 
@@ -131,10 +133,10 @@ async function envoyer(p = null, avant = []) {
 
 /** Au lancement : une action restée dans son délai d'annulation (application fermée) part maintenant. */
 export function reprendre() {
-  const p = lire();
-  if (!p || enCours || !S.session || !Array.isArray(S.d?.ruches)) return;
+  const g = lire();
+  if (!g?.p || enCours || !S.session || !Array.isArray(S.d?.ruches) || (g.ex || "") !== exCourante()) return;
   garder(null);
-  envoyer(p, []);
+  envoyer(g.p, []);
 }
 
 export const actions = {
