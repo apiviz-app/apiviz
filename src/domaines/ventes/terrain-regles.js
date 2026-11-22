@@ -26,6 +26,72 @@ export function lireLienRuche(texte) {
   } catch { return null; }
 }
 
+// ---------- Code court des QR (IT-10, migration 034) ----------
+// 4 caractères (« K7M2 ») parmi 31 : ni 0, O, 1, I ni L, pour ne pas se tromper en recopiant. Unique dans l'exploitation.
+export const ALPHABET_CODE = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+const CODE = /^[2-9A-HJKMNP-Z]{4,6}$/;
+
+/** Code tapé ou lu, ramené à sa forme (« k7m2 », « K7-M2 », « k 7 m 2 » → « K7M2 ») ; "" s'il n'est pas valable. */
+export function normaliserCode(texte) {
+  const c = String(texte || "").toUpperCase().replace(/[\s\-.·]/g, "");
+  return CODE.test(c) ? c : "";
+}
+
+/** Lien court imprimé dans le QR : « ?c=K7M2&ex=<exploitation> ». Plus court que ?ruche=, donc un QR plus gros. */
+export function lienCode(base, exploitation, code) {
+  const u = new URL(base);
+  u.search = "";
+  u.hash = "";
+  u.searchParams.set("c", code);
+  if (exploitation) u.searchParams.set("ex", exploitation);
+  return u.toString();
+}
+
+/**
+ * Ce que contient un QR ou une adresse : { ruche, code, ex }, ou null.
+ * Lit le lien court (?c=), les étiquettes déjà collées (?ruche=, v5.57), un identifiant seul ou un code seul.
+ */
+export function lireQr(texte) {
+  const t = String(texte || "").trim();
+  const ancien = lireLienRuche(t);
+  if (ancien) return { ruche: ancien.ruche, code: "", ex: ancien.ex };
+  const seul = normaliserCode(t);
+  if (seul && !/^https?:/i.test(t)) return { ruche: "", code: seul, ex: null };
+  try {
+    const u = new URL(t);
+    const c = normaliserCode(u.searchParams.get("c")), ex = u.searchParams.get("ex");
+    return c ? { ruche: "", code: c, ex: ex && UUID.test(ex) ? ex.toLowerCase() : null } : null;
+  } catch { return null; }
+}
+
+/** La colonie désignée par ce que lireQr a rendu, parmi celles de l'exploitation ouverte ; null si aucune. */
+export function trouverRuche(ruches, p) {
+  if (!p || !Array.isArray(ruches)) return null;
+  if (p.ruche) return ruches.find((r) => String(r.id).toLowerCase() === p.ruche) || null;
+  if (p.code) return ruches.find((r) => String(r.code_qr || "").toUpperCase() === p.code) || null;
+  return null;
+}
+
+/**
+ * Pourquoi rien n'a été trouvé : « autre » (le QR vient d'une autre exploitation), « attente » (hors ligne, la colonie
+ * n'est peut-être pas encore sur ce téléphone) ou « inconnu ». Message en français, au tutoiement.
+ */
+export function raisonIntrouvable(p, exploitation, horsLigne) {
+  if (p?.ex && exploitation && p.ex !== exploitation) {
+    return { raison: "autre", texte: "Cette ruche n’est pas dans ton exploitation. Si tu en gères plusieurs, change d’exploitation depuis ton avatar, puis scanne à nouveau." };
+  }
+  if (horsLigne) return { raison: "attente", texte: "Cette ruche n’est pas encore sur ton téléphone. Elle s’ouvrira dès le retour du réseau." };
+  return { raison: "inconnu", texte: p?.code ? `Aucune de tes ruches n’a le code ${p.code}.` : "Cette ruche n’existe plus dans Apiviz." };
+}
+
+/** Les colonies à imprimer : « nouvelles » (jamais imprimées), « toutes », ou celles choisies (ids). */
+export function aImprimer(ruches, quoi, choisies = []) {
+  const ls = Array.isArray(ruches) ? ruches : [];
+  if (quoi === "nouvelles") return ls.filter((r) => !r.etiquette_imprimee_le);
+  if (quoi === "choix") { const s = new Set(choisies); return ls.filter((r) => s.has(r.id)); }
+  return ls;
+}
+
 // ---------- Caisse ----------
 // Libellé d'un produit à la caisse : « Toutes fleurs 500 g », « Hydromel sec 75 cl » (v5.65, migration 032).
 const libelleLot = (l) => (estMiel(l) ? `${l.miel || "Miel"} ${l.format_g} g` : `${nomLot(l)}${formatLot(l) ? " " + formatLot(l) : ""}`);
