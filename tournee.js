@@ -66,7 +66,14 @@ const TN = (() => {
   const effacer = () => { try { localStorage.removeItem(cleMemo()); } catch {} };
 
   // ---------- Ordre et fiches ----------
-  function ordonner(ids) {
+  // IT-10 (AP-US-045) : ordre de pose (place de chaque colonie dans le rucher, migration 034) ou priorité (critiques,
+  // à surveiller, puis les moins récemment vues : l'ordre d'avant). Règles : src/domaines/visites/ordre-tournee.js.
+  // Le choix est retenu sur le téléphone ; les prioritaires restent signalées (Urgent, Priorité) dans les deux ordres.
+  const lireOrdre = () => { try { return localStorage.getItem("apidoo-tournee-ordre") || ""; } catch { return ""; } };
+  const noterOrdre = (o) => { try { localStorage.setItem("apidoo-tournee-ordre", o); } catch {} };
+  const OR = () => window.Regles?.tournee;
+  function ordonner(ids, ordre = "priorite") {
+    if (OR()) return OR().ordonner(ids, S.d.ruches, ordre, (id) => lastVisit(id)?.date_visite || "");
     const poids = (id) => { const c = classe(rucheDe(id)); return c === "crit" ? 0 : c === "watch" ? 1 : 2; };
     const quand = (id) => lastVisit(id)?.date_visite || "";
     return [...ids].sort((a, b) => poids(a) - poids(b) || quand(a).localeCompare(quand(b)));
@@ -420,6 +427,9 @@ const TN = (() => {
         titre: `Tournée « ${esc(t.nom)} »`,
         corps: `<p class="tn-say">${faites ? `${faites} ruche${faites > 1 ? "s" : ""} déjà notée${faites > 1 ? "s" : ""}, tu peux reprendre.` : `${t.ids.length} ruches à voir, commence par ${esc(nomDe(prem))}.`}</p>${ligneMeteo()}
         ${horsLigne() ? '<p class="tn-alerte">Pas de réseau. Les saisies restent sur le téléphone et partent au retour du réseau.</p>' : ""}
+        ${OR() ? `<div class="field tn-ordre"><div class="t">Ordre de passage</div><div class="seg" role="group" aria-label="Ordre de passage" style="grid-template-columns:repeat(2,minmax(0,1fr))">${Object.entries(OR().ORDRES).map(([k, l]) => `<button type="button" class="${S.tn.ordre === k ? "on" : ""}" aria-pressed="${S.tn.ordre === k}" data-act="tnordre" data-v="${k}">${l}</button>`).join("")}</div>
+          ${S.tn.ordre === "pose" && !t.ids.some((id) => rucheDe(id)?.ordre_pose) ? '<p class="small">Ces ruches ne sont pas encore rangées : elles suivent leur nom.</p>' : ""}
+          ${typeof ACT.oprangement == "function" && !document.documentElement.classList.contains("lecteur") ? `<button type="button" class="tn-lien" data-act="oprangement" data-v="${esc(t.rucher)}">Changer l’ordre de pose</button>` : ""}</div>` : ""}
         <section class="tn-carte tn-liste" aria-label="Ruches de la tournée">${t.ids.map((id, i) => {
           const f = fiche(id), d = lastVisit(id), c = classe(rucheDe(id));
           return `<div class="tn-l">${hex(id, i)}<span><b>${esc(nomDe(id))}</b><small>${f.etat !== "vide" ? { notee: "Notée", passee: "Passée", enregistree: "Enregistrée" }[f.etat] : d ? (d.reine === "Non vue" ? "Reine pas vue à la dernière visite" : "Dernière visite " + esc(U.dateCourte(d.date_visite))) : "Première visite"}</small></span>${c === "crit" ? '<em class="tn-tag c">Urgent</em>' : c === "watch" ? '<em class="tn-tag w">Priorité</em>' : ""}</div>`;
@@ -539,12 +549,15 @@ const TN = (() => {
 
   // ---------- Actions ----------
   ACT.v3tournee = (cle) => {
-    const ids = ordonner(S.d.ruches.filter((r) => (r.rucher || "") === cle).map((r) => r.id));
-    if (!ids.length) return;
+    const tous = S.d.ruches.filter((r) => (r.rucher || "") === cle).map((r) => r.id);
+    if (!tous.length) return;
+    const ordre = OR() ? OR().ordreParDefaut(tous, S.d.ruches, lireOrdre()) : "priorite";
+    const ids = ordonner(tous, ordre);
     const g = lireBrouillon(cle);
     S.tournee = g?.T && g.T.ids.length === ids.length ? { ...g.T, i: 0 } : { rucher: cle, nom: U.nomRucher(cle), ids, i: 0, faites: 0 };
-    S.tn = g?.T && g.T.ids.length === ids.length ? { ...g.tn, etape: "depart", ecoute: false, alerte: "", meteo: null } : { etape: "depart", mode: lireMode(), modele: lireModele(), fiches: {}, taches: [], texte: "", debut: Date.now() };
+    S.tn = g?.T && g.T.ids.length === ids.length ? { ...g.tn, etape: "depart", ecoute: false, alerte: "", meteo: null } : { etape: "depart", mode: lireMode(), modele: lireModele(), ordre, fiches: {}, taches: [], texte: "", debut: Date.now() };
     S.tn.modele ||= lireModele(); // tournée gardée avant la v5.49
+    S.tn.ordre ||= ordre; // tournée gardée avant la v5.74
     go("tournee");
     chargerMeteo();
   };
@@ -557,6 +570,13 @@ const TN = (() => {
     },
     tnzero: () => { effacer(); ACT.v3tournee(T().rucher); },
     tnmodele: (m) => { if (!MODELES[m]) return; S.tn.modele = m; noterModele(m); sauver(); render(); },
+    // Ordre de passage (IT-10) : les fiches déjà notées gardent leur contenu, seule la liste change d'ordre.
+    tnordre: (o) => {
+      if (!OR()?.ORDRES[o]) return;
+      S.tn.ordre = o; noterOrdre(o);
+      T().ids = ordonner(T().ids, o); T().i = 0;
+      sauver(); render();
+    },
     tnquitter: () => {
       arreter(); compterTemps(); sauver();
       const garde = T().ids.some((id) => fiche(id).etat === "notee");
