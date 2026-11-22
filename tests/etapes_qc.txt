@@ -10,7 +10,7 @@
     cap = os.environ.get("CAPTURES")
     if cap: os.makedirs(cap, exist_ok=True)
     shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/{nom}.png", full_page=True))
-    CODES = ["H3PV", "Q8TX", "B2LN", "W9DF", "K7M2", "R4ZC"]
+    CODES = ["H3PV", "Q8TX", "B2HN", "W9DF", "K7M2", "R4ZC"]
     for r, c in zip(DATA["ruches"], CODES): r["code_qr"] = c; r["etiquette_imprimee_le"] = J(30); r["ordre_pose"] = None
     DATA["ruches"][4]["etiquette_imprimee_le"] = None; DATA["ruches"][5]["etiquette_imprimee_le"] = None
     notees = []
@@ -50,9 +50,9 @@
     shot("qc-scanner-375")
     page.fill("#qr_code", "K0"); page.click("#sheet .qr-saisie .btn.main"); page.wait_for_timeout(200)
     verif("pas la bonne forme" in page.locator("#sheet .qr-aide").first.inner_text(), "code mal formé : expliqué sous le champ")
-    page.fill("#qr_code", "b2-ln"); page.click("#sheet .qr-saisie .btn.main")
+    page.fill("#qr_code", "b2-hn"); page.click("#sheet .qr-saisie .btn.main")
     page.wait_for_selector("#sheet .qr-feuille", timeout=3000)
-    verif(titre() == "Ruche 3", "code tapé « b2-ln » : la feuille de Ruche 3")
+    verif(titre() == "Ruche 3", "code tapé « b2-hn » : la feuille de Ruche 3")
     page.click("#sheet [data-act=closesheet]")
 
     # 5. Sans réseau : le lien court ouvre la fiche depuis les données du téléphone.
@@ -89,7 +89,7 @@
 
     # 7. Imprimer : la date d'impression est notée pour les étiquettes imprimées, puis elles ne sont plus « nouvelles ».
     page.evaluate("window.print = () => {}")
-    page.click("[data-act=qrquoi][data-v=nouvelles]"); page.click("[data-act=qrimprimer]"); page.wait_for_timeout(600)
+    page.click("[data-act=qrquoi][data-v=nouvelles]"); page.locator("[data-act=qrimprimer]:visible").first.click(); page.wait_for_timeout(600)
     verif(len(notees) == 1 and sorted(notees[0]["ruches"]) == sorted([R[4], R[5]]), "noter_etiquettes : Ruche 5 et Ruche 6")
     page.evaluate("render()"); page.wait_for_timeout(200)
     verif(page.locator("[data-act=qrquoi][data-v=nouvelles]").inner_text().endswith("(0)"), "plus aucune nouvelle dans Bois")
