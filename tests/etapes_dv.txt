@@ -1,0 +1,57 @@
+    # IT-11 — Dictée vocale fiable (AP-FEAT-049, AP-US-055) : avec reconnaissance (Android en ligne), « force quatre,
+    # cellules royales ouvertes » remplit les alvéoles Force et Cellules royales (AP-TECH-170) puis la visite enregistrée ;
+    # sans reconnaissance, le bouton reste et explique le micro du clavier dans la note (AP-TECH-171).
+    # La reconnaissance du navigateur est remplacée par une fausse, pilotée par le test. Avec CAPTURES=<dossier> : 375 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    page.add_init_script("""(() => {
+      try { localStorage.setItem('apidoo-dictee-info', '1'); } catch {}
+      if (sessionStorage.getItem('sans-reco') === '1') { delete window.SpeechRecognition; delete window.webkitSpeechRecognition; return; }
+      class Fausse { constructor() { window.__reco = this; } start() { window.__recoOn = true; } stop() { window.__recoOn = false; } }
+      window.SpeechRecognition = Fausse; window.webkitSpeechRecognition = Fausse;
+      window.__dire = (t, fin = true) => { const r = [{ transcript: t }]; r.isFinal = fin; window.__reco.onresult({ resultIndex: 0, results: [r] }); };
+    })()""")
+    page.set_viewport_size({"width": 375, "height": 812})
+
+    # 1. Sans reconnaissance vocale : le bouton reste et renvoie vers le micro du clavier.
+    page.goto(url); page.evaluate("sessionStorage.setItem('sans-reco', '1')"); page.reload()
+    page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    verif(page.evaluate("!window.webkitSpeechRecognition && !window.SpeechRecognition"), "navigateur sans reconnaissance vocale")
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
+    verif(page.locator(".vx-entree[data-act=vxrepli]").count() == 1, "« Visiter à la voix » reste affiché sans reconnaissance")
+    page.click(".vx-entree"); page.wait_for_selector("#sheet[open] .vx-clavier", timeout=5000)
+    t = page.locator("#sheet .vx-clavier").inner_text()
+    verif("micro de ton clavier" in t and "note" in t, "on explique d'utiliser le micro du clavier dans la note")
+    if cap: page.screenshot(path=f"{cap}/dv-repli-375.png")
+    page.click("#sheet [data-act=vxnote]"); page.wait_for_timeout(300)
+    verif(page.evaluate("document.activeElement && document.activeElement.id") == "v_note", "« Écrire dans la note » : la note prend la main")
+
+    # 2. Avec reconnaissance, en ligne : les nouveaux champs se remplissent à la voix.
+    page.evaluate("sessionStorage.removeItem('sans-reco')"); page.reload()
+    page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.newvisite()"); page.wait_for_selector("text=Nouvelle visite")
+    page.click(".vx-entree[data-act=vxouvrir]"); page.wait_for_selector("#alVoix[open] .vx-champs .vx-c", timeout=5000)
+    noms = page.evaluate("[...document.querySelectorAll('#alVoix .vx-c')].map(b => b.textContent.trim())")
+    verif(all(n in " | ".join(noms) for n in ("Force", "Œufs vus", "Cellules royales")), "alvéoles Force, Œufs vus et Cellules royales pendant la dictée (%s)" % noms)
+    page.evaluate("__dire('Couvain abondant, force quatre, cellules royales ouvertes')"); page.wait_for_timeout(200)
+    lab = page.evaluate("Object.fromEntries([...document.querySelectorAll('#alVoix .vx-c')].map(b => [b.dataset.v, b.getAttribute('aria-label')]))")
+    verif(lab.get("force") == "Force, 4/5" and lab.get("cellules_royales") == "Cellules royales, Ouvertes", "« force quatre, cellules royales ouvertes » : Force et Cellules royales remplies (%s)" % lab)
+    verif(lab.get("couvain") == "Couvain, Abondant" and lab.get("oeufs_vus") == "Œufs vus, vide", "le reste : seulement ce qui a été dit")
+    if cap: page.screenshot(path=f"{cap}/dv-dictee-375.png")
+    # Toucher une alvéole avec des gants : choix suivant, puis vide.
+    page.click("#alVoix .vx-c[data-v=oeufs_vus]"); v1 = page.locator("#alVoix .vx-c[data-v=oeufs_vus]").get_attribute("aria-label")
+    page.click("#alVoix .vx-c[data-v=oeufs_vus]"); v2 = page.locator("#alVoix .vx-c[data-v=oeufs_vus]").get_attribute("aria-label")
+    page.click("#alVoix .vx-c[data-v=oeufs_vus]"); v3 = page.locator("#alVoix .vx-c[data-v=oeufs_vus]").get_attribute("aria-label")
+    verif((v1, v2, v3) == ("Œufs vus, Oui", "Œufs vus, Non", "Œufs vus, vide"), "toucher Œufs vus : Oui, Non, puis vide (%s)" % [v1, v2, v3])
+
+    # 3. « C'est bon » : relecture, puis enregistrement de la visite avec ces champs.
+    page.evaluate("__dire('c\\'est bon')"); page.wait_for_selector("#alVoix .vx-relire", timeout=5000)
+    r = page.locator("#alVoix .vx-relire").inner_text()
+    verif("4 sur 5" in r and "Ouvertes" in r, "relecture : Force 4 sur 5, Cellules royales ouvertes")
+    page.click("#alVoix [data-act=vxenreg]")
+    page.wait_for_function("() => document.querySelector('.toast') && /Visite/.test(document.querySelector('.toast').textContent)", timeout=10000)
+    page.wait_for_timeout(800)
+    vis = [b for n, b in recu["rpc"] if n == "creer_visite"]
+    p = vis[-1]["p"] if vis else {}
+    verif(str(p.get("force")) == "4" and p.get("cellules_royales") == "Ouvertes" and p.get("couvain") == "Abondant", "visite enregistrée : force 4, cellules ouvertes, couvain abondant (%s)" % {k: p.get(k) for k in ("force", "cellules_royales", "couvain")})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
