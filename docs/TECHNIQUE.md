@@ -337,3 +337,21 @@ existante (anciens chemins d'avant 008) ; tout autre stockage (factures). Double
 
 **Retour arrière** : Actions › Nettoyage du stockage › Disable workflow, ou `NETTOYAGE_ACTIF=non` dans les secrets de la
 fonction (effet immédiat, sans redéploiement). L'application continue sans journal ; rien d'autre ne dépend de la fonction.
+
+## Santé : varroa et signes sanitaires (IT-12, v5.76)
+
+- **Comptages** : un comptage varroa est une opération (`operations`) avec un résultat par colonie (`operation_colonies`),
+  migration 036. Les comptages notés dans une visite restent dans `visites.varroa*` (source de vérité pour l'ancienne
+  version et pour le retour arrière) et sont recopiés par le déclencheur `comptage_varroa` en opération d'origine
+  « visite », de même identifiant que la visite. Côté application, `Regles.sante.comptages(S.d)` réunit les deux sans
+  doublon (une visite pas encore recopiée, ou une base sans 036, est lue directement), au format d'une visite
+  (`ruche_id`, `date_visite`, `varroa`, `varroa_abeilles`, `varroa_methode`, plus `duree_jours`, `origine`).
+- **Seuils** : `seuils_varroa` (méthode, mois de début et de fin, valeur, source, lien, date de consultation). Aucune
+  valeur par défaut, ni en base ni dans le code. `Regles.sante.seuilApplicable(comptage, { seuils, reglages })` rend le
+  seuil de la méthode et du mois du comptage (le plus récemment vérifié), sinon le réglage `varroaSeuil` saisi avant
+  IT-12 (taux seulement), sinon `null` : pas d'alerte. `UX.seuilVarroa(v)` est le point d'entrée des anciens scripts.
+- **Signes** : `observations_sanitaires` (une ligne par colonie, `saisie_id` commun), `noter_signes(p)`. Liste des signes
+  et des signes « avis » dans `src/domaines/sante/regles.js` ; dangers réglementés sourcés mais masqués tant que
+  `relu` vaut `false` (relecture humaine, AP-TECH-183 et 199).
+- **Écrans** : `varroa` (Ruchers › Santé, `src/domaines/sante/ecran.js`), `comptage` (FLUX, `comptage.js`),
+  `signalement` (`signes.js`). Les contacts sanitaires sont dans les réglages de l'exploitation (`contactsSanitaires`).
