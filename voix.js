@@ -170,7 +170,7 @@ const VX = (() => {
     const EA = window.Noyau?.espaceApi;
     if (!EA?.remarquesVoix || !E) return "";
     const prec = S.d.visites.filter((v) => v.ruche_id === S.visite.ruche_id).sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
-    const R = EA.remarquesVoix(E.v, prec, { nom: E.nom, seuil: typeof UX != "undefined" ? UX.seuilVarroa() : 3, aujourdhui: today() });
+    const R = EA.remarquesVoix(E.v, prec, { nom: E.nom, seuil: typeof UX != "undefined" ? UX.seuilVarroa({ ...E.v, date_visite: E.v?.date_visite || today() }) : null, aujourdhui: today() });
     E.remarques = R.remarques;
     E.agenda = E.agenda || new Set();
     const doute = R.doute && !E.douteVu ? `<div class="vx-doute" role="group" aria-label="Question d’API">${E.corrige

@@ -10,6 +10,7 @@ import { vibrer } from "./domaines/retours/sons.js";
 import * as gabarit from "./noyau/gabarit.js";
 import { nbAVoir } from "./domaines/ruchers/vue-tableau.js";
 import * as historique from "./noyau/historique.js";
+import { apresVisite, sectionVisite } from "./domaines/sante/signes.js";
 
 for (const def of ecrans) {
   routeur.enregistrer(def);
@@ -23,6 +24,8 @@ Object.assign(window.Noyau, {
   proprietaireAction: actions.proprietaire,
   // Compteur « N à voir » du menu latéral (navigation-ordi.js, v5.50).
   ruches: { nbAVoir },
+  // IT-12 : section « Signes sanitaires » de la visite (ux.js) et envoi des signes après la visite (visites-groupees.js).
+  sante: { apresVisite, sectionVisite },
 });
 
 // Champs à suggestions transformés en puces ou en liste sous le champ (v5.41).

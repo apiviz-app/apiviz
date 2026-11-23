@@ -2110,7 +2110,7 @@ Comptages structurés et seuils sourcés.
 | Type | Fonctionnalité |
 | Domaine | D06 Santé, varroa et traitements |
 | Epic parent | AP-EPIC-014 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 23 nov. 2026 sur `claude/it-12-sante-varroa` (v5.76, migration 036), en attente de fusion puis de recette |
 | Priorité | P1 |
 | Valeur métier | 5/5 |
 | Complexité | M |
@@ -2148,7 +2148,7 @@ Comptages structurés et seuils sourcés.
 | Type | Fonctionnalité |
 | Domaine | D06 Santé, varroa et traitements |
 | Epic parent | AP-EPIC-014 |
-| Statut actuel | PARTIEL |
+| Statut actuel | EN COURS — réalisé le 23 nov. 2026 sur `claude/it-12-sante-varroa` (v5.76, migration 036) : aucun seuil par défaut, seuils saisis avec source et date ; en attente de fusion puis de recette |
 | Priorité | P0 |
 | Valeur métier | 5/5 |
 | Complexité | S |
@@ -2339,7 +2339,7 @@ Signes, mortalités et suivi sanitaire.
 | Type | Fonctionnalité |
 | Domaine | D06 Santé, varroa et traitements |
 | Epic parent | AP-EPIC-016 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | EN COURS — réalisé le 23 nov. 2026 sur `claude/it-12-sante-varroa` (v5.76, migration 036), photo du signe non faite ; en attente de fusion puis de recette |
 | Priorité | P2 |
 | Valeur métier | 4/5 |
 | Complexité | M |
@@ -2375,7 +2375,7 @@ Signes, mortalités et suivi sanitaire.
 | Type | Fonctionnalité |
 | Domaine | D06 Santé, varroa et traitements |
 | Epic parent | AP-EPIC-016 |
-| Statut actuel | NON IMPLÉMENTÉ |
+| Statut actuel | PARTIEL — aide au signalement réalisée le 23 nov. 2026 (v5.76) ; liste des dangers réglementés sourcée mais masquée en attendant la relecture de Pierre-Louis (AP-TECH-199) |
 | Priorité | P3 |
 | Valeur métier | 3/5 |
 | Complexité | S |

@@ -5,7 +5,7 @@
 // Rempli après le rendu de l'écran « ruche » (src/domaines/colonies/ecrans.js), dans <div class="cb-onglet"> d'ux.js.
 // Règles pures : ../equipe/regles.js. Globales d'app.js lues à l'appel : S, esc, cfg, byId, render.
 import * as Q from "../equipe/regles.js";
-import { tauxVarroa, seuilVarroa } from "../sante/regles.js";
+import { tauxVarroa, comptages, seuilApplicable } from "../sante/regles.js";
 
 const e = (t) => esc(t);
 const etat = () => (S.cb ||= { mesure: "poids", comparer: "" });
@@ -30,7 +30,7 @@ function dessin(s, comp, evts, mesure, seuil, W) {
   const ligne = (pts, cls) => (pts.length > 1 ? `<polyline points="${pts.map((p) => `${x(p.j).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ")}" class="${cls}"/>` : "");
   const points = (pts, cls, quoi) => pts.map((p) => `<circle cx="${x(p.j).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${cls === "cb-p" ? 4.5 : 3.5}" class="${cls}"><title>${e(quoi)} · ${e(dateCourte(p.date))} : ${e(f(p.v, Q.MESURES[mesure].dec))}${e(Q.MESURES[mesure].unite)}</title></circle>`).join("");
   const marques = evts.map((ev) => `<line x1="${x(ev.j).toFixed(1)}" x2="${x(ev.j).toFixed(1)}" y1="${haut - 4}" y2="${bas}" class="cb-ev ${ev.type}"><title>${ev.type === "recolte" ? "Récolte" : "Traitement"} · ${e(dateCourte(ev.date))} : ${e(ev.texte)}</title></line>`).join("");
-  const seuilL = mesure === "varroa" && seuil <= hi ? `<line x1="${g}" x2="${W - dr}" y1="${y(seuil).toFixed(1)}" y2="${y(seuil).toFixed(1)}" class="cb-seuil"/><text x="${W - dr}" y="${(y(seuil) - 5).toFixed(1)}" text-anchor="end" class="cb-seuil-t">seuil ${f(seuil, 1)} %</text>` : "";
+  const seuilL = mesure === "varroa" && seuil != null && seuil <= hi ? `<line x1="${g}" x2="${W - dr}" y1="${y(seuil).toFixed(1)}" y2="${y(seuil).toFixed(1)}" class="cb-seuil"/><text x="${W - dr}" y="${(y(seuil) - 5).toFixed(1)}" text-anchor="end" class="cb-seuil-t">seuil ${f(seuil, 1)} %</text>` : "";
   const der = s[0].points.at(-1);
   const etiquette = `${Q.MESURES[mesure].titre}, ${s[0].annee}${der ? `, dernière mesure ${f(der.v, Q.MESURES[mesure].dec)}${Q.MESURES[mesure].unite} le ${dateCourte(der.date)}` : ""}`;
   return `<svg class="cb-svg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${e(etiquette)}">${grille.join("")}${mois.join("")}${seuilL}${marques}
@@ -45,10 +45,15 @@ export function completerCourbes() {
   const r = byId([...(S.d.ruches || []), ...(S.d.ruchesSorties || [])], S.ruche);
   if (!r) return;
   const st = etat(), mesure = Q.MESURES[st.mesure] ? st.mesure : "poids", annee = new Date().getFullYear();
-  const seuil = seuilVarroa(typeof cfg == "function" ? cfg() : {});
-  const s = Q.series(S.d.visites, r.id, mesure, annee, tauxVarroa);
+  // IT-12 : le varroa se lit dans tous les comptages (visites et comptages du rucher, migration 036) ; le seuil est
+  // celui qui s'applique au dernier comptage de la colonie (sa méthode, son mois), sans valeur par défaut.
+  const source = mesure === "varroa" ? comptages(S.d) : S.d.visites;
+  const dernier = mesure === "varroa" ? source.find((c) => c.ruche_id === r.id && tauxVarroa(c) !== null) : null;
+  const sa = dernier ? seuilApplicable(dernier, { seuils: S.d.seuils || [], reglages: typeof cfg == "function" ? cfg() : {} }) : null;
+  const seuil = sa && sa.unite === "pourcent" ? sa.valeur : null;
+  const s = Q.series(source, r.id, mesure, annee, tauxVarroa);
   const autre = st.comparer && st.comparer !== r.id ? byId(S.d.ruches || [], st.comparer) : null;
-  const comp = autre ? { nom: autre.nom, points: Q.series(S.d.visites, autre.id, mesure, annee, tauxVarroa)[0].points } : null;
+  const comp = autre ? { nom: autre.nom, points: Q.series(source, autre.id, mesure, annee, tauxVarroa)[0].points } : null;
   const evts = Q.evenements(S.d, r.id, annee);
   const phrase = Q.phraseCourbe(s, mesure, seuil);
   const der = s[0].points.at(-1);

@@ -56,7 +56,11 @@ test("suivi : récolte, comparaison à même date, colonies", () => {
 });
 
 test("varroa, hiver, essaimage, hausses", () => {
-  const S = V.suivi(base(), 2026, "2026-11-20", {});
+  // IT-12 : aucun seuil par défaut ; ici, le seuil de 3 % réglé par l'apiculteur.
+  const sans = V.suivi(base(), 2026, "2026-11-20", {});
+  assert.equal(sans.varroa.auDessus.length, 0, "sans seuil choisi : aucune colonie « au-dessus »");
+  assert.equal(sans.varroa.sansSeuil, 2);
+  const S = V.suivi(base(), 2026, "2026-11-20", { varroaSeuil: 3 });
   assert.equal(S.varroa.comptees, 2);
   assert.equal(S.varroa.sous, 1);
   assert.deepEqual(S.varroa.auDessus.map((r) => [r.nom, r.taux]), [["Ruche 2", 4]]);
@@ -95,7 +99,7 @@ test("phrases de la frise : passé tiré des données, futur annoncé", () => {
 });
 
 test("priorités d'API : urgentes d'abord, trois au plus, rien pour une saison passée", () => {
-  const S = V.suivi(base(), 2026, "2026-11-20", {});
+  const S = V.suivi(base(), 2026, "2026-11-20", { varroaSeuil: 3 });
   const P = V.priorites(S, { attente: 12.5 });
   assert.equal(P.length, 3);
   assert.equal(P[0].titre, "Traiter ou recompter Ruche 2");

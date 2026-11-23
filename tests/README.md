@@ -29,6 +29,13 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénarios IT-12 (v5.76, migration 036) : `etapes_va` (Ruchers › Santé : reprise du comptage d'une visite à
+l'identique, aucun seuil par défaut, seuil ajouté avec source et date dans l'onglet, comptage du rucher avec taux au fur et
+à mesure, chute sur lange ramenée à un jour, comptage sans réseau puis envoyé, fiche colonie et « D'où vient ce seuil ? »,
+courbe varroa conservée, ordinateur), `etapes_os` (Noter un signe, avis sans maladie nommée, aide au signalement, contacts,
+fiche au vouvoiement, signe coché dans la visite et rattaché à elle, signe sans réseau). `etapes_sd` connaît les écrans
+`comptage` et `signalement`. Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px.
+
 Scénario v5.35 : `etapes_cp` (menu latéral qui garde sa position, « Nouvelle visite » à côté d'API, liens sans
 soulignement, sélecteur de date maison, agenda en calendrier : jour, mois, semaine, tâche en retard, ajout prérempli).
 

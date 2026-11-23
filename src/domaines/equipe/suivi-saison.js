@@ -2,7 +2,7 @@
 // phase de la saison, frise, quatre chiffres qui changent avec la phase, aperçus, priorités d'API. Tout est tiré des
 // visites, récoltes, événements des colonies et tâches : aucun chiffre inventé, et ce qui n'est pas noté est dit
 // « à vérifier ». Tests : tests/unitaires/suivi-saison.test.mjs.
-import { tauxVarroa, seuilVarroa } from "../sante/regles.js";
+import { tauxVarroa, seuilApplicable, comptages, auDessus } from "../sante/regles.js";
 
 /** Les sept moments de la saison (France, par défaut) ; flex = largeur sur la frise (en mois). */
 export const PHASES = [
@@ -60,7 +60,10 @@ export function suivi(d, annee, aujourdhui, reglages = {}) {
   const avant = (d.recoltes || []).filter((x) => an(x.date_recolte) === String(annee - 1));
   const somme = (l) => arrondi(l.reduce((t, x) => t + Number(x.kg || 0), 0));
   const parRuche = (id) => visites.filter((v) => v.ruche_id === id).sort((x, y) => jour(y.date_visite).localeCompare(jour(x.date_visite)));
-  const seuil = seuilVarroa(reglages);
+  // IT-12 : seuil de chaque comptage (méthode, mois) d'après seuils_varroa ou le réglage saisi par l'apiculteur ; aucun
+  // par défaut. Les comptages viennent des visites et des comptages du rucher (migration 036).
+  const seuilDe = (v) => { const s = seuilApplicable(v, { seuils: d.seuils || [], reglages }); return s && s.unite === "pourcent" ? s.valeur : null; };
+  const lesComptages = comptages(d).filter((c) => an(c.date_visite) === a && jour(c.date_visite) <= ref);
 
   // Récolte : kilos de l'année, de l'an dernier, et de l'an dernier à la même date (seulement pendant la saison).
   const kg = somme(recoltes), kgAvant = somme(avant);
@@ -75,10 +78,11 @@ export function suivi(d, annee, aujourdhui, reglages = {}) {
     sorties: sorties.map((e) => ({ date: jour(e.date_evenement), nom: (d.ruchesSorties || []).find((r) => r.id === e.ruche_id)?.nom || ruches.find((r) => r.id === e.ruche_id)?.nom || "Une ruche", detail: e.detail || "" })) };
 
   // Varroa : dernier taux compté de chaque ruche cette année.
-  const comptes = ruches.map((r) => { const v = parRuche(r.id).find((x) => tauxVarroa(x) !== null); return { r, v, t: v ? tauxVarroa(v) : null }; });
+  const comptes = ruches.map((r) => { const v = lesComptages.find((x) => x.ruche_id === r.id && tauxVarroa(x) !== null); return { r, v, t: v ? tauxVarroa(v) : null, s: v ? seuilDe(v) : null }; });
   const avec = comptes.filter((c) => c.t !== null);
-  const varroa = { seuil, comptees: avec.length, sous: avec.filter((c) => c.t < seuil).length,
-    auDessus: avec.filter((c) => c.t >= seuil).sort((x, y) => y.t - x.t).map((c) => ({ id: c.r.id, nom: c.r.nom, taux: arrondi(c.t), date: jour(c.v.date_visite) })),
+  const varroa = { seuil: avec.find((c) => c.s !== null)?.s ?? null, sansSeuil: avec.filter((c) => c.s === null).length, comptees: avec.length,
+    sous: avec.filter((c) => c.s !== null && c.t < c.s).length,
+    auDessus: avec.filter((c) => auDessus(c.t, c.s)).sort((x, y) => y.t - x.t).map((c) => ({ id: c.r.id, nom: c.r.nom, taux: arrondi(c.t), date: jour(c.v.date_visite) })),
     sansComptage: comptes.filter((c) => c.t === null).map((c) => ({ id: c.r.id, nom: c.r.nom })),
     moyenne: avec.length ? arrondi(avec.reduce((t, c) => t + c.t, 0) / avec.length) : null };
 
@@ -197,7 +201,9 @@ export function chiffres(S, ventes = null) {
     sous: S.objectif ? `sur ${S.objectif} kg visés` : S.kgAvant ? `${fr(S.kgAvant)} kg en ${S.annee - 1}` : "cette saison", ton: "" };
   const colonies = { id: "colonies", nom: "Colonies", valeur: S.courante ? String(c.actuel) : `+${c.plus} −${c.moins}`,
     sous: S.courante ? (c.plus || c.moins ? `${c.depart} au départ · +${c.plus} −${c.moins}` : "aucune entrée ni sortie") : "entrées et sorties", ton: "" };
-  const varroa = v.comptees
+  const varroa = v.comptees && v.sansSeuil === v.comptees
+    ? { id: "varroa", nom: "Varroa", valeur: String(v.comptees), sous: "comptées · aucun seuil choisi", ton: "" }
+    : v.comptees
     ? { id: "varroa", nom: "Varroa", valeur: `${v.sous}/${v.comptees}`, sous: v.auDessus.length ? `${v.auDessus.length} au-dessus du seuil` : v.sansComptage.length ? `sous le seuil · ${v.sansComptage.length} à compter` : "sous le seuil", ton: v.auDessus.length ? "crit" : v.sansComptage.length ? "watch" : "good" }
     : { id: "varroa", nom: "Varroa", valeur: "—", sous: "aucun comptage", ton: "watch" };
   const q = quatrieme(S);
@@ -230,7 +236,7 @@ export function apercu(id, S, extra = {}) {
         ...c.sorties.slice(0, 3).map((s) => L(`${s.nom} · ${dCourte(s.date)}`, s.detail || "sortie"))],
       bouton: ["ruches", "Voir les ruchers"] };
     case "varroa": return { titre: "Varroa", pct: v.comptees ? Math.round((v.sous / v.comptees) * 100) : null,
-      lignes: [L("Taux moyen", v.moyenne === null ? "aucun comptage" : `${fr(v.moyenne)} % (seuil ${fr(v.seuil)} %)`),
+      lignes: [L("Taux moyen", v.moyenne === null ? "aucun comptage" : `${fr(v.moyenne)} %${v.seuil !== null ? ` (seuil ${fr(v.seuil)} %)` : " (aucun seuil choisi)"}`),
         ...v.auDessus.slice(0, 3).map((r) => L(r.nom, `${fr(r.taux)} % le ${dCourte(r.date)}`, r.id)),
         v.sansComptage.length ? L("Pas encore comptées", noms(v.sansComptage)) : null].filter(Boolean),
       bouton: ["varroa", "Voir la santé"] };

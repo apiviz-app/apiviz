@@ -51,9 +51,14 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     reglements: ["reglements_associes", "date_reglement", !1],
     // Migration 028 : pièces du stock qui composent chaque type de ruche physique.
     compositions: ["compositions_ruches", "type"],
+    // IT-12 (migration 036) : comptages varroa en opération, résultat par colonie, seuils sourcés, signes sanitaires.
+    operations: ["operations", "date_operation", !1],
+    comptesVarroa: ["operation_colonies"],
+    seuils: ["seuils_varroa", "methode"],
+    observations: ["observations_sanitaires", "date_observation", !1],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020", compositions: "028" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020", compositions: "028", operations: "036", comptesVarroa: "036", seuils: "036", observations: "036" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",

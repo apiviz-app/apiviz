@@ -14,11 +14,11 @@ test("taux de varroa pour 100 abeilles", () => {
   assert.equal(tauxVarroa(undefined), null);
 });
 
-test("seuil varroa réglable", () => {
-  assert.equal(seuilVarroa({}), 3);
-  assert.equal(seuilVarroa(undefined), 3);
+test("seuil varroa : celui que l'apiculteur a réglé, aucun par défaut (IT-12)", () => {
+  assert.equal(seuilVarroa({}), null);
+  assert.equal(seuilVarroa(undefined), null);
   assert.equal(seuilVarroa({ varroaSeuil: "2" }), 2);
-  assert.equal(seuilVarroa({ varroaSeuil: "" }), 3);
+  assert.equal(seuilVarroa({ varroaSeuil: "" }), null);
 });
 
 // Les valeurs des seuils viennent de meteo.js ; ici, des valeurs fixes pour tester la règle seule.

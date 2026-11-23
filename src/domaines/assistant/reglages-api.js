@@ -30,7 +30,7 @@ export function completerReglages() {
   const terrain = titres.find((h) => h.textContent.trim() === "Sur le terrain");
   if (!terrain) return;
   terrain.insertAdjacentHTML("beforebegin", `<h2 class="rg-g rg-g-api">${typeof Apiviz != "undefined" ? Apiviz.compagnon("repos", 24) : ""}API</h2><div class="rg-bloc rg-api">
-    ${ligne("go", "apimemoire", ic(P.memoire), "Ce qu’API sait de toi", `Seuil varroa ${fr(seuilVarroa(reglages()))} %, tes traitements, ta météo de visite`)}
+    ${ligne("go", "apimemoire", ic(P.memoire), "Ce qu’API sait de toi", `${seuilVarroa(reglages()) ? `Seuil varroa ${fr(seuilVarroa(reglages()))} %` : "Seuils varroa"}, tes traitements, ta météo de visite`)}
     ${Voix.disponible() ? ligne("apivoix", "", ic(P.voix), "Voix d’API", Voix.resume(Voix.lire())) : ""}
     ${ligne("apiconseilsreglage", "", ic(P.conseils), "Conseils d’API", resumeConseils(prefsConseils()))}
   </div>`);
@@ -58,7 +58,8 @@ function memoire() {
   shell("Ce qu’API sait de toi", "Tes façons de faire, telles qu’API les lit", "", `<div class="mm-ecran">
     <section class="card mm-intro">${typeof Apiviz != "undefined" ? Apiviz.compagnon("repos", 44) : ""}<p>Je réponds avec <b>tes</b> données et <b>tes</b> réglages, jamais avec une méthode toute faite. Si quelque chose est faux ici, corrige-le : mes conseils suivront. Dis-moi aussi tes façons de faire en me parlant (« mon seuil varroa est de 2 % ») : je te proposerai de les retenir.</p></section>
     <h2 class="rg-g">Tes façons de faire</h2><div class="rg-bloc mm-bloc">
-      ${item("Seuil d’alerte varroa", `${fr(seuilVarroa(c))} varroas pour 100 abeilles`, source("varroaSeuil", c.varroaSeuil ? "Ton réglage" : "Réglage par défaut : à adapter avec ton GDSA ou ton technicien sanitaire"), ...geste("varroaSeuil", "v3seuilfeuille"))}
+      ${item("Seuil d’alerte varroa", seuilVarroa(c) ? `${fr(seuilVarroa(c))} varroas pour 100 abeilles` : (S.d?.seuils || []).length ? "Seuils sourcés, par méthode et période" : "Aucun seuil choisi",
+        source("varroaSeuil", c.varroaSeuil ? "Ton réglage, source non notée" : "Pas de seuil par défaut : ajoute celui de ton GDSA ou de ton technicien, avec sa source"), ...geste("varroaSeuil", "saversseuils", "Voir les seuils"))}
       ${item("Dernier traitement noté", t ? t.quoi : "Aucun traitement noté", t ? `Le ${t.quand}, d’après tes visites` : "Note-le dans la visite : je saurai quand reparler du varroa", t ? "" : null)}
       ${item("Poids d’alerte en hiver", hiver ? `${fr(hiver)} kg` : "Pas fixé", source("hiverPoids", hiver ? "Ton réglage" : "Dis-le-moi : « en hiver, je m’alerte sous 18 kg »"), ...(appris.hiverPoids ? geste("hiverPoids") : ["", ""]))}
       ${item("Objectif de récolte", obj ? `${obj} kg` : "Pas fixé", source("objectif_recolte", obj ? "Ton réglage" : ""), ...geste("objectif_recolte", "rtobjectif", obj ? "Modifier" : "Fixer"))}

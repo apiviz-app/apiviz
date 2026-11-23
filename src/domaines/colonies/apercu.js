@@ -6,7 +6,6 @@
 // Téléphone et ordinateur : la fiche est la même. Les globales d'app.js (S, esc, cfg, byId, dshort, today, AL) ne sont lues
 // qu'à l'appel. Rien ne bouge si le téléphone demande de réduire les animations (styles/40-fiche-ruche.css).
 import { messageRuche, visitesDe, echellePoids, resumePoids } from "./suivi.js";
-import { seuilVarroa } from "../sante/regles.js";
 
 const e = (t) => esc(t);
 const MAX_POINTS = 8;
@@ -27,7 +26,7 @@ export function completerApercu() {
 
 // 1. API : la phrase, sa source, sous l'en-tête de la ruche.
 function message(r, wrap) {
-  const m = messageRuche(r, S.d.visites, { seuil: seuilVarroa(cfg()) });
+  const m = messageRuche(r, S.d.visites, { seuil: (v) => UX.seuilVarroa(v) }); // IT-12 : seuil sourcé du comptage, ou aucun
   const tete = wrap.querySelector(".u-ruche-tete");
   if (!m || !tete) return;
   const api = typeof AL != "undefined" ? AL.compagnon(m.ton === "crit" ? "attention" : "repos", 40) : "";

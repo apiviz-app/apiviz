@@ -143,6 +143,11 @@ const HL = (() => {
       } else if (it.type === "rpc" && it.nom === "assembler_ruches") {
         // Ruches physiques assemblées sans réseau (migration 028) : caisses ajoutées, pièces retirées du stock.
         Regles.assemblage.appliquer(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "compter_varroa") {
+        // IT-12 (migration 036) : comptage du rucher noté sans réseau, montré tout de suite.
+        Regles.sante.appliquerComptage(d, it.args.p, { _attente: true });
+      } else if (it.type === "rpc" && it.nom === "noter_signes") {
+        Regles.sante.appliquerSignes(d, it.args.p, { _attente: true });
       } else if (it.type === "insert") {
         const cle = INSERTS[it.table], liste = d[cle];
         if (!liste) continue;
@@ -423,6 +428,7 @@ const HL = (() => {
     }
     if (it.type === "rpc" && it.nom === "creer_rucher") return ["Rucher · " + (it.args.p.nom || ""), "créé"];
     if (it.type === "rpc" && ["appliquer_action_groupee", "ranger_ruches", "noter_etiquettes"].includes(it.nom)) return Regles.groupe.libelleEnAttente(it.nom, it.args.p);
+    if (it.type === "rpc" && ["compter_varroa", "noter_signes"].includes(it.nom)) return Regles.sante.libelleEnAttente(it.nom, it.args.p, d);
     if (it.type === "rpc" && it.nom === "placer_rucher") {
       return ["Position · " + ((d.ruchers || []).find((x) => x.id === it.args.p.id)?.nom || "rucher"), "placé sur la carte"];
     }

@@ -14,7 +14,7 @@ const ORDRE = ["000-structure-au-3-nov-2026.sql", "004-photos-visites.sql", "005
   "006-hors-ligne.sql", "007-registre.sql", "009-colonie-varroa-recolte-livraison.sql",
   "008-exploitations.sql", "010-registre-factures.sql", "011-invitation-avant-connexion.sql", "012-correctifs.sql",
   "013-noyau-resume-et-journal.sql", "014-roles-audit.sql", "015-ruchers.sql",
-  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql", "021-profils-etiquettes.sql", "022-suppression-compte.sql", "023-visite-rapide.sql", "024-assistant-usage.sql", "025-factures-fichiers.sql", "026-hors-ligne-v2.sql", "027-commandes-en-ligne.sql", "028-assemblage-ruches.sql", "029-offres-gouttes.sql", "030-fil-equipe.sql", "031-echanges-api.sql", "032-produits.sql", "033-clients-gouts.sql", "034-tournee-qr-groupe.sql", "035-photos-colonie-rucher.sql"];
+  "016-emplacements-contenants.sql", "017-associes.sql", "018-stock-mouvements.sql", "019-reines-liens.sql", "020-visite-express-reglements.sql", "021-profils-etiquettes.sql", "022-suppression-compte.sql", "023-visite-rapide.sql", "024-assistant-usage.sql", "025-factures-fichiers.sql", "026-hors-ligne-v2.sql", "027-commandes-en-ligne.sql", "028-assemblage-ruches.sql", "029-offres-gouttes.sql", "030-fil-equipe.sql", "031-echanges-api.sql", "032-produits.sql", "033-clients-gouts.sql", "034-tournee-qr-groupe.sql", "035-photos-colonie-rucher.sql", "036-sante-varroa.sql"];
 
 // Le strict minimum de ce que Supabase fournit (rôles, auth, storage), pour que les fichiers passent.
 const SUPABASE = `

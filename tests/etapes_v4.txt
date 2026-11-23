@@ -98,13 +98,17 @@
     page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".wrap > .head .g-plus")
     verif("au-dessus" in page.locator(".head").inner_text(), "page varroa : ruche au-dessus du seuil")
     shot("varroa")
-    # v5.43 : le seuil s'ouvre par ⋯ (feuille de saisie courte)
-    cliquer(page, "[data-act=v3seuilfeuille]"); page.wait_for_selector("#sheet[open] input[name=s]")
-    page.fill("#sheet input[name=s]", "5"); page.click("#sheet .btn.main")
+    # IT-12 : les seuils sont dans l'onglet (Santé › Seuils) ; le réglage d'avant reçoit sa source et devient un seuil sourcé.
+    page.click(".g-outils [data-act=savue][data-v=seuils]"); page.wait_for_selector(".sa-regle")
+    verif("Réglage d’avant" in page.locator(".sa-ecran").inner_text() and "source non notée" in page.locator(".sa-ecran").inner_text(), "Seuils : le 3 % d'avant, « source non notée »")
+    page.click("[data-act=saseuil][data-v=ancien]"); page.wait_for_selector("#sheet[open] input[name=source]")
+    verif(page.input_value("#sheet input[name=valeur]") == "3", "« Ajouter la source » : la valeur d'avant est reprise")
+    page.fill("#sheet input[name=valeur]", "5"); page.fill("#sheet input[name=source]", "Technicien sanitaire du GDSA"); page.click("#sheet .btn.main")
     page.wait_for_selector(".toast >> text=Seuil enregistré", timeout=8000)
-    # Depuis IT-01 les réglages passent par regler() (clé par clé) ; l'ancienne écriture reste acceptée.
     reglages_envoyes = lambda: [b.get("data", {}) for u, b in patches("reglages")] + [b.get("p_modifs", {}) for n, b in recu["rpc"] if n == "regler"]
-    verif(any(d.get("varroaSeuil") == 5 for d in reglages_envoyes()), "seuil réglable enregistré")
+    sv = [r for t, u, rows in recu["upsert"] if t == "seuils_varroa" for r in rows]
+    verif(sv and sv[-1]["valeur"] == 5 and sv[-1]["source"] == "Technicien sanitaire du GDSA" and any("varroaSeuil" in d and d["varroaSeuil"] is None for d in reglages_envoyes()),
+          "seuil sourcé enregistré, réglage d'avant retiré")
 
     # Récolte et mise en pots
     page.evaluate("ACT.newrecolte()"); page.wait_for_selector("#r_kg")

@@ -1,6 +1,8 @@
     # v5.40 — Ruchers : liste dense rangée par rucher (par défaut sur téléphone), alvéoles et tableau (v5.37), une seule
     # barre (Filtrer et trier, raccourcis, présentation), menu ⋯, sélection par appui long, version ordinateur.
     import os, datetime
+    # IT-12 : plus de seuil varroa par défaut ; cet apiculteur avait réglé 3 % lui-même (réglage d’avant, source non notée).
+    DATA["reglages"][0]["data"]["varroaSeuil"] = 3
     cap = os.environ.get("CAPTURES")
     vide = {"acces": "", "proprietaire": "", "proprietaire_tel": "", "capacite": None, "environnement": "", "ressources": "", "point_eau": "", "notes": "", "archive_le": None}
     RC, RL = str(uuid.uuid4()), str(uuid.uuid4())

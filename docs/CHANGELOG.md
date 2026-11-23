@@ -5,6 +5,67 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.76 · à publier en recette · santé : varroa et signes sanitaires (IT-12)
+**Migration 036** (`036-sante-varroa.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
+appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur
+`apidoo` avec l'accord de Pierre-Louis. La fiche d'itération parlait de « 021 » : ce numéro est pris, c'est 036.
+Sans elle, l'application lit toujours les comptages des visites ; le comptage du rucher, les seuils et les signes disent
+« La base doit être mise à jour ». Maquette « IT-12 Santé : varroa et observations sanitaires » du 23 nov. 2026, validée
+par Pierre-Louis (seuils dans l'onglet Santé). Itération IT-12 : AP-FEAT-051, 052, 057, 058 (AP-US-058, 059, 064, 065).
+
+Pour l'apiculteur :
+1. **Plus aucun seuil varroa par défaut** (AP-US-059). Le 3 % appliqué jusqu'ici sans source disparaît : sans seuil
+   choisi, le taux s'affiche sans couleur d'alerte et l'app invite à en choisir un. Un seuil réglé avant cette version
+   par l'apiculteur reste appliqué, présenté « saisi par toi, source non notée », avec « Ajouter la source ».
+2. **Ruchers › Santé** à deux parties (bascule sous les onglets) : **Comptages** (dernier comptage de chaque colonie :
+   méthode, résultat, pastille au-dessus / proche / sous le seuil / pas de seuil / à compter ; filtres par rucher ;
+   seuil appliqué avec sa source et « ? » pour le détail ; signes des 30 derniers jours) et **Seuils** (par méthode et
+   par période, chacun avec sa source et sa date de consultation, obligatoires ; ajouter, modifier, retirer).
+3. **Compter le rucher** (AP-US-058) : une seule opération pour toutes les colonies d'un rucher. Sucre glace, lavage,
+   chute naturelle sur lange ou autre ; échantillon proposé pour chaque colonie et corrigeable ligne par ligne ; − / + ou
+   saisie au clavier ; résultat au fur et à mesure (taux pour 100 abeilles, ou varroas par jour : 21 en 7 jours = 3 par
+   jour), comparé au seuil quand il existe. Sans réseau, le comptage reste sur le téléphone et part au retour.
+4. **Noter un signe** (AP-US-064) : colonies, signes rangés en trois groupes (couvain, abeilles, prédateurs et
+   ravageurs), importance, note. Aussi dans la visite (section « Signes sanitaires »), rattaché à elle. L'onglet Santé
+   de la colonie les montre datés, sans conclusion automatique. Quelques signes (larves filantes, opercules affaissés,
+   odeur anormale, mortalité, petit coléoptère) invitent à demander l'avis du vétérinaire ou du groupement sanitaire.
+5. **Aide au signalement** (AP-US-065) : ce qui est prêt et ce qui manque, contacts saisis par l'apiculteur
+   (vétérinaire, groupement sanitaire, services vétérinaires du département ; « Appeler »), fiche au vouvoiement à
+   partager ou copier. apiviz n'envoie rien. **La liste des maladies réglementées n'est pas affichée** : sources trouvées
+   (Anses, rapport 2025 du LNR Santé des abeilles), à relire par Pierre-Louis avant de passer `relu: true`.
+6. Onglet Santé de la colonie : bandeau quand le dernier comptage dépasse le seuil, avec sa source ; « Compter »
+   ouvre le comptage pour cette colonie ; courbe varroa (onglet Courbes) conservée, avec les comptages du rucher.
+
+Technique :
+- `src/domaines/sante/regles.js` : comptages (opérations + reprise des visites, sans doublon), résultat (taux, chute par
+  jour), `seuilApplicable` (méthode, période, plus récemment vérifié, réglage d'avant), `niveau`, validations, signes,
+  fiche de signalement, dangers réglementés masqués (`relu: false`). `ecran.js` (Santé), `comptage.js` (Compter le
+  rucher, écran de saisie pas à pas), `signes.js` (feuille, section de la visite, aide au signalement), `ecrans.js`
+  (table des écrans : `varroa`, `comptage`, `signalement`). Aucune nouvelle surcharge de `render`, `shell` ou `view*` ;
+  `V3.vues.varroa` (v3.js) n'est plus appelé.
+- Appels de seuil sans valeur par défaut : `ux.js`, `v3.js`, `alveoles.js`, `nav4.js`, `voix.js`, `colonies/tableau.js`,
+  `colonies/suivi.js`, `colonies/apercu.js`, `colonies/courbes.js`, `equipe/suivi-saison.js`, `assistant/compagnon.js`,
+  `assistant/reglages-api.js`. La puce « Varroa N (lange) » perd son repère « 3 varroas » non sourcé.
+- `app.js` : tables facultatives `operations`, `operation_colonies`, `seuils_varroa`, `observations_sanitaires` (036).
+  `offline.js` : `compter_varroa` et `noter_signes` montrés en attente et libellés. `visites-groupees.js` : signes de la
+  visite envoyés après elle. `gabarit.js` : `comptage` en FLUX, parent de `signalement`. `styles/71-sante.css`.
+- Migration 036 : voir `migrations/README.md`. Tests : SQL `test_036.mjs` (53 vérifications), unitaires
+  `sante.test.mjs` (10 tests), scénarios `etapes_va`, `etapes_os` ; `etapes_sd` et `etapes_gb` mis à jour ; la base
+  simulée connaît `compter_varroa` et `noter_signes`. Charte de ton : la fiche de signalement est un document émis.
+
+Pas fait (noté pour la suite) : photo jointe à un signe ; fiche en PDF (partage ou copie du texte) ; commune du rucher
+dans la fiche ; liste des dangers réglementés tant qu'elle n'est pas relue ; traitements (IT-13).
+
+À vérifier :
+- Ruchers › Santé sans seuil : aucune couleur rouge ou verte, carte « Pas encore de seuil ».
+- Seuils › Ajouter un seuil sans source : refusé ; avec source et date : affiché « saisi par toi », source et période.
+- Un compte qui avait réglé un seuil avant : « Réglage d'avant », couleurs inchangées ; « Ajouter la source ».
+- Compter le rucher sur un vrai téléphone, gants : − / + assez grands, clavier numérique, résultat qui suit.
+- En mode avion : compter, recharger, revenir en ligne ; le comptage part une fois (Synchronisation vide).
+- Comptages d'avant (visites) : mêmes chiffres qu'avant dans Santé, la fiche et la courbe.
+- Visite avec « Signes sanitaires » cochés : le signe apparaît dans l'onglet Santé de la colonie.
+- Aide au signalement : « Partager la fiche » ouvre le partage du téléphone ; « Appeler » compose le numéro.
+
 ## v5.75 · à publier en recette · photos et voix consolidées (IT-11)
 **Migration 035** (`035-photos-colonie-rucher.sql`), **additive, ne casse pas l'ancienne version** : à appliquer sur
 `apidoo-test` (fait par Claude le 22 nov. 2026, voir `migrations/README.md`), puis sur `apidoo` avec l'accord de

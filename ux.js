@@ -155,11 +155,18 @@ const UX = (() => {
   // Taux pour 100 abeilles quand on connaît le nombre d'abeilles prélevées (sucre glace, lavage).
   // Règles sanitaires : src/domaines/sante/regles.js (IT-03, testées unitairement).
   const tauxVarroa = Regles.sante.tauxVarroa;
-  const seuilVarroa = () => Regles.sante.seuilVarroa(cfg());
+  // IT-12 (migration 036) : seuil du comptage v (sa méthode, son mois) dans la table seuils_varroa, ou le réglage saisi
+  // par l'apiculteur avant cette version ; null sans seuil choisi (plus de 3 % par défaut). Sans v : le réglage seul.
+  const seuilVarroa = (v) => {
+    if (!v) return Regles.sante.seuilVarroa(cfg());
+    const s = Regles.sante.seuilApplicable(v, { seuils: S.d?.seuils || [], reglages: cfg() });
+    return s && s.unite === "pourcent" ? s.valeur : null;
+  };
   function chipVarroa(v) {
-    const t = tauxVarroa(v);
-    if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, v.varroa_methode !== "Lange" && v.varroa >= 3 ? "watch" : "");
-    return chip(`Varroa ${n(t, 1)} %`, t >= seuilVarroa() ? "crit" : t >= seuilVarroa() * 0.66 ? "watch" : "good");
+    const t = tauxVarroa(v), s = seuilVarroa(v), R = Regles.sante;
+    // Pas de couleur sans seuil choisi (AP-US-059) ; la chute sur lange n'a plus de repère « 3 varroas » non sourcé.
+    if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, "");
+    return chip(`Varroa ${n(t, 1)} %`, R.auDessus(t, s) ? "crit" : R.proche(t, s) ? "watch" : s ? "good" : "");
   }
   // Visite express (v5.32, migration 020) : les valeurs reprises de la précédente, pas observées ce jour-là, sont en
   // retrait avec la mention « reprise » (v5.49, AP-US-041) ; la ligne dit la durée et ce qui a été vu.
@@ -209,14 +216,14 @@ const UX = (() => {
     const der = vis[0];
     const pesees = vis.filter((v) => v.poids_kg);
     const ecart = pesees.length > 1 ? Number(pesees[0].poids_kg) - Number(pesees[1].poids_kg) : null;
-    const varroa = vis.find((v) => v.varroa !== null && v.varroa !== undefined);
+    const varroa = Regles.sante.dernierComptage(d, r.id); // IT-12 : comptages des visites et du rucher
     const miel = sum(d.recoltes.filter((x) => x.ruche_id === r.id), (x) => x.kg);
     const taches = d.taches.filter((t) => t.ruche_id === r.id && !t.faite);
     const tx = varroa ? tauxVarroa(varroa) : null;
     const chiffres = `<section class="card u-trois u-quatre">
       <div><b>${der ? days(der.date_visite) + " j" : "–"}</b><span>visite</span></div>
       <div><b>${pesees[0] ? n(pesees[0].poids_kg) + " kg" : "–"}</b><span>${ecart === null ? "poids" : ecart < 0 ? `poids ↘ ${n(-ecart)}` : ecart > 0 ? `poids ↗ ${n(ecart)}` : "poids stable"}</span></div>
-      <div class="${tx !== null && tx >= seuilVarroa() ? "u-alerte" : ""}"><b>${!varroa ? "–" : tx !== null ? n(tx, 1) + " %" : varroa.varroa}</b><span>varroa</span></div>
+      <div class="${Regles.sante.auDessus(tx, seuilVarroa(varroa)) ? "u-alerte" : ""}"><b>${!varroa ? "–" : tx !== null ? n(tx, 1) + " %" : varroa.varroa}</b><span>varroa</span></div>
       <div><b>${r.hausses || 0}</b><span>hausse${(r.hausses || 0) > 1 ? "s" : ""}</span></div></section>`;
     const tete = `<div class="u-ruche-tete"><div class="u-ruche-id"><span class="u-gros-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>${r.code ? `<span class="tag u-code">n° ${esc(r.code)}</span>` : ""}${r.sortie ? `<span class="tag crit">${esc(r.sortie)}${r.date_sortie ? " le " + esc(dfr(r.date_sortie)) : ""}</span>` : `<span class="tag ${etatClass(r.etat)}">${esc(r.etat)}</span>`}${miel ? `<span class="small">${n(miel)} kg récoltés</span>` : ""}</div></div>`;
     const poids = pesees.length > 1 ? `<details class="card u-pli"><summary><h2>Évolution du poids</h2><span class="u-chev" aria-hidden="true">›</span></summary>${lineChart({ labels: pesees.slice().reverse().map((v) => dshort(v.date_visite)), series: [{ name: "Poids", color: C.honey, values: pesees.slice().reverse().map((v) => Number(v.poids_kg)) }], fmt: (x) => n(x) + " kg", title: "Évolution du poids de la ruche", h: 170 })}</details>` : "";
@@ -320,7 +327,8 @@ const UX = (() => {
           ${seg("Méthode", "varroa_methode", ["Sucre glace", "Lavage", "Lange"])}
           ${lange ? '<p class="small">Lange : note les varroas tombés pendant le comptage (pas de taux pour 100 abeilles).</p>'
             : `<label>Abeilles prélevées<input type="number" step="1" min="1" inputmode="numeric" id="v_abeilles" value="${esc(e.varroa_abeilles ?? "")}" placeholder="300 (un demi-verre)"></label>
-          ${tx !== null ? `<p class="small u-taux ${tx >= seuilVarroa() ? "crit" : ""}">Soit ${n(tx, 1)} varroas pour 100 abeilles · seuil ${n(seuilVarroa(), 1)} %</p>` : ""}`}`)}
+          ${tx !== null ? (() => { const s = seuilVarroa({ ...e, date_visite: e.date_visite || today() }); return `<p class="small u-taux ${Regles.sante.auDessus(tx, s) ? "crit" : ""}">Soit ${n(tx, 1)} varroas pour 100 abeilles · ${s ? `seuil ${n(s, 1)} %` : "pas de seuil choisi pour cette méthode"}</p>`; })() : ""}`}`)}
+        ${window.Noyau?.sante ? (() => { const x = Noyau.sante.sectionVisite(e); return sec("signes", "Signes sanitaires", x.resume, x.rempli, x.html); })() : ""}
         ${sec("intrants", "Nourrissement et matériel", utilise || "Ajouter", !!utilise, steppers || '<p class="small">Ajoute tes consommables dans Stocks › Matériel pour les suivre ici.</p>')}
         ${typeof RG != "undefined" ? sec("traitement", "Traitement", e.traitement || "Ajouter", !!e.traitement, RG.formSection(e)) : ""}
         ${typeof PH != "undefined" ? sec("photos", "Photos", "Ajouter", false, PH.formSection()) : ""}

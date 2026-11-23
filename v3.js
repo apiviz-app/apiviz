@@ -151,7 +151,8 @@ const V3 = (() => {
 
 
   // ---------- Varroa ----------
-  const mesures = (id) => S.d.visites.filter((v) => v.ruche_id === id && v.varroa != null);
+  // IT-12 : comptages des visites et du rucher (migration 036), au format d'une visite (src/domaines/sante/regles.js).
+  const mesures = (id) => Regles.sante.comptagesDe(S.d, id);
   const visiteAvant = ACT.newvisite;
   ACT.newvisite = (id) => {
     visiteAvant(id);
@@ -171,10 +172,11 @@ const V3 = (() => {
   ACT.v3compter = (id) => { ACT.newvisite(id); U.ouvrir("poids"); redessiner("visite"); document.getElementById("v_varroa")?.focus(); };
 
   function vueVarroa() {
-    const seuil = U.seuilVarroa();
+    // Ancien écran Santé : remplacé en IT-12 par src/domaines/sante/ecran.js ; gardé sans seuil par défaut.
+    const seuil = U.seuilVarroa() || 0;
     const lignes = S.d.ruches.map((r) => {
       const ms = mesures(r.id), der = ms[0], t = U.tauxVarroa(der);
-      const ton = t === null ? "" : t >= seuil ? "crit" : t >= seuil * 0.66 ? "watch" : "good";
+      const ton = t === null || !seuil ? "" : t >= seuil ? "crit" : t >= seuil * 0.66 ? "watch" : "good";
       const pts = ms.filter((v) => U.tauxVarroa(v) !== null).slice(0, 12).reverse();
       const courbe = pts.length > 1 ? lineChart({ labels: pts.map((v) => dshort(v.date_visite)),
         series: [{ name: "Taux", color: C.honey, values: pts.map((v) => Math.round(U.tauxVarroa(v) * 10) / 10) }, { name: "Seuil", color: "#A61B1B", values: pts.map(() => seuil) }],
@@ -182,7 +184,7 @@ const V3 = (() => {
       return `<section class="card"><div class="u-entete"><div><b>${esc(r.nom)}</b><div class="small">${der ? `${esc(U.dateCourte(der.date_visite))} · ${der.varroa_methode ? esc(der.varroa_methode.toLowerCase()) : "méthode non notée"}` : "Jamais compté"}</div></div>
         <span class="v3-droite">${der ? `<b class="${ton}">${t !== null ? n(t, 1) + " %" : der.varroa + " varroas"}</b>` : ""}<button type="button" class="btn sm" data-act="v3compter" data-v="${r.id}">Compter</button></span></div>${courbe}</section>`;
     }).join("");
-    const haut = S.d.ruches.filter((r) => { const t = U.tauxVarroa(mesures(r.id)[0]); return t !== null && t >= seuil; }).length;
+    const haut = S.d.ruches.filter((r) => Regles.sante.auDessus(U.tauxVarroa(mesures(r.id)[0]), seuil || null)).length;
     // v5.43 (gabarit commun) : le seuil est un réglage, il passe dans ⋯ (feuille de saisie courte) ; la liste vient tout de suite.
     shell("Santé", [`Seuil d’alerte ${n(seuil, 1)} %`, haut ? `${U.pluriel(haut, "ruche")} au-dessus` : ""].filter(Boolean).join(" · "),
       `<button type="button" class="btn" data-act="v3seuilfeuille">Seuil d’alerte varroa</button>`,
@@ -191,10 +193,9 @@ const V3 = (() => {
   const todosAvant = window.todos;
   window.todos = function () {
     const l = todosAvant().map((x) => (x[0] === "Obligation" ? [x[0], x[1], x[2], "declaration"] : x));
-    const seuil = U.seuilVarroa();
     S.d.ruches.forEach((r) => {
-      const t = U.tauxVarroa(mesures(r.id)[0]);
-      if (t !== null && t >= seuil) l.unshift([r.nom, "crit", `Varroa ${n(t, 1)} % (seuil ${n(seuil, 1)} %)`, "ruche:" + r.id]);
+      const der = mesures(r.id)[0], t = U.tauxVarroa(der), seuil = U.seuilVarroa(der);
+      if (Regles.sante.auDessus(t, seuil)) l.unshift([r.nom, "crit", `Varroa ${n(t, 1)} % (seuil ${n(seuil, 1)} %)`, "ruche:" + r.id]);
     });
     const al = S.d.ventes.filter((v) => v.livre === false).length;
     if (al) l.push(["À livrer", "watch", `${U.pluriel(al, "commande")} à livrer`, "livrer"]);

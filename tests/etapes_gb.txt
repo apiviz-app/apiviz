@@ -27,14 +27,16 @@
     verif("Fichier comptable" in page.locator("#sheet .g-actions").inner_text(), "Dépenses : « Fichier comptable » dans ⋯")
     page.locator("#sheet [data-act=closesheet]").first.click()
     verif(not e["petits"], "Dépenses : aucun texte sous 12 px " + str(e["petits"]))
-    # Santé : le seuil n'est plus dans l'écran, il s'ouvre par ⋯
+    # Santé : le seuil n'est plus dans l'écran ; IT-12 (maquette du 23 nov. 2026) : les seuils sourcés sont dans l'onglet,
+    # bascule « Comptages / Seuils » ; « Noter un signe » est dans ⋯.
     e = ecran("varroa")
     verif(e["titre"] == "Ruchers" and page.locator("form[data-form=v3seuil]").count() == 0, "Santé : onglet de Ruchers (titre « Ruchers », v5.50), plus de formulaire de seuil dans l'écran")
     page.locator(".wrap > .head .g-plus").click(); page.wait_for_selector("#sheet[open] .g-action")
-    page.locator("#sheet .g-action", has_text="Seuil d’alerte varroa").click()
-    page.wait_for_selector("#sheet[open] input[name=s]")
-    verif(page.locator("#sheet h2").inner_text() == "Seuil d’alerte varroa", "Santé : ⋯ › Seuil d'alerte ouvre la feuille de saisie")
+    verif("Noter un signe" in page.locator("#sheet .g-actions").inner_text(), "Santé : ⋯ › Noter un signe")
     page.locator("#sheet [data-act=closesheet]").first.click()
+    page.click(".g-outils [data-act=savue][data-v=seuils]"); page.wait_for_selector(".sa-regle")
+    verif(page.locator(".sa-ajout").count() == 1, "Santé › Seuils : « Ajouter un seuil » dans l'onglet")
+    page.click(".g-outils [data-act=savue][data-v=comptages]"); page.wait_for_selector(".sa-liste")
     if cap: page.screenshot(path=cap + "/gb-sante-390.png")
     # Fiche ruche : un bouton principal et un bouton +
     page.evaluate("S.ruche = S.d.ruches[0].id; ACT.go('ruche')"); page.wait_for_selector(".n4-rbarre")

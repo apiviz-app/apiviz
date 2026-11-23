@@ -141,18 +141,17 @@ const N4 = (() => {
     const entete = '<button class="btn" data-act="rcnouveau">Nouveau rucher</button><button class="btn" data-act="newruches">Ajouter des ruches</button>'
       + (d.ruches.length && typeof ACT.dpouvrir == "function" ? '<button class="btn" data-act="dpouvrir" data-v="">Déplacer</button>' : "");
     if (!ls.length) return shell("Ruchers", "", entete, emptyState("Crée ton premier rucher", "Un nom, un emplacement, puis tes ruches. Tu pourras le placer sur la carte et noter comment y accéder.", "Nouveau rucher", "rcnouveau"));
-    const seuil = U.seuilVarroa();
     // Un bloc par rucher de la table (IT-05), y compris sans colonie ; data-k : clé lue par AL.completerRuchers.
     const blocs = ls.map((l) => {
       const k = l.cle, rs = l.rs, pb = rs.filter((r) => r.etat !== "Bonne"), etat = l.etat;
       const der = rs.map((r) => lastVisit(r.id)).filter(Boolean).sort((a, b) => b.date_visite.localeCompare(a.date_visite))[0];
       const place = l.lat != null;
       const lignes = rs.map((r) => {
-        const v = d.visites.find((x) => x.ruche_id === r.id && x.varroa != null), t = U.tauxVarroa(v);
+        const v = Regles.sante.dernierComptage(d, r.id), t = U.tauxVarroa(v), seuil = U.seuilVarroa(v);
         const sous = [r.etat !== "Bonne" ? r.etat : "", r.hausses ? U.pluriel(r.hausses, "hausse") : "", r.annee_reine ? "reine " + r.annee_reine : "", lastVisit(r.id) ? "" : "jamais visitée"].filter(Boolean).join(" · ");
         return `<button type="button" class="n4-ruche" data-act="ruche" data-v="${r.id}"><span class="n4-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span>
           <span class="u-todo-t"><b>${esc(r.nom)}</b><span class="small">${esc(sous || "en bon état")}</span></span>
-          ${t !== null ? `<span class="n4-taux ${t >= seuil ? "crit" : ""}">${n(t, 1)} %</span>` : ""}<span class="u-chev" aria-hidden="true">›</span></button>`;
+          ${t !== null ? `<span class="n4-taux ${Regles.sante.auDessus(t, seuil) ? "crit" : ""}">${n(t, 1)} %</span>` : ""}<span class="u-chev" aria-hidden="true">›</span></button>`;
       }).join("");
       const etatTag = !rs.length ? "" : pb.length ? `<span class="tag ${etatClass(etat)}">${pb.length} ${etat === "Critique" ? "critique" : "à surveiller"}</span>` : '<span class="tag good">tout va bien</span>';
       const action = rs.length > 1 ? `<button type="button" class="btn main" data-act="v3tournee" data-v="${esc(k)}">Faire la tournée</button>`
