@@ -57,8 +57,8 @@
 .cv-res.crit{color:var(--crit)}
 .cv-res.watch{color:var(--watch)}
 .cv-res.good{color:var(--good)}
-.cv-ab{display:flex;align-items:center;gap:6px;font-size:var(--t-s);color:var(--muted);margin:2px 0 0}
-.cv-ab input{width:80px;min-height:36px;padding:0 8px;font-size:var(--t-m)}
+.cv-ab{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:6px;font-size:var(--t-s);color:var(--muted);margin:2px 0 0;text-align:left}
+.cv-ab input{width:80px;min-height:36px;padding:0 8px;font-size:var(--t-m);margin:0}
 .cv-ctl{display:flex;align-items:center;gap:4px;flex:none}
 .cv-ctl input{width:56px;min-height:44px;padding:0 4px;text-align:center;font-size:var(--t-l);font-weight:700}
 .cv-pm{width:44px;height:44px;border:1px solid var(--line2);border-radius:var(--r-s);background:#fff;font:inherit;font-size:20px;color:var(--ink);cursor:pointer}
