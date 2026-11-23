@@ -34,6 +34,8 @@ Exceptions actuelles (textes de documents émis) :
 | `terrain-regles.js` | « …votre commande (…) est prête… » | SMS envoyé au client quand sa commande en ligne est prête (v5.57) |
 | `commandes.js` | « Réservez votre miel en ligne : » | texte du lien de la page de commande, partagé aux clients (v5.57) |
 | `saison.js` | « Dites-moi ce qui vous ferait plaisir » | message aux clients qui ont demandé à être prévenus de la récolte (v5.66) |
+| `sante/regles.js` | « Je vous signale avoir observé le… » | fiche de signalement remise au vétérinaire, au groupement sanitaire ou aux services vétérinaires (IT-12) |
+| `sante/regles.js` | « Je souhaite avoir votre avis sur la conduite à tenir. » | même fiche (IT-12) |
 | `commande.html` | toute la page | page de commande publique, lue par les clients (v5.57) |
 
 Ajouter une exception : seulement pour un texte destiné à un tiers, en l'inscrivant ici **et** dans le test.

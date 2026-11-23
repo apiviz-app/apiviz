@@ -13,7 +13,9 @@ const EXCEPTIONS = [
   ["ux.js", '"Votre miel · "'], // objet de l'e-mail envoyé au client
   ["src/domaines/ventes/terrain-regles.js", "votre commande ("],
   ["src/domaines/ventes/commandes.js", "Réservez votre miel en ligne"],
-  ["src/domaines/production/saison.js", "Dites-moi ce qui vous ferait plaisir"], // message aux clients à prévenir de la récolte (v5.66) // texte du lien partagé aux clients (v5.57) // SMS envoyé au client quand sa commande en ligne est prête (v5.56)
+  ["src/domaines/production/saison.js", "Dites-moi ce qui vous ferait plaisir"],
+  ["src/domaines/sante/regles.js", "Je vous signale avoir observé le"], // fiche de signalement remise au vétérinaire ou aux services (IT-12)
+  ["src/domaines/sante/regles.js", "Je souhaite avoir votre avis sur la conduite à tenir"], // même fiche // message aux clients à prévenir de la récolte (v5.66) // texte du lien partagé aux clients (v5.57) // SMS envoyé au client quand sa commande en ligne est prête (v5.56)
 ];
 const FORMES = /\b(vous|votre|vos|[a-zà-ÿ]{3,}ez)\b/gi;
 const PAS_DES_VERBES = new Set(["chez", "assez"]);

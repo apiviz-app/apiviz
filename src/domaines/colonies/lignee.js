@@ -6,7 +6,9 @@
 // Les globales d'app.js (S, sb, sheet, esc, dfr, today, toast, refresh, render, cfg, byId, n) ne sont lues qu'à l'appel.
 import * as C from "./regles.js";
 import * as R from "./reines.js";
-import { tauxVarroa, seuilVarroa } from "../sante/regles.js";
+import * as SA from "../sante/regles.js";
+import { ctx as ctxSante, detail as detailComptage } from "../sante/ecran.js";
+import { signesRecents } from "../sante/ecran.js";
 
 const e = (t) => esc(t);
 const appel = (nom, args) => (typeof HL != "undefined" ? HL.rpc(nom, args) : sb.rpc(nom, args));
@@ -93,23 +95,36 @@ function sectionLignee(r) {
   return `<section class="card rn-lignee"><h2>Lignée</h2>${lignes.join("") || '<p class="small">Aucun lien connu. Une division, un essaim récupéré ou une réunion notés dans l’onglet Colonie apparaîtront ici.</p>'}</section>`;
 }
 
-// ---------- Onglet « Santé » (AP-TECH-121) ----------
-// Lecture de ce qui est déjà saisi dans les visites : comptages varroa et traitements. Le seul seuil affiché est celui
-// que l'apiculteur a réglé lui-même (Santé › seuil) ; aucune posologie ni aucun délai n'est proposé ici.
+// ---------- Onglet « Santé » (AP-TECH-121 ; IT-12, maquette du 23 nov. 2026) ----------
+// Comptages varroa (visites et comptages du rucher, migration 036), comparés au seuil sourcé qui s'applique (sa source
+// en clair, « ? » pour le détail) ; signes sanitaires notés, datés, sans conclusion automatique (AP-US-064) ;
+// traitements saisis pendant les visites. Aucune posologie ni aucun délai n'est proposé ici (traitements : IT-13).
 function ongletSante(r) {
   const vis = (S.d.visites || []).filter((v) => v.ruche_id === r.id);
-  const seuil = seuilVarroa(cfg());
-  const comptages = vis.filter((v) => v.varroa !== null && v.varroa !== undefined).slice(0, 6).map((v) => {
-    const t = tauxVarroa(v);
-    return `<div class="cl-ligne"><span><b>${t !== null ? n(t, 1) + " %" : e(v.varroa) + " varroa" + (Number(v.varroa) > 1 ? "s" : "")}</b>
-      <span class="small">${e([dfr(v.date_visite), v.varroa_methode, t !== null ? `${v.varroa} sur ${v.varroa_abeilles} abeilles` : ""].filter(Boolean).join(" · "))}</span></span>
-      ${t !== null && t >= seuil ? '<span class="tag crit">au-dessus de ton seuil</span>' : ""}</div>`;
+  const c = ctxSante(), liste = SA.comptagesDe(S.d, r.id);
+  const der = liste[0], nivDer = der ? SA.niveau(der, c) : null, sDer = der ? SA.seuilApplicable(der, c) : null;
+  const bandeau = der && nivDer === "haut"
+    ? `<section class="card rn-alerte"><p><b>${e(SA.resultat(der).texte)} le ${e(dfr(der.date_visite))} : au-dessus de ton seuil de ${e(SA.valeurTexte(sDer))}</b></p>
+        <p class="small">${e([der.varroa_methode, SA.periodeTexte(sDer)].filter(Boolean).join(", "))} · ${e(SA.sourceTexte(sDer))}</p>
+        <button type="button" class="link" data-act="saquestion" data-v="${e(der.varroa_methode)}">D’où vient ce seuil ?</button></section>`
+    : der && SA.resultat(der).valeur !== null && !sDer
+      ? `<p class="small rn-sansseuil">Pas de seuil choisi pour cette méthode : le résultat s’affiche sans couleur. <button type="button" class="link" data-act="saversseuils">Choisir un seuil</button></p>` : "";
+  const comptages = liste.slice(0, 6).map((v) => {
+    const niv = SA.niveau(v, c);
+    return `<div class="cl-ligne"><span><b>${e(SA.resultat(v).texte)}</b>
+      <span class="small">${e(detailComptage(v))}</span></span>
+      ${niv === "haut" ? '<span class="tag crit">au-dessus de ton seuil</span>' : v._attente ? '<span class="tag watch">en attente</span>' : ""}</div>`;
   }).join("");
+  const signes = signesRecents(r.id).slice(0, 8).map((g) => `<div class="cl-ligne"><span><b>${e(g.signes.map(SA.nomSigne).join(", "))}</b>
+      <span class="small">${e([dfr(g.date), SA.IMPORTANCES[g.importance]?.toLowerCase(), g.ruches.length > 1 ? `avec ${g.ruches.length - 1} autre${g.ruches.length > 2 ? "s" : ""} colonie${g.ruches.length > 2 ? "s" : ""}` : ""].filter(Boolean).join(" · "))}</span></span>
+      <button type="button" class="link" data-act="sasignalement" data-v="${e(g.saisie)}">Aide</button></div>`).join("");
   const traitements = vis.filter((v) => v.traitement).slice(0, 6).map((v) => `<div class="cl-ligne"><span><b>${e(v.traitement)}</b>
       <span class="small">${e([dfr(v.date_visite), v.lot_produit && "lot " + v.lot_produit, v.traitement_dose, v.retrait_prevu && "fin prévue le " + dfr(v.retrait_prevu)].filter(Boolean).join(" · "))}</span></span></div>`).join("");
-  return `<section class="card rn-varroa"><div class="u-entete"><h2>Varroa</h2>${C.estActive(r) ? `<button type="button" class="link" data-act="v3compter" data-v="${e(r.id)}">Compter</button>` : ""}</div>
+  return `${bandeau}<section class="card rn-varroa"><div class="u-entete"><h2>Varroa</h2>${C.estActive(r) ? `<button type="button" class="link" data-act="cvouvrir" data-v="${e(r.id)}">Compter</button>` : ""}</div>
       ${comptages || '<p class="small">Aucun comptage noté pour cette colonie.</p>'}
       <button type="button" class="link rn-suite" data-act="go" data-v="varroa">Suivi de toutes les colonies</button></section>
+    <section class="card rn-signes"><div class="u-entete"><h2>Signes sanitaires</h2>${C.estActive(r) ? `<button type="button" class="link" data-act="sasigne" data-v="${e(r.id)}">Noter un signe</button>` : ""}</div>
+      ${signes || '<p class="small">Rien de noté sur cette colonie.</p>'}</section>
     <section class="card rn-traitements"><h2>Traitements</h2>${traitements || '<p class="small">Aucun traitement noté. Ils se saisissent pendant la visite.</p>'}
       <button type="button" class="link rn-suite" data-act="go" data-v="registre">Registre d’élevage</button></section>`;
 }
