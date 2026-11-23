@@ -2,7 +2,7 @@
 // de la courbe de poids. Fonctions pures, testées par tests/unitaires/suivi.test.mjs.
 // API ne parle que s'il a quelque chose à dire (docs/CHARTE_GRAPHIQUE.md) : une colonie en forme sans signal n'a pas
 // de message. Pour un soin, il renvoie vers le vétérinaire ou le GDS, sans rien prescrire.
-import { tauxVarroa } from "../sante/regles.js";
+import { tauxVarroa, seuilDe, auDessus } from "../sante/regles.js";
 import { estActive } from "./regles.js";
 
 const jour = (d) => String(d || "").slice(0, 10);
@@ -27,14 +27,14 @@ export function visitesDe(visites, id) {
  * provisions faibles, reine non vue deux fois de suite, longue absence de visite (colonie qui n'est pas en forme).
  * La phrase reprend au plus deux constats, puis le conseil du premier.
  */
-export function messageRuche(r, visites, { seuil = 3, aujourdhui = new Date().toISOString().slice(0, 10) } = {}) {
+export function messageRuche(r, visites, { seuil = null, aujourdhui = new Date().toISOString().slice(0, 10) } = {}) {
   if (!r || !estActive(r)) return null;
   const vs = visitesDe(visites, r.id), der = vs[0], ps = vs.filter(pesee);
   const constats = [];
   const vr = vs.find((v) => v.varroa !== null && v.varroa !== undefined);
-  const tx = vr ? tauxVarroa(vr) : null;
-  if (tx !== null && tx >= seuil)
-    constats.push({ t: `Varroa à ${nb(tx)} % le ${dateLongue(vr.date_visite)}, au-dessus de ton seuil de ${nb(seuil)} %.`, c: "Vois le traitement avec ton vétérinaire ou ton GDS.", crit: true });
+  const tx = vr ? tauxVarroa(vr) : null, s = vr ? seuilDe(seuil, vr) : null; // IT-12 : pas d'alerte sans seuil choisi
+  if (auDessus(tx, s))
+    constats.push({ t: `Varroa à ${nb(tx)} % le ${dateLongue(vr.date_visite)}, au-dessus de ton seuil de ${nb(s)} %.`, c: "Vois le traitement avec ton vétérinaire ou ton GDS.", crit: true });
   if (ps.length > 1) {
     const perte = Number(ps[1].poids_kg) - Number(ps[0].poids_kg);
     if (perte >= 1) constats.push({ t: `Elle a perdu ${nb(perte)} kg depuis le ${dateLongue(ps[1].date_visite)}.`, c: "Pèse-la de nouveau et donne du candy si elle est légère." });

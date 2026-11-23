@@ -175,16 +175,18 @@ const AL = (() => {
       return p && NIVEAUX[p] ? { cl: "bg-niv", txt: num, niv: NIVEAUX[p], mot: `provisions ${p.toLowerCase()}` } : { cl: "bg-vide", txt: num, mot: "provisions pas encore notées" };
     }
     if (l === "varroa") {
-      const t = U.tauxVarroa(visites.find((v) => v.varroa != null)), s = U.seuilVarroa();
+      const c = Regles.sante.dernierComptage(S.d, r.id), t = U.tauxVarroa(c), s = U.seuilVarroa(c), R = Regles.sante;
       if (t === null) return { cl: "bg-vide", txt: num, mot: "varroa pas encore compté" };
-      return { cl: `al-txt bg-${t >= s ? "crit" : t >= s * 0.66 ? "watch" : "good"}`, txt: n(t, 1), mot: `varroa ${n(t, 1)} %` };
+      // IT-12 : sans seuil choisi, le taux s'affiche sans couleur d'alerte.
+      return { cl: `al-txt bg-${R.auDessus(t, s) ? "crit" : R.proche(t, s) ? "watch" : s ? "good" : "vide"}`, txt: n(t, 1), mot: `varroa ${n(t, 1)} %` };
     }
     return { cl: `bg-${etatClass(r.etat)}`, txt: num, mot: `état ${r.etat}` };
   }
   function legendeLentille(l) {
     const s = U.seuilVarroa();
     if (l === "prov") return `<p class="al-cle"><span><i class="al-niv" style="--niv:85%"></i>Bonnes</span><span><i class="al-niv" style="--niv:52%"></i>Moyennes</span><span><i class="al-niv" style="--niv:22%"></i>Faibles</span></p>`;
-    if (l === "varroa") return `<p class="al-cle"><span><i class="bg-good"></i>Sous ${n(s * 0.66, 1)} %</span><span><i class="bg-watch"></i>À surveiller</span><span><i class="bg-crit"></i>À partir de ${n(s, 1)} %</span></p>`;
+    if (l === "varroa") return s ? `<p class="al-cle"><span><i class="bg-good"></i>Sous ${n(s * 0.66, 1)} %</span><span><i class="bg-watch"></i>À surveiller</span><span><i class="bg-crit"></i>À partir de ${n(s, 1)} %</span></p>`
+      : '<p class="al-cle"><span>Pas de seuil choisi : taux sans couleur (Ruchers › Santé › Seuils).</span></p>';
     return legende();
   }
   function appliquerLentille() {
@@ -255,7 +257,7 @@ const AL = (() => {
     const taches = d.taches.filter((t) => !t.faite && ids.has(t.ruche_id));
     const lignes = rs.map((r) => {
       const v = d.visites.find((x) => x.ruche_id === r.id), p = d.visites.find((x) => x.ruche_id === r.id && x.poids_kg);
-      const tx = U.tauxVarroa(d.visites.find((x) => x.ruche_id === r.id && x.varroa != null));
+      const tx = U.tauxVarroa(Regles.sante.dernierComptage(d, r.id));
       return `<button type="button" class="al-ligne" data-act="ruche" data-v="${r.id}"><span class="n4-hex bg-${etatClass(r.etat)}" aria-hidden="true"></span><b>${esc(r.nom)}</b>
         <span class="small ${r.etat === "Bonne" ? "" : etatClass(r.etat)}">${esc(r.etat === "Bonne" ? "En forme" : r.etat)}</span>
         <span class="al-kg">${p ? esc(n(p.poids_kg)) + " kg" : "–"}</span><span class="al-opt">${tx !== null ? "Varroa " + esc(n(tx, 1)) + " %" : "–"}</span>

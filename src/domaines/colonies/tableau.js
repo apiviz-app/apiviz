@@ -2,11 +2,11 @@
 // Fonctions pures, testées par tests/unitaires/tableau.test.mjs : une ligne par colonie active (état, force, reine,
 // varroa, provisions, dernière visite, rucher, à faire), filtres, tri et synthèse. Aucune donnée nouvelle : tout vient
 // des colonnes existantes (ruches, visites, reines) ; aucun seuil nouveau sauf ceux déjà en usage dans l'app
-// (seuil varroa réglable, 3 % par défaut ; « proche du seuil » aux deux tiers, comme ux.js ; 30 jours sans visite,
+// (seuil varroa choisi par l'apiculteur, aucun par défaut depuis IT-12 ; « proche du seuil » aux deux tiers, comme ux.js ; 30 jours sans visite,
 // comme l'accueil d'app.js).
 import { statut, estActive } from "./regles.js";
 import { reineEnPlace, couleurMarquage } from "./reines.js";
-import { tauxVarroa } from "../sante/regles.js";
+import { tauxVarroa, comptages, seuilDe, auDessus, proche } from "../sante/regles.js";
 import { n, days } from "../../noyau/format.js";
 
 export const JOURS_SANS_VISITE = 30;
@@ -33,9 +33,10 @@ const pire = (a, b) => (NIVEAUX[a].rang <= NIVEAUX[b].rang ? a : b);
 
 /**
  * Une ligne par colonie active (active ou orpheline), dans l'ordre de d.ruches.
- * `seuil` : seuil varroa de l'exploitation (varroas pour 100 abeilles) ; `aujourdhui` : Date (pour les jours écoulés).
+ * `seuil` : seuil varroa (varroas pour 100 abeilles), nombre, null (aucun : pas d'alerte) ou fonction (comptage) → nombre | null ; `aujourdhui` : Date (pour les jours écoulés).
  */
-export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
+export function lignes(d, { seuil = null, aujourdhui = new Date() } = {}) {
+  const tous = comptages(d); // IT-12 : comptages du rucher (migration 036) et comptages des visites
   const parRuche = new Map();
   for (const v of [...(d.visites || [])].sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)))) {
     if (!parRuche.has(v.ruche_id)) parRuche.set(v.ruche_id, []);
@@ -44,8 +45,8 @@ export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
   const ruchers = new Map((d.ruchers || []).map((r) => [r.id, r.nom]));
   return (d.ruches || []).filter(estActive).map((r) => {
     const vs = parRuche.get(r.id) || [], der = vs[0] || null;
-    const comptage = vs.find((v) => v.varroa != null) || null;
-    const taux = tauxVarroa(comptage);
+    const comptage = tous.find((c) => c.ruche_id === r.id) || null;
+    const taux = tauxVarroa(comptage), s = comptage ? seuilDe(seuil, comptage) : null;
     const orpheline = statut(r) === "orpheline";
     const reine = orpheline ? null : reineEnPlace(d, r);
     const annee = reine?.annee_naissance ? Number(reine.annee_naissance) : null;
@@ -56,8 +57,8 @@ export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
     if (r.etat === "Critique") ajoute("urg", "critique", "État critique");
     // v5.49 (migration 023) : cellules royales operculées à la dernière visite, repère d'essaimage.
     if (der?.cellules_royales === "Operculées") ajoute("urg", "essaimage", "Essaimage : cellules royales operculées");
-    if (taux !== null && taux >= seuil) ajoute("urg", "varroa", `Varroa ${n(taux, 1)} % (seuil ${n(seuil, 1)} %)`);
-    else if (taux !== null && taux >= seuil * 0.66) ajoute("watch", "varroa", `Varroa ${n(taux, 1)} % : proche du seuil`);
+    if (auDessus(taux, s)) ajoute("urg", "varroa", `Varroa ${n(taux, 1)} % (seuil ${n(s, 1)} %)`);
+    else if (proche(taux, s)) ajoute("watch", "varroa", `Varroa ${n(taux, 1)} % : proche du seuil`);
     if (r.etat === "À surveiller") ajoute("watch", "surveiller", "État à surveiller");
     if (der?.provisions === "Faibles") ajoute("watch", "provisions", "Provisions faibles");
     if (jours !== null && jours > JOURS_SANS_VISITE) ajoute("watch", "visite", `Pas visitée depuis ${jours} jours`);
@@ -73,7 +74,7 @@ export function lignes(d, { seuil = 3, aujourdhui = new Date() } = {}) {
       provisions: PROVISIONS.includes(der?.provisions) ? der.provisions : null,
       poids: der?.poids_kg != null && der.poids_kg !== "" ? Number(der.poids_kg) : null,
       jours, derniere: der?.date_visite || null,
-      alertes: { varroa: taux !== null && taux >= seuil, provisions: der?.provisions === "Faibles", visite: jours !== null && jours > JOURS_SANS_VISITE },
+      alertes: { varroa: auDessus(taux, s), provisions: der?.provisions === "Faibles", visite: jours !== null && jours > JOURS_SANS_VISITE },
       visites: vs.slice(0, 3),
     };
   });

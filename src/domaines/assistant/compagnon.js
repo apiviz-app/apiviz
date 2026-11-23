@@ -154,7 +154,7 @@ export function coutTexte(g) {
  * o : { nom, seuil (varroas pour 100 abeilles), aujourdhui }.
  */
 export function remarquesVoix(v = {}, precedentes = [], o = {}) {
-  const nom = o.nom || "la ruche", auj = o.aujourdhui, seuil = Number(o.seuil) || 3;
+  const nom = o.nom || "la ruche", auj = o.aujourdhui, seuil = Number(o.seuil) > 0 ? Number(o.seuil) : null; // IT-12 : aucun seuil par défaut
   const mois = auj ? enDate(auj).getMonth() : 0;
   const tache = (titre, jours) => ({ titre, echeance: auj ? plusJours(auj, jours) : null });
   const remarques = [];
@@ -174,7 +174,7 @@ export function remarquesVoix(v = {}, precedentes = [], o = {}) {
   if (compte) {
     const t = tauxVarroa(compte);
     const traite = precedentes.some((x) => jour(x.date_visite) >= jour(compte.date_visite) && String(x.traitement || "").trim());
-    if (t >= seuil && !traite) remarques.push({ id: "varroa", texte: `Varroa à ${fr(t)} % le ${dCourte(compte.date_visite)} (ton seuil : ${fr(seuil)} %), pas de traitement noté depuis.`, tache: tache(`Traiter ou recompter ${nom}`, 7) });
+    if (seuil !== null && t >= seuil && !traite) remarques.push({ id: "varroa", texte: `Varroa à ${fr(t)} % le ${dCourte(compte.date_visite)} (ton seuil : ${fr(seuil)} %), pas de traitement noté depuis.`, tache: tache(`Traiter ou recompter ${nom}`, 7) });
   }
   return { remarques, doute };
 }
@@ -245,7 +245,8 @@ const fait = (texte, date, r) => ({ texte, date: date ? jour(date) : undefined, 
 export function reponseLocale(question, d = {}, o = {}) {
   const t = sansAccent(question);
   if (!t.trim()) return null;
-  if (/seuil/.test(t) && /varroa/.test(t)) return reponse(`Ton seuil d’alerte varroa : ${fr(Number(o.seuil) || 3)} varroas pour 100 abeilles.`);
+  if (/seuil/.test(t) && /varroa/.test(t)) return reponse(Number(o.seuil) > 0 ? `Ton seuil d’alerte varroa : ${fr(Number(o.seuil))} varroas pour 100 abeilles.`
+    : "Tu n’as pas encore choisi de seuil d’alerte varroa. Ajoute celui de ton GDS ou de ton technicien, avec sa source, dans Ruchers › Santé › Seuils.");
   const r = rucheDuTexte(question, d.ruches || []);
   if (r) {
     const vs = visitesDe(d, r.id), der = vs[0];

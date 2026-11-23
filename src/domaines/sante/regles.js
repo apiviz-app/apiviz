@@ -55,14 +55,16 @@ export function comptages(d) {
     if (!o || c.varroa == null) continue;
     l.push({ id: c.id, ruche_id: c.ruche_id, date_visite: o.date_operation, varroa: Number(c.varroa),
       varroa_abeilles: c.abeilles ?? o.echantillon_abeilles ?? null, varroa_methode: o.methode || "", duree_jours: o.duree_jours ?? null,
-      origine: o.origine || "operation", operation_id: o.id, visite_id: o.visite_id || null, _attente: !!(o._attente || c._attente) });
+      origine: o.origine || "operation", operation_id: o.id, visite_id: o.visite_id || null, _attente: !!(o._attente || c._attente), cree: o.created_at || null });
   }
   for (const v of d?.visites || []) {
     if (v.varroa == null || repris.has(v.id)) continue;
     l.push({ id: v.id, ruche_id: v.ruche_id, date_visite: v.date_visite, varroa: Number(v.varroa), varroa_abeilles: v.varroa_abeilles ?? null,
-      varroa_methode: v.varroa_methode || "", duree_jours: null, origine: "visite", operation_id: null, visite_id: v.id, _attente: !!v._attente });
+      varroa_methode: v.varroa_methode || "", duree_jours: null, origine: "visite", operation_id: null, visite_id: v.id, _attente: !!v._attente, cree: v.created_at || null });
   }
-  return l.sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)));
+  // Même jour : le plus récemment saisi d'abord (une saisie sans date de création vient d'être faite sur le téléphone).
+  const cree = (c) => (c.cree ? String(c.cree) : "9999");
+  return l.sort((a, b) => String(b.date_visite).localeCompare(String(a.date_visite)) || cree(b).localeCompare(cree(a)));
 }
 /** Comptages d'une colonie, le plus récent d'abord. */
 export const comptagesDe = (d, rucheId, liste) => (liste || comptages(d)).filter((c) => c.ruche_id === rucheId);
@@ -73,7 +75,7 @@ export const dernierComptage = (d, rucheId, liste) => comptagesDe(d, rucheId, li
 
 /** Le mois m (1 à 12) est-il dans la période [debut, fin] ? La période peut passer la fin de l'année (nov. → févr.). */
 export const dansPeriode = (m, debut, fin) => (debut <= fin ? m >= debut && m <= fin : m >= debut || m <= fin);
-export const periodeTexte = (s) => (!s || (s.mois_debut === 1 && s.mois_fin === 12) ? "toute l'année" : `${MOIS[s.mois_debut - 1]} → ${MOIS[s.mois_fin - 1]}`);
+export const periodeTexte = (s) => (!s || (s.mois_debut === 1 && s.mois_fin === 12) ? "toute l’année" : `${MOIS[s.mois_debut - 1]} → ${MOIS[s.mois_fin - 1]}`);
 const dateFr = (iso) => (iso ? new Date(String(iso).slice(0, 10) + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "");
 /** « Source : … · consultée le 2 sept. 2026 », ou la mention du réglage d'avant IT-12. */
 export const sourceTexte = (s) =>
@@ -163,7 +165,7 @@ export function appliquerComptage(d, p, extra = {}) {
   if (d.operations.some((o) => o.id === p.id)) return;
   d.operations.unshift({ id: p.id, type: "comptage_varroa", rucher_id: p.rucher_id || null, date_operation: p.date, methode: p.methode,
     echantillon_abeilles: p.echantillon_abeilles ?? null, duree_jours: estChute(p.methode) ? Number(p.duree_jours) : null, note: p.note || "",
-    origine: "operation", visite_id: null, ...extra });
+    origine: "operation", visite_id: null, created_at: new Date().toISOString(), ...extra });
   for (const c of p.colonies || []) d.comptesVarroa.push({ id: `${p.id}:${c.ruche_id}`, operation_id: p.id, ruche_id: c.ruche_id, varroa: c.varroa, abeilles: c.abeilles ?? null, ...extra });
 }
 
@@ -209,7 +211,7 @@ export function appliquerSignes(d, p, extra = {}) {
   d.observations ||= [];
   if (d.observations.some((o) => o.saisie_id === p.id)) return;
   for (const r of p.ruches || []) d.observations.unshift({ id: `${p.id}:${r}`, saisie_id: p.id, ruche_id: r, date_observation: p.date, signes: [...p.signes],
-    importance: p.importance, note: p.note || "", visite_id: p.visite_id || null, ...extra });
+    importance: p.importance, note: p.note || "", visite_id: p.visite_id || null, created_at: new Date().toISOString(), ...extra });
 }
 /** Observations d'une colonie, la plus récente d'abord. */
 export const observationsDe = (d, rucheId) => (d?.observations || []).filter((o) => o.ruche_id === rucheId)
@@ -253,15 +255,15 @@ export function ficheSignalement(o) {
     "",
     `Je vous signale avoir observé le ${dateLongue(o.date)}, sur le rucher « ${o.rucher || "sans nom"} »${o.commune ? ` (${o.commune})` : ""}, `
       + `sur ${o.colonies.length} colonie${o.colonies.length > 1 ? "s" : ""}${o.total ? ` sur ${o.total}` : ""} (${o.colonies.join(", ")}) : ${signes}.`,
-    o.importance ? `Importance notée : ${String(o.importance).toLowerCase()}.` : "",
-    o.varroa ? `Dernier comptage de varroas : ${o.varroa}.` : "",
-    o.note ? `Précisions : ${o.note}` : "",
+    o.importance ? `Importance notée : ${String(o.importance).toLowerCase()}.` : null,
+    o.varroa ? `Dernier comptage de varroas : ${o.varroa}.` : null,
+    o.note ? `Précisions : ${o.note}` : null,
     "",
     "Je souhaite avoir votre avis sur la conduite à tenir.",
     "",
     [o.apiculteur, o.napi ? `NAPI ${o.napi}` : "", o.contact].filter(Boolean).join(" · "),
   ];
-  return lignes.filter((l, i, t) => l !== "" || (t[i - 1] !== "" && i > 0)).join("\n");
+  return lignes.filter((l) => l !== null).join("\n").trim();
 }
 const dateLongue = (iso) => new Date(String(iso).slice(0, 10) + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
