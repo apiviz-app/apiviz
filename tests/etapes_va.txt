@@ -1,0 +1,134 @@
+    # IT-12 — Varroa : comptage du rucher en une opération (AP-US-058) et seuils sourcés (AP-US-059), migration 036.
+    # Reprise du comptage d'une visite à l'identique, aucun seuil par défaut (pas de couleur), seuil ajouté avec sa source
+    # et sa date dans l'onglet Santé, comptage du rucher (taux au fur et à mesure, comparé au seuil), chute naturelle
+    # ramenée à un jour, comptage sans réseau puis envoyé, fiche colonie (bandeau, « D'où vient ce seuil ? »), ordinateur.
+    # Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
+    import os, datetime
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    auj = datetime.date.today().isoformat()
+    R1 = DATA["ruches"][0]["id"]; R2, R3 = str(uuid.uuid4()), str(uuid.uuid4())
+    base_col = {"statut": "active", "sortie": "", "hausses": 0, "equipement": [], "reine_origine": "", "reine_introduite": None, "annee_reine": None, "notes": "", "type_ruche": ""}
+    DATA["ruches"][0].update(base_col)
+    DATA["ruches"] += [{**base_col, "id": R2, "nom": "Ruche 2", "rucher": "Verger", "etat": "Bonne"}, {**base_col, "id": R3, "nom": "Ruche 3", "rucher": "Verger", "etat": "Bonne"}]
+    V1 = str(uuid.uuid4())
+    DATA["visites"] = [{"id": V1, "ruche_id": R1, "date_visite": "2026-09-14", "activite": "Normale", "provisions": "Bonnes", "reine": "Vue", "couvain": "Normal",
+                        "poids_kg": None, "varroa": 6, "varroa_abeilles": 300, "varroa_methode": "Sucre glace", "note": "", "traitement": "", "lot_produit": "", "traitement_dose": "", "retrait_prevu": None}]
+    # Base avec la migration 036 : la visite a été reprise en opération d'origine « visite », même identifiant.
+    DATA["operations"] = [{"id": V1, "type": "comptage_varroa", "rucher_id": None, "date_operation": "2026-09-14", "methode": "Sucre glace", "echantillon_abeilles": 300,
+                           "duree_jours": None, "note": "", "origine": "visite", "visite_id": V1}]
+    DATA["operation_colonies"] = [{"id": V1, "operation_id": V1, "ruche_id": R1, "varroa": 6, "abeilles": 300}]
+    DATA["seuils_varroa"] = []; DATA["observations_sanitaires"] = []
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    def captures(nom):
+        if not cap: return
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(350)
+            page.screenshot(path=f"{cap}/va-{nom}-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+    ligne = lambda nom: page.locator(".sa-liste .sa-ligne", has_text=nom).inner_text()
+
+    # Ruchers › Santé : reprise à l'identique, aucun seuil par défaut.
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-liste", timeout=5000)
+    verif(page.locator(".wrap > .head h1").inner_text() == "Ruchers" and page.locator(".g-outils .sa-seg").count() == 1, "Santé : onglet de Ruchers, bascule Comptages / Seuils sous les onglets")
+    verif(page.locator(".sa-liste .sa-ligne").count() == 3, "trois colonies listées")
+    t = ligne("Ruche 1")
+    verif("2 %" in t and "6 sur 300 abeilles" in t and "sucre glace" in t and "noté dans une visite" in t, f"comptage de la visite repris à l'identique ({t!r})".replace("\n", " "))
+    verif("pas de seuil" in t and page.locator(".sa-liste .tag.crit, .sa-liste .tag.good").count() == 0, "aucun seuil par défaut : pas de couleur d'alerte")
+    verif("Jamais comptée" in ligne("Ruche 2") and "à compter" in ligne("Ruche 2"), "colonie jamais comptée : « à compter »")
+    verif("Pas encore de seuil" in page.locator(".sa-seuil").inner_text(), "carte « Pas encore de seuil » qui invite à en choisir un")
+    verif(page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), "téléphone : pas de défilement horizontal")
+    captures("comptages-sans-seuil")
+
+    # Seuils : aucun par défaut, ajout avec source et date obligatoires.
+    page.click("[data-act=savue][data-v=seuils]"); page.wait_for_selector(".sa-regle", timeout=3000)
+    verif("aucun seuil par défaut" in page.locator(".sa-regle").inner_text(), "Seuils : « apiviz n'applique aucun seuil par défaut »")
+    verif(page.locator(".sa-groupe", has_text="Aucun seuil").count() == 3, "trois méthodes, aucune n'a de seuil")
+    page.click(".sa-ajout"); page.wait_for_selector("#sheet[open] select[name=methode]", timeout=3000)
+    verif(page.locator("#sheet input[name=source]").get_attribute("required") is not None and page.locator("#sheet input[name=consulte_le]").get_attribute("required") is not None, "source et date de consultation obligatoires")
+    page.select_option("#sheet select[name=methode]", "Lavage"); page.select_option("#sheet select[name=mois_debut]", "1"); page.select_option("#sheet select[name=mois_fin]", "12")
+    page.fill("#sheet input[name=valeur]", "3"); page.fill("#sheet input[name=source]", "GDSA, réunion de rentrée"); page.fill("#sheet input[name=consulte_le]", auj)
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Seuil enregistré", timeout=5000)
+    s = next(x for x in recu["upsert"] if x[0] == "seuils_varroa")[2][0]
+    verif(s["methode"] == "Lavage" and s["valeur"] == 3 and s["source"] == "GDSA, réunion de rentrée" and s["consulte_le"] == auj and s["mois_debut"] == 1 and s["mois_fin"] == 12, f"seuil envoyé avec sa source et sa date ({s})")
+    g = page.locator(".sa-groupe").nth(1).inner_text()
+    verif("3 %" in g and "saisi par toi" in g and "Source : GDSA, réunion de rentrée" in g and "toute l’année" in g, f"Lavage : 3 %, saisi par toi, source et période affichées ({g!r})".replace("\n", " "))
+    captures("seuils")
+
+    # Comptage du rucher : lavage, taux au fur et à mesure, comparé au seuil sourcé.
+    page.evaluate("ACT.cvouvrir('')"); page.wait_for_selector(".cv-liste", timeout=5000)
+    verif(page.evaluate("S.route") == "comptage", "écran « Compter le rucher »")
+    verif(page.locator(".cv-ligne").count() == 3 and page.locator("#cv_ok").is_disabled(), "trois colonies, bouton inactif tant que rien n'est compté")
+    page.click("[data-act=cvmethode][data-v=Lavage]"); page.wait_for_selector("[data-act=cvmethode][data-v=Lavage].on")
+    page.fill(f"#cv_n_{R1}", "11")
+    r = page.locator(f"#cv_res_{R1}").inner_text()
+    verif("3,7 %" in r and "au-dessus du seuil (3 %)" in r, f"taux affiché au fur et à mesure, comparé au seuil ({r!r})")
+    for _ in range(3): page.click(f"[data-act=cvplus][data-v='{R2}']")
+    r2 = page.locator(f"#cv_res_{R2}").inner_text()
+    verif(page.input_value(f"#cv_n_{R2}") == "3" and "1 %" in r2 and "sous le seuil" in r2, f"+ trois fois : 3 varroas, 1 %, sous le seuil ({r2!r})")
+    page.fill(f"#cv_ab_{R2}", "250"); r2 = page.locator(f"#cv_res_{R2}").inner_text()
+    verif("1,2 %" in r2, f"abeilles corrigées sur une ligne : 3 sur 250 = 1,2 % ({r2!r})")
+    verif("Pas comptée" in page.locator(f"#cv_res_{R3}").inner_text() and page.locator("#cv_ok").inner_text() == "Enregistrer 2 comptages", "colonie sans nombre : pas comptée ; « Enregistrer 2 comptages »")
+    captures("compter")
+    page.click("#cv_ok"); page.wait_for_selector(".toast >> text=2 comptages enregistrés", timeout=5000)
+    p = [b for n, b in recu["rpc"] if n == "compter_varroa"][-1]["p"]
+    verif(p["methode"] == "Lavage" and p["id"] and p["echantillon_abeilles"] == 300 and sorted((c["ruche_id"], c["varroa"], c["abeilles"]) for c in p["colonies"]) == sorted([(R1, 11, 300), (R2, 3, 250)]),
+          f"compter_varroa : une opération, 2 colonies, abeilles par colonie ({p['colonies']})")
+    page.wait_for_selector(".sa-liste", timeout=5000)
+    t = ligne("Ruche 1")
+    verif("3,7 %" in t and "au-dessus" in t and page.locator(".sa-liste .sa-hex.sa-haut").count() == 1, f"Santé : Ruche 1 au-dessus du seuil ({t!r})".replace("\n", " "))
+    verif("Source : GDSA, réunion de rentrée" in page.locator(".sa-seuil").inner_text(), "carte du seuil appliqué : source affichée")
+    page.click(".sa-q"); page.wait_for_selector("#sheet[open] .sa-dl", timeout=3000)
+    q = page.locator("#sheet").inner_text()
+    verif("D’où vient ce seuil ?" in q and "GDSA, réunion de rentrée" in q and "toute l’année" in q, "« ? » : source, date et période du seuil (AP-US-059)")
+    page.click("#sheet [data-act=closesheet]")
+    captures("comptages-avec-seuil")
+
+    # Chute naturelle : 21 varroas sur 7 jours = 3 par jour (AP-US-058).
+    page.evaluate("ACT.cvouvrir('')"); page.wait_for_selector(".cv-liste", timeout=5000)
+    page.click("[data-act=cvmethode][data-v=Lange]"); page.wait_for_selector("#cv_duree")
+    page.fill("#cv_duree", "7"); page.fill(f"#cv_n_{R3}", "21")
+    r3 = page.locator(f"#cv_res_{R3}").inner_text()
+    verif("3 / jour" in r3 and "pas de seuil enregistré" in r3, f"chute sur lange : 3 varroas par jour, sans seuil pour cette méthode ({r3!r})")
+    page.click("#cv_ok"); page.wait_for_selector(".toast >> text=1 comptage enregistré", timeout=5000)
+    p = [b for n, b in recu["rpc"] if n == "compter_varroa"][-1]["p"]
+    verif(p["methode"] == "Lange" and p["duree_jours"] == 7 and p["colonies"] == [{"ruche_id": R3, "varroa": 21, "abeilles": None}], "lange : durée envoyée, pas d'abeilles")
+    page.wait_for_selector(".sa-liste", timeout=5000)
+    verif("3 / jour" in ligne("Ruche 3") and "pas de seuil" in ligne("Ruche 3"), "Santé : Ruche 3, 3 / jour, sans couleur")
+
+    # Sans réseau : le comptage reste sur le téléphone, se voit tout de suite, survit au rechargement, part au retour.
+    avant = len([n for n, b in recu["rpc"] if n == "compter_varroa"])
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.cvouvrir('')"); page.wait_for_selector(".cv-liste", timeout=5000)
+    page.click("[data-act=cvmethode][data-v='Sucre glace']"); page.fill(f"#cv_n_{R2}", "6")
+    page.click("#cv_ok"); page.wait_for_selector(".toast >> text=gardé sur le téléphone", timeout=8000)
+    page.wait_for_selector(".sa-liste", timeout=5000)
+    t = ligne("Ruche 2")
+    verif("2 %" in t and "en attente" in t, f"sans réseau : comptage montré tout de suite, « en attente » ({t!r})".replace("\n", " "))
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=20000)
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-liste", timeout=5000)
+    verif("en attente" in ligne("Ruche 2"), "après rechargement sans réseau : toujours là, en attente")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_function(f"!document.querySelector('.hl-band')", timeout=20000)
+    envoyes = [b for n, b in recu["rpc"] if n == "compter_varroa"]
+    verif(len(envoyes) == avant + 1 and envoyes[-1]["p"]["colonies"][0]["varroa"] == 6, "retour du réseau : le comptage part une fois")
+
+    # Fiche colonie › Santé : bandeau au-dessus du seuil, avec sa source.
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_selector(".subtabs", timeout=5000)
+    page.click("[data-act=uronglet][data-v=sante]"); page.wait_for_selector(".rn-varroa", timeout=5000)
+    a = page.locator(".rn-alerte").inner_text()
+    verif("au-dessus de ton seuil de 3 %" in a and "Source : GDSA" in a, f"fiche › Santé : bandeau avec la source ({a!r})".replace("\n", " "))
+    v = page.locator(".rn-varroa").inner_text()
+    verif("3,7 %" in v and "2 %" in v and "6 sur 300 abeilles" in v, "fiche › Santé : comptage du rucher et comptage de la visite")
+    captures("fiche-sante")
+    page.click("[data-act=uronglet][data-v=courbes]"); page.click("[data-act=cbmesure][data-v=varroa]"); page.wait_for_selector(".cb-carte", timeout=3000)
+    verif(page.locator(".cb-seuil-t").count() == 1 and "seuil 3 %" in page.locator(".cb-seuil-t").text_content() and page.locator(".cb-carte circle.cb-p").count() >= 2, "courbe varroa conservée : comptages et seuil sourcé")
+
+    # Ordinateur.
+    page.set_viewport_size({"width": 1280, "height": 900}); page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-liste", timeout=5000)
+    verif(page.locator(".wrap > .head .btn.main", has_text="Compter le rucher").count() == 1, "ordinateur : « Compter le rucher » à droite de l'en-tête")
+    page.set_viewport_size({"width": 390, "height": 844})
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

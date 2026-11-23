@@ -152,6 +152,23 @@ base = base.replace(rpc_fin, """        if nom == "creer_rucher":
                 if conf: return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "conflit", "champs": conf, "serveur": ligne, "version": ligne["modifie_le"]}))
             ligne.update(champs); ligne["modifie_le"] = horloge()
             return route.fulfill(status=200, headers=hdr, body=json.dumps({"statut": "ok", "version": ligne["modifie_le"]}))
+        # IT-12 (migration 036) : comptage du rucher et signes sanitaires, idempotents par l'identifiant comme la base.
+        if nom == "compter_varroa":
+            p = body["p"]; ops = DATA.setdefault("operations", []); oc = DATA.setdefault("operation_colonies", [])
+            if not any(x["id"] == p["id"] for x in ops):
+                ops.append({"id": p["id"], "type": "comptage_varroa", "rucher_id": p.get("rucher_id"), "date_operation": p["date"], "methode": p["methode"],
+                            "echantillon_abeilles": p.get("echantillon_abeilles"), "duree_jours": p.get("duree_jours"), "note": p.get("note", ""), "origine": "operation",
+                            "visite_id": None, "created_at": "2026-11-23T10:%02d:00Z" % len(ops)})
+                for c in p["colonies"]:
+                    oc.append({"id": str(uuid.uuid4()), "operation_id": p["id"], "ruche_id": c["ruche_id"], "varroa": c["varroa"], "abeilles": c.get("abeilles")})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(p["id"]))
+        if nom == "noter_signes":
+            p = body["p"]; obs = DATA.setdefault("observations_sanitaires", [])
+            if not any(x["saisie_id"] == p["id"] for x in obs):
+                for r in p["ruches"]:
+                    obs.append({"id": str(uuid.uuid4()), "saisie_id": p["id"], "ruche_id": r, "date_observation": p["date"], "signes": p["signes"],
+                                "importance": p.get("importance", "leger"), "note": p.get("note", ""), "visite_id": p.get("visite_id")})
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(len(p["ruches"])))
 """ + rpc_fin)
 v = '"varroa": None, "note": p.get("note", "")})'
 assert base.count(v) == 1

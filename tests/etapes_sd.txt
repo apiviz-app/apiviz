@@ -9,6 +9,9 @@
     DATA["ruche_evenements"] = []; DATA["mouvements_stock"] = []
     DATA["clients"][0]["telephone"] = "0612345678"
     DATA["taches"] = [{"id": str(uuid.uuid4()), "titre": "Peser les ruches", "echeance": J(-4), "ruche_id": None, "faite": False, "assigne": ""}]
+    # IT-12 : un signe noté, pour l'écran « Aide au signalement ».
+    SIG = str(uuid.uuid4())
+    DATA["observations_sanitaires"] = [{"id": str(uuid.uuid4()), "saisie_id": SIG, "ruche_id": DATA["ruches"][0]["id"], "date_observation": J(2), "signes": ["ailes_deformees"], "importance": "leger", "note": "", "visite_id": None}]
     ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
     ctx.route("https://data.geopf.fr/wmts**", lambda rt: rt.abort())
     LF = _ici / "leaflet" / "package" / "dist"
@@ -49,8 +52,9 @@
               ("profil", "ACT.go('profil')"), ("rappels", "ACT.go('rappels')"), ("activite", "ACT.go('activite')"), ("jalons", "ACT.go('jalons')"), ("recherche", "ACT.go('recherche')"),
               ("saison", "ACT.go('saison')"), ("plus", "ACT.go('plus')"), ("api", "ACT.go('api')"), ("apimemoire", "ACT.go('apimemoire')"),
               ("offre", "ACT.go('offre')"), ("offres", "ACT.go('offres')"), ("recharge", "ACT.go('recharge')"), ("stockage", "ACT.go('stockage')"),
-              ("visite", "S.visite = null; ACT.newvisite()"), ("vente", "ACT.newvente()"), ("recolte", "ACT.go('recolte')")]
-    NIVEAU2 = {"msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge", "apimemoire", "stockage"}
+              ("visite", "S.visite = null; ACT.newvisite()"), ("vente", "ACT.newvente()"), ("recolte", "ACT.go('recolte')"),
+              ("comptage", "ACT.cvouvrir('')"), ("signalement", "S.sig = '%s'; ACT.go('signalement')" % SIG)]
+    NIVEAU2 = {"signalement", "msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge", "apimemoire", "stockage"}
     RAYONS = {"10px", "12px", "14px", "20px", "999px", "50%"}
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)

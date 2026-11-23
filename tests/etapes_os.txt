@@ -1,0 +1,94 @@
+    # IT-12 — Signes sanitaires (AP-US-064) et aide au signalement (AP-US-065), migration 036.
+    # Feuille « Noter un signe » depuis Santé (colonies, signes, importance), signe qui demande un avis → aide au
+    # signalement (rien n'est envoyé, aucune maladie nommée tant que la liste officielle n'est pas relue, fiche au
+    # vouvoiement, contacts saisis par l'apiculteur), onglet Santé de la colonie (daté, sans conclusion), signe coché dans
+    # la visite et rattaché à elle, signe noté sans réseau. Avec CAPTURES=<dossier> : captures à 375 et 1 280 px.
+    import os, re as _re
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    R1 = DATA["ruches"][0]["id"]; R2, R3 = str(uuid.uuid4()), str(uuid.uuid4())
+    base_col = {"statut": "active", "sortie": "", "hausses": 0, "equipement": [], "reine_origine": "", "reine_introduite": None, "annee_reine": None, "notes": "", "type_ruche": ""}
+    DATA["ruches"][0].update(base_col)
+    DATA["ruches"] += [{**base_col, "id": R2, "nom": "Ruche 2", "rucher": "Verger", "etat": "Bonne"}, {**base_col, "id": R3, "nom": "Ruche 3", "rucher": "Verger", "etat": "Bonne"}]
+    DATA["operations"] = []; DATA["operation_colonies"] = []; DATA["seuils_varroa"] = []; DATA["observations_sanitaires"] = []
+
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.wait_for_function("navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(()=>true)", timeout=15000)
+    page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    def captures(nom):
+        if not cap: return
+        for w, h in ((375, 812), (1280, 900)):
+            page.set_viewport_size({"width": w, "height": h}); page.wait_for_timeout(350)
+            page.screenshot(path=f"{cap}/os-{nom}-{w}.png", full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+
+    # Santé : aucun signe, « Noter un signe ».
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-liste", timeout=5000)
+    verif("Aucun signe noté" in page.locator(".sa-ecran").inner_text(), "Santé : aucun signe ces 30 jours")
+    page.click(".sa-tete [data-act=sasigne]"); page.wait_for_selector("#sheet[open] .sg-groupe", timeout=3000)
+    verif(page.locator("#sheet .btn.main").is_disabled() and "Choisis au moins un signe" in page.locator("#sheet .btn.main").inner_text(), "feuille : bouton inactif sans signe")
+    verif(page.locator("#sheet .sg-groupe").count() == 3, "signes rangés en trois groupes : couvain, abeilles, prédateurs et ravageurs")
+    page.click(f"#sheet [data-act=sgcolonie][data-v='{R1}']")
+    page.click("#sheet [data-act=sgsigne][data-v=ailes_deformees]")
+    verif(page.locator("#sheet .sg-avis").count() == 0 and page.locator("#sheet .btn.main").inner_text() == "Enregistrer 1 signe", "ailes déformées : pas d'avis demandé, « Enregistrer 1 signe »")
+    page.click("#sheet [data-act=sgsigne][data-v=larves_filantes]")
+    av = page.locator("#sheet .sg-avis").inner_text()
+    verif("avis de ton vétérinaire ou de ton groupement sanitaire" in av and not _re.search(r"loque|obligatoire|déclar", av, _re.I), f"larves filantes : invite à demander un avis, sans nommer de maladie ni d'obligation ({av!r})")
+    page.click("#sheet [data-act=sgimportance][data-v=marque]"); page.fill("#sg_note", "Deux cadres")
+    verif("voir l’aide" in page.locator("#sheet .btn.main").inner_text(), "bouton « Enregistrer et voir l’aide »")
+    captures("feuille")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".sg-ecran", timeout=5000)
+    p = [b for n, b in recu["rpc"] if n == "noter_signes"][-1]["p"]
+    verif(p["ruches"] == [R1] and p["signes"] == ["ailes_deformees", "larves_filantes"] and p["importance"] == "marque" and p["note"] == "Deux cadres" and p["id"], f"noter_signes : colonie, signes, importance, note ({p})")
+
+    # Aide au signalement.
+    e = page.locator(".sg-ecran").inner_text()
+    verif(page.evaluate("S.route") == "signalement" and page.locator(".wrap > .head h1").inner_text() == "Aide au signalement", "écran « Aide au signalement »")
+    verif("n’envoie rien à ta place" in e, "apiviz n'envoie rien à la place de l'apiculteur")
+    verif(page.locator(".sg-dangers").count() == 0 and "pas encore reprise dans apiviz" in e and not _re.search(r"loque|tropilaelaps|aethina", e, _re.I), "aucune maladie réglementée nommée tant que la liste n'est pas relue")
+    verif("À renseigner dans Réglages" in page.locator(".sg-pret").inner_text(), "ce qui manque : le numéro NAPI")
+    verif(page.locator(".sg-contacts").inner_text().count("Pas encore renseigné") == 3, "trois contacts à saisir")
+    f = page.locator(".sg-fiche pre").inner_text()
+    verif("Madame, Monsieur," in f and "Je vous signale" in f and "ailes déformées, larves filantes" in f and "Deux cadres" in f and not _re.search(r"loque|\btu\b", f, _re.I), "fiche au vouvoiement, faits seulement")
+    verif(page.locator(".shell > .topbar .g-retour-haut").count() == 1 or page.locator(".g-retour").count() >= 1, "retour vers Santé")
+    captures("signalement")
+    page.click(".sg-contacts [data-act=sigcontacts]"); page.wait_for_selector("#sheet[open] input[name=veterinaire_tel]", timeout=3000)
+    page.fill("#sheet input[name=veterinaire_nom]", "Dr Morel"); page.fill("#sheet input[name=veterinaire_tel]", "06 11 22 33 44")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Contacts enregistrés", timeout=5000)
+    page.wait_for_selector(".sg-contacts a[href^='tel:']", timeout=5000)
+    verif(page.locator(".sg-contacts a[href='tel:0611223344']").count() == 1 and "Dr Morel" in page.locator(".sg-contacts").inner_text(), "contact du vétérinaire : nom et bouton « Appeler »")
+    verif(DATA["reglages"][0]["data"].get("contactsSanitaires", {}).get("veterinaire", {}).get("tel") == "06 11 22 33 44", "contacts gardés dans les réglages de l'exploitation")
+
+    # Santé et fiche colonie : le signe, daté, sans conclusion.
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-signes", timeout=5000)
+    verif("Ailes déformées, Larves filantes" in page.locator(".sa-signes").inner_text(), "Santé : signe noté dans les 30 derniers jours")
+    page.evaluate("ACT.ruche('%s')" % R1); page.wait_for_selector(".subtabs", timeout=5000)
+    page.click("[data-act=uronglet][data-v=sante]"); page.wait_for_selector(".rn-signes", timeout=5000)
+    t = page.locator(".rn-signes").inner_text()
+    verif("Ailes déformées, Larves filantes" in t and "marqué" in t and not _re.search(r"loque|maladie", t, _re.I), f"fiche › Santé : signe daté, sans conclusion automatique ({t!r})".replace("\n", " "))
+    captures("fiche-signes")
+
+    # Signe coché dans la visite (AP-TECH-197) : noté après la visite, avec son identifiant.
+    page.evaluate("ACT.newvisite('%s')" % R2); page.wait_for_selector("form[data-form=visite]", timeout=5000)
+    page.locator("details[data-sec=signes]").evaluate("d => d.open = true")
+    page.click("[data-act=vsigne][data-v=frelons]"); page.wait_for_selector("[data-act=vsigne][data-v=frelons].on", timeout=3000)
+    verif("Frelons asiatiques" in page.locator("details[data-sec=signes] summary").inner_text(), "visite : section « Signes sanitaires », résumé à jour")
+    page.click("form[data-form=visite] .btn.main"); page.wait_for_selector(".toast >> text=Visite enregistrée", timeout=8000)
+    vis = [b for n, b in recu["rpc"] if n == "creer_visite"][-1]["p"]
+    sg = [b for n, b in recu["rpc"] if n == "noter_signes"][-1]["p"]
+    verif("signes" not in vis and sg["signes"] == ["frelons"] and sg["ruches"] == [R2] and sg["visite_id"] == vis["id"], "signes envoyés après la visite, rattachés à elle")
+    page.wait_for_timeout(300); page.click("[data-act=uronglet][data-v=sante]"); page.wait_for_selector(".rn-signes", timeout=5000)
+    verif("Frelons asiatiques" in page.locator(".rn-signes").inner_text(), "fiche de Ruche 2 › Santé : le signe de la visite")
+
+    # Sans réseau.
+    avant = len([n for n, b in recu["rpc"] if n == "noter_signes"])
+    etat["coupe"] = True; ctx.set_offline(True)
+    page.evaluate("ACT.go('varroa')"); page.wait_for_selector(".sa-liste", timeout=5000)
+    page.click(".sa-tete [data-act=sasigne]"); page.wait_for_selector("#sheet[open] .sg-groupe", timeout=3000)
+    page.click(f"#sheet [data-act=sgcolonie][data-v='{R3}']"); page.click("#sheet [data-act=sgsigne][data-v=fausse_teigne]")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=gardé sur le téléphone", timeout=8000)
+    verif("Fausse teigne" in page.locator(".sa-signes").inner_text() and "en attente" in page.locator(".sa-signes").inner_text(), "sans réseau : signe montré tout de suite, en attente")
+    etat["coupe"] = False; ctx.set_offline(False)
+    page.wait_for_function("!document.querySelector('.hl-band')", timeout=20000)
+    verif(len([n for n, b in recu["rpc"] if n == "noter_signes"]) == avant + 1, "retour du réseau : le signe part une fois")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
