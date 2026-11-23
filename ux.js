@@ -165,7 +165,7 @@ const UX = (() => {
   function chipVarroa(v) {
     const t = tauxVarroa(v), s = seuilVarroa(v), R = Regles.sante;
     // Pas de couleur sans seuil choisi (AP-US-059) ; la chute sur lange n'a plus de repère « 3 varroas » non sourcé.
-    if (t === null) return chip(`Varroa ${R.resultat(v).texte}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, "");
+    if (t === null) return chip(`Varroa ${v.varroa}${v.varroa_methode === "Lange" ? " (lange)" : ""}`, "");
     return chip(`Varroa ${n(t, 1)} %`, R.auDessus(t, s) ? "crit" : R.proche(t, s) ? "watch" : s ? "good" : "");
   }
   // Visite express (v5.32, migration 020) : les valeurs reprises de la précédente, pas observées ce jour-là, sont en
