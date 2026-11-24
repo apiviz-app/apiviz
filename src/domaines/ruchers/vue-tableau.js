@@ -209,7 +209,7 @@ function menu(t) {
   const b = (act, v, lib) => `<button type="button" class="btn tb-menu-b" data-act="${act}"${v !== null ? ` data-v="${e(v)}"` : ""}>${lib}</button>`;
   return `<section class="tb-menu" role="dialog" aria-modal="true" aria-label="Plus d’actions">
     ${b("rcnouveau", null, "Nouveau rucher")}${b("newruches", null, "Ajouter des ruches")}${typeof ACT.dpouvrir == "function" ? b("dpouvrir", "", "Déplacer des colonies") : ""}
-    ${b("tbchoix", null, "Sélectionner des colonies")}${b("qrscanner", null, "Scanner une ruche")}${b("qretiquettes", null, "Étiquettes QR des ruches")}<button type="button" class="tb-menu-b tb-menu-lien" data-act="tbexport">Exporter (tableur)</button>
+    ${b("tbchoix", null, "Sélectionner des colonies")}${b("qrscanner", null, "Scanner une ruche")}${b("qretiquettes", null, "Étiquettes QR des ruches")}${b("go", "comparaison", "Comparer mes ruchers")}<button type="button" class="tb-menu-b tb-menu-lien" data-act="tbexport">Exporter (tableur)</button>
   </section>`;
 }
 

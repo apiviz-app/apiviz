@@ -1,0 +1,23 @@
+/* Apiviz — Comparer mes ruchers (v5.81, maquette « Idées à forte valeur », idée 2). Écran src/domaines/ruchers/comparer.js. */
+.cr-page{display:flex;flex-direction:column;gap:14px}
+.cr-criteres{display:flex;flex-wrap:wrap;gap:8px}
+.cr-criteres .chip{min-height:var(--cible)}
+.cr-carte{display:flex;flex-direction:column;gap:8px}
+.cr-tete{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cr-tete b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:19px}
+.cr-kg{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px}
+.cr-kg .small{grid-column:2;text-align:right;margin-top:-2px}
+.cr-barre{grid-row:1/3;height:12px;border-radius:var(--r-pill);background:#EEF0EA;overflow:hidden}
+.cr-barre span{display:block;height:100%;border-radius:var(--r-pill);background:var(--honey)}
+.cr-chiffres{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;font-size:var(--t-s);color:#3F4A44}
+.cr-tag{align-self:flex-start;font-size:var(--t-xs);font-weight:600;padding:3px 8px;border-radius:var(--r-pill)}
+.cr-tag.ok{background:var(--goodbg);color:#174F2B}
+.cr-tag.faible{background:var(--watchbg);color:#5C3D00}
+.cr-lecture{background:var(--cire);border:1px dashed var(--honey);box-shadow:none;color:#5C3D00}
+.cr-lecture p{margin:6px 0 0;font-size:var(--t-s);line-height:1.45}
+.cr-histoire h2{margin:0 0 8px}
+.cr-table{width:100%;border-collapse:collapse;font-size:var(--t-m)}
+.cr-table th,.cr-table td{padding:8px 4px;border-top:1px solid var(--line);text-align:right}
+.cr-table th[scope=row],.cr-table thead th:first-child{text-align:left;font-weight:500}
+.cr-table thead th{border-top:0;font-size:var(--t-s);color:var(--muted);font-weight:600}
+.cr-table .cr-an{font-weight:700}

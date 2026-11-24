@@ -38,6 +38,10 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.81 (24 nov. 2026)** : écran **Comparaison** (« Comparer mes ruchers », niveau 2 sous Ruchers, ouvert par
+Ruchers › ⋯ ; retour « ‹ Ruchers » ; route `comparaison`). Pas de nouvelle rubrique. Décision de Pierre-Louis
+(24 nov. 2026, maquette « Idées à forte valeur », idée 2).
+
 **v5.80 (24 nov. 2026)** : écran **Préparer ma sortie** (niveau 2 sous l'Agenda, ouvert par Agenda › ⋯ ; retour
 « ‹ Agenda » ; route `sortie`). Pas de nouvelle rubrique. Décision de Pierre-Louis (24 nov. 2026, maquette « Idées à
 forte valeur », idée 4).
