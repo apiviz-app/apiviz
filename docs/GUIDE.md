@@ -167,6 +167,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Comparer mes ruchers** *(v5.81)* : Ruchers › ⋯. Kilos par colonie, pertes, varroa et valeur de la récolte par
   rucher, triables, avec le meilleur et le plus faible, et les kilos par colonie sur 3 saisons. apiviz ne conclut pas à
   ta place : il dit quoi regarder.
+- **Prêt pour l'hiver** *(v5.82)* : Ruchers › ⋯ (ou Ma saison › Hiver). Chaque colonie est prête, à surveiller, à
+  reprendre ou à compléter, d'après son poids, son varroa, sa reine, sa force et ses réserves notées cet automne, et
+  les repères que tu fixes (avec ton GDS ou ton vétérinaire). apiviz compare, il ne prédit pas.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.

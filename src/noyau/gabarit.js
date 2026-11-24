@@ -42,6 +42,8 @@ export const PARENTS = {
   sortie: ["agenda", "Agenda"],
   // Comparer mes ruchers (v5.81) : sous Ruchers.
   comparaison: ["ruches", "Ruchers"],
+  // Prêt pour l'hiver (v5.82) : sous Ruchers.
+  hiver: ["ruches", "Ruchers"],
 };
 
 /**

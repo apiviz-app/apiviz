@@ -1,0 +1,55 @@
+    # v5.82 — Prêt pour l'hiver (maquette « Idées à forte valeur », idée 5, validée le 24 nov. 2026) : Ruchers › ⋯ ;
+    # sans repère, apiviz le dit ; repères réglés (poids dans hiverPoids, varroa) ; colonies classées, triées, filtrées ;
+    # toucher une colonie ouvre sa fiche ; Ma saison › Hiver mène à l'écran.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    an = datetime.date.today().year
+    automne = f"{an}-10-15" if datetime.date.today().isoformat() >= f"{an}-10-15" else J(1)
+    vis = lambda rid, **k: {"id": str(uuid.uuid4()), "ruche_id": rid, "date_visite": automne, "activite": "Normale", "provisions": "Moyennes", "reine": "Vue", "note": "", "couvain": "", "traitement": "", **k}
+    DATA["visites"] = [v for v in DATA.get("visites", []) if v["ruche_id"] not in R[:3]] + [vis(R[0], poids_kg=14), vis(R[1], poids_kg=17), vis(R[2], poids_kg=25, traitement="Lanières")]
+    DATA["reglages"][0]["data"].pop("hiverPoids", None)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Sans repère.
+    page.evaluate("ACT.go('hiver')"); page.wait_for_selector(".hv-page")
+    verif("Prêt pour l’hiver" in entete(page), "écran Prêt pour l'hiver")
+    verif(page.locator(".hv-alerte").count() == 1 and "Règle d’abord tes repères" in page.locator(".hv-alerte").inner_text(), "sans repère : apiviz le dit")
+    verif("Pas réglé" in page.locator(".hv-reperes").inner_text(), "Tes repères : pas réglés")
+
+    # 2. Régler les repères.
+    page.click(".hv-alerte [data-act=hvreperes]"); page.wait_for_selector("#sheet[open] input[name=poids]")
+    page.fill("#sheet input[name=poids]", "18"); page.fill("#sheet input[name=varroa]", "1")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Repères enregistrés", timeout=8000)
+    dd = DATA["reglages"][0]["data"]
+    verif(dd.get("hiverPoids") == 18 and (dd.get("hiver") or {}).get("varroa") == 1, "repères enregistrés : hiverPoids 18, varroa 1 (%s)" % {k: dd.get(k) for k in ("hiverPoids", "hiver")})
+    page.evaluate("refresh()"); page.wait_for_timeout(500); page.evaluate("ACT.go('hiver')"); page.wait_for_selector(".hv-page")
+    verif(page.locator(".hv-alerte").count() == 0 and "18 kg" in page.locator(".hv-reperes").inner_text(), "repères affichés")
+
+    # 3. Classement.
+    cols = page.locator(".hv-col").all_inner_texts()
+    verif(cols and cols[0].startswith("Ruche 1") and "À reprendre" in cols[0] and "Sous ton repère de 18 kg" in cols[0], "Ruche 1 (14 kg) : à reprendre, en premier (%s)" % (cols[:1],))
+    r2 = next((c for c in cols if c.startswith("Ruche 2")), "")
+    verif("À surveiller" in r2 and "Juste sous ton repère de poids" in r2, "Ruche 2 (17 kg) : à surveiller")
+    r3 = next((c for c in cols if c.startswith("Ruche 3")), "")
+    verif("Prête" in r3 and "25 kg" in r3, "Ruche 3 (25 kg) : prête")
+    verif(page.locator(".hv-barre span").count() >= 3, "barre de résumé")
+    shot("hv-liste")
+
+    # 4. Filtre et fiche.
+    page.click("[data-act=hvfiltre][data-v=reprendre]"); page.wait_for_timeout(250)
+    verif(all("À reprendre" in c for c in page.locator(".hv-col").all_inner_texts()), "filtre : à reprendre seulement")
+    page.locator(".hv-col").first.click(); page.wait_for_timeout(500)
+    verif(page.evaluate("S.route") == "ruche", "toucher une colonie ouvre sa fiche")
+
+    # 5. Ma saison › Hiver mène à l'écran.
+    page.evaluate("ACT.go('masaison')"); page.wait_for_timeout(500)
+    page.evaluate("ACT.msapercu('hiver')"); page.wait_for_selector("#sheet[open]")
+    verif(page.locator("#sheet [data-act=msaller][data-v=hiver]").count() == 1, "Ma saison › Hiver : « Voir colonie par colonie »")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

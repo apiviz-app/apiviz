@@ -1,0 +1,22 @@
+/* Apiviz — Prêt pour l'hiver (v5.82, maquette « Idées à forte valeur », idée 5). Écran src/domaines/colonies/hiver.js.
+   Les niveaux se distinguent par la couleur ET la luminosité (sapin foncé, miel, brique, gris clair). */
+.hv-page{display:flex;flex-direction:column;gap:14px}
+.hv-resume{display:flex;flex-direction:column;gap:8px}
+.hv-barre{display:flex;height:14px;gap:2px;border-radius:var(--r-pill);overflow:hidden}
+.hv-barre .hv-prete{background:#1F6B3A}.hv-barre .hv-surveiller{background:var(--honey)}.hv-barre .hv-reprendre{background:#B4472E}.hv-barre .hv-completer{background:#C4CABD}
+.hv-alerte{display:flex;flex-direction:column;gap:8px;background:var(--cire);border:1px dashed var(--honey);box-shadow:none}
+.hv-alerte p{margin:0}
+.hv-filtres{display:flex;flex-wrap:wrap;gap:8px}
+.hv-filtres .chip{min-height:var(--cible)}
+.hv-liste{display:flex;flex-direction:column;gap:0;padding-top:4px;padding-bottom:4px}
+.hv-col{display:flex;flex-direction:column;gap:4px;width:100%;padding:12px 0;border:0;border-top:1px solid #EEF0EA;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.hv-col:first-child{border-top:0}
+.hv-tete{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hv-tete h2{margin:0}
+.hv-tag{font-size:var(--t-xs);font-weight:600;padding:3px 8px;border-radius:var(--r-pill);white-space:nowrap}
+.hv-tag.hv-prete{background:var(--goodbg);color:#174F2B}.hv-tag.hv-surveiller{background:var(--watchbg);color:#5C3D00}
+.hv-tag.hv-reprendre{background:#F6DDD5;color:#7A2914}.hv-tag.hv-completer{background:#EEF0EA;color:#3F4A44}
+.hv-mesures{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--t-s);color:#3F4A44}
+.hv-manque{color:var(--muted)}
+.hv-reperes{display:flex;flex-direction:column;gap:6px}
+.hv-ligne{display:flex;justify-content:space-between;gap:10px;margin:0;font-size:var(--t-m)}

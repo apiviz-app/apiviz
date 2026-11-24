@@ -38,6 +38,10 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.82 (24 nov. 2026)** : écran **Prêt pour l'hiver** (niveau 2 sous Ruchers, ouvert par Ruchers › ⋯ et par
+Ma saison › Hiver ; retour « ‹ Ruchers » ; route `hiver`). Pas de nouvelle rubrique. Décision de Pierre-Louis
+(24 nov. 2026, maquette « Idées à forte valeur », idée 5).
+
 **v5.81 (24 nov. 2026)** : écran **Comparaison** (« Comparer mes ruchers », niveau 2 sous Ruchers, ouvert par
 Ruchers › ⋯ ; retour « ‹ Ruchers » ; route `comparaison`). Pas de nouvelle rubrique. Décision de Pierre-Louis
 (24 nov. 2026, maquette « Idées à forte valeur », idée 2).
