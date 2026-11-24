@@ -6,6 +6,8 @@
 // Règles pures : terrain-regles.js. Globales d'app.js lues à l'appel : S, esc, eur, cfg, today, shell, render, toast,
 // refresh, sb, HL, PF.
 import * as T from "./terrain-regles.js";
+// v5.77 (migration 037) : offres appliquées toutes seules et remise ponctuelle, comme dans « Nouvelle vente ».
+import { blocRemises, calcul, avecRemises, fournirCaisse } from "./remises.js";
 
 const CLIENT = "Vente au marché";
 export const CLIENT_MARCHE = CLIENT; // v5.66 : aussi « Vente sans client » de la feuille « Pour qui ? » (pour-qui.js)
@@ -18,10 +20,17 @@ const moi = () => (typeof PF != "undefined" && PF.prenom?.()) || "";
 const client = () => (S.d.clients || []).find((c) => String(c.nom).trim().toLowerCase() === CLIENT.toLowerCase()) || null;
 const modes = () => { const m = (typeof cfg == "function" && cfg().modes) || []; return m.length ? m : ["Espèces", "Carte", "Chèque"]; };
 
+/** Lignes de vente du panier (lots les plus anciens d'abord), lues par remises.js. */
+export const lignesCaisse = () => T.lignesVente(T.produitsCaisse(S.d.lots || []), etat().q).lignes;
+/** Client de la caisse (« Vente au marché »), s'il existe déjà. */
+export const clientCaisse = () => client();
+fournirCaisse({ lignes: lignesCaisse, client: clientCaisse });
+
 export function ecran() {
   const st = etat(), produits = T.produitsCaisse(S.d.lots || []);
   if (!st.mode || !modes().includes(st.mode)) st.mode = modes()[0];
-  const total = T.totalPanier(produits, st.q);
+  if (!Object.keys(st.q).length) st.remise = null;
+  const total = calcul("caisse").total;
   const pots = Object.values(st.q).reduce((t, n) => t + n, 0);
   const c = client(), jour = c ? T.ventesDuJour(S.d, c.id, today()) : { nb: 0, montant: 0 };
   const tuile = (p) => {
@@ -37,6 +46,7 @@ export function ecran() {
       : `<div class="cs-pots">${produits.map(tuile).join("")}</div>
       <section class="cs-panier" aria-labelledby="cs_p"><div class="cs-ptete"><h2 id="cs_p">Panier</h2>${pots ? '<button type="button" class="link" data-act="csvider">Vider</button>' : ""}</div>
         ${lignes ? `<ul>${lignes}</ul>` : '<p class="small">Rien pour l’instant.</p>'}
+        ${pots ? blocRemises("caisse") : ""}
         <p class="cs-total"><span>Total</span><b>${e(eur(total))}</b></p></section>
       <fieldset class="op-choix cs-modes"><legend>Payé en</legend><div>${modes().map((m) => `<label class="op-radio"><input type="radio" name="cs_mode" value="${e(m)}" ${m === st.mode ? "checked" : ""} data-act="csmode" data-v="${e(m)}"><span>${e(m)}</span></label>`).join("")}</div></fieldset>
       ${moi() ? `<p class="small">Vendu par ${e(moi())} · argent récolté par ${e(moi())}</p>` : ""}
@@ -63,14 +73,16 @@ async function encaisser() {
   const { lignes, manque } = T.lignesVente(produits, st.q);
   if (manque) return toast(`Plus assez en stock : ${manque}`);
   if (!lignes.length) return;
-  const total = T.totalPanier(produits, st.q);
+  const total = calcul("caisse").total;
   enCours = true;
   try {
     const client_id = await clientMarche();
-    const { error, local } = await appel("creer_vente", { p: { id: crypto.randomUUID(), client_id, date_vente: today(), lignes, paye: true, mode: st.mode,
-      livre: true, vendu_par: moi(), encaisse_par: moi() } });
+    const p = avecRemises("caisse", { id: crypto.randomUUID(), client_id, date_vente: today(), lignes, paye: true, mode: st.mode,
+      livre: true, vendu_par: moi(), encaisse_par: moi() });
+    const { error, local } = await appel("creer_vente", { p });
     if (error) throw error;
     st.q = {};
+    st.remise = null;
     await refresh();
     toast(local ? `Vente de ${eur(total)} gardée sur le téléphone` : `Vente de ${eur(total)} enregistrée`);
   } catch (err) {
@@ -81,7 +93,7 @@ async function encaisser() {
 export const actions = {
   csajout: (cle) => { const st = etat(), p = T.produitsCaisse(S.d.lots || []).find((x) => x.cle === cle); if (p && (st.q[cle] || 0) < p.stock) { st.q[cle] = (st.q[cle] || 0) + 1; render(); } },
   csretire: (cle) => { const st = etat(); st.q[cle] = Math.max(0, (st.q[cle] || 0) - 1); if (!st.q[cle]) delete st.q[cle]; render(); },
-  csvider: () => { etat().q = {}; render(); },
+  csvider: () => { etat().q = {}; etat().remise = null; render(); },
   csmode: (m) => { etat().mode = m; },
   csencaisser: () => encaisser(),
   cscaisse: () => go("caisse"),

@@ -150,6 +150,13 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Visite express, Visite complète, fiche). Depuis Apiviz : Ruchers › ⋯ ou bouton API › Scanner une ruche.
 - **Caisse du marché** *(v5.57)* : Produits › ⋯ ou bouton API. Touche les pots, choisis le mode de paiement, Encaisser.
   Marche sans réseau (la vente part au retour du réseau) ; client « Vente au marché ».
+- **Remises et offres** *(v5.77)* : Produits › ⋯ › Offres de vente › « Créer une offre » : 4 achetés, 1 offert ; un lot
+  à prix rond (3 pots pour 25 €) ; −10 % ou −5 €, avec un minimum d'achat si tu veux ; le prix d'un client ou d'un
+  cercle (revendeur −20 %). Choisis les produits, pour qui et quand ; l'interrupteur coupe une offre sans l'effacer.
+  Pendant une vente ou à la caisse, l'offre la plus avantageuse s'applique toute seule (deux offres ne s'additionnent
+  pas) et apiviz te dit quand un article de plus en ferait profiter le client. Pour un geste ponctuel : « Ajouter une
+  remise » (en %, en € ou un article offert ; le motif est facultatif). L'article offert sort du stock ; le reçu, la
+  facture et le bilan montrent les remises.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.

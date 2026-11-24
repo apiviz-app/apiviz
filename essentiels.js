@@ -370,7 +370,7 @@ const ES = (() => {
     const kg = sum(recoltes, (x) => x.kg), ruches = [...new Set(recoltes.map((x) => x.ruche_id).filter(Boolean))].map(nomRuche), debut = recoltes[0]?.date_recolte;
     const lignes = d.lignes.filter((x) => x.lot_id === l.id), parClient = new Map();
     lignes.forEach((x) => { const v = byId(d.ventes, x.vente_id), cl = byId(d.clients, v?.client_id); const k = cl?.id || "?"; const e = parClient.get(k) || { c: cl, q: 0, date: v?.date_vente }; e.q += x.quantite; if (v?.date_vente > e.date) e.date = v.date_vente; parClient.set(k, e); });
-    const vendus = sum(lignes, (x) => x.quantite), ca = sum(lignes, (x) => x.quantite * x.prix_unitaire);
+    const vendus = sum(lignes, (x) => x.quantite), ca = sum(lignes, Regles.remises.montantLigne);
     const ids = new Set(recoltes.map((x) => x.ruche_id)), soins = d.visites.filter((v) => v.traitement && ids.has(v.ruche_id) && yr(v.date_visite) === yr(debut || today()));
     const etape = (t, g, s) => `<div class="er-etape"><span class="small">${t}</span><b>${esc(g)}</b><span class="small">${esc(s)}</span></div>`;
     const ctl = [["Dénomination, poids net, origine", l.miel && l.format_g && c.origine !== ""], ["DDM et numéro de lot", l.ddm && l.code], ["Adresse de l’exploitation", c.adresse]];
@@ -408,6 +408,13 @@ const ES = (() => {
     const v = byId(S.d.ventes, id);
     $sheetForm.querySelector(".u-deux")?.insertAdjacentHTML("afterend", `<button type="button" class="btn" data-act="erfacture" data-v="${id}">${v.facture_num ? `Voir la facture ${numero(v)}` : "Créer la facture"}</button>`);
   };
+  // v5.77 (migration 037) : sous les produits, le sous-total puis chaque remise sur sa ligne (offre, remise ponctuelle).
+  const remisesFacture = (v, lignes) => {
+    const r = Regles.remises.lignesRemise(v, lignes);
+    if (!r.length) return "";
+    return `<p class="er-f-ligne"><span>Sous-total</span><span>${esc(eur(Regles.remises.venteBrut(v, lignes)))}</span></p>`
+      + r.map((x) => `<p class="er-f-ligne er-f-remise"><span>${esc(x.libelle)}</span><span>−${esc(eur(x.montant))}</span></p>`).join("");
+  };
   VUES.facture = function () {
     const d = S.d, v = byId(d.ventes, S.factId), c = cfg();
     if (!v?.facture_num) { S.route = "clients"; return render(); }
@@ -419,6 +426,7 @@ const ES = (() => {
         <div class="er-f-t"><h2>${esc(c.nom)}</h2><div><h2>Facture ${numero(v)}</h2><p class="small">Émise le ${dfr(v.facture_date)}, vente du ${dfr(v.date_vente)}</p></div></div>
         <div class="er-f-t"><p>${a(c.adresse, "Adresse")}<br>SIRET : ${a(c.siret, "à renseigner")}${c.telephone ? `<br>${esc(c.telephone)}` : ""}</p><p class="er-d"><b>${esc(cl?.nom || "Client")}</b>${cl?.adresse ? `<br>${esc(cl.adresse)}` : ""}${cl?.code_postal || cl?.ville ? `<br>${esc([cl.code_postal, cl.ville].filter(Boolean).join(" "))}` : ""}${cl?.siret ? `<br>SIRET : ${esc(cl.siret)}` : ""}${cl?.email ? `<br>${esc(cl.email)}` : ""}</p></div>
         <table><thead><tr><th>Produit</th><th>Lot</th><th class="m">Quantité</th><th class="m">Prix</th><th class="m">Total</th></tr></thead><tbody>${lignes}</tbody></table>
+        ${remisesFacture(v, d.lignes)}
         <p class="er-f-total"><span>Total</span><span>${esc(eur(venteTotal(v)))}</span></p>
         <p class="small">${v.paye ? `Payée${v.mode ? ", " + esc(v.mode) : ""}.` : `Règlement à ${esc(c.delai_paiement || "réception")}.`} ${a(c.mention_tva, "Mention de TVA selon ton statut")}</p>
       </article>`);

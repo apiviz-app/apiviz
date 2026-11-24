@@ -102,11 +102,14 @@ const HL = (() => {
       } else if (it.type === "rpc" && it.nom === "creer_vente") {
         const p = it.args.p;
         if (d.ventes.some((v) => v.id === p.id)) continue;
+        // v5.77 (migration 037) : remises de la vente et de chaque ligne, comme les enregistrera creer_vente.
         d.ventes.unshift({ id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye, mode: p.mode,
-          livre: p.livre !== false, livraison: p.livraison || "", _attente: true });
+          livre: p.livre !== false, livraison: p.livraison || "", promotion_id: p.promotion_id || null, promotion_nom: p.promotion_nom || "",
+          remise_offre: Number(p.remise_offre) || 0, remise_manuelle: Number(p.remise_manuelle) || 0, remise_motif: p.remise_motif || "",
+          remise_libelle: p.remise_libelle || "", _attente: true });
         for (const x of p.lignes || []) {
           const lot = byId(d.lots, x.lot_id);
-          d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0 });
+          d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0, remise: Number(x.remise) || 0 });
           if (lot) lot.pots_restants = Number(lot.pots_restants) - Number(x.quantite);
         }
       } else if (it.type === "rpc" && it.nom === "creer_rucher") {
@@ -620,7 +623,9 @@ const HL = (() => {
       if (it.type === "rpc" && it.nom === "creer_vente") {
         const p = it.args.p;
         S.vente = { id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye !== false, mode: p.mode || cfg().modes[0],
-          livre: p.livre !== false, livraison: p.livraison || "", q: Object.fromEntries((p.lignes || []).map((l) => [l.lot_id, Number(l.quantite)])) };
+          livre: p.livre !== false, livraison: p.livraison || "", q: Object.fromEntries((p.lignes || []).map((l) => [l.lot_id, Number(l.quantite)])),
+          // v5.77 : la remise ponctuelle gardée est reprise telle qu'enregistrée (en €) ; l'offre se recalcule.
+          remise: Number(p.remise_manuelle) > 0 ? { mode: "eur", valeur: Number(p.remise_manuelle), cible: "", motif: p.remise_motif || "" } : null };
         return go("vente");
       }
       if (it.type === "rpc" && it.nom === "creer_visite") {

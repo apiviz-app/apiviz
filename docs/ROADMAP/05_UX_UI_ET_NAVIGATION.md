@@ -38,6 +38,13 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.77 (24 nov. 2026)** : écran **Offres de vente** (niveau 2 sous Produits, ouvert par Produits › ⋯ › « Offres de
+vente » ; retour « ‹ Produits ») et saisie **Créer une offre** (écran pas à pas, « Annuler »). Nouvelle vente et Caisse
+du marché gagnent le bloc des remises (offre appliquée toute seule, coup de pouce, « Ajouter une remise » qui ouvre une
+feuille du bas). Pas de nouvelle rubrique ni d'onglet. Route `promotions` / `promotion` (`offre` et `offres` sont
+celles de l'abonnement). Décision de Pierre-Louis (24 nov. 2026, maquette « Remises et offres » : « je te laisse
+implémenter ta proposition » ; deux offres ne s'additionnent pas ; motif de remise facultatif).
+
 **v5.71 (20 nov. 2026)** : **Espace API**. L'écran API (même place : bouton central › « Ouvrir l'espace API ») gagne
 « Pour aujourd'hui », le micro, la lecture à voix haute et le mode **Mains libres** (plein écran, sans adresse) ; la carte
 d'API de l'Accueil devient « Pour aujourd'hui ». Réglages gagne un groupe **API** (entre L'exploitation et Sur le terrain :

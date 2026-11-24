@@ -1,6 +1,7 @@
 // Apiviz — règles pures des outils de terrain (v5.57, maquettes « Nouveautés » du 17 nov. 2026) : étiquette QR d'une
 // ruche, caisse du marché, commandes en ligne. Testées par tests/unitaires/terrain.test.mjs.
 import { estMiel, nomLot, formatLot, categorieDe } from "../production/produits.js";
+import { montantLigne } from "./remises-regles.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -143,7 +144,7 @@ export function lignesVente(produits, q) {
 export function ventesDuJour(d, clientId, jour) {
   const vs = (d.ventes || []).filter((v) => v.client_id === clientId && String(v.date_vente).slice(0, 10) === jour);
   const ids = new Set(vs.map((v) => v.id));
-  const montant = (d.lignes || []).filter((l) => ids.has(l.vente_id)).reduce((t, l) => t + Number(l.quantite) * Number(l.prix_unitaire || 0), 0);
+  const montant = (d.lignes || []).filter((l) => ids.has(l.vente_id)).reduce((t, l) => t + montantLigne(l), 0);
   return { nb: vs.length, montant: Math.round(montant * 100) / 100 };
 }
 

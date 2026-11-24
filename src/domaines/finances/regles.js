@@ -2,10 +2,11 @@
 // `d` a la forme de S.d : { ventes, lignes, depenses, recoltes, lots }. `maintenant` permet de tester une date fixe.
 import { sum, byId, yr, mo } from "../../noyau/format.js";
 import { lotsMiel, estMiel } from "../production/produits.js";
+import { montantLigne } from "../ventes/remises-regles.js";
 
-/** Montant d'une vente : somme quantité × prix de ses lignes. */
+/** Montant d'une vente : somme quantité × prix − remise de ses lignes (remise : migration 037, v5.77). */
 export const venteTotal = (d, vente) =>
-  sum(d.lignes.filter((ligne) => ligne.vente_id === vente.id), (ligne) => ligne.quantite * ligne.prix_unitaire);
+  sum(d.lignes.filter((ligne) => ligne.vente_id === vente.id), montantLigne);
 
 /**
  * Stock : pots de miel, kilos restants, kilos mis en pots (miel seulement, v5.65) ; autres produits en stock ; valeur à
@@ -34,13 +35,13 @@ export function fin(d, annee, maintenant = new Date()) {
     recoltes = d.recoltes.filter((recolte) => yr(recolte.date_recolte) === annee),
     idsVentes = new Set(ventes.map((vente) => vente.id)),
     lignes = d.lignes.filter((ligne) => idsVentes.has(ligne.vente_id)),
-    ca = sum(lignes, (ligne) => ligne.quantite * ligne.prix_unitaire),
+    ca = sum(lignes, montantLigne),
     encaisse = sum(ventes.filter((vente) => vente.paye), total),
     charges = sum(depenses, (depense) => depense.montant),
     kgRecolte = sum(recoltes, (recolte) => recolte.kg),
     lignesMiel = lignes.filter((ligne) => estMiel(byId(d.lots, ligne.lot_id))),
     kgVendu = sum(lignesMiel, (ligne) => (ligne.quantite * (byId(d.lots, ligne.lot_id)?.format_g || 0)) / 1e3),
-    caMiel = sum(lignesMiel, (ligne) => ligne.quantite * ligne.prix_unitaire),
+    caMiel = sum(lignesMiel, montantLigne),
     moisCa = Array(12).fill(0),
     moisEncaisse = Array(12).fill(0),
     moisDepenses = Array(12).fill(0),

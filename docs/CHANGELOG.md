@@ -5,6 +5,69 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.77 · à publier en recette · remises et offres de vente
+**Migration 037** (`037-remises-offres.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
+appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur
+`apidoo` avec l'accord de Pierre-Louis. Sans elle, l'application vend sans remise comme avant ; Offres de vente dit « La
+base doit être mise à jour » et « Ajouter une remise » n'apparaît pas. Une ancienne version affiche une vente remisée au
+prix plein (elle ne lit pas la remise). Maquette « apiviz — Remises et offres » du 24 nov. 2026, validée par
+Pierre-Louis : deux offres ne s'additionnent pas ; le motif d'une remise est facultatif.
+
+Pour l'apiculteur :
+1. **Offres de vente** (Produits › ⋯ › Offres de vente) : une carte par offre (Active, Prévue, Terminée, Coupée ;
+   période ; produits et clients concernés), un interrupteur pour la couper sans l'effacer, et ce qu'elle a donné
+   (ventes, euros offerts, euros encaissés). Les remises de l'année sont dans le résumé de l'écran.
+2. **Créer une offre**, quatre modèles : **X achetés, Y offerts** (les moins chers sont offerts ; les variétés d'un même
+   format se mélangent), **lot à prix rond** (3 pots de 500 g pour 25 € ; les plus chers du panier entrent dans le lot),
+   **remise en % ou en €** (minimum d'achat facultatif), **prix pour un client** (un ou plusieurs clients ou cercles).
+   Produits concernés (par format : « Miel 250 g », « Hydromel 75 cl », ou tous), pour qui, quand (toujours ou une
+   période), nom proposé d'après les réglages, aperçu pour le client (« 5 pour 28 € au lieu de 35 €, soit −20 % »).
+3. **Nouvelle vente** : dès que le panier remplit une offre, elle s'applique toute seule (ligne verte, montant offert).
+   Deux offres ne s'additionnent pas : apiviz garde la plus avantageuse pour le client. Quand un article de plus ferait
+   profiter le client d'une offre, une ligne le dit (« Encore 1 pot de Miel 250 g et le client gagne 7 € avec… »).
+   Récapitulatif : sous-total, offre, remise, total à payer, ce que le client économise ; la barre d'enregistrement
+   affiche le total net.
+4. **Ajouter une remise** (feuille du bas) : en % (5, 10, 15, 20 ou autre), en € ou un article offert ; sur toute la vente
+   ou sur un produit ; motif facultatif (Client fidèle, Pot abîmé, Famille, amis, Geste commercial ou autre) ; nouveau
+   total en direct, « Arrondir à 25 € ». S'ajoute à l'offre ; « Modifier » ou « Retirer la remise ».
+5. **Caisse du marché** : l'offre s'applique aussi, la remise ponctuelle aussi ; « Encaisser » montre le total net.
+6. **Le stock, le reçu, la facture et le bilan restent justes** : l'article offert sort du stock ; le chiffre d'affaires
+   compte ce qui a été payé ; le reçu et la facture montrent le sous-total puis chaque remise sur sa ligne (« Offre
+   « 4 achetés, 1 offert » −7 € ») ; le message du reçu dit « remise de … comprise » ; le Bilan ajoute « … de remises
+   accordées » sous le chiffre d'affaires ; l'export des ventes gagne une colonne Remise.
+
+Technique :
+- `src/domaines/ventes/remises-regles.js` (règles pures, `Regles.remises`) : famille d'un lot (catégorie et format),
+  montant net d'une ligne (`montantLigne` : quantité × prix − remise), offres (`calculerOffre`, `meilleureOffre`,
+  `offreValable`), remise ponctuelle, répartition au centime sur les lignes (plus forts restes, jamais plus que la
+  ligne), `calculerVente` (lignes et champs pour `creer_vente`), coup de pouce, validation, ligne à écrire, aperçu, usage,
+  lignes de remise du reçu et de la facture.
+- `src/domaines/ventes/remises.js` : bloc des remises (vente et caisse), feuille « Remise sur cette vente », écrans
+  `promotions` et `promotion` (`ecrans.js`), enveloppe de `HL.rpc` pour `creer_vente` (comme v3.js et entre-associes.js :
+  sans remise, les paramètres restent identiques). `caisse.js` lui donne ses lignes (`fournirCaisse`, pas d'import
+  circulaire). Nouvelle offre : identifiant donné par l'application.
+- Totaux nets partout : `finances/regles.js` (`venteTotal`, chiffre d'affaires), `terrain-regles.js` (ventes du jour),
+  `app.js` (ventes par format, export), `essentiels.js` (fiche de lot, facture), `ux.js` (reçu), fonction serveur
+  « assistant » (`outils.js` : total net ; lit `vente_lignes` en `*` pour marcher avec ou sans 037).
+- `app.js` : table facultative `promotions` (037). `offline.js` : une vente gardée sans réseau garde ses remises (lignes
+  et détail) ; « Corriger » reprend la remise ponctuelle en €. `gabarit.js` : `promotion` en FLUX, `promotions` sous
+  Produits. `styles/72-remises.css`. Astuce de l'accueil, `docs/GUIDE.md`, arborescence (`05_UX_UI_ET_NAVIGATION.md`).
+- Migration 037 : voir `migrations/README.md`. Tests : SQL `test_037.mjs` (39 vérifications), `test_appliquer.mjs` mis à
+  jour ; unitaires `remises.test.mjs` (13 tests) ; scénario `etapes_rm` ; `etapes_sd` (deux écrans) et `etapes_nk`
+  (59 écrans) mis à jour.
+
+Pas fait (noté pour la suite) : offre réservée à une variété précise (les offres visent un format) ; offres sur la page
+de commande en ligne ; remise d'une vente déjà enregistrée (supprimer et refaire la vente) ; une offre créée sans réseau
+part au retour du réseau et ne s'applique qu'ensuite.
+
+À vérifier :
+- Créer « 4 achetés, 1 offert » sur le miel 250 g ; vendre 4 pots : la ligne « Encore 1 pot… » ; 5 pots : −1 pot.
+- Deux offres valables en même temps : seule la plus avantageuse s'applique.
+- « Ajouter une remise » −10 % avec et sans motif ; en € ; article offert ; « Arrondir » ; « Retirer la remise ».
+- Caisse du marché avec l'offre ; vente gardée en mode avion puis envoyée : remise identique dans la base.
+- Reçu, facture (sous-total et lignes de remise), Bilan (« remises accordées »), export des ventes (colonne Remise).
+- Interrupteur d'une offre ; offre avec période (Prévue avant, Terminée après) ; prix client pour un cercle.
+
 ## v5.76 · à publier en recette · santé : varroa et signes sanitaires (IT-12)
 **Migration 036** (`036-sante-varroa.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
 appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur
