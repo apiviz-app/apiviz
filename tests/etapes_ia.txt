@@ -41,7 +41,11 @@
 
     page.set_viewport_size({"width": 375, "height": 812})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
-    ecritures = len(recu["rpc"]) + len(recu["upsert"]) + len(patchs)
+    # v5.86 et suivantes : jours d'utilisation (noter_activite) et lectures (demande de suppression, bandeau, équipe) ne
+    # sont pas des écritures de données de l'exploitation.
+    HORS = ("noter_activite", "ma_suppression", "suppressions_annoncees", "est_admin_apiviz", "comparaison_departement")
+    rpc_ecrits = lambda: len([n for n, b in recu["rpc"] if n not in HORS])
+    ecritures = rpc_ecrits() + len(recu["upsert"]) + len(patchs)
 
     # 1. Feuille du bouton API : le champ de question apparaît en tête.
     page.click(".bottom [data-v=saisir]"); page.wait_for_selector("#sheet[open] .as-champ input", timeout=5000)
@@ -144,7 +148,7 @@
     ctx.set_offline(False); page.evaluate("render()")
 
     # 8. API ne modifie rien : en dehors de son historique (api_echanges), aucune écriture en base pendant tout l'échange.
-    autres = len(recu["rpc"]) + len([1 for t, u, rows in recu["upsert"] if t != "api_echanges"]) + len([p_ for p_ in patchs if "api_echanges" not in str(p_)])
+    autres = rpc_ecrits() + len([1 for t, u, rows in recu["upsert"] if t != "api_echanges"]) + len([p_ for p_ in patchs if "api_echanges" not in str(p_)])
     verif(autres == ecritures, "aucune écriture en base depuis l'écran API, hors historique")
 
     # 9. Ordinateur : « Demander à API » de la barre du haut ouvre la feuille avec le champ ; écran lisible.
