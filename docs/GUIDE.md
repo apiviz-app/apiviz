@@ -174,6 +174,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   frise (touche un moment pour le résumer), la priorité d'API (« + Agenda », « Suivant »), quatre chiffres qui changent
   avec la saison (touche-en un pour l'aperçu) et six raccourcis, dont celui « du moment ». Le raccourci **Bilan** donne
   le bilan de l'année *(v5.61)* : partage-le ou imprime-le en PDF.
+- **Bilan de la saison** *(v5.79)* : Ma saison › Bilan. Colonies au début et à la fin, pertes, varroa moyen, coût du
+  kilo, « Ce qui a marché », « À revoir » et « Ce qui manque ». Trois versions à partager ou imprimer : Complète,
+  Sanitaire (pour le GDS, sans argent), Simple (pour la famille).
 - **Commandes** *(v5.57, Produits)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
   clients réservent les produits en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
   s'enregistre), Prévenir (SMS prêt), Annuler.

@@ -5,6 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.79 · à publier en recette · bilan de saison enrichi
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 1, validée par Pierre-Louis le 24 nov. 2026
+(« Ok pour les idées 1, 2, 3, 4, 5 »). L'écran « Bilan de la saison » existait (v5.61 : kilos, pots, argent, kilos par
+ruche, ce qu'API retient, partager, imprimer) : il est complété plutôt que doublé.
+
+Pour l'apiculteur (Ma saison › Bilan) :
+1. **Trois versions** : **Complète** (pour toi et tes associés), **Sanitaire** (pour le GDS : sans aucun chiffre
+   d'argent) et **Simple** (pour la famille : ni argent, ni varroa, ni « À revoir »). L'écran, le partage et
+   l'impression (PDF) suivent la version choisie.
+2. **Nouveaux chiffres** : colonies au début et à la fin de l'année avec les pertes, varroa moyen (nombre de comptages),
+   **coût du kilo** (dépenses ÷ kilos récoltés).
+3. **Ce qui a marché** (meilleur rucher, essaims récupérés, divisions, aucune perte, ventes en hausse), **À revoir**
+   (colonies au-dessus de ton seuil de varroa et le rucher le plus touché, pertes et leur rucher, ruches sans récolte,
+   ventes en baisse) et **Ce qui manque** (pas de récolte, de comptage, de seuil de varroa ou de dépense : le chiffre
+   correspondant n'est pas calculé). Rien n'est inventé ; sans seuil choisi, aucune colonie n'est dite trop infestée.
+
+Technique : `src/domaines/equipe/bilan-saison.js` (règles pures : colonies au 1er janvier et à la fin, pertes Morte /
+Perdue par rucher, colonies nées par essaim, division ou élevage ; varroa par `sante/regles.js` `comptages`,
+`seuilApplicable` ; phrases ; versions ; texte à partager). `saison.js` (`ecranBilan`, `partager`, action `msversion`).
+Styles dans `62-equipe-saison.css` (les puces de version ne s'impriment pas). Tests : unitaires `bilan-saison.test.mjs`
+(5 tests) ; scénario `etapes_bs`.
+
+À vérifier :
+- Ma saison › Bilan : tuiles Colonies, Varroa moyen, Coût du kilo ; « Ce qui a marché », « À revoir », « Ce qui manque ».
+- Version Sanitaire : aucun euro à l'écran, au partage ni à l'impression. Version Simple : ni varroa ni « À revoir ».
+
 ## v5.78 · à publier en recette · carte de fidélité
 **Migration 038** (`038-carte-fidelite.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
 appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur

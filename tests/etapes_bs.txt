@@ -1,0 +1,50 @@
+    # v5.79 — Bilan de saison enrichi (maquette « Idées à forte valeur », idée 1, validée le 24 nov. 2026) : colonies,
+    # pertes, varroa, coût du kilo, ce qui a marché / à revoir / ce qui manque, trois versions (complète, sanitaire,
+    # simple) pour l'écran, le partage et l'impression. Avec CAPTURES=<dossier> : captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    rucher0 = DATA["ruches"][0]["rucher"]
+    DATA["ruches"].append({"id": str(uuid.uuid4()), "nom": "Morte-1", "rucher": rucher0, "etat": "Critique", "type_ruche": "Dadant 10 cadres", "annee_reine": 2023, "notes": "", "sortie": "Morte", "date_sortie": J(30)})
+    OP = str(uuid.uuid4())
+    DATA["operations"] = [{"id": OP, "date_operation": J(90), "methode": "Sucre glace", "echantillon_abeilles": 300, "origine": "operation"}]
+    DATA["operation_colonies"] = [{"id": str(uuid.uuid4()), "operation_id": OP, "ruche_id": R[1], "varroa": 12}, {"id": str(uuid.uuid4()), "operation_id": OP, "ruche_id": R[2], "varroa": 3}]
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.add_init_script("window.__partage = null; Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }); Object.defineProperty(navigator, 'clipboard', { value: { writeText: (t) => { window.__partage = t; return Promise.resolve(); } }, configurable: true });")
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    page.evaluate("ACT.go('msbilan')"); page.wait_for_selector(".ms-page")
+    texte = lambda: page.locator(".ms-page").inner_text()
+
+    # 1. Version complète.
+    verif(page.locator(".ms-versions .chip.on").inner_text() == "Complète", "version complète par défaut")
+    t = texte()
+    verif("Colonies" in t and "→" in t and "1 perte" in t, "tuile Colonies : début → fin, 1 perte")
+    verif("Varroa moyen" in t and "2,5 %" in t and "1 comptage" not in t, "tuile Varroa moyen : 2,5 % (2 comptages)")
+    verif("Coût du kilo" in t and "1,92 €" in t, "tuile Coût du kilo : 48 € ÷ 25 kg = 1,92 €")
+    verif("À revoir" in t and "Varroa au-dessus de ton seuil sur 1 colonie" in t and "1 colonie perdue" in t, "À revoir : varroa et perte")
+    verif("Argent rentré" in t, "complète : l'argent")
+    shot("bs-complete")
+    page.click("[data-act=mspartager]"); page.wait_for_timeout(300)
+    p = page.evaluate("window.__partage") or ""
+    verif("Colonies :" in p and "Coût du kilo : 1,92 €" in p and "À revoir :" in p, "partage complet (%s)" % p.replace("\n", " | ")[:200])
+
+    # 2. Version sanitaire : pas d'argent.
+    page.click("[data-act=msversion][data-v=sanitaire]"); page.wait_for_timeout(300)
+    t = texte()
+    verif("€" not in t and "Pots vendus" not in t, "sanitaire : aucun euro, pas de ventes")
+    verif("Varroa moyen" in t and "À revoir" in t, "sanitaire : varroa et À revoir gardés")
+    shot("bs-sanitaire")
+    page.click("[data-act=mspartager]"); page.wait_for_timeout(300)
+    verif("€" not in (page.evaluate("window.__partage") or "€"), "partage sanitaire : aucun euro")
+
+    # 3. Version simple : ni argent ni varroa ni À revoir.
+    page.click("[data-act=msversion][data-v=famille]"); page.wait_for_timeout(300)
+    t = texte()
+    verif("€" not in t and "Varroa" not in t and "À revoir" not in t, "simple : ni argent, ni varroa, ni À revoir")
+    verif("kg récoltés" in t, "simple : les kilos")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

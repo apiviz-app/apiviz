@@ -29,6 +29,9 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
+partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.78 (migration 038) : `etapes_fi` (Réglages › Carte de fidélité ; vente à un client à 8 tampons : 9 sur
 10, carte pleine à 2 pots, « Offrir maintenant » à 3 avec `remise_fidelite`, « Plus tard », « Retirer » ; pas de carte
 sans client ; reçu et fiche client ; base sans 038). Avec `CAPTURES=<dossier>` : captures à 390 px.
