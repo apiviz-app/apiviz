@@ -12,6 +12,7 @@
     # 1. Sans saisie en attente : tout est vidé, retour à l'écran de connexion.
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     page.wait_for_timeout(800)
+    page.evaluate("localStorage.setItem('apiviz-bienvenue-vue', '1')")  # v5.84 : bienvenue déjà vue (etapes_bv)
     page.evaluate("localStorage.setItem('apidoo-journal', '[]'); localStorage.setItem('apidoo-test-perso', 'x')")
     avant = page.evaluate(contenu_local)
     verif(avant["kv"] > 0 and len(avant["cles"]) >= 2, "avant : données gardées pour le hors ligne (%s)" % avant)

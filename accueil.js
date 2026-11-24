@@ -37,7 +37,7 @@ const AC = (() => {
       const premiere = d.ruches.find((x) => x.statut !== "orpheline") || d.ruches[0];
       return `<section class="ac-api court">${AL.compagnon("bonjour", 36)}
       <div class="ac-api-t"><b id="acPhrase">Note ta première visite pour que je suive chaque colonie.</b></div>
-      <button type="button" class="btn main" data-act="newvisite" data-v="${premiere.id}">Noter</button></section>`;
+      <button type="button" class="btn main" data-act="${window.Arrivee ? "arvisite" : "newvisite"}" data-v="${premiere.id}">Noter</button></section>`;
     }
     const r = prioritaire();
     const pesees = r ? d.visites.filter((v) => v.ruche_id === r.id && v.poids_kg).length : 0;
@@ -163,7 +163,11 @@ const AC = (() => {
     (liste || avant).insertAdjacentHTML("afterend", dernieres());
     if (guide) {
       // Sans visite, le guide de prise en main reste en vue, juste sous la priorité ; ensuite il passe en bas.
-      if (!d.visites.length) wrap.querySelector(".ac-api").after(guide); else wrap.append(guide);
+      // v5.84 : « Mes premiers pas » reste en haut pendant ses 14 jours, avec « Demande à API » juste dessous.
+      const pp = guide.classList.contains("pp");
+      if (!d.visites.length || pp) wrap.querySelector(".ac-api").after(guide); else wrap.append(guide);
+      const aide = wrap.querySelector(".pp-aide");
+      if (pp && aide) guide.after(aide);
     }
     if (!telephone.matches) colonnes(wrap);
   }

@@ -6,6 +6,25 @@ la production publie la v5.14 tant qu'elles ne sont pas validées en recette.
 L'organisation ci-dessous est **gelée** (doc `docs/ROADMAP/05_UX_UI_ET_NAVIGATION.md` §2) : une rubrique ne change de
 place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour dans la même pull request.
 
+## Premiers pas *(v5.84)*
+
+- **Bienvenue** (une fois par appareil, avant le compte) : « Créer mon compte », « Voir une exploitation d'exemple »
+  ou « J'ai déjà un compte ». « Créer mon compte » passe par **Faisons connaissance** : API se présente en quatre
+  diapositives (au rucher, au bureau, puis les offres Découverte, Rucher et Exploitation avec leurs prix) ; elles
+  défilent seules ou au toucher, « Passer » à tout moment.
+- **Créer mon compte** : prénom, e-mail, mot de passe, « J'ai 15 ans ou plus ». Le prénom n'est plus redemandé après le
+  lien de confirmation.
+- **Tu en es où ?** : nombre de colonies, vente du miel, code postal (météo), comment tu as connu Apiviz. Tout est
+  facultatif. Un débutant commence sans Matériel ni Finances, qui ne vend pas sans Ventes et clients : Réglages ›
+  L'exploitation › **Rubriques affichées** les remet d'un geste. Produits reste dans la barre du bas (récoltes, stock).
+- **Ton premier rucher** : son nom, « Je suis au rucher » pour la position, le nombre de ruches. L'exploitation prend
+  un nom proposé (« Les ruches de Camille »), à changer dans Réglages.
+- **Première visite guidée** : quatre questions (reine ou œufs, couvain, provisions, abeilles), un conseil d'API à
+  chacune, « Passer cette question » ; « Pas au rucher ? » la met dans l'agenda pour demain. Puis **Bravo** : le jalon,
+  « Enchaîner avec » la ruche suivante et les rappels proposés.
+- **Exploitation d'exemple** : rien n'est enregistré ; trois bulles montrent la priorité du jour, les ruchers et le
+  bouton API ; « Commencer avec mes ruches » mène au compte.
+
 ## Se repérer
 
 - **Un écran par sujet** *(v5.44)* : Accueil, Ruchers, Produits (Miel avant la v5.65), Agenda, Finances, Matériel, Registre et déclaration,
@@ -40,7 +59,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   dans les sept prochains jours (visites selon la météo, priorités de la saison, conseils, commandes), en pointillé ;
   garde ou écarte chacun, puis « Tout ajouter ».
 - **Dates** *(v5.35)* : chaque champ date ouvre le calendrier d'Apiviz, avec des raccourcis (aujourd'hui, hier…).
-- **Bien démarrer** guide les premiers pas ; le bouton Masquer le retire.
+- **Mes premiers pas** *(v5.84, avant : Bien démarrer)* : cinq étapes (rucher, première visite, seuil varroa, associé,
+  récolte) pendant 14 jours, sous la priorité du jour, avec « Une question ? Demande à API » ; « Masquer cette carte » la retire.
 - **Ton rayon** *(v5.68)* : une alvéole par semaine de mars à novembre, plus remplie quand tu as fait plus de visites ;
   la semaine en cours clignote, une alvéole touchée dit sa semaine et ses visites. La pastille donne le nombre de
   semaines d'affilée avec une visite. « Jalons gagnés » ouvre l'écran **Jalons** : douze étapes de la saison (première

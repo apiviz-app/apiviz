@@ -1,4 +1,4 @@
-// Apiviz — prise en main : création du rucher en trois questions,
+// Apiviz — prise en main : premier rucher (v5.84 : une seule question après « Tu en es où ? »),
 // guide de démarrage selon la saison, premier succès, écrans vides utiles. Chargé en dernier.
 const DM = (() => {
   const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
@@ -62,41 +62,44 @@ const DM = (() => {
     }
   };
 
-  // ---------- Trois questions ----------
-  const q = { pas: 1, profil: "", nom: "", nb: 2, rucher: "", lat: null, lng: null };
+  // ---------- Premier rucher (v5.84, écran 4 de la maquette « Onboarding irréprochable ») ----------
+  // Une seule question après « Tu en es où ? » (profil.js) : le nom du rucher, sa position, le nombre de ruches.
+  // L'exploitation prend un nom proposé (« Les ruches de Camille »), modifiable dans Réglages. Les rubriques affichées
+  // suivent les réponses de « Tu en es où ? » (débutant : sans Matériel ni Finances ; ne vend pas : sans Ventes).
+  const q = { nb: 2, rucher: "", lat: null, lng: null };
+  const RA = () => window.Regles?.arrivee;
   const accueilAvant = EX.accueil;
   EX.accueil = function () {
     if (memo("apidoo-invitation")) return accueilAvant();
-    const champ = (id, t, v, ph) => `<label>${t}<input id="${id}" value="${esc(v)}" placeholder="${ph}" maxlength="80"></label>`;
-    const tete = `<p class="dm-pas">Question ${q.pas} sur 3</p>`;
-    const corps = q.pas === 1 ? `${api("repond", 56)}${tete}<h1 class="dm-say">Où en es-tu avec tes abeilles ?</h1>
-        <button type="button" class="dm-choix" data-act="dmprofil" data-v="deja"><b>J’ai déjà des ruches</b><span>Tu reprends où tu en es</span></button>
-        <button type="button" class="dm-choix" data-act="dmprofil" data-v="debut"><b>Je me lance</b><span>Tu démarres avec tes premières ruches</span></button>
-        <button type="button" class="dm-choix" data-act="dmexemple"><b>Je veux d’abord regarder</b><span>Un rucher d’exemple, sans rien saisir</span></button>
-        <button type="button" class="dm-lien" data-act="logout">Se déconnecter</button>`
-      : q.pas === 2 ? `${tete}<h1 class="dm-say">Comment s’appelle ton exploitation, et combien de ruches as-tu ?</h1>
-        ${champ("dm_nom", "Nom de ton exploitation", q.nom, "Le rucher des Tilleuls")}
-        <p class="dm-sous">Nombre de ruches</p><div class="dm-compte"><button type="button" class="btn" data-act="dmnb" data-v="-1" aria-label="Une ruche de moins">−</button><b>${q.nb}</b><button type="button" class="btn" data-act="dmnb" data-v="1" aria-label="Une ruche de plus">+</button></div>
-        <p class="small">Tu pourras les renommer. Le lien d’invitation d’un associé s’ouvre directement sur ce téléphone.</p><div class="dm-grand"></div>
-        <button type="button" class="btn honey block" data-act="dmsuite">Continuer</button>`
-      : `${tete}<h1 class="dm-say">Où sont tes ruches ?</h1><p class="small">Pour te dire quand ouvrir, selon la météo de ton rucher.</p>
-        ${champ("dm_rucher", "Nom du rucher", q.rucher, "Le Verger")}
-        <button type="button" class="btn block" data-act="dmposition">${q.lat === null ? "Utiliser ma position" : "Position enregistrée"}</button><div class="dm-grand"></div>
-        <button type="button" class="btn honey block" data-act="dmcreer">Créer mon rucher</button>`;
-    $app.innerHTML = `<div class="dm-ecran">${corps}</div>`;
+    const nb = q.nb, hexas = Array.from({ length: Math.min(nb, 12) }, (_, i) => `<span>Ruche ${i + 1}</span>`).join("") + (nb > 12 ? `<span>+${nb - 12}</span>` : "");
+    $app.innerHTML = `<div class="ob ar-rucher"><form class="ob-in" data-form="dmrucher" novalidate>
+      <div class="ob-hd"><span class="ob-prog" aria-label="Étape 3 sur 3"><i class="on"></i><i class="on"></i><i class="on"></i></span><button type="button" class="link" data-act="logout">Se déconnecter</button></div>
+      <div class="ob-corps"><div><h1>Ton premier rucher</h1><p class="ob-sous">Tu pourras en ajouter d’autres, et tout renommer.</p></div>
+        <label>Son nom<input id="dm_rucher" value="${esc(q.rucher)}" placeholder="Le Verger" maxlength="80"></label>
+        <div class="ar-position">${q.lat === null ? `<button type="button" class="btn block" data-act="dmposition">Je suis au rucher : utiliser ma position</button>`
+          : `<div class="ar-place"><span>✓ Placé là où tu es</span><button type="button" class="link" data-act="dmposition">Refaire</button></div>`}
+          <p class="small">La position sert à la météo du rucher et à préparer tes tournées. Tu peux la donner plus tard.</p></div>
+        <div class="ar-compte"><span><b>Combien de ruches ?</b><span>Numérotées pour toi, renommables</span></span>
+          <div class="ar-pas"><button type="button" data-act="dmnb" data-v="-1" aria-label="Une ruche de moins">−</button><b aria-live="polite">${nb}</b><button type="button" data-act="dmnb" data-v="1" aria-label="Une ruche de plus">+</button></div></div>
+        <div class="ar-hexas" aria-hidden="true">${hexas}</div>
+        <button type="button" class="link" data-act="dmexemple">Voir d’abord une exploitation d’exemple</button>
+      </div>
+      <div class="ob-pied"><button type="button" class="btn main" data-act="dmcreer">Créer mon rucher</button></div></form></div>`;
   };
-  ACT.dmprofil = (v) => { q.profil = v; q.pas = 2; EX.accueil(); };
-  ACT.dmnb = (v) => { q.nom = document.getElementById("dm_nom").value; q.nb = Math.min(200, Math.max(1, q.nb + Number(v))); EX.accueil(); };
-  ACT.dmsuite = () => { q.nom = document.getElementById("dm_nom").value.trim(); if (!q.nom) return toast("Donne un nom à ton exploitation", true); q.pas = 3; EX.accueil(); };
+  const lireRucher = () => { const z = document.getElementById("dm_rucher"); if (z) q.rucher = z.value; };
+  ACT.dmnb = (v) => { lireRucher(); q.nb = RA() ? RA().bornerRuches(q.nb + Number(v)) : Math.min(200, Math.max(1, q.nb + Number(v))); EX.accueil(); };
   ACT.dmposition = () => {
-    q.rucher = document.getElementById("dm_rucher").value;
+    lireRucher();
     if (!navigator.geolocation) return toast("Position indisponible sur cet appareil", true);
     navigator.geolocation.getCurrentPosition((p) => { q.lat = p.coords.latitude; q.lng = p.coords.longitude; EX.accueil(); }, () => toast("Position refusée : tu pourras placer le rucher sur la carte", true));
   };
-  ACT.dmcreer = async () => {
-    const rucher = document.getElementById("dm_rucher").value.trim() || "Mon rucher";
+  ACT.dmcreer = async (_v, _k, bouton) => {
+    lireRucher();
+    const rucher = q.rucher.trim() || "Mon rucher";
+    const prenom = window.PF?.prenom?.() || "";
+    if (bouton) bouton.disabled = true;
     try {
-      const r = await sb.rpc("creer_exploitation", { p_nom: q.nom });
+      const r = await sb.rpc("creer_exploitation", { p_nom: RA() ? RA().nomExploitation(prenom) : "Mon exploitation" });
       if (r.error) throw r.error;
       memo("apidoo-exploitation", r.data);
       await EX.choisir();
@@ -105,35 +108,25 @@ const DM = (() => {
       const colonies = Array.from({ length: q.nb }, (_, i) => ({ id: crypto.randomUUID(), nom: `Ruche ${i + 1}` }));
       const a = await sb.rpc("creer_rucher", { p: { id: q.rucherId ||= crypto.randomUUID(), nom: rucher, lat: q.lat, lng: q.lng, colonies } });
       if (a.error) throw a.error;
-      memo(cle("profil"), q.profil);
-      S.member = true; S.route = "dash"; render(); await loadAll(); render();
-      toast("Exploitation créée");
+      // Rubriques proposées d'après « Tu en es où ? » et début de « Mes premiers pas » (14 jours).
+      const rep = window.PF?.reponsesArrivee?.() || {};
+      const rubriques = RA() ? RA().rubriquesProposees(rep) : null;
+      try { await sb.rpc("regler", { p_modifs: { ...(rubriques ? { rubriques } : {}), premiers_pas_debut: new Date().toISOString().slice(0, 10) } }); } catch { /* réglages plus tard */ }
+      S.member = true; S.route = "dash"; render(); await loadAll();
+      toast("Ton rucher est prêt");
+      if (window.Arrivee?.apresRucher) window.Arrivee.apresRucher(); else if (window.Arrivee) window.Arrivee.ouvrirVisite(); else render();
     } catch (e) { fail(e); }
+    finally { if (bouton?.isConnected) bouton.disabled = false; }
   };
 
   // ---------- Accueil de démarrage ----------
   const installee = () => window.Plateforme?.installee() ?? (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true);
   // « ton téléphone » ou « ton ordinateur », selon l'appareil (nav4.js).
   const surQuoi = () => (typeof N4 != "undefined" && N4.support ? N4.support() : "ton téléphone");
-  function etapes() {
-    const d = S.d;
-    return [[d.ruches.length > 0, "Ajouter tes ruches", "newruches"],
-      [d.ruches.some((r) => r.lat != null), "Placer ton rucher sur la carte", "dmcarte"],
-      [d.visites.length > 0, "Noter une première visite", "dmvisite"],
-      [!!memo(cle("invite")), "Inviter ton associé (facultatif)", "dminviter"],
-      [installee() || !!memo(cle("installe")), `Installer Apiviz sur ${surQuoi()}`, "dminstaller"]];
-  }
-  function saison() {
-    const d = S.d, m = new Date().getMonth();
-    const l = [m >= 4 && m <= 8 ? [d.recoltes.length > 0, "Noter ta récolte", "newrecolte"] : [d.lots.length > 0, "Saisir tes pots restants", "newlot"],
-      [d.clients.length > 0, "Ajouter tes clients habituels", "newclient"]];
-    if (m >= 8) l.push([false, `Déclarer tes ruches avant le 31 décembre`, "dmdeclarer"]);
-    return l.filter((x) => !x[0]);
-  }
-  const bouton = ([ok, t, a]) => `<button class="step ${ok ? "ok" : ""}" ${ok ? "disabled" : `data-act="${a}"`}><span class="dot">${ok ? "✓" : ""}</span>${esc(t)}</button>`;
   ACT.dmcarte = () => go("carte");
   // Première visite : la tournée existante, directement en mode guidé par API.
   ACT.dmvisite = async () => {
+    if (window.Arrivee) return window.Arrivee.ouvrirVisite(); // v5.84 : première visite guidée (écran 8)
     const k = UX.ruchers()[0]?.[0];
     if (k === undefined || typeof ACT.tnmode != "function") return ACT.newvisite();
     await ACT.v3tournee(k);
@@ -167,15 +160,29 @@ const DM = (() => {
     }
     astuce(wrap);
     if (!responsable) { arrivee(wrap); return; }
-    if (memo(cle("masque"))) return;
-    const e = etapes(), s = saison(), faites = e.filter((x) => x[0]).length;
-    if (faites === e.length && !s.length) return;
-    const sec = `<section class="card dm-guide"><div class="u-entete"><h2>Bien démarrer</h2><button type="button" class="link" data-act="dmmasquer">Masquer</button></div>
-      <p class="small">${faites} sur ${e.length}</p><div class="track"><i style="width:${Math.round(faites / e.length * 100)}%"></i></div>
-      <div class="steps">${e.map(bouton).join("")}</div>${s.length && d.visites.length ? `<p class="dm-sous">Ce mois-ci</p><div class="steps">${s.map(bouton).join("")}</div>` : ""}</section>`;
+    // v5.84 : « Mes premiers pas » (écran 10 de la maquette) : cinq étapes, pendant 14 jours, masquable ; puis une
+    // carte « Une question ? Demande à API ». (Les étapes du mois de l'ancien guide sont dans « À faire » et Ma saison.)
+    const RA = window.Regles?.arrivee;
+    if (!RA) return;
+    const pv = d.visites.length ? [...d.visites].sort((a, b) => String(a.date_visite).localeCompare(String(b.date_visite)))[0] : null;
+    const pr = pv && byId(d.ruches, pv.ruche_id);
+    const e = RA.premiersPas({ ruches: d.ruches.length, visites: d.visites.length, seuils: (d.seuils || []).length, invite: !!memo(cle("invite")) || (window.PF?.nbPersonnes?.() || 0) > 1,
+      recoltes: d.recoltes.length, lots: (d.lots || []).length, premiereVisite: pr ? { ruche: pr.nom, date: dshort(pv.date_visite) } : null });
+    const debut = cfg().premiers_pas_debut || null;
     const haut = titre?.closest(".hero-head, .head, .hero");
-    const avant = wrap.querySelector(".dm-bravo") || (haut && wrap.contains(haut) ? haut : null);
-    if (avant) avant.insertAdjacentHTML("afterend", sec); else wrap.insertAdjacentHTML("afterbegin", sec);
+    const placer = (html) => { const avant = wrap.querySelector(".dm-bravo") || wrap.querySelector(".pp") || (haut && wrap.contains(haut) ? haut : null); if (avant) avant.insertAdjacentHTML("afterend", html); else wrap.insertAdjacentHTML("afterbegin", html); };
+    if (RA.montrerPremiersPas({ etapes: e, masquee: !!memo(cle("masque")), debut })) {
+      const faites = e.filter((x) => x.faite).length;
+      placer(`<section class="card pp dm-guide"><div class="u-entete"><h2>Mes premiers pas</h2><span class="pp-compte">${faites} sur ${e.length}</span></div>
+        <div class="pp-barre" role="img" aria-label="${faites} étapes sur ${e.length}"><i style="width:${Math.round(faites / e.length * 100)}%"></i></div>
+        <div class="pp-liste">${e.map((x) => `<button type="button" class="pp-etape${x.faite ? " ok" : ""}" ${x.faite ? "disabled" : `data-act="${x.act}"`}><span class="pp-rond" aria-hidden="true">${x.faite ? "✓" : ""}</span><span class="pp-txt"><b>${esc(x.titre)}</b><span>${esc(x.detail)}</span></span>${x.faite ? "" : `<span class="pp-duree">${esc(x.duree)}</span>`}</button>`).join("")}</div>
+        ${!installee() && matchMedia("(max-width:800px)").matches ? `<button type="button" class="link" data-act="dminstaller">Installer Apiviz sur ${surQuoi()}</button>` : ""}
+        <button type="button" class="link" data-act="dmmasquer">Masquer cette carte</button></section>`);
+      placer(`<section class="pp-aide"><b>Une question ? Demande à API</b><div>${RA.QUESTIONS_AIDE.map((t, i) => `<button type="button" data-act="arquestion" data-v="${i}">${esc(t)}</button>`).join("")}</div></section>`);
+      // La carte d'aide passe sous « Mes premiers pas ».
+      const aide = wrap.querySelector(".pp-aide"), pp = wrap.querySelector(".pp");
+      if (aide && pp) pp.after(aide);
+    }
     if (matchMedia("(min-width:801px)").matches && !installee()) relais();
   }
   function arrivee(wrap) {
@@ -227,10 +234,14 @@ const DM = (() => {
     S.member = true; S.route = "dash";
     window.PF?.exemple?.(); // pas d'inscription en mode exemple (v5.42)
     await window.loadAll(); render();
-    document.body.insertAdjacentHTML("afterbegin", '<div class="dm-exemple"><span>Rucher d’exemple, rien n’est enregistré</span><button type="button" data-act="dmsortie">Créer le mien</button></div>');
+    // v5.84 (écran 7) : bandeau « Exemple », bouton « Commencer avec mes ruches » et trois bulles de découverte.
+    document.body.insertAdjacentHTML("afterbegin", '<div class="dm-exemple ex-bandeau"><span>Exemple · rien n’est enregistré</span><button type="button" data-act="dmquitter">Quitter</button></div>');
+    document.body.insertAdjacentHTML("beforeend", '<div class="ex-commencer"><button type="button" class="btn honey" data-act="dmsortie">Commencer avec mes ruches</button></div>');
+    window.Arrivee?.bulles?.();
     document.addEventListener("submit", (e) => { e.preventDefault(); e.stopImmediatePropagation(); toast(REFUS.message); document.getElementById("sheet")?.close?.(); }, true);
   };
   ACT.dmsortie = () => { try { sessionStorage.setItem("dm-creer", "1"); } catch {} location.reload(); };
+  ACT.dmquitter = () => location.reload();
 
   const U_pluriel = (n) => (n > 1 ? `Tes ${n} ruches sont` : "Ta ruche est");
 

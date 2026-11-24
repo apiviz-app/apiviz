@@ -92,6 +92,7 @@ const NL = (() => {
       <div class="nl-corps"><button type="button" class="nl-chercher" data-act="go" data-v="recherche">${icon("recherche")}<span>Rechercher une ruche, un client…</span></button>
         <div class="nl-liste">${VOLET.map(([r, t, sous]) => `<button type="button" class="nl-entree${a === r ? " on" : ""}" data-act="go" data-v="${r}"${a === r ? ' aria-current="page"' : ""}><span class="nl-ic">${icon(r)}</span><span class="nl-txt"><b>${esc(t)}</b><span>${esc(sous)}</span></span></button>`).join("")}</div>
         <p class="nl-note">Accueil, Ruchers et Miel sont dans la barre du bas.</p></div>`;
+    window.Rubriques?.filtrerVolet(d); // v5.84 : rubriques masquées (Réglages › Rubriques affichées)
     if (!d.open) d.showModal();
     d.querySelector("button.on, .nl-liste button")?.focus({ preventScroll: true });
   }

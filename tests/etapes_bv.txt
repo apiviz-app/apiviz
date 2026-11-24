@@ -1,0 +1,140 @@
+    # v5.84 — parcours d'arrivée (maquette « apiviz — Onboarding irréprochable », validée le 24 nov. 2026) : bienvenue,
+    # « Faisons connaissance » et ses offres (029), compte avec prénom et 15 ans, « Tu en es où ? », premier rucher,
+    # première visite guidée, Bravo et rappels, « Mes premiers pas », rubriques affichées, exploitation d'exemple.
+    # Avec CAPTURES=<dossier> : captures à 390 px.
+    import os, json as _json
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/ar-{nom}.png", full_page=True))
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    inscrit = []
+    def auth(route):
+        r = route.request
+        if r.method == "OPTIONS": return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        inscrit.append(r.post_data_json or {})
+        route.fulfill(status=200, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}, body=_json.dumps({"id": "u2", "email": "camille@exemple.fr", "user_metadata": {}, "identities": [{"id": "x"}]}))
+    ctx.route("**/auth/v1/signup**", auth)
+    page.emulate_media(reduced_motion="reduce")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Sans compte : la bienvenue, une fois par appareil
+    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.goto(url); page.wait_for_selector(".ar[data-ecran=bienvenue]", timeout=15000)
+    t = page.locator(".ar").inner_text()
+    verif("Ton carnet de rucher, prêt en 2 minutes." in t and "Offre Découverte gratuite" in t, "bienvenue : la promesse et l'offre gratuite")
+    verif(page.locator("[data-act=arcreer]").count() == 1 and page.locator("[data-act=arexemple]").count() == 1 and page.locator("[data-act=arconnexion]").count() == 1, "trois portes : compte, exemple, déjà un compte")
+    verif(page.evaluate("document.documentElement.scrollWidth") <= 390, "bienvenue : rien ne dépasse en largeur")
+    shot("1-bienvenue")
+    page.click("[data-act=arcreer]"); page.wait_for_selector(".ar[data-ecran=connaissance]")
+    verif("Moi, c’est API" in page.locator(".ar-scene").inner_text() and page.locator(".ar-barre").count() == 4, "Faisons connaissance : API se présente, quatre diapositives")
+    shot("1b-diapo-1")
+    page.click(".ar-pied [data-act=arsuivant]"); page.wait_for_selector(".ar[data-diapo='1']")
+    verif("Une visite en moins d’une minute" in page.locator(".ar-scene").inner_text(), "diapositive 2 : au rucher")
+    page.click(".ar-scene"); page.wait_for_selector(".ar[data-diapo='2']")
+    verif("De la ruche au pot" in page.locator(".ar-scene").inner_text(), "un toucher sur l'écran avance : au bureau")
+    page.click(".ar-barre >> nth=3"); page.wait_for_selector(".ar[data-diapo='3']")
+    t = page.locator(".ar-scene").inner_text()
+    verif(page.locator(".ar-offre").count() == 3 and "Gratuit" in t and "3,90 € / mois" in t and "11,90 € / mois" in t and "Jusqu’à 10 ruches et 2 personnes" in t, "les trois offres de la base, avec prix et limites")
+    verif(page.locator(".ar-l").count() >= 9, "chaque offre montre ce qu'elle apporte, ligne par ligne")
+    shot("1b-offres")
+    page.click("[data-act=arcommencer]"); page.wait_for_selector("form[data-form=auth] [name=prenom]")
+    verif(page.locator(".auth.cx").get_attribute("data-mode") == "up" and page.locator("[name=age15]").count() == 1, "Créer mon compte : prénom, e-mail, mot de passe, 15 ans ou plus")
+    verif("Tes données restent à toi" in page.locator(".cx-rassure").inner_text(), "rassurance : données et hors ligne")
+    shot("2-compte")
+    page.fill("[name=prenom]", "Camille"); page.fill("[name=email]", "camille@exemple.fr"); page.fill("[name=password]", "abeilles2026")
+    page.evaluate("document.querySelector('form[data-form=auth]').noValidate = true")
+    page.click("form[data-form=auth] .btn.main")
+    page.wait_for_selector(".cx-erreur")
+    verif("15 ans" in page.locator(".cx-erreur").inner_text() and not inscrit, "sans « 15 ans ou plus », rien n'est envoyé")
+    page.fill("[name=password]", "abeilles2026"); page.check("[name=age15]"); page.click("form[data-form=auth] .btn.main")
+    page.wait_for_selector("text=Ouvre le lien reçu", timeout=10000)
+    verif(inscrit and inscrit[0].get("data", {}).get("prenom") == "Camille", "le prénom part avec le compte : " + str(inscrit[:1]))
+    verif(_json.loads(page.evaluate("localStorage.getItem('apiviz-inscription-attente')")) == {"email": "camille@exemple.fr", "prenom": "Camille", "age15": True}, "le prénom attend sur l'appareil")
+    page.goto(url); page.wait_for_selector(".auth.cx form", timeout=15000)
+    verif(page.locator(".ar").count() == 0, "la bienvenue ne revient pas sur cet appareil")
+
+    # 2. Compte confirmé, sans exploitation : l'étape 1 s'enregistre seule, puis « Tu en es où ? »
+    DATA["profils"] = []
+    EXPL["miennes"].clear()
+    EXPL["membres"][:] = [m for m in EXPL["membres"] if m["email"] == "test@apidoo.fr"]
+    for k in ("ruches", "visites", "recoltes", "lots_stock", "ventes", "vente_lignes", "clients", "taches"): DATA[k] = []
+    page.evaluate("window.name = ''; localStorage.setItem('apiviz-inscription-attente', JSON.stringify({email: 'test@apidoo.fr', prenom: 'Camille', age15: true}))")
+    page.goto(url); page.wait_for_selector("text=Tu en es où", timeout=15000)
+    p = DATA["profils"][0]
+    verif(p["prenom"] == "Camille", "prénom enregistré sans le redemander")
+    verif(page.locator(".ob-prog i").count() == 3 and page.locator(".ob-niveaux .op-radio").count() == 4, "étape 2 sur 3 : nombre de colonies en quatre choix")
+    page.click(".ob-niveaux label:has(input[value='1-10'])"); page.click("label:has(input[name=vend][value=non])")
+    page.fill("[name=code_postal]", "35000"); page.wait_for_timeout(150)
+    verif("Ille-et-Vilaine" in page.locator(".ob-lieu").inner_text(), "code postal : le département, pour la météo")
+    page.click("label:has(input[name=source][value=syndicat])")
+    ap = page.locator(".ob-apercu").inner_text()
+    verif("Ruchers" in ap and "Matériel" not in ap and "Ventes" not in ap, "aperçu : un débutant qui ne vend pas, sans Matériel ni Ventes")
+    shot("3-tu-en-es-ou")
+    page.click("[data-act=obfinir]"); page.wait_for_selector("text=Ton premier rucher", timeout=15000)
+    verif(p["colonies"] == "1-10" and p["code_postal"] == "35000" and p["source"] == "syndicat" and p["inscription_finie"], "réponses enregistrées dans le profil")
+
+    # 3. Premier rucher
+    page.fill("#dm_rucher", "Le Verger"); page.click("[data-act=dmnb][data-v='1']"); page.click("[data-act=dmnb][data-v='1']")
+    verif(page.locator(".ar-hexas span").count() == 4 and page.locator("#dm_rucher").input_value() == "Le Verger", "quatre ruches prévues, le nom reste")
+    shot("4-rucher")
+    page.click("[data-act=dmcreer]"); page.wait_for_selector(".ar[data-ecran=premierevisite]", timeout=15000)
+    noms = [b["p_nom"] for n, b in recu["rpc"] if n == "creer_exploitation"]
+    verif(noms == ["Les ruches de Camille"], "exploitation créée avec un nom proposé : " + str(noms))
+    verif(len([r for r in DATA["ruches"] if r.get("rucher") == "Le Verger"]) == 4, "rucher et quatre colonies créés")
+    verif(DATA["reglages"][0]["data"].get("rubriques") == {"ventes": False, "materiel": False, "finances": False} and DATA["reglages"][0]["data"].get("premiers_pas_debut"), "rubriques proposées et début des premiers pas : " + str(DATA["reglages"][0]["data"]))
+
+    # 4. Première visite guidée
+    verif("Ta première visite · question 1 sur 4" in page.locator(".ar-etape").inner_text() and "Ruche 1" in page.locator(".ar-tete").inner_text(), "première visite : Ruche 1, question 1 sur 4")
+    verif("œufs frais" in page.locator(".ar-conseil").inner_text(), "conseil d'API à chaque question")
+    shot("8-visite")
+    page.click("[data-act=arrepondre][data-v='1']"); page.click("[data-act=arrepondre][data-v='1']")
+    page.click("[data-act=arrepondre][data-v='']"); page.click("[data-act=arrepondre][data-v='0']")
+    verif("C’est tout" in page.locator(".ar-question").inner_text() and page.locator(".ar-fait").count() == 3, "fin : trois réponses, une passée")
+    page.click("[data-act=arenregistrer]"); page.wait_for_selector(".ar[data-ecran=bravo]", timeout=10000)
+    v = next(b["p"] for n, b in recu["rpc"] if n == "creer_visite")
+    verif(v["reine"] == "Non vue" and v["oeufs_vus"] is True and v["couvain"] == "Normal" and v["activite"] == "Normale" and "provisions" not in v["observes"], "visite envoyée : " + str({k: v[k] for k in ("reine", "oeufs_vus", "couvain", "activite", "observes")}))
+
+    # 5. Bravo et rappels
+    t = page.locator(".ar").inner_text()
+    verif("Bravo Camille, Ruche 1 est suivie" in t and "Jalon débloqué" in t, "Bravo : jalon de la première visite")
+    verif(page.locator("[data-act=arenchainer]").inner_text() == "Enchaîner avec Ruche 2", "enchaîner avec la ruche suivante")
+    shot("9-bravo")
+    if page.locator(".ar-rappels").count():
+        page.click(".ar-sw[data-v=meteo]")
+        verif(_json.loads(page.evaluate("localStorage.getItem('apiviz-rappels-envoyes')"))["meteo"] is False, "un type de rappel se coupe d'un geste")
+        page.click("[data-act=araccueil]")
+    else:
+        page.click("[data-act=araccueil]")
+    page.wait_for_selector(".pp", timeout=10000)
+
+    # 6. Mes premiers pas, aide d'API, rubriques masquées
+    t = page.locator(".pp").inner_text()
+    verif("Mes premiers pas" in t and "2 sur 5" in t and "Ruche 1, le" in t, "accueil : Mes premiers pas, 2 sur 5 : " + t.replace("\n", " | "))
+    verif(page.locator(".pp-aide button").count() == 2 and page.locator(".dm-bravo").count() == 0, "« Demande à API » et pas de second bravo")
+    shot("10-accueil")
+    page.evaluate("ACT.go('menu')"); page.wait_for_selector("#nlVolet[open]")
+    entrees = page.locator("#nlVolet .nl-entree").evaluate_all("l => l.map(b => b.dataset.v)")
+    verif("materiel" not in entrees and "pilotage" not in entrees and "agenda" in entrees, "volet : sans Matériel ni Finances : " + str(entrees))
+    page.keyboard.press("Escape")
+    page.evaluate("quickSheet()"); page.wait_for_selector("#sheet[open] .n4-tuiles")
+    tuiles = page.locator("#sheet .n4-tuile").evaluate_all("l => l.map(b => b.dataset.v)")
+    verif("newvente" not in tuiles and "newdepense" not in tuiles and "newvisite" in tuiles, "Saisir : sans Vente ni Dépense : " + str(tuiles))
+    page.evaluate("document.getElementById('sheet').close()")
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("[data-act=rbrubriques]")
+    verif("Masquées : Ventes et clients, Matériel, Finances" in page.locator("[data-act=rbrubriques]").inner_text(), "Réglages : les rubriques masquées")
+    page.click("[data-act=rbrubriques]"); page.click(".ar-sw[data-v=materiel]"); page.wait_for_timeout(400)
+    verif(DATA["reglages"][0]["data"]["rubriques"]["materiel"] is True, "Matériel remis d'un geste")
+
+    # 7. Exploitation d'exemple, depuis la bienvenue
+    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.goto(url); page.wait_for_selector(".ar[data-ecran=bienvenue]", timeout=15000)
+    page.click("[data-act=arexemple]"); page.wait_for_selector(".ex-bandeau", timeout=15000)
+    verif("Exemple · rien n’est enregistré" in page.locator(".ex-bandeau").inner_text() and page.locator(".ex-commencer [data-act=dmsortie]").count() == 1, "exemple : bandeau et « Commencer avec mes ruches »")
+    page.wait_for_selector(".ex-bulle", timeout=5000)
+    verif("1 sur 3" in page.locator(".ex-bulle").inner_text() and page.locator(".ex-cible").count() == 1, "première bulle sur la priorité du jour")
+    shot("7-exemple")
+    page.click("[data-act=exsuivant]"); page.click("[data-act=exsuivant]")
+    verif("3 sur 3" in page.locator(".ex-bulle").inner_text() and "Le bouton API" in page.locator(".ex-bulle").inner_text(), "troisième bulle : le bouton API")
+    page.click("[data-act=exsuivant]")
+    verif(page.locator(".ex-bulle").count() == 0 and page.locator(".ex-voile").count() == 0, "« J'ai compris » ferme les bulles")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

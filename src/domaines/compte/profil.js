@@ -12,19 +12,34 @@
 // Sans la migration 021 : rien ne change (pas d'inscription, ancien prénom par appareil). Globales lues à l'appel :
 // S, sb, esc, shell, sheet, $app, $sheetForm, toast, render, go, cfg, saveCfg, EX, ES, EXP, download, today, fail.
 import * as R from "./regles-profil.js";
+import * as RA from "./regles-arrivee.js";
 
 const e = (t) => esc(t);
-const st = { email: "", charge: false, chargement: false, absent: false, ligne: null, noms: null, nomsDe: null, pas: 1, brouillon: null, retour: null };
+const st = { email: "", charge: false, chargement: false, absent: false, ligne: null, noms: null, nomsDe: null, pas: 1, brouillon: null, retour: null, auto: false };
 const email = () => String(S.session?.user?.email || "").toLowerCase();
 const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { return null; } return v; };
 const clePrenom = () => `apiviz-prenom-${S.session?.user?.email || ""}`;
 const clePlusTard = () => `apiviz-inscription-plus-tard-${email()}`;
+// v5.84 (parcours d'arrivée) : prénom et « 15 ans ou plus » donnés avec le compte (app.js), sur cet appareil ou dans le
+// compte (user_metadata) ; réponses de « Tu en es où ? » propres à l'exploitation (vente du miel), reprises à la création
+// du rucher (demarrage.js) pour proposer les rubriques.
+export function attente() {
+  let a = null;
+  try { a = JSON.parse(localStorage.getItem("apiviz-inscription-attente") || "null"); } catch { a = null; }
+  const meta = S.session?.user?.user_metadata || {};
+  if (a && a.email === email() && a.prenom && a.age15) return { prenom: a.prenom, age15: true };
+  if (meta.prenom && meta.age15) return { prenom: String(meta.prenom).slice(0, 60), age15: true };
+  return null;
+}
+const cleArrivee = () => `apiviz-arrivee-${email()}`;
+/** Réponses de « Tu en es où ? » gardées sur l'appareil : { colonies, vend }. */
+export function reponsesArrivee() { try { return JSON.parse(memo(cleArrivee()) || "{}") || {}; } catch { return {}; } }
 const plateforme = () => { const p = window.Capacitor?.getPlatform?.(); return p === "ios" || p === "android" ? p : "web"; };
 
 // ---------- Chargement ----------
 async function charger() {
   if (st.chargement || !S.session) return;
-  if (st.email !== email()) Object.assign(st, { email: email(), charge: false, absent: false, ligne: null, noms: null, nomsDe: null, pas: 1, brouillon: null });
+  if (st.email !== email()) Object.assign(st, { email: email(), charge: false, absent: false, ligne: null, noms: null, nomsDe: null, pas: 1, brouillon: null, auto: false });
   if (st.charge) return;
   st.chargement = true;
   try {
@@ -67,10 +82,17 @@ export function exemple(prenom = "Camille") {
 const coche = (nom, v, t, val) => `<label class="op-radio"><input type="radio" name="${nom}" value="${e(v)}" ${val === v ? "checked" : ""}><span>${e(t)}</span></label>`;
 const groupe = (nom, titre, options, val) => `<fieldset class="op-choix"><legend>${e(titre)}</legend><div>${options.map(([v, t]) => coche(nom, v, t, val)).join("")}</div></fieldset>`;
 
+/** Aperçu « Ton Apiviz affichera » : les rubriques proposées d'après les réponses en cours. */
+function apercu(b) {
+  const vend = b.vend === "oui" || b.vend === true ? true : b.vend === "non" || b.vend === false ? false : null;
+  return RA.apercuRubriques(RA.rubriquesProposees({ colonies: b.colonies, vend })).map((t) => `<span>${e(t)}</span>`).join("");
+}
+
 function ecranInscription() {
   const b = (st.brouillon ||= { ...R.vide(), ...(st.ligne || {}), prenom: st.ligne?.prenom || memo(clePrenom()) || "" });
   const edition = !!st.retour;
-  const prog = edition ? "" : `<span class="ob-prog" aria-label="Étape ${st.pas} sur 2"><i class="on"></i><i class="${st.pas >= 2 ? "on" : ""}"></i></span>`;
+  // v5.84 : trois étapes pour une nouvelle personne (compte, « Tu en es où ? », premier rucher dans demarrage.js).
+  const prog = edition ? "" : `<span class="ob-prog" aria-label="Étape ${st.pas} sur 3"><i class="on"></i><i class="${st.pas >= 2 ? "on" : ""}"></i><i></i></span>`;
   let corps, pied;
   if (st.pas === 1) {
     corps = `<svg width="52" height="60" viewBox="0 0 56 64" aria-hidden="true"><path d="M28 2l24 14v32L28 62 4 48V16z" fill="#E3A008"/><path d="M28 18l12 7v14l-12 7-12-7V25z" fill="#FBEFC9"/></svg>
@@ -82,6 +104,20 @@ function ecranInscription() {
       <p class="ob-err" role="alert"></p>`;
     pied = edition ? `<button type="button" class="btn" data-act="obannuler">Annuler</button><button type="button" class="btn main" data-act="obsuite">Enregistrer</button>`
       : `<button type="button" class="btn main" data-act="obsuite">Continuer</button>`;
+  } else if (!edition) {
+    // v5.84 : « Tu en es où ? », quatre questions facultatives en un toucher (maquette, écran 3). Les autres questions
+    // (âge, ancienneté, activité) viennent plus tard, une à la fois (« Pour mieux te connaître »).
+    const vend = b.vend === true || b.vend === "oui" ? "oui" : b.vend === false || b.vend === "non" ? "non" : "";
+    const niveaux = [["1-10", "1–10", "Je débute"], ["11-50", "11–50", "Je m’y connais"], ["51-150", "51–150", "C’est mon métier"], ["150+", "150 et +", "Grosse exploitation"]];
+    corps = `<div><h1>Tu en es où${b.prenom ? `, ${e(b.prenom)}` : ""} ?</h1><p class="ob-sous">4 questions facultatives pour adapter Apiviz à toi.</p></div>
+      <fieldset class="op-choix"><legend>Combien de colonies ?</legend><div class="ob-niveaux">${niveaux.map(([v, n, t]) => `<label class="op-radio"><input type="radio" name="colonies" value="${v}" ${b.colonies === v ? "checked" : ""}><span><b>${n}</b><small>${t}</small></span></label>`).join("")}</div></fieldset>
+      ${groupe("vend", "Tu vends ton miel ?", [["oui", "Oui"], ["non", "Pas pour l’instant"]], vend)}
+      <label>Ton code postal<span class="ob-cp"><input name="code_postal" value="${e(b.code_postal)}" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="35000"><span class="ob-lieu">${e(R.lieu(b.code_postal) ? `${R.lieu(b.code_postal)} · pour la météo de tes ruchers` : "")}</span></span></label>
+      ${groupe("source", "Comment as-tu connu Apiviz ?", R.SOURCES, b.source)}
+      <div class="ob-apercu" aria-live="polite"><b>Ton Apiviz affichera</b><div>${apercu(b)}</div></div>
+      <p class="ob-petit">Jamais vendu ni montré à tes associés. Modifiable ou effaçable dans Mon profil.</p>
+      <p class="ob-err" role="alert"></p>`;
+    pied = `<button type="button" class="btn main" data-act="obfinir">Continuer</button>`;
   } else {
     corps = `<div><h1>Pour mieux te connaître</h1><p class="ob-sous">Tout est facultatif. Ça nous aide à savoir qui utilise Apiviz et à l’améliorer.</p></div>
       ${groupe("tranche_age", "Ton âge", R.AGES, b.tranche_age)}
@@ -103,7 +139,9 @@ function ecranInscription() {
   const f = $app.querySelector("form");
   f.addEventListener("input", () => {
     lire();
-    const z = $app.querySelector(".ob-lieu"); if (z) z.textContent = R.lieu(st.brouillon.code_postal);
+    const z = $app.querySelector(".ob-lieu"), lieu = R.lieu(st.brouillon.code_postal);
+    if (z) z.textContent = lieu && !st.retour && st.pas === 2 ? `${lieu} · pour la météo de tes ruchers` : lieu;
+    const ap = $app.querySelector(".ob-apercu div"); if (ap) ap.innerHTML = apercu(st.brouillon);
     const av = $app.querySelector(".ob-av b"); if (av) av.textContent = (st.brouillon.prenom || "?")[0].toUpperCase();
   });
   f.addEventListener("submit", (ev) => { ev.preventDefault(); (st.pas === 1 ? ACT.obsuite : ACT.obfinir)(); });
@@ -213,7 +251,19 @@ function avantRendu() {
   if (!S.session || S.recovery) return;
   if (!st.charge || st.email !== email()) { charger(); return; }
   if (S.member !== false && S.d) chargerNoms();
-  if ((S.member === false || S.d) && (inscriptionDue() || st.retour)) { ecranInscription(); return true; }
+  if ((S.member === false || S.d) && (inscriptionDue() || st.retour)) {
+    // v5.84 : prénom et âge déjà donnés avec le compte : l'étape 1 s'enregistre seule, on passe à « Tu en es où ? ».
+    const a = !st.retour && st.pas === 1 && !st.auto ? attente() : null;
+    if (a) {
+      st.auto = true;
+      st.brouillon = { ...R.vide(), ...(st.ligne || {}), prenom: a.prenom, age15: true };
+      $app.innerHTML = '<div class="loader" role="status" aria-label="Chargement"><mv-eveil><img src="symbole-apiviz.svg" alt=""></mv-eveil></div>';
+      enregistrer({ prenom: a.prenom, nom: st.ligne?.nom || "", plateforme: st.ligne?.plateforme || plateforme() })
+        .then(() => { st.pas = 2; try { localStorage.removeItem("apiviz-inscription-attente"); } catch {} }, () => {}).finally(() => render());
+      return true;
+    }
+    ecranInscription(); return true;
+  }
 }
 if (typeof window != "undefined" && window.Noyau?.crochets) window.Noyau.crochets.sur("avantRendu", "inscription", avantRendu);
 
@@ -238,6 +288,15 @@ export const actions = {
     const v = R.controle(b);
     if (v) return erreurEcran(v);
     try {
+      if (!st.retour) {
+        // v5.84 : « Tu en es où ? » — colonies, code postal et source dans le profil ; la vente du miel reste sur
+        // l'appareil jusqu'à la création du rucher (rubriques de l'exploitation, demarrage.js).
+        const r = R.reponses(b);
+        memo(cleArrivee(), JSON.stringify({ colonies: r.colonies, vend: b.vend === "oui" ? true : b.vend === "non" ? false : null }));
+        await enregistrer({ colonies: r.colonies, code_postal: r.code_postal, source: r.source, inscription_finie: new Date().toISOString() });
+        toast(`Bienvenue ${st.ligne?.prenom || ""}`.trim());
+        return terminer();
+      }
       await enregistrer({ ...R.reponses(b), newsletter: !!b.newsletter, ...(st.retour ? {} : { inscription_finie: new Date().toISOString() }) });
       toast(st.retour ? "Réponses enregistrées" : `Bienvenue ${st.ligne?.prenom || ""}`.trim());
       terminer();
@@ -314,5 +373,5 @@ export const actions = {
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),
 };
 
-if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, associes, moi, membres, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
+if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, attente, reponsesArrivee, associes, moi, membres, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
 export { ecranProfil, completerMembres };

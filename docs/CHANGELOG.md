@@ -5,6 +5,65 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.84 · à publier en recette · parcours d'arrivée
+**Pas de migration.** Maquette « apiviz — Onboarding irréprochable » (écrans 1 à 10 et 1 bis), validée par
+Pierre-Louis le 24 nov. 2026 (« Je valide la globalité de ce que tu m'as proposé », puis « implémente tout »). Les
+écrans 5 et 6 (reprendre son carnet) sont la v5.85 ; les notifications app fermée, la v5.87.
+
+Pour l'apiculteur :
+1. **Bienvenue** (avant le compte, une fois par appareil) : la promesse et trois portes, « Créer mon compte »,
+   « Voir une exploitation d'exemple », « J'ai déjà un compte ». Pas pour un lien d'invitation (il ouvre la création
+   du compte comme avant).
+2. **Faisons connaissance** : API se présente en quatre diapositives animées (au rucher, au bureau, puis les trois
+   offres de la base, Découverte gratuite, Rucher 3,90 € / mois, Exploitation 11,90 € / mois, avec leurs limites et ce
+   qu'elles ajoutent, ligne par ligne). Elles défilent seules (6 s) ou au toucher ; « Passer » ; sans animation si le
+   téléphone est réglé ainsi (on avance au toucher).
+3. **Créer mon compte** : prénom, e-mail, mot de passe et « J'ai 15 ans ou plus ». Le prénom part avec le compte et
+   n'est plus redemandé après le lien de confirmation (même ouvert sur un autre appareil).
+4. **Tu en es où ?** (remplace « Pour mieux te connaître » à l'inscription) : nombre de colonies, vente du miel, code
+   postal (département, pour la météo) et « Comment as-tu connu Apiviz ? », en un toucher, tout facultatif, avec
+   l'aperçu « Ton Apiviz affichera ». L'âge, l'ancienneté et l'activité restent dans Mon profil.
+5. **Ton premier rucher** (remplace les trois questions) : nom, « Je suis au rucher » (position), nombre de ruches avec
+   leur aperçu. L'exploitation prend un nom proposé, « Les ruches de Camille ».
+6. **Rubriques affichées** (Réglages › L'exploitation) : proposées d'après « Tu en es où ? » — un débutant (1 à 10
+   colonies) commence sans Matériel ni Finances, qui ne vend pas sans Ventes et clients. Une rubrique masquée quitte le
+   menu de l'ordinateur, le volet du téléphone et les tuiles de « Saisir » ; rien n'est effacé.
+7. **Première visite guidée** : quatre questions (reine ou œufs, cadres de couvain, provisions, abeilles), un conseil
+   d'API à chacune, « Passer cette question », durée à la fin ; « Pas au rucher ? » crée la tâche pour demain. Le
+   bouton « Noter » de l'accueil sans visite y mène aussi.
+8. **Bravo** : jalon « Première visite », « Enchaîner avec Ruche 2 » (même visite guidée), puis « Qu'apiviz te
+   prévienne au bon moment ? » (exemple, trois types, deux par semaine au plus) et « Activer les rappels ».
+9. **Mes premiers pas** (remplace « Bien démarrer », sous la priorité du jour, 14 jours) : créer mon rucher, première
+   visite, seuil varroa, inviter un associé, récolte, avec la durée de chaque étape ; « Une question ? Demande à API »
+   et deux questions toutes prêtes.
+10. **Exploitation d'exemple** : bandeau « Exemple · rien n'est enregistré », « Commencer avec mes ruches » et trois
+    bulles de découverte (priorité du jour, ruchers, bouton API).
+
+Écarts avec la maquette : quatre tranches de colonies (celles du profil, 021) au lieu de trois ; pas de dictée sur
+l'écran de première visite ; l'exploitation d'exemple garde ses données (6 ruches) ; « Produits » reste dans la barre
+du bas quand les ventes sont masquées (récoltes et stock y sont) ; les rappels s'activent pour l'instant pendant
+qu'Apiviz est ouverte (app fermée : v5.87).
+
+Technique :
+- `src/domaines/compte/regles-arrivee.js` (règles pures, `Regles.arrivee`) : bienvenue, offres (vérifiées contre 029),
+  rubriques proposées et actives, routes masquées, charge de la visite guidée, étapes de « Mes premiers pas ».
+- `arrivee.js` : bienvenue et diapositives (crochet `avantRendu`, clé d'appareil `apiviz-bienvenue-vue`, gardée à la
+  déconnexion), routes `premierevisite` et `bravo`, bulles de l'exemple, `window.Arrivee`. `rubriques.js` : réglage
+  `rubriques`, ligne de Réglages, filtre du menu (`apresRendu`), du volet (`navigation.js`) et de « Saisir » (`nav4.js`).
+- `app.js` : prénom et 15 ans dans « Créer mon compte » (`user_metadata`, clé `apiviz-inscription-attente`).
+  `profil.js` : étape 1 enregistrée seule, « Tu en es où ? ». `demarrage.js` : premier rucher, réglages `rubriques`
+  et `premiers_pas_debut`, carte « Mes premiers pas ». `accueil.js` : carte en haut, « Noter » vers la visite guidée.
+  `styles/77-arrivee.css`.
+- Tests : unitaires `arrivee.test.mjs` (10 tests) ; scénario `etapes_bv` (bienvenue, diapositives, compte, profil,
+  rucher, visite, Bravo, premiers pas, rubriques, exemple) ; `etapes_op`, `etapes_ex`, `etapes_cx`, `etapes_ac`,
+  `etapes_cf`, `etapes_dx`, `etapes_dc` adaptés.
+
+À vérifier :
+- Premier lancement sur un téléphone : bienvenue, diapositives (défilement seul, toucher), offres lisibles.
+- Créer un compte, ouvrir le lien sur un autre appareil : le prénom n'est pas redemandé.
+- « Je suis au rucher » sur le terrain ; première visite guidée ; « Pas au rucher ? ».
+- Rubriques : un débutant ne voit ni Matériel ni Finances ; Réglages les remet.
+
 ## v5.83 · à publier en recette · d'un pot à ses ruches
 **Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 3, validée par Pierre-Louis le 24 nov. 2026.
 La fiche de lot montrait déjà l'histoire du lot (v5.30) et ses clients : elle est complétée.

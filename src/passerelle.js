@@ -24,12 +24,14 @@ import * as groupe from "./domaines/colonies/groupe.js";
 import * as remises from "./domaines/ventes/remises-regles.js";
 // Carte de fidélité (v5.78, migration 038) : tampons d'un client, récompense.
 import * as fidelite from "./domaines/ventes/fidelite-regles.js";
+// Parcours d'arrivée (v5.84) : rubriques proposées, nom de l'exploitation, étapes de « Mes premiers pas ».
+import * as arrivee from "./domaines/compte/regles-arrivee.js";
 // File d'opérations hors ligne v2 (IT-09), lue par offline.js.
 import * as file from "./donnees/file.js";
 import { creerFile } from "./noyau/erreurs.js";
 import * as crochets from "./noyau/crochets.js";
 
-window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, assemblage, produits, photos, file, tournee, groupe, remises, fidelite });
+window.Regles = Object.freeze({ ...format, finances, sante, meteo, visites, compte, ruchers, colonies, reines, stock, assemblage, produits, photos, file, tournee, groupe, remises, fidelite, arrivee });
 
 // Journal des erreurs de production (AP-FEAT-016) : journaliser() d'app.js en envoie une copie ici.
 // S et sb sont les globales d'app.js (chargé après ce module) : elles ne sont lues qu'au moment de l'envoi.

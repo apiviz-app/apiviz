@@ -43,6 +43,12 @@ programme avec retard, matériel et stock, cases gardées, rucher décoché, lan
 Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
 partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
+Scénario v5.84 : `etapes_bv` (parcours d'arrivée : bienvenue une fois par appareil, « Faisons connaissance » et les
+trois offres de 029, « Créer mon compte » avec prénom et 15 ans — rien n'est envoyé sans —, étape 1 enregistrée seule,
+« Tu en es où ? » et son aperçu, premier rucher et nom proposé, rubriques proposées, première visite guidée et sa
+charge, Bravo et rappels, « Mes premiers pas », volet et « Saisir » sans les rubriques masquées, Réglages › Rubriques
+affichées, exploitation d'exemple et ses trois bulles). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.78 (migration 038) : `etapes_fi` (Réglages › Carte de fidélité ; vente à un client à 8 tampons : 9 sur
 10, carte pleine à 2 pots, « Offrir maintenant » à 3 avec `remise_fidelite`, « Plus tard », « Retirer » ; pas de carte
 sans client ; reçu et fiche client ; base sans 038). Avec `CAPTURES=<dossier>` : captures à 390 px.
