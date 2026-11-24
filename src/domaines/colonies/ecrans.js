@@ -4,6 +4,7 @@ import { completerApercu } from "./apercu.js";
 import { completerLignee, actions as actionsLignee } from "./lignee.js";
 import { completerFiche as completerExpress } from "../visites/express.js";
 import { completerCourbes, actions as actionsCourbes } from "./courbes.js";
+import { ecran as ecranHiver, actions as actionsHiver } from "./hiver.js";
 
 export default [
   // Fiche d'une ruche : ux.js (journal de cartes), complétée par Alvéoles (courbe de poids ouverte, en-tête), puis par
@@ -13,4 +14,6 @@ export default [
   // visites/express.js (v5.32 : bouton « Visite express » quand la ruche a déjà une visite), puis par courbes.js
   // (v5.61 : onglet « Courbes », poids, varroa et force sur la saison).
   { id: "ruche", titre: "Ruche", rubrique: "ruches", rendu: () => { UX.ecrans.fiche(); AL.completerFiche(); completerFiche(); completerApercu(); completerLignee(); completerExpress(); completerCourbes(); }, actions: { ...actions, ...actionsLignee, ...actionsCourbes } },
+  // Prêt pour l'hiver (v5.82) : hiver.js, ouvert par Ruchers › ⋯.
+  { id: "hiver", titre: "Prêt pour l’hiver", rubrique: "ruches", rendu: () => ecranHiver(), actions: actionsHiver },
 ];

@@ -1,6 +1,8 @@
 // Apiviz — écrans du domaine production (IT-03).
 import { ecran as ecranMiseEnPots, actions as actionsMiseEnPots, remplace as remplaceMiseEnPots } from "./mise-en-pots.js";
 import { completerLot } from "./lot.js";
+// v5.83 : traçabilité (QR du pot, origine, traitements pendant la miellée, clients à prévenir).
+import { completerLot as completerTracabilite, actions as actionsTracabilite } from "./tracabilite-ecran.js";
 import { ecran as ecranProduit, actions as actionsProduit, remplace as remplaceProduit, completerStock } from "./produit.js";
 import { ecran as ecranRecoltes, actions as actionsRecoltes } from "./recoltes.js";
 import { ecran as ecranRecolte, actions as actionsRecolte, remplace as remplaceRecolte } from "./recolte.js";
@@ -14,7 +16,8 @@ export default [
   // Récoltes (v5.66, maquette du 18 nov. 2026) : saison, miel à mettre en pots, récoltes et productions, clients à prévenir.
   { id: "recoltes", titre: "Produits", rubrique: "ventes", rendu: ecranRecoltes, actions: actionsRecoltes },
   // Fiche de lot : essentiels.js, complétée par lot.js (v5.30 : « D'où vient ce pot », récolte, achats, mise en pots, ventes).
-  { id: "lot", titre: "Lot", rubrique: "miel", rendu: () => { ES.VUES.lot(); completerLot(); } },
+  // v5.83 : puis par tracabilite-ecran.js (carte « Traçabilité », « Si un souci est signalé sur ce lot »).
+  { id: "lot", titre: "Lot", rubrique: "miel", rendu: () => { ES.VUES.lot(); completerLot(); completerTracabilite(); }, actions: actionsTracabilite },
   // Récolte et traçabilité : v3.js, migrée sans changement.
   // v5.66 : affichage en deux étapes (recolte.js : ruches en alvéoles et poids, puis mise en pots) ; l'enregistrement
   // reste celui de v3.js (formulaire « v3recolte »).

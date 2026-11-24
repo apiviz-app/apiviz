@@ -1,0 +1,17 @@
+/* Apiviz — Préparer ma sortie (v5.80, maquette « Idées à forte valeur », idée 4). Écran src/domaines/agenda/sortie.js.
+   Jetons de jetons.css ; textes de 12 px au moins ; cibles de 44 px. */
+.so-page{display:flex;flex-direction:column;gap:14px}
+.so-jours{display:flex;flex-wrap:wrap;gap:8px}
+.so-jours .chip{min-height:var(--cible)}
+.so-carte{display:flex;flex-direction:column;gap:8px}
+.so-carte h2{margin:0}
+.so-meteo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.so-tag{font-size:var(--t-xs);font-weight:600;padding:3px 8px;border-radius:var(--r-pill);white-space:nowrap}
+.so-tag.ok{background:var(--goodbg);color:#174F2B}
+.so-tag.rapide,.so-tag.manque{background:var(--watchbg);color:#5C3D00}
+.so-tag.non{background:#EEF0EA;color:#3F4A44}
+.so-page label.so-rucher,.so-page label.so-mat{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;min-height:var(--cible);margin:0;text-align:left;font-weight:400;color:var(--ink);cursor:pointer}
+.so-page .so-rucher input,.so-page .so-mat input{margin:0;flex:none;width:22px;height:22px;accent-color:var(--pine)}
+.so-rucher>span,.so-mat>span:not(.so-tag){flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.so-prog{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:var(--t-m)}
+.so-tete{display:flex;justify-content:space-between;align-items:baseline}

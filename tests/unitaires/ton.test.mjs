@@ -15,6 +15,7 @@ const EXCEPTIONS = [
   ["src/domaines/ventes/commandes.js", "Réservez votre miel en ligne"],
   ["src/domaines/production/saison.js", "Dites-moi ce qui vous ferait plaisir"],
   ["src/domaines/sante/regles.js", "Je vous signale avoir observé le"], // fiche de signalement remise au vétérinaire ou aux services (IT-12)
+  ["src/domaines/production/tracabilite.js", "Bonjour, vous avez acheté ${libelle} (lot ${lot.code})"], // message aux clients d'un lot à vérifier (v5.83)
   ["src/domaines/sante/regles.js", "Je souhaite avoir votre avis sur la conduite à tenir"], // même fiche // message aux clients à prévenir de la récolte (v5.66) // texte du lien partagé aux clients (v5.57) // SMS envoyé au client quand sa commande en ligne est prête (v5.56)
 ];
 const FORMES = /\b(vous|votre|vos|[a-zà-ÿ]{3,}ez)\b/gi;

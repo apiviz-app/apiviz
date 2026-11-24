@@ -5,11 +5,14 @@
 // dans une feuille du bas), six raccourcis dont celui « du moment ». Règles pures : suivi-saison.js.
 // Le bilan de l'année (v5.61 : kilos, pots, argent, kilos par ruche, ce qu'API retient, partager, imprimer) devient
 // l'écran « msbilan », ouvert depuis le raccourci « Bilan ».
-// Globales d'app.js lues à l'appel : S, esc, eur, cfg, shell, yearSel, today, venteTotal, toast, write, sb, ACT, AL,
+// Globales d'app.js lues à l'appel : S, esc, eur, cfg, shell, render, yearSel, today, venteTotal, toast, write, sb, ACT, AL,
 // $sheet, $sheetForm.
 import * as Q from "./regles.js";
 import * as V from "./suivi-saison.js";
 import { saison as saisonProduits } from "../production/saison.js";
+// v5.79 (maquette « Idées à forte valeur », idée 1) : colonies, pertes, varroa, coût du kilo, ce qui a marché / à revoir /
+// ce qui manque, trois versions à partager. Règles pures : bilan-saison.js.
+import * as BS from "./bilan-saison.js";
 
 const e = (t) => esc(t);
 const f = (x) => String(x).replace(".", ",");
@@ -18,7 +21,7 @@ const ICONE = (d, t = 22) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24
 const reglages = () => (typeof cfg == "function" ? cfg() : {}) || {};
 
 // Ce qui reste d'un rendu à l'autre : phase choisie sur la frise, priorité affichée.
-const etat = { annee: null, phase: null, api: 0 };
+const etat = { annee: null, phase: null, api: 0, version: "complete" };
 
 function calcul() {
   const annee = Number(S.annee) || new Date().getFullYear();
@@ -154,13 +157,18 @@ function ouvrirApercu(id) {
 // ---------- Bilan de l'année (v5.61) ----------
 function donneesBilan() {
   const annee = Number(S.annee) || new Date().getFullYear();
-  const s = Q.saison(S.d, annee, typeof venteTotal == "function" ? venteTotal : null);
+  const vt = typeof venteTotal == "function" ? venteTotal : null;
+  const s = Q.saison(S.d, annee, vt);
   const parRuche = Q.kgParRuche(S.d, annee);
-  return { annee, s, parRuche, cs: Q.constats(parRuche, annee) };
+  const cs = Q.constats(parRuche, annee);
+  const b = BS.bilan({ d: S.d, annee, aujourdhui: today(), ctx: { seuils: S.d.seuils || [], reglages: reglages() }, s, parRuche, constats: cs,
+    caAvant: Q.saison(S.d, annee - 1, vt).rentre });
+  return { annee, s, parRuche, cs, b };
 }
 
 export function ecranBilan() {
-  const { annee, s, parRuche, cs } = donneesBilan();
+  const { annee, s, parRuche, b } = donneesBilan();
+  const version = etat.version, m = BS.montre(version);
   const evo = Q.evolution(s.kg, s.kgAvant, annee);
   const sem = annee === new Date().getFullYear() ? Q.semainesDeStock(S.d, s.stock, today()) : null;
   const max = Math.max(1, ...parRuche.map((r) => r.kg));
@@ -173,24 +181,38 @@ export function ecranBilan() {
       <p class="ms-oeil">${e((typeof cfg == "function" && cfg().nom) || "Saison")} · ${annee}</p>
       <p class="ms-phrase">${e(phrase)}</p>
       ${vide ? '<p class="small">Les récoltes, ventes et dépenses de l’année apparaîtront ici au fil de la saison.</p>' : `
+      <div class="ms-versions" role="group" aria-label="Version du bilan">${BS.VERSIONS.map((x) => `<button type="button" class="chip${x.id === version ? " on" : ""}" aria-pressed="${x.id === version}" data-act="msversion" data-v="${x.id}">${x.titre}</button>`).join("")}</div>
+      <p class="small ms-version-sous">${e(BS.VERSIONS.find((x) => x.id === version).sous)}</p>
       <div class="ms-tuiles">
-        ${tuile("Pots vendus", f(s.pots), s.clients ? pl(s.clients, "client") : "", "")}
+        ${b.col.debut || b.col.fin ? tuile("Colonies", `${b.col.debut} → ${b.col.fin}`, b.col.pertes ? `${pl(b.col.pertes, "perte")}` : "Aucune perte") : ""}
+        ${m.sante && b.va.moyenne != null ? tuile("Varroa moyen", `${e(f(b.va.moyenne))} %`, pl(b.va.comptages, "comptage")) : ""}
+        ${m.argent ? `${tuile("Pots vendus", f(s.pots), s.clients ? pl(s.clients, "client") : "", "")}
         ${tuile("Reste en stock", pl(s.stock, "pot"), sem ? `≈ ${pl(sem, "semaine")} de ventes` : "")}
         ${tuile("Argent rentré", e(eur(s.rentre)), "")}
         ${tuile("Dépensé", e(eur(s.depense)), s.rentre || s.depense ? `Solde ${e(eur(s.rentre - s.depense))}` : "")}
+        ${b.coutKg != null ? tuile("Coût du kilo", e(eur(b.coutKg)), "dépenses ÷ kilos récoltés") : ""}` : ""}
       </div>
-      ${parRuche.some((r) => r.kg > 0) ? `<section class="card ms-ruches" aria-labelledby="ms_r"><h2 id="ms_r">Kilos récoltés par ruche</h2>
+      ${m.details && parRuche.some((r) => r.kg > 0) ? `<section class="card ms-ruches" aria-labelledby="ms_r"><h2 id="ms_r">Kilos récoltés par ruche</h2>
         <p class="small">${parRuche.filter((r) => r.kg > 0).length >= 3 ? "Les 3 meilleures en premier" : "Du meilleur au moins bon"}${s.kg - parRuche.reduce((t, r) => t + r.kg, 0) > 0.05 ? ` · ${f(Math.round((s.kg - parRuche.reduce((t, r) => t + r.kg, 0)) * 10) / 10)} kg récoltés sans ruche précise` : ""}</p>
         <ul>${parRuche.map((r, i) => `<li><span class="ms-nom">${e(r.nom)}</span><span class="ms-barre" aria-hidden="true"><span class="${i < 3 && r.kg > 0 ? "top" : ""}" style="width:${Math.round((r.kg / max) * 100)}%"></span></span><span class="ms-kg">${e(f(r.kg))} kg</span></li>`).join("")}</ul></section>` : ""}
-      ${cs.length ? `<section class="ms-api" aria-labelledby="ms_a"><span class="ms-api-av" aria-hidden="true">${api}</span><div><h2 id="ms_a">Ce qu’API retient</h2>${cs.map((c) => `<p>${e(c)}</p>`).join("")}<p class="small">D’après les récoltes, les ventes et les fiches des ruches de ${annee}.</p></div></section>` : ""}
+      ${(() => {
+        const ok = BS.filtrer(b.marche, version), ko = m.details ? BS.filtrer(b.revoir, version) : [], manque = m.details ? BS.filtrer(b.manque, version) : [];
+        if (!ok.length && !ko.length && !manque.length) return "";
+        const liste = (l) => l.map((x) => `<p>${e(x.texte)}</p>`).join("");
+        return `<section class="ms-api" aria-labelledby="ms_a"><span class="ms-api-av" aria-hidden="true">${api}</span><div>
+          ${ok.length ? `<h2 id="ms_a">Ce qui a marché</h2>${liste(ok)}` : `<h2 id="ms_a" class="ms-sr">Bilan</h2>`}
+          ${ko.length ? `<h2 class="ms-h">À revoir</h2>${liste(ko)}` : ""}
+          ${manque.length ? `<h2 class="ms-h">Ce qui manque</h2><div class="ms-manque">${liste(manque)}</div>` : ""}
+          <p class="small">D’après tes récoltes, colonies, comptages et ventes de ${annee}. Rien d’inventé : ce qui manque est signalé.</p></div></section>`;
+      })()}
       <div class="ms-boutons"><button type="button" class="btn" data-act="mspartager">Partager le résumé</button><button type="button" class="btn" data-act="msimprimer">Imprimer ou PDF</button></div>`}
     </div>`);
   document.querySelector(".wrap")?.classList.add("ms-ecran");
 }
 
 async function partager() {
-  const { annee, s, parRuche, cs } = donneesBilan();
-  const texte = Q.resumeTexte((typeof cfg == "function" && cfg().nom) || "", annee, s, parRuche, cs);
+  const { annee, parRuche, b } = donneesBilan();
+  const texte = BS.texte((typeof cfg == "function" && cfg().nom) || "", annee, b, etat.version, parRuche);
   try {
     if (navigator.share) return await navigator.share({ title: `Saison ${annee}`, text: texte });
     await navigator.clipboard.writeText(texte);
@@ -209,4 +231,5 @@ export const actions = {
   msaller: (route) => { $sheet.close(); ACT.go(route); },
   mspartager: () => partager(),
   msimprimer: () => window.print(),
+  msversion: (v) => { if (BS.VERSIONS.some((x) => x.id === v)) { etat.version = v; render(); } },
 };

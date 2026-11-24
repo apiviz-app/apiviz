@@ -105,6 +105,13 @@
 .ms-boutons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .ms-boutons .btn{min-height:48px;justify-content:center}
 @media (min-width:1024px){.ms-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}.ms-page{max-width:880px}}
+/* v5.79 : versions du bilan (complète, sanitaire, simple), « À revoir », « Ce qui manque ». */
+.ms-versions{display:flex;flex-wrap:wrap;gap:8px}
+.ms-versions .chip{min-height:var(--cible)}
+.ms-page .ms-version-sous{margin:-8px 0 0}
+.ms-api .ms-h{margin:12px 0 4px}
+.ms-manque p{color:var(--muted)}
+.ms-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Impression : seulement la page de la saison, sur l'écran « Ma saison ». */
 @media print{
   body:has(.ms-ecran) *{visibility:hidden}
@@ -112,7 +119,7 @@
   body:has(.ms-ecran) .ms-page{position:absolute;left:0;top:0;width:100%;padding:12mm}
   .ms-tuiles{grid-template-columns:repeat(4,minmax(0,1fr))}
   .ms-tuile,.ms-ruches,.ms-api{break-inside:avoid}
-  body:has(.ms-ecran) .ms-boutons{display:none}
+  body:has(.ms-ecran) .ms-boutons,body:has(.ms-ecran) .ms-versions,body:has(.ms-ecran) .ms-version-sous{display:none}
 }
 
 /* ---------- Ma saison en un écran (v5.69, maquette « Accueil compact » du 20 nov. 2026) ----------

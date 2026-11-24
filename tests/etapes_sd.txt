@@ -54,8 +54,8 @@
               ("offre", "ACT.go('offre')"), ("offres", "ACT.go('offres')"), ("recharge", "ACT.go('recharge')"), ("stockage", "ACT.go('stockage')"),
               ("visite", "S.visite = null; ACT.newvisite()"), ("vente", "ACT.newvente()"), ("recolte", "ACT.go('recolte')"),
               ("comptage", "ACT.cvouvrir('')"), ("signalement", "S.sig = '%s'; ACT.go('signalement')" % SIG),
-              ("promotions", "ACT.go('promotions')"), ("promotion", "ACT.rmnouvelle()")]
-    NIVEAU2 = {"signalement", "msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge", "apimemoire", "stockage", "promotions"}
+              ("promotions", "ACT.go('promotions')"), ("promotion", "ACT.rmnouvelle()"), ("sortie", "ACT.go('sortie')"), ("comparaison", "ACT.go('comparaison')"), ("hiver", "ACT.go('hiver')")]
+    NIVEAU2 = {"signalement", "msbilan", "rucher", "ruche", "meteo", "lot", "profil", "rappels", "activite", "jalons", "recherche", "saison", "achatfacture", "caisse", "etiquettesqr", "offre", "offres", "recharge", "apimemoire", "stockage", "promotions", "sortie", "comparaison", "hiver"}
     RAYONS = {"10px", "12px", "14px", "20px", "999px", "50%"}
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)

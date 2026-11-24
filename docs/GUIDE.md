@@ -161,6 +161,18 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Un tampon par article payé par un client nommé. Carte pleine : l'article suivant est offert, maintenant (« Offrir
   maintenant », le moins cher du panier) ou à la prochaine visite. Le reçu et la fiche du client disent où en est sa
   carte.
+- **Préparer ma sortie** *(v5.80)* : Agenda › ⋯. Pour aujourd'hui, demain ou après-demain : les ruchers à voir (à
+  cocher), le créneau météo, les tâches et colonies à voir, et le matériel à emporter d'après tes tâches, comparé à ton
+  stock (« Il en manque 2 »). « Partir » lance la tournée.
+- **Comparer mes ruchers** *(v5.81)* : Ruchers › ⋯. Kilos par colonie, pertes, varroa et valeur de la récolte par
+  rucher, triables, avec le meilleur et le plus faible, et les kilos par colonie sur 3 saisons. apiviz ne conclut pas à
+  ta place : il dit quoi regarder.
+- **Prêt pour l'hiver** *(v5.82)* : Ruchers › ⋯ (ou Ma saison › Hiver). Chaque colonie est prête, à surveiller, à
+  reprendre ou à compléter, d'après son poids, son varroa, sa reine, sa force et ses réserves notées cet automne, et
+  les repères que tu fixes (avec ton GDS ou ton vétérinaire). apiviz compare, il ne prédit pas.
+- **D'un pot à ses ruches** *(v5.83)* : Produits › un lot. Ruchers et colonies d'origine, traitements notés pendant la
+  miellée, et, si un souci est signalé, qui prévenir (message prêt, par SMS ou e-mail). Les étiquettes de pots peuvent
+  porter un QR : visé avec le téléphone, il ouvre la fiche du lot.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.
@@ -174,6 +186,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   frise (touche un moment pour le résumer), la priorité d'API (« + Agenda », « Suivant »), quatre chiffres qui changent
   avec la saison (touche-en un pour l'aperçu) et six raccourcis, dont celui « du moment ». Le raccourci **Bilan** donne
   le bilan de l'année *(v5.61)* : partage-le ou imprime-le en PDF.
+- **Bilan de la saison** *(v5.79)* : Ma saison › Bilan. Colonies au début et à la fin, pertes, varroa moyen, coût du
+  kilo, « Ce qui a marché », « À revoir » et « Ce qui manque ». Trois versions à partager ou imprimer : Complète,
+  Sanitaire (pour le GDS, sans argent), Simple (pour la famille).
 - **Commandes** *(v5.57, Produits)* : crée ta page de commande (mot d'accueil, lieux de retrait), partage le lien ; tes
   clients réservent les produits en stock et paient au retrait. Les commandes arrivent ici : Livrée (la vente
   s'enregistre), Prévenir (SMS prêt), Annuler.

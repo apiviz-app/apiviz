@@ -5,6 +5,136 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.83 · à publier en recette · d'un pot à ses ruches
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 3, validée par Pierre-Louis le 24 nov. 2026.
+La fiche de lot montrait déjà l'histoire du lot (v5.30) et ses clients : elle est complétée.
+
+Pour l'apiculteur (Produits › un lot) :
+1. Carte **Traçabilité** : ruchers et colonies d'origine, dates et kilos de la récolte (récoltes reliées à
+   l'extraction du lot), et les **traitements notés pendant la miellée** (60 jours avant la première récolte jusqu'à
+   la dernière), signalés à vérifier avec le délai d'attente du produit. Le QR du pot, et « Imprimer la fiche du lot ».
+2. Carte **Si un souci est signalé sur ce lot** : clients connus qui en ont acheté, pots vendus sans nom (marché),
+   pots encore en stock ; « Préparer le message » : texte modifiable (vouvoiement, document émis), envoi par SMS,
+   e-mail (en copie cachée) ou copier. Rien ne part sans l'apiculteur.
+3. **QR sur les étiquettes de pots** (option, retenue dans les réglages `etiquetteQr`, oui par défaut) : le lien
+   `…/?lot=<code>` ouvre la fiche du lot une fois connecté, depuis l'appareil photo du téléphone ou le scanner
+   d'Apiviz (qui lisait seulement les ruches). Code inconnu dans l'exploitation ouverte : apiviz le dit.
+
+Technique : `src/domaines/production/tracabilite.js` (règles pures : lien du QR, origine, traitements, clients à
+prévenir, message), `tracabilite-ecran.js` (cartes de la fiche de lot, lien `?lot=` par le crochet `apresRendu`,
+`window.Tracabilite`), `etiquettes.js` (option QR, `.et-qr`), `ruchers/qr.js` (scanner), `styles/76-tracabilite.css`.
+Le QR des pots est un lien vers l'application : il ne montre rien à un client sans compte (page publique : plus tard,
+si souhaité). Charte de ton : exception ajoutée pour le message aux clients.
+Tests : unitaires `tracabilite.test.mjs` (5 tests) ; scénario `etapes_tr`.
+
+À vérifier :
+- Un lot relié à une extraction : ruchers, colonies, traitement pendant la miellée ; le QR.
+- « Préparer le message » : SMS et e-mail sur téléphone.
+- Étiquettes avec QR, imprimées à 100 % : le QR se lit à l'appareil photo et ouvre le lot.
+
+## v5.82 · à publier en recette · prêt pour l'hiver
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 5, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Ruchers › ⋯ › **Prêt pour l'hiver** ; aussi Ma saison › Hiver › « Voir colonie par colonie ») :
+1. Chaque colonie active est classée d'après ses mesures d'automne (depuis le 1er août, réglable) : **À reprendre**,
+   **À surveiller**, **Prête**, ou **À compléter** (aucune visite cet automne). Barre de résumé, puces pour filtrer, la
+   plus urgente d'abord ; toucher une colonie ouvre sa fiche.
+2. Ce qui est regardé : **poids** (sous ton repère de plus de 10 % → à reprendre ; juste sous → à surveiller),
+   **varroa** (au-dessus de ton repère → à reprendre), **reine** (orpheline ou non vue aux 2 dernières visites → à
+   reprendre ; reine de 3 ans ou plus → à surveiller), **force** (1 ou 2 sur 5) et **réserves faibles** notées à la
+   visite (à surveiller). Ce qui manque est dit (pesée, comptage, traitement noté depuis juillet).
+3. **Tes repères** (poids d'hivernage, varroa après traitement, début de l'automne) se règlent dans une feuille, à fixer
+   avec ton GDS ou ton vétérinaire. Sans repère, le critère n'est pas jugé et l'écran le dit. Le poids est le même
+   réglage que celui de Ma saison et d'API (`hiverPoids`). Jamais une prédiction de survie.
+
+Technique : `src/domaines/colonies/hiver-regles.js` (règles pures : repères, bilan d'une colonie, liste triée et
+comptes ; varroa par `sante/regles.js`), `hiver.js` (écran `hiver`, niveau 2 sous Ruchers ; entrée dans le menu ⋯ de
+`vue-tableau.js`), `styles/75-hiver.css` ; `equipe/suivi-saison.js` : le bouton de l'aperçu « Hiver » mène à l'écran.
+Tests : unitaires `hiver.test.mjs` (6 tests) ; scénario `etapes_hv` ; `etapes_sd` et `etapes_nk` (62 écrans) mis à jour.
+
+À vérifier :
+- Sans repère : le message ; régler poids et varroa ; colonies classées avec leurs raisons.
+- Filtres ; toucher une colonie ; Ma saison › Hiver › « Voir colonie par colonie ».
+
+## v5.81 · à publier en recette · comparer mes ruchers
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 2, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Ruchers › ⋯ › **Comparer mes ruchers**, écran « Comparaison », année au choix) :
+1. Une carte par rucher : **kilos par colonie** (barre), récolte, **pertes**, **varroa** moyen (et colonies au-dessus de
+   ton seuil), **valeur** estimée de la récolte (kilos × prix moyen du kilo vendu dans l'année).
+2. Trier par kilos par colonie, pertes, varroa ou valeur ; repères **Meilleur rendement** et **Le plus faible**.
+3. **Ce que montrent tes chiffres** : pour le rucher le plus faible, s'il l'est plusieurs saisons de suite, s'il a le
+   varroa le plus haut ou le plus de pertes — jamais présenté comme une cause (« l'emplacement, les reines et l'année
+   jouent aussi »).
+4. **Kilos par colonie sur 3 saisons** ; une année sans récolte notée affiche « — », pas zéro.
+5. Un seul rucher : l'écran dit qu'il n'y a rien à comparer.
+
+Technique : `src/domaines/ruchers/comparer-regles.js` (règles pures : colonies vivantes dans l'année, kilos, pertes,
+varroa par `sante/regles.js`, valeur, histoire, tri, repères, lecture), `comparer.js` (écran `comparaison`, niveau 2
+sous Ruchers ; entrée dans le menu ⋯ de `vue-tableau.js`), `styles/74-comparer.css`. Une colonie compte dans le rucher
+où elle est aujourd'hui (dit à l'écran). Tests : unitaires `comparer.test.mjs` (4 tests) ; scénario `etapes_cr` ;
+`etapes_sd` et `etapes_nk` (61 écrans) mis à jour.
+
+Pas fait : répartir les kilos d'une colonie déplacée dans l'année entre ses ruchers ; coût par rucher (les dépenses ne
+sont pas rattachées à un rucher).
+
+À vérifier :
+- Plusieurs ruchers avec récoltes et comptages : cartes, tri, repères, lecture, tableau 3 saisons.
+- Changer d'année ; un seul rucher.
+
+## v5.80 · à publier en recette · préparer ma sortie
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 4, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Agenda › ⋯ › **Préparer ma sortie**) :
+1. Choisis le jour (aujourd'hui, **demain** par défaut, après-demain).
+2. **Ruchers à voir**, numérotés du plus chargé au moins chargé, à cocher ; le **créneau météo** conseillé du premier
+   rucher placé sur la carte (bonne plage la plus longue, sinon visite rapide).
+3. **Au programme** : les tâches de ce jour et celles en retard, plus les colonies à revoir sans tâche (orpheline, état
+   critique ou à surveiller, pas de visite depuis plus de 30 jours).
+4. **Dans la voiture** : le matériel de toute sortie, puis ce que demandent les tâches (pesée → peson, candi →
+   candi pour chaque colonie ou le nombre écrit, varroa → sucre glace et bocal, traitement → gants et produit, retirer
+   les lanières → sac, hausses, récolte, essaim, reine, cadres), **comparé au stock** de Matériel (« il t'en reste 1 kg »,
+   « Il en manque 2 », « Plus en stock »). Les cases cochées restent sur le téléphone pour ce jour.
+5. **Partir : lancer la tournée** ouvre la tournée du premier rucher coché.
+
+Technique : `src/domaines/agenda/sortie-regles.js` (règles pures : programme, regroupement par rucher, matériel par mots
+repérés, détail, jours, meilleure plage), `sortie.js` (écran `sortie`, niveau 2 sous l'Agenda ; bouton dans les actions
+de l'Agenda), `styles/73-sortie.css`. Météo par `MT.parHeure` (redessinée quand elle arrive). Tests : unitaires
+`sortie.test.mjs` (5 tests) ; scénario `etapes_so` ; `etapes_sd` et `etapes_nk` (60 écrans) mis à jour.
+
+Pas fait : ordre de visite par distance entre ruchers ; matériel réglable (les mots repérés sont fixes).
+
+À vérifier :
+- Des tâches pour demain avec « candi », « peser », « varroa », « lanières » : le matériel et le stock.
+- Décocher un rucher : ses tâches et son matériel partent. Cocher le matériel, revenir : les cases restent.
+- Rucher placé sur la carte : le créneau conseillé. « Partir » ouvre la tournée.
+
+## v5.79 · à publier en recette · bilan de saison enrichi
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 1, validée par Pierre-Louis le 24 nov. 2026
+(« Ok pour les idées 1, 2, 3, 4, 5 »). L'écran « Bilan de la saison » existait (v5.61 : kilos, pots, argent, kilos par
+ruche, ce qu'API retient, partager, imprimer) : il est complété plutôt que doublé.
+
+Pour l'apiculteur (Ma saison › Bilan) :
+1. **Trois versions** : **Complète** (pour toi et tes associés), **Sanitaire** (pour le GDS : sans aucun chiffre
+   d'argent) et **Simple** (pour la famille : ni argent, ni varroa, ni « À revoir »). L'écran, le partage et
+   l'impression (PDF) suivent la version choisie.
+2. **Nouveaux chiffres** : colonies au début et à la fin de l'année avec les pertes, varroa moyen (nombre de comptages),
+   **coût du kilo** (dépenses ÷ kilos récoltés).
+3. **Ce qui a marché** (meilleur rucher, essaims récupérés, divisions, aucune perte, ventes en hausse), **À revoir**
+   (colonies au-dessus de ton seuil de varroa et le rucher le plus touché, pertes et leur rucher, ruches sans récolte,
+   ventes en baisse) et **Ce qui manque** (pas de récolte, de comptage, de seuil de varroa ou de dépense : le chiffre
+   correspondant n'est pas calculé). Rien n'est inventé ; sans seuil choisi, aucune colonie n'est dite trop infestée.
+
+Technique : `src/domaines/equipe/bilan-saison.js` (règles pures : colonies au 1er janvier et à la fin, pertes Morte /
+Perdue par rucher, colonies nées par essaim, division ou élevage ; varroa par `sante/regles.js` `comptages`,
+`seuilApplicable` ; phrases ; versions ; texte à partager). `saison.js` (`ecranBilan`, `partager`, action `msversion`).
+Styles dans `62-equipe-saison.css` (les puces de version ne s'impriment pas). Tests : unitaires `bilan-saison.test.mjs`
+(5 tests) ; scénario `etapes_bs`.
+
+À vérifier :
+- Ma saison › Bilan : tuiles Colonies, Varroa moyen, Coût du kilo ; « Ce qui a marché », « À revoir », « Ce qui manque ».
+- Version Sanitaire : aucun euro à l'écran, au partage ni à l'impression. Version Simple : ni varroa ni « À revoir ».
+
 ## v5.78 · à publier en recette · carte de fidélité
 **Migration 038** (`038-carte-fidelite.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
 appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur
