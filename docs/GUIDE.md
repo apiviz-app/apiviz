@@ -170,6 +170,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Prêt pour l'hiver** *(v5.82)* : Ruchers › ⋯ (ou Ma saison › Hiver). Chaque colonie est prête, à surveiller, à
   reprendre ou à compléter, d'après son poids, son varroa, sa reine, sa force et ses réserves notées cet automne, et
   les repères que tu fixes (avec ton GDS ou ton vétérinaire). apiviz compare, il ne prédit pas.
+- **D'un pot à ses ruches** *(v5.83)* : Produits › un lot. Ruchers et colonies d'origine, traitements notés pendant la
+  miellée, et, si un souci est signalé, qui prévenir (message prêt, par SMS ou e-mail). Les étiquettes de pots peuvent
+  porter un QR : visé avec le téléphone, il ouvre la fiche du lot.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.

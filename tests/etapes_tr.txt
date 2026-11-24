@@ -1,0 +1,67 @@
+    # v5.83 — D'un pot à ses ruches (maquette « Idées à forte valeur », idée 3, validée le 24 nov. 2026) : fiche de lot
+    # (ruchers et colonies d'origine, traitement pendant la miellée, QR), clients à prévenir et message, lien « ?lot= »
+    # ouvert depuis l'appareil photo, QR sur les étiquettes de pots.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    # Lot L26-01 : extraction de Ruche 1 (Verger) et Ruche 4 (Bois), Ruche 4 traitée 10 jours avant la récolte.
+    DATA["lots_stock"][0]["extraction"] = "E26-01"
+    for r in DATA["recoltes"]: r["extraction"] = "E26-01"
+    DATA["visites"].append({"id": str(uuid.uuid4()), "ruche_id": R[3], "date_visite": J(90), "activite": "Normale", "provisions": "Moyennes", "reine": "Vue",
+                            "couvain": "", "note": "", "traitement": "Acide oxalique", "poids_kg": None, "varroa": None})
+    CM, VM = str(uuid.uuid4()), str(uuid.uuid4())
+    DATA["clients"].append({"id": CM, "nom": "Vente au marché", "cercle": "", "telephone": "", "email": ""})
+    DATA["ventes"].append({"id": VM, "client_id": CM, "date_vente": J(3), "paye": True, "mode": "Espèces"})
+    DATA["vente_lignes"].append({"vente_id": VM, "lot_id": L1, "quantite": 5, "prix_unitaire": 12})
+    DATA["reglages"][0]["data"]["adresse"] = "1 rue des Abeilles\n21000 Dijon"
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Fiche du lot.
+    page.evaluate("id => { S.lotId = id; ACT.go('lot'); }", L1); page.wait_for_selector(".tr-carte")
+    tr = page.locator(".tr-carte").inner_text()
+    verif("Verger" in tr and "Bois" in tr, "ruchers d'origine : Verger, Bois (%s)" % tr[:200])
+    verif("Ruche 1" in tr and "Ruche 4" in tr and "25 kg" in tr, "colonies d'origine et kilos")
+    verif(page.locator(".tr-trait.tr-alerte").count() == 1 and "Acide oxalique" in tr and "Ruche 4" in page.locator(".tr-trait").inner_text(), "traitement pendant la miellée signalé")
+    page.wait_for_selector(".tr-qr svg", timeout=8000)
+    verif(page.locator(".tr-qr svg").count() == 1, "QR du pot sur la fiche")
+    shot("tr-fiche")
+
+    # 2. Si un souci est signalé.
+    so = page.locator(".tr-souci").inner_text()
+    lignes = page.locator(".tr-souci .tr-ligne").all_inner_texts()
+    val = lambda debut: next((l.split()[-1] for l in lignes if l.startswith(debut)), None)
+    verif(val("Clients connus") == "1" and val("Vendus sans nom") == "5" and val("Encore en stock") == "18", "1 client connu, 5 sans nom, 18 en stock (%s)" % lignes)
+    page.click(".tr-souci [data-act=trmessage]"); page.wait_for_selector("#sheet[open] #tr_msg")
+    msg = page.locator("#tr_msg").input_value()
+    verif("vous avez acheté" in msg and "L26-01" in msg, "message aux clients, vouvoiement, code du lot")
+    verif("Mme Martin (3)" in page.locator("#sheet").inner_text(), "Mme Martin, 3 pots")
+    verif(page.locator("#sheet [data-act=trenvoi][data-v=sms]").is_enabled() and not page.locator("#sheet [data-act=trenvoi][data-v=mail]").is_enabled(), "SMS possible, e-mail non (pas d'adresse)")
+    shot("tr-message")
+    page.click("#sheet [data-act=closesheet]")
+
+    # 3. Lien du QR ouvert depuis l'appareil photo.
+    verif(page.evaluate("Tracabilite.lireLienLot(location.origin + '/?lot=L26-02')?.code") == "L26-02", "lecture du lien du pot")
+    page.goto(url + "?lot=l26-02"); page.wait_for_selector(".tr-carte", timeout=15000)
+    verif(page.evaluate("S.lotId") == L2 and "lot=" not in page.url, "le lien ouvre la fiche du lot (casse ignorée) et quitte l'adresse")
+    page.evaluate("Tracabilite.ouvrirCode('ZZZ')"); page.wait_for_selector(".toast >> text=n’est pas dans l’exploitation", timeout=5000)
+    verif(True, "code inconnu : apiviz le dit")
+
+    # 4. Étiquettes de pots avec QR.
+    page.evaluate("window.print = () => {}")
+    page.evaluate("id => ACT.etiq(id)", L1); page.wait_for_selector("#sheet[open] select[name=qr]")
+    page.fill("#sheet input[name=nombre]", "2")
+    page.click("#sheet .btn.main"); page.wait_for_selector("#etiqPrint .et-qr svg", state="attached", timeout=8000)
+    verif(page.locator("#etiqPrint .et-qr svg").count() == 2, "QR sur les 2 étiquettes")
+    page.evaluate("document.getElementById('etiqPrint').innerHTML = ''")
+    page.evaluate("id => ACT.etiq(id)", L1); page.wait_for_selector("#sheet[open] select[name=qr]")
+    page.select_option("#sheet select[name=qr]", "non"); page.fill("#sheet input[name=nombre]", "1")
+    page.click("#sheet .btn.main"); page.wait_for_selector("#etiqPrint .et", state="attached", timeout=8000)
+    verif(page.locator("#etiqPrint .et-qr").count() == 0, "sans QR si « Non »")
+    page.wait_for_timeout(500)
+    verif(DATA["reglages"][0]["data"].get("etiquetteQr") is False, "le choix est retenu")

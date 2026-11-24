@@ -1,0 +1,17 @@
+/* Apiviz — D'un pot à ses ruches (v5.83, maquette « Idées à forte valeur », idée 3). Fiche de lot :
+   src/domaines/production/tracabilite-ecran.js. Impression « fiche du lot » : seules la fiche et ses cartes restent. */
+.tr-carte,.tr-souci{display:flex;flex-direction:column;gap:6px}
+.tr-carte h2,.tr-souci h2{margin:0}
+.tr-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.tr-qr{flex:0 0 auto;width:72px;height:72px;padding:4px;background:#fff;border-radius:var(--r-s);border:1px solid #EEF0EA}
+.tr-qr svg{width:100%;height:100%;display:block}
+.tr-ligne{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0;padding:4px 0;border-top:1px solid #EEF0EA}
+.tr-ligne span{color:var(--muted)}
+.tr-ligne b{text-align:right}
+.tr-trait{margin:4px 0 0;padding:8px 10px;border-radius:var(--r-s);background:#EEF4EC;color:#1F4D2E}
+.tr-trait.tr-alerte{background:var(--cire);color:#7A3B1E;border:1px dashed var(--honey)}
+.tr-souci{background:var(--cire);border:1px dashed var(--honey);box-shadow:none}
+@media print{
+  body:not(.print-etiq) .tr-ecran button,body:not(.print-etiq) nav,body:not(.print-etiq) .tabbar{display:none!important}
+  body:not(.print-etiq) .tr-ecran .card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+}

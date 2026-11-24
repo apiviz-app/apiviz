@@ -11,3 +11,7 @@
 .et-nom{font:700 11pt/1.1 'Bricolage Grotesque',system-ui,sans-serif}
 .et-poids{font-weight:700;font-size:16pt;line-height:1.1;margin:.5mm 0}
 .et-pied{font-size:6.5pt;margin-top:.5mm}
+/* v5.83 : QR de traçabilité, à droite, 16 mm (lisible à 20 cm par un téléphone). */
+.et-avec-qr{position:relative;padding-right:20mm}
+.et-qr{position:absolute;right:2.5mm;top:50%;transform:translateY(-50%);width:16mm;height:16mm}
+.et-qr svg{width:100%;height:100%;display:block}
