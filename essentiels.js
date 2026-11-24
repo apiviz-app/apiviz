@@ -251,6 +251,7 @@ const ES = (() => {
         ${ligne("go", "membres", ic("M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M17 12a2.5 2.5 0 1 0 0-5M17 14.5c2.3.2 3.9 1.9 4.5 4.5"), "Membres et associés", "Qui saisit, qui achète, qui vend", membres ? `<span class="rg-v">${membres}</span>` : "")}
         ${(() => { const O = window.Noyau?.offre, o = O?.connue(); if (O && !o) O.charger().then(() => { if (S.route === "reglages" && O.connue()) render(); });
           return ligne("go", "offre", ic("M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"), "Offre et gouttes d’API", o ? `${O.nom(o.offre)} · essai, recharges, réponse rapide` : "Ton offre, tes gouttes d’API", o ? `<span class="rg-v">${esc(O.gouttes(o.gouttes.total))}</span>` : ""); })()}
+        ${window.CarteFidelite ? (() => { const f = CarteFidelite.ligneReglage(); return ligne("rmreglcarte", "", ic("M3 6h18v12H3zM7 10h.01M11 10h.01M15 10h.01M7 14h10"), f.titre, f.sous, `<span class="rg-v">${esc(f.valeur)}</span>`); })() : ""}
         ${ligne("errgfact", "", ic("M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"), "Factures", `Prochaine : ${num}${c.mention_tva ? "" : " · mention de TVA à remplir"}`)}
       </div>
       <h2 class="rg-g">Sur le terrain</h2><div class="rg-bloc">

@@ -1,0 +1,110 @@
+    # v5.78 — Carte de fidélité (migration 038, maquette « Idées pour vendre plus », idée 1, validée le 24 nov. 2026).
+    # Réglages › Carte de fidélité ; vente à Mme Martin (8 tampons) : 9 sur 10, carte pleine à 2 pots, « Offrir maintenant » à 3
+    # (article le moins cher offert, creer_vente avec remise_fidelite) ou « Plus tard » ; pas de carte sans client ;
+    # reçu ; fiche client ; base sans 038. Avec CAPTURES=<dossier> : captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    sans038 = {"oui": False}
+    def ventes_route(route):
+        if sans038["oui"] and route.request.method == "GET" and "remise_fidelite" in route.request.url:
+            return route.fulfill(status=400, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+                                 body=json.dumps({"code": "42703", "message": "column ventes.remise_fidelite does not exist"}))
+        return route.fallback()
+    ctx.route("**/rest/v1/ventes*", ventes_route)
+    # Mme Martin : 8 articles achetés aujourd'hui (la carte commence aujourd'hui).
+    VA = str(uuid.uuid4())
+    DATA["ventes"].append({"id": VA, "client_id": C1, "date_vente": J(0), "paye": True, "mode": "Espèces"})
+    DATA["vente_lignes"].append({"id": str(uuid.uuid4()), "vente_id": VA, "lot_id": L2, "quantite": 8, "prix_unitaire": 7})
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Réglages › Carte de fidélité.
+    page.evaluate("ACT.go('reglages')"); page.wait_for_timeout(400)
+    verif(existe(page, "[data-act=rmreglcarte]") and "Non" in page.locator("[data-act=rmreglcarte]").inner_text(), "Réglages : ligne « Carte de fidélité », éteinte")
+    cliquer(page, "[data-act=rmreglcarte]"); page.wait_for_selector("#sheet[open] select[name=actif]")
+    page.select_option("#sheet select[name=actif]", "1"); page.fill("#sheet input[name=tampons]", "10")
+    verif(page.input_value("#sheet input[name=depuis]") == J(0), "date de début proposée : aujourd'hui")
+    page.click("#sheet .btn.main"); page.wait_for_selector(".toast >> text=Carte de fidélité activée", timeout=8000)
+    f = DATA["reglages"][0]["data"].get("fidelite") or {}
+    verif(f.get("actif") is True and f.get("tampons") == 10 and f.get("depuis") == J(0), "réglage enregistré (%s)" % f)
+    page.evaluate("refresh()"); page.wait_for_timeout(400)
+
+    # 2. Vente à Mme Martin : 9 sur 10, puis carte pleine.
+    def nouvelle_vente(client=True):
+        page.evaluate("ACT.newvente()"); page.wait_for_selector(".pq-champ")
+        if client:
+            page.click(".pq-champ"); page.wait_for_selector("#sheet[open] #pq_q")
+            page.click(f"#pq_res [data-act=pqchoisir][data-v='{C1}']"); page.wait_for_timeout(300)
+    nouvelle_vente()
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(400)
+    t = page.locator(".fi-carte").inner_text() if page.locator(".fi-carte").count() else ""
+    verif("Carte de fidélité · 9 sur 10" in t and "Encore 1 article" in t, "1 pot : « 9 sur 10, encore 1 article » (%s)" % t.replace("\n", " "))
+    verif(page.locator(".fi-pastilles .fi-p.on").count() == 9, "9 tampons pleins")
+    verif(page.locator(".fi-pleine").count() == 0, "pas encore de récompense")
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(300)
+    verif(page.locator(".fi-pleine").count() == 1 and "Carte pleine avec cette vente" in page.locator(".fi-pleine").inner_text() and page.locator("[data-act=rmcarte][data-v=oui]").count() == 0,
+          "2 pots : « Carte pleine avec cette vente », le prochain article est offert")
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(300)
+    verif(page.locator("[data-act=rmcarte][data-v=oui]").count() == 1, "3 pots : « Offrir maintenant » proposé")
+    shot("fi-carte-pleine")
+    page.click("[data-act=rmcarte][data-v=oui]"); page.wait_for_timeout(300)
+    o = page.locator(".fi-carte .rm-offre").inner_text() if page.locator(".fi-carte .rm-offre").count() else ""
+    verif("Article offert par la carte" in o and "−7 €" in o, "« Offrir maintenant » : article offert, −7 € (%s)" % o.replace("\n", " "))
+    verif(page.locator(".sv-total b").inner_text() == "14 €", "total 21 € − 7 € = 14 €")
+    verif("Carte de fidélité" in page.locator(".rm-recap").inner_text(), "récapitulatif : ligne Carte de fidélité")
+    verif("0 sur 10" in page.locator(".fi-carte").inner_text(), "la carte repart à 0 (l'article offert ne compte pas)")
+    shot("fi-recompense")
+    page.click("form[data-form=vente] .btn.main"); page.wait_for_selector(".toast >> text=Vente enregistrée", timeout=10000)
+    v = [b["p"] for n_, b in recu["rpc"] if n_ == "creer_vente"]
+    verif(len(v) == 1 and v[0].get("remise_fidelite") == 7 and v[0]["lignes"] == [{"lot_id": L2, "quantite": 3, "remise": 7}] and v[0]["remise_offre"] == 0,
+          "creer_vente : remise_fidelite 7, ligne remisée (%s)" % (v[:1],))
+
+    # 3. « Plus tard » : rien d'offert ; « Retirer » après « Offrir maintenant ».
+    nouvelle_vente()
+    for _ in range(3):
+        page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(150)
+    page.click("[data-act=rmcarte][data-v=non]"); page.wait_for_timeout(300)
+    verif(page.locator(".fi-pleine").count() == 0 and page.locator(".sv-total b").inner_text() == "21 €", "« Plus tard » : prix plein, plus de proposition")
+    page.evaluate("ACT.cancel ? ACT.cancel() : ACT.go('clients')"); page.wait_for_timeout(200)
+    nouvelle_vente()
+    for _ in range(3):
+        page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(150)
+    page.click("[data-act=rmcarte][data-v=oui]"); page.wait_for_timeout(200)
+    page.click(".fi-carte [data-act=rmcarte][data-v=retirer]"); page.wait_for_timeout(300)
+    verif(page.locator(".sv-total b").inner_text() == "21 €", "« Retirer » : prix plein")
+    page.evaluate("ACT.cancel ? ACT.cancel() : ACT.go('clients')"); page.wait_for_timeout(200)
+
+    # 4. Sans client nommé : pas de carte.
+    nouvelle_vente(client=False)
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(300)
+    verif(page.locator(".fi-carte").count() == 0, "sans client : pas de carte")
+    page.evaluate("ACT.cancel ? ACT.cancel() : ACT.go('clients')"); page.wait_for_timeout(200)
+
+    # 5. Reçu et fiche client.
+    VB = str(uuid.uuid4())
+    DATA["ventes"].append({"id": VB, "client_id": C1, "date_vente": J(0), "paye": True, "mode": "Espèces", "remise_fidelite": 7, "remise_offre": 0, "remise_manuelle": 0})
+    DATA["vente_lignes"].append({"id": str(uuid.uuid4()), "vente_id": VB, "lot_id": L2, "quantite": 3, "prix_unitaire": 7, "remise": 7})
+    page.evaluate("refresh()"); page.wait_for_timeout(500)
+    page.evaluate(f"ACT.uvente('{VB}')"); page.wait_for_selector("#sheet[open] .u-total")
+    r = page.locator("#sheet").inner_text()
+    verif("Carte de fidélité" in r and "−7 €" in r and page.locator("#sheet .u-total b").inner_text() == "14 €", "reçu : ligne « Carte de fidélité » et total net")
+    verif(page.locator("#sheet .u-carte").count() == 1 and "Carte de fidélité : 0 sur 10" in page.locator("#sheet .u-carte").inner_text(), "reçu : « Carte de fidélité : 0 sur 10 » (%s)" % (page.locator("#sheet .u-carte").inner_text() if page.locator("#sheet .u-carte").count() else ""))
+    shot("fi-recu", False)
+    page.evaluate("$sheet.close()")
+    page.evaluate(f"ACT.editclient('{C1}')"); page.wait_for_selector("#sheet[open] .fc-hero")
+    verif(page.locator("#sheet .fi-fiche").count() == 1 and "0 sur 10" in page.locator("#sheet .fi-fiche").inner_text(), "fiche client : la carte")
+    page.evaluate("$sheet.close()")
+
+    # 6. Base sans 038 : pas de carte, la vente marche comme avant.
+    sans038["oui"] = True
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+    nouvelle_vente()
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(600)
+    verif(page.locator(".fi-carte").count() == 0 and page.locator(".sv-total b").inner_text() == "7 €", "sans 038 : pas de carte, prix plein")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

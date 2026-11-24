@@ -184,21 +184,31 @@ export function calculerManuelle(r, ls, dejaParLigne) {
  * Tout le calcul d'une vente : brut, meilleure offre, remise ponctuelle, total, lignes et champs à envoyer à
  * creer_vente (037). lignes = [{ lot_id, quantite }] ; manuelle = { mode, valeur, cible, motif } ou null.
  */
-export function calculerVente({ lignes = [], lots = [], promotions = [], client = null, date = "", manuelle = null } = {}) {
+export function calculerVente({ lignes = [], lots = [], promotions = [], client = null, date = "", manuelle = null, fidelite = false } = {}) {
   const ls = enrichir(lignes, lots);
   const brut = ls.reduce((t, l) => t + l.brut, 0);
   const offre = meilleureOffre(promotions, lignes, lots, { client, date });
   const parOffre = offre ? offre.parLigne : ls.map(() => 0);
-  const man = calculerManuelle(manuelle, ls, parOffre);
+  // v5.78 (migration 038) : récompense de la carte de fidélité, après l'offre : l'article le moins cher qui reste à payer.
+  const parCarte = ls.map(() => 0);
+  if (fidelite && ls.length) {
+    const reste = ls.map((l, k) => l.brut - parOffre[k]);
+    const k = ls.reduce((m, l, j) => (reste[j] > 0 && (m < 0 || l.prix < ls[m].prix) ? j : m), -1);
+    if (k >= 0) parCarte[k] = Math.min(ls[k].prix, reste[k]);
+  }
+  const remiseCarte = parCarte.reduce((a, b) => a + b, 0);
+  const avant = ls.map((_, k) => parOffre[k] + parCarte[k]);
+  const man = calculerManuelle(manuelle, ls, avant);
   const remiseOffre = offre ? offre.remise : 0;
-  const total = brut - remiseOffre - man.remise;
+  const total = brut - remiseOffre - remiseCarte - man.remise;
   return {
     brut: euros(brut),
     offre: offre ? { promotion: offre.promotion, remise: euros(remiseOffre), offerts: offre.offerts } : null,
     manuelle: man.remise ? { remise: euros(man.remise), libelle: libelleManuelle(manuelle), motif: String(manuelle?.motif || "") } : null,
     total: euros(total),
-    economie: euros(remiseOffre + man.remise),
-    lignes: ls.map((l, k) => ({ lot_id: l.lot_id, quantite: l.quantite, remise: euros(parOffre[k] + man.parLigne[k]) })),
+    carte: remiseCarte ? { remise: euros(remiseCarte) } : null,
+    economie: euros(remiseOffre + remiseCarte + man.remise),
+    lignes: ls.map((l, k) => ({ lot_id: l.lot_id, quantite: l.quantite, remise: euros(parOffre[k] + parCarte[k] + man.parLigne[k]) })),
     champs: {
       promotion_id: offre ? offre.promotion.id || null : null,
       promotion_nom: offre ? String(offre.promotion.nom || "") : "",
@@ -206,6 +216,8 @@ export function calculerVente({ lignes = [], lots = [], promotions = [], client 
       remise_manuelle: euros(man.remise),
       remise_motif: man.remise ? String(manuelle?.motif || "").slice(0, 60) : "",
       remise_libelle: man.remise ? libelleManuelle(manuelle) : "",
+      // Envoyé seulement quand la carte sert (une base sans 038 ne connaît pas la colonne, creer_vente l'ignore).
+      ...(remiseCarte ? { remise_fidelite: euros(remiseCarte) } : {}),
     },
   };
 }
@@ -279,10 +291,11 @@ export function usage(p, ventes, lignes) {
   return { fois: vs.length, offert: euros(vs.reduce((t, v) => t + cts(v.remise_offre), 0)), ventes: euros(net) };
 }
 
-/** Remises accordées sur une liste de ventes : offres, remises ponctuelles, total (euros). */
+/** Remises accordées sur une liste de ventes : offres, remises ponctuelles, carte de fidélité (v5.78), total (euros). */
 export function remisesAccordees(ventes) {
-  const o = (ventes || []).reduce((t, v) => t + cts(v.remise_offre), 0), m = (ventes || []).reduce((t, v) => t + cts(v.remise_manuelle), 0);
-  return { offres: euros(o), ponctuelles: euros(m), total: euros(o + m) };
+  const s = (k) => (ventes || []).reduce((t, v) => t + cts(v[k]), 0);
+  const o = s("remise_offre"), m = s("remise_manuelle"), f = s("remise_fidelite");
+  return { offres: euros(o), ponctuelles: euros(m), fidelite: euros(f), total: euros(o + m + f) };
 }
 
 /** Contrôle d'une offre avant enregistrement : message en français (tutoiement) ou "" si tout va bien. */
@@ -350,6 +363,7 @@ export function lignesRemise(vente, lignes) {
   if (!vente) return [];
   const out = [];
   if (cts(vente.remise_offre) > 0) out.push({ libelle: vente.promotion_nom ? `Offre « ${vente.promotion_nom} »` : "Offre", montant: euros(cts(vente.remise_offre)) });
+  if (cts(vente.remise_fidelite) > 0) out.push({ libelle: "Carte de fidélité", montant: euros(cts(vente.remise_fidelite)) });
   if (cts(vente.remise_manuelle) > 0) {
     const d = [vente.remise_libelle, vente.remise_motif].filter(Boolean).join(", ");
     out.push({ libelle: d ? `Remise (${d})` : "Remise", montant: euros(cts(vente.remise_manuelle)) });

@@ -106,7 +106,7 @@ const HL = (() => {
         d.ventes.unshift({ id: p.id, client_id: p.client_id, date_vente: p.date_vente, paye: p.paye, mode: p.mode,
           livre: p.livre !== false, livraison: p.livraison || "", promotion_id: p.promotion_id || null, promotion_nom: p.promotion_nom || "",
           remise_offre: Number(p.remise_offre) || 0, remise_manuelle: Number(p.remise_manuelle) || 0, remise_motif: p.remise_motif || "",
-          remise_libelle: p.remise_libelle || "", _attente: true });
+          remise_libelle: p.remise_libelle || "", remise_fidelite: Number(p.remise_fidelite) || 0, _attente: true });
         for (const x of p.lignes || []) {
           const lot = byId(d.lots, x.lot_id);
           d.lignes.push({ vente_id: p.id, lot_id: x.lot_id, quantite: x.quantite, prix_unitaire: lot ? lot.prix : 0, remise: Number(x.remise) || 0 });

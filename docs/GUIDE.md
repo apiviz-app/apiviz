@@ -157,6 +157,10 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   pas) et apiviz te dit quand un article de plus en ferait profiter le client. Pour un geste ponctuel : « Ajouter une
   remise » (en %, en € ou un article offert ; le motif est facultatif). L'article offert sort du stock ; le reçu, la
   facture et le bilan montrent les remises.
+- **Carte de fidélité** *(v5.78)* : Réglages › L'exploitation › Carte de fidélité (carte pleine à 10 tampons par défaut).
+  Un tampon par article payé par un client nommé. Carte pleine : l'article suivant est offert, maintenant (« Offrir
+  maintenant », le moins cher du panier) ou à la prochaine visite. Le reçu et la fiche du client disent où en est sa
+  carte.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.

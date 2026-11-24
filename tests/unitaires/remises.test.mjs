@@ -162,7 +162,8 @@ test("usage d'une offre et remises accordées", () => {
   ];
   const lignes = [{ vente_id: "v1", quantite: 5, prix_unitaire: 6, remise: 6 }, { vente_id: "v3", quantite: 5, prix_unitaire: 6, remise: 7 }];
   assert.deepEqual(R.usage(xy, ventes, lignes), { fois: 2, offert: 12, ventes: 47 });
-  assert.deepEqual(R.remisesAccordees(ventes), { offres: 12, ponctuelles: 4.6, total: 16.6 });
+  assert.deepEqual(R.remisesAccordees(ventes), { offres: 12, ponctuelles: 4.6, fidelite: 0, total: 16.6 });
+  assert.equal(R.remisesAccordees([...ventes, { remise_fidelite: 6 }]).total, 22.6, "v5.78 : la carte compte dans les remises");
   assert.equal(R.statut({ actif: true, debut: "2026-12-12" }, "2026-11-24"), "prevue");
   assert.equal(R.statut({ actif: true, fin: "2026-01-01" }, "2026-11-24"), "finie");
   assert.equal(R.statut({ actif: false }, "2026-11-24"), "coupee");

@@ -72,3 +72,19 @@
 .rm-apercu-offre span:last-child{font-size:14px;color:#D5DBD3}
 .rm-form .link.crit{align-self:center;min-height:var(--cible)}
 .rm-dans{padding-top:10px;border-top:1px solid var(--line)}
+
+/* ---------- Carte de fidélité (v5.78) ---------- */
+.fi-carte{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:var(--r-m);background:var(--pine);color:#fff}
+.fi-carte .small{color:#D5DBD3}
+.fi-tete{display:flex;align-items:center;gap:10px}
+.fi-pastilles{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;padding:10px;border-radius:var(--r-s,10px);background:#fff}
+.fi-p{aspect-ratio:1;border-radius:var(--r-pill);border:2px dashed var(--line2)}
+.fi-p.on{border:0;background:var(--honey)}
+.fi-carte .rm-offre{color:#174F2B}
+.fi-carte .rm-offre .small{color:#2D5A3C}
+.fi-pleine{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:var(--r-m);background:var(--goodbg);color:#174F2B}
+.fi-pleine .small{color:#2D5A3C}
+.fi-choix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fi-choix .btn{min-height:var(--cible)}
+.fi-fiche{margin:0 0 4px;padding:10px 12px;border-radius:var(--r-m);background:var(--cire);color:#5C3D00;font-size:var(--t-s)}
+.u-carte{margin:6px 0 0}
