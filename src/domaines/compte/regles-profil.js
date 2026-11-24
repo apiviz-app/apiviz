@@ -8,10 +8,13 @@ export const ACTIVITES = [["loisir", "Loisir"], ["pluriactif", "Pluriactif"], ["
 export const COLONIES = [["1-10", "1 à 10"], ["11-50", "11 à 50"], ["51-150", "51 à 150"], ["150+", "Plus de 150"]];
 export const SOURCES = [["bouche", "Bouche-à-oreille"], ["syndicat", "Syndicat ou GDS"], ["rucher-ecole", "Rucher-école"], ["salon", "Salon"],
   ["reseaux", "Réseaux sociaux"], ["recherche", "Recherche web"], ["store", "Store"], ["autre", "Autre"]];
-const CHAMPS = { tranche_age: AGES, sexe: SEXES, anciennete: ANCIENNETES, activite: ACTIVITES, colonies: COLONIES, source: SOURCES };
+// v5.86 (migration 039) : ce que la personne attend d'abord d'Apiviz. Le sexe n'est plus demandé (minimisation) :
+// SEXES reste pour lire une ancienne réponse, mais n'est plus proposé ; chaque enregistrement l'efface.
+export const ATTENTES = [["suivre", "Suivre mes colonies"], ["vendre", "Vendre mon miel"], ["tracabilite", "La traçabilité"], ["conseil", "Être conseillé"]];
+const CHAMPS = { tranche_age: AGES, anciennete: ANCIENNETES, activite: ACTIVITES, colonies: COLONIES, source: SOURCES, attente: ATTENTES };
 
 /** Profil vide (réponses facultatives effacées). */
-export const vide = () => ({ prenom: "", nom: "", tranche_age: "", sexe: "", code_postal: "", anciennete: "", activite: "", colonies: "", source: "", newsletter: false });
+export const vide = () => ({ prenom: "", nom: "", tranche_age: "", code_postal: "", anciennete: "", activite: "", colonies: "", source: "", attente: "", newsletter: false });
 
 /** Libellé d'un code, ou « » s'il n'y a pas de réponse. */
 export const libelle = (liste, code) => (liste.find(([k]) => k === code) || [, ""])[1];
@@ -56,6 +59,7 @@ export function controle(b) {
 export function reponses(b) {
   const r = { code_postal: /^[0-9]{5}$/.test(String(b?.code_postal || "").trim()) ? String(b.code_postal).trim() : "" };
   for (const [k, liste] of Object.entries(CHAMPS)) r[k] = liste.some(([c]) => c === b?.[k]) ? b[k] : "";
+  r.sexe = ""; // v5.86 : plus demandé, une ancienne réponse s'efface au premier enregistrement
   return r;
 }
 

@@ -6,7 +6,7 @@
 //   - Le nom suit le compte (table profils) ; il est aussi recopié sur l'appareil (clé apiviz-prenom-<e-mail>), que
 //     lisent l'accueil, le menu et « Entre associés » sans réseau.
 //   - Écran « Mon profil » (Réglages › Toi) : identité, réponses, choix (statistiques, nouveautés), effacer ses
-//     réponses, télécharger ses données.
+//     réponses, télécharger ses données. v5.86 : le sexe n'est plus demandé ; « Ce que tu attends » (039).
 //   - Membres : prénom et nom des membres (noms_membres()), personnes sans compte (réglage « associes », proposé dans
 //     les achats et les ventes). Les associés proposés = les membres + les personnes sans compte.
 // Sans la migration 021 : rien ne change (pas d'inscription, ancien prénom par appareil). Globales lues à l'appel :
@@ -49,6 +49,7 @@ async function charger() {
       else if (!/fetch|network|load failed/i.test(r.error.message || "")) throw r.error;
       else return; // hors ligne : on réessaiera
     } else st.ligne = (Array.isArray(r.data) ? r.data[0] : r.data) || null;
+    if (st.ligne && !("attente" in st.ligne)) st.sans039 = true; // base sans 039 (v5.86)
     st.charge = true;
     if (st.ligne?.prenom) memo(clePrenom(), st.ligne.prenom);
   } catch (err) { st.charge = true; st.absent = true; typeof journaliser == "function" && journaliser("profil", String(err?.message || err)); }
@@ -121,12 +122,12 @@ function ecranInscription() {
   } else {
     corps = `<div><h1>Pour mieux te connaître</h1><p class="ob-sous">Tout est facultatif. Ça nous aide à savoir qui utilise Apiviz et à l’améliorer.</p></div>
       ${groupe("tranche_age", "Ton âge", R.AGES, b.tranche_age)}
-      ${groupe("sexe", "Tu es", R.SEXES, b.sexe)}
       <label>Ton code postal<span class="ob-cp"><input name="code_postal" value="${e(b.code_postal)}" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="33750"><span class="ob-lieu">${e(R.lieu(b.code_postal))}</span></span></label>
       ${groupe("anciennete", "Tu as des abeilles depuis", R.ANCIENNETES, b.anciennete)}
       ${groupe("activite", "Ton activité", R.ACTIVITES, b.activite)}
       ${groupe("colonies", "Nombre de colonies", R.COLONIES, b.colonies)}
       ${groupe("source", "Comment as-tu connu Apiviz ?", R.SOURCES, b.source)}
+      ${st.sans039 ? "" : groupe("attente", "Ce que tu attends d’abord d’Apiviz", R.ATTENTES, b.attente)}
       <label class="ob-coche"><input type="checkbox" name="newsletter" ${b.newsletter ? "checked" : ""}><span>Je veux recevoir les nouveautés d’Apiviz par e-mail (une fois par mois au plus).</span></label>
       <div class="ob-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Ces réponses ne servent qu’à des statistiques d’ensemble. Elles ne sont ni vendues, ni montrées à tes associés. Tu peux les changer ou les effacer dans Réglages › Mon profil.</span></div>
       <p class="ob-err" role="alert"></p>`;
@@ -161,9 +162,17 @@ function lire() {
 }
 const erreurEcran = (m) => { const z = $app.querySelector(".ob-err"); if (z) z.textContent = m; };
 
+// v5.86 (migration 039) : colonnes attente et mieux_connaitre_fin. Sur une base sans 039, on réessaie sans elles.
+const COLONNES_039 = ["attente", "mieux_connaitre_fin"];
 async function enregistrer(champs) {
-  const ligne = { email: email(), ...champs };
-  const r = await sb.from("profils").upsert(ligne, { onConflict: "email" }).select().maybeSingle();
+  let ligne = { email: email(), ...champs };
+  if (st.sans039) ligne = Object.fromEntries(Object.entries(ligne).filter(([k]) => !COLONNES_039.includes(k)));
+  let r = await sb.from("profils").upsert(ligne, { onConflict: "email" }).select().maybeSingle();
+  if (r.error && COLONNES_039.some((k) => k in ligne) && /attente|mieux_connaitre_fin|PGRST204|column/i.test(`${r.error.code} ${r.error.message}`)) {
+    st.sans039 = true;
+    ligne = Object.fromEntries(Object.entries(ligne).filter(([k]) => !COLONNES_039.includes(k)));
+    r = await sb.from("profils").upsert(ligne, { onConflict: "email" }).select().maybeSingle();
+  }
   if (r.error) throw r.error;
   const recu = Array.isArray(r.data) ? r.data[0] : r.data;
   st.ligne = recu || { ...(st.ligne || {}), ...ligne };
@@ -196,9 +205,9 @@ function ecranProfil() {
     <div class="pf-bloc">${ligne("Prénom et nom", [p.prenom, p.nom].filter(Boolean).join(" "))}${ligne("E-mail", S.session.user.email)}
       <div class="pf-l"><span>Mot de passe</span><button type="button" class="link" data-act="pfmdp">Changer</button></div></div>
     <h2 class="pf-g"><span>À propos de toi</span><button type="button" class="link" data-act="pfreponses">Modifier</button></h2>
-    <div class="pf-bloc">${ligne("Âge", R.libelle(R.AGES, p.tranche_age))}${ligne("Sexe", R.libelle(R.SEXES, p.sexe))}${ligne("Lieu", R.lieu(p.code_postal))}
+    <div class="pf-bloc">${ligne("Âge", R.libelle(R.AGES, p.tranche_age))}${ligne("Lieu", R.lieu(p.code_postal))}
       ${ligne("Abeilles depuis", R.libelle(R.ANCIENNETES, p.anciennete))}${ligne("Activité", R.libelle(R.ACTIVITES, p.activite))}
-      ${ligne("Colonies", R.libelle(R.COLONIES, p.colonies))}${ligne("Connu par", R.libelle(R.SOURCES, p.source))}</div>
+      ${ligne("Colonies", R.libelle(R.COLONIES, p.colonies))}${ligne("Connu par", R.libelle(R.SOURCES, p.source))}${st.sans039 ? "" : ligne("Ce que tu attends", R.libelle(R.ATTENTES, p.attente))}</div>
     <h2 class="pf-g"><span>Tes choix</span></h2>
     <div class="pf-bloc">${sw("stats_ok", "Utiliser mes réponses dans les statistiques d’ensemble", p.stats_ok !== false)}${sw("newsletter", "Nouveautés par e-mail", !!p.newsletter)}</div>
     <div class="pf-act">
@@ -373,5 +382,5 @@ export const actions = {
   mbretirer: (nom) => saveCfg({ associes: R.sansCompte(cfg()).filter((x) => x !== nom) }, `${nom} retiré`),
 };
 
-if (typeof window != "undefined") window.PF = { charger, inscriptionDue, exemple, attente, reponsesArrivee, associes, moi, membres, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
+if (typeof window != "undefined") window.PF = { enregistrer, charger, inscriptionDue, exemple, attente, reponsesArrivee, associes, moi, membres, prenom, nbPersonnes, completerMembres, ecranProfil, absent: () => st.absent, etat: () => st };
 export { ecranProfil, completerMembres };

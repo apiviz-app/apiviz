@@ -42,17 +42,26 @@ données elle-même. Une exploitation ne voit jamais les données d'une autre.
 ## Votre profil et les statistiques
 
 À l'inscription, Apiviz vous demande votre prénom et votre nom, une seule fois : ils suivent votre compte et vos
-associés vous voient sous ce nom. Il vous propose ensuite quelques questions, **toutes facultatives** : tranche d'âge,
-sexe, code postal (dont on déduit le département), depuis quand vous avez des abeilles, votre activité (loisir,
-pluriactif, professionnel), votre nombre de colonies, et comment vous avez connu Apiviz.
+associés vous voient sous ce nom. Il vous propose ensuite quelques questions, **toutes facultatives** : votre nombre de
+colonies, si vous vendez votre miel, votre code postal (dont on déduit le département, aussi pour la météo) et comment
+vous avez connu Apiviz. Deux semaines plus tard, une carte en propose quatre autres, une à la fois : depuis quand vous
+avez des abeilles, votre activité (loisir, pluriactif, professionnel), votre tranche d'âge et ce que vous attendez
+d'abord d'Apiviz. Le sexe n'est plus demandé (depuis le 24 nov. 2026) et les réponses déjà données ont été effacées.
+
+**Mesure de l'utilisation.** Pour savoir ce qui sert et ce qui manque, Apiviz note, pour chaque jour où vous l'ouvrez,
+les grandes rubriques consultées (accueil, ruchers, visites, ventes…) et le type d'appareil (navigateur, iPhone,
+Android). Rien d'autre : ni ce que vous saisissez, ni l'heure, ni votre position. Ces jours sont gardés 400 jours au
+plus et ne servent qu'aux statistiques d'ensemble ci-dessous.
 
 Ces réponses servent uniquement à des **statistiques d'ensemble** sur les utilisateurs d'Apiviz (par exemple : combien
 viennent de chaque région, par quel canal), pour améliorer l'application. Elles ne sont ni vendues, ni montrées à vos
 associés ni aux responsables de votre exploitation : vous seul les voyez. Les statistiques ne montrent jamais un groupe de
 moins de cinq personnes. Inscription réservée aux personnes de 15 ans ou plus.
 
-Dans Réglages › Mon profil, vous pouvez à tout moment les modifier, les effacer, ne plus compter dans les statistiques,
-et choisir de recevoir ou non les nouveautés par e-mail (non par défaut).
+Dans Réglages › Mon profil, vous pouvez à tout moment les modifier, les effacer, ne plus compter dans les statistiques
+(plus rien n'est alors noté, et les jours déjà notés sont effacés), et choisir de recevoir ou non les nouveautés par
+e-mail (non par défaut). En échange de vos réponses, Apiviz peut vous montrer vos visites du mois à côté de la moyenne
+de votre département, seulement si au moins cinq apiculteurs du département ont accepté les statistiques.
 
 ## Où sont vos données
 
