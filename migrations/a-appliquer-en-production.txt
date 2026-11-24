@@ -77,3 +77,7 @@
 #   abonner_push, desabonner_push) et rappels envoyés (notifications_envoyees). Additive, ne casse pas l'ancienne version.
 #   Après 039. NON APPLIQUÉE : d'abord apidoo-test, puis apidoo avec l'accord de Pierre-Louis. Avec elle : déployer la
 #   fonction « rappels » (--no-verify-jwt) et ses secrets, puis les secrets RAPPELS_SECRET_* de GitHub.
+# 041-supprimer-mes-donnees.sql (PR claude/supprimer-mes-donnees, v5.88) : suppression du compte en 30 jours annulables,
+#   choix par exploitation partagée, bandeau des autres membres, effacement par la fonction « supprimer-comptes ».
+#   Additive, ne casse pas l'ancienne version. Après 040. NON APPLIQUÉE : d'abord apidoo-test, puis apidoo avec l'accord de
+#   Pierre-Louis. Avec elle : déployer « supprimer-comptes » (--no-verify-jwt, secret SUPPRESSION_CLE) et le secret GitHub.

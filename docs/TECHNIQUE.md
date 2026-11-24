@@ -282,6 +282,17 @@ d'activer une offre payée ou une recharge.
 `abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
 changent pas : seul le bouton « Payer » sera branché.
 
+## Mes données et suppression du compte (v5.88, migration 041)
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Base | `migrations/041-supprimer-mes-donnees.sql` | Demande (30 jours), choix par exploitation partagée, bandeau, `effacer_compte()` |
+| Fonction serveur | `supabase/functions/supprimer-comptes/` | Chaque nuit : fichiers des exploitations qui partent, puis la base ; `--no-verify-jwt`, `SUPPRESSION_CLE` |
+| Planification | `.github/workflows/supprimer-comptes.yml` | 2 h 47 UTC ; à la main avec « Simuler » |
+| Écrans | `src/domaines/compte/suppression.js` | Mes données, Avant de supprimer, Confirmer, écran d'attente, bandeau |
+
+Annuler une demande à la main : `delete from public.comptes_a_supprimer where email = '…'`.
+
 ## Rappels même quand Apiviz est fermée (v5.87, migration 040)
 
 | Élément | Fichier | Rôle |

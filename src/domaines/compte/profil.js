@@ -213,7 +213,7 @@ function ecranProfil() {
     <div class="pf-act">
       <button type="button" class="btn" data-act="pfeffacer">Effacer mes réponses « À propos de toi »</button>
       <button type="button" class="btn" data-act="pftelecharger">Télécharger mes données</button>
-      <button type="button" class="link pf-danger" data-act="pfsupprimer">Supprimer mon compte</button>
+      <button type="button" class="link pf-danger" data-act="sdouvrir">Mes données et suppression du compte</button>
       <a class="link" href="confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>
     </div></div>`);
   ES.retour("go", "reglages", "‹ Réglages");
