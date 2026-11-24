@@ -282,6 +282,18 @@ d'activer une offre payée ou une recharge.
 `abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
 changent pas : seul le bouton « Payer » sera branché.
 
+## Rappels même quand Apiviz est fermée (v5.87, migration 040)
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Base | `migrations/040-rappels-app-fermee.sql` | `abonnements_push`, `abonner_push()`, `desabonner_push()`, `notifications_envoyees` |
+| Fonction serveur | `supabase/functions/rappels/index.ts` et `regles.js` | Clé publique ; envoi quotidien (`x-rappels-secret`), deux par semaine au plus ; `--no-verify-jwt` |
+| Planification | `.github/workflows/rappels.yml` | Chaque matin (7 h 17 UTC) ; à la main : cible et « Essai » |
+| Application | `src/domaines/compte/notifications.js`, `sw.js` | Abonnement de l'appareil, carte de l'écran Rappels ; `push` et clic |
+
+Secrets de la fonction : `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, `VAPID_SUJET`, `RAPPELS_SECRET` ; GitHub :
+`RAPPELS_SECRET_RECETTE`, `RAPPELS_SECRET_PRODUCTION`.
+
 ## Mieux connaître ses utilisateurs (v5.86, migration 039)
 
 | Élément | Fichier | Rôle |

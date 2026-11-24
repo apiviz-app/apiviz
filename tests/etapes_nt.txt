@@ -1,0 +1,67 @@
+    # v5.87 — Rappels même quand Apiviz est fermée (maquette « apiviz — Onboarding irréprochable », écran 9 ; migration
+    # 040, fonction « rappels » simulée). Réglages › Rappels : carte « Même quand Apiviz est fermée », abonnement de
+    # l'appareil (clé publique de la fonction, abonner_push avec les types), type retiré, désabonnement ; serveur sans
+    # clés ; lien ?ecran=agenda d'un rappel. Le Web Push du navigateur est simulé (pas de service de push en test).
+    import os
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/nt-{nom}.png", full_page=True))
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.add_init_script("""
+      (() => {
+        const fausse = { endpoint: 'https://push.example/appareil-1', toJSON() { return { endpoint: this.endpoint, keys: { p256dh: 'B'.repeat(87), auth: 'A'.repeat(22) } }; },
+          unsubscribe: async () => { window.__retraits = (window.__retraits || 0) + 1; window.__abo = null; return true; } };
+        const pm = { getSubscription: async () => window.__abo || null, subscribe: async (o) => { window.__options = o; window.__abo = fausse; return fausse; } };
+        try { Object.defineProperty(Notification, 'permission', { get: () => 'granted' }); } catch (e) {}
+        Notification.requestPermission = async () => 'granted';
+        if (navigator.serviceWorker) Object.defineProperty(navigator.serviceWorker, 'ready', { get: () => Promise.resolve({ pushManager: pm, showNotification: async () => {} }) });
+      })();
+    """)
+    FN = {"cle": "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"}
+    def fonction(route):
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if route.request.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        return route.fulfill(status=200, headers=h, body=json.dumps({"cle": FN["cle"]}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/rappels", fonction)
+    appels = lambda nom: [b for n, b in recu["rpc"] if n == nom]
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 1. Réglages › Rappels : la carte
+    page.evaluate("ACT.go('rappels')"); page.wait_for_selector(".nt-carte", timeout=10000)
+    page.wait_for_selector(".nt-carte [data-act=ntbascule]")
+    t = page.locator(".nt-carte").inner_text()
+    verif("Même quand Apiviz est fermée" in t and "Désactivés" in t and page.locator(".nt-carte [data-act=nttype]").count() == 3, "carte : appareil désactivé, trois types")
+    shot("1-carte")
+
+    # 2. Abonnement
+    page.click("[data-act=ntbascule]"); page.wait_for_selector(".nt-carte:has-text('Activés')", timeout=10000)
+    a = appels("abonner_push")
+    verif(len(a) == 1 and a[0]["p"]["endpoint"] == "https://push.example/appareil-1" and a[0]["p"]["types"] == {"visites": True, "meteo": True, "saison": True} and len(a[0]["p"]["p256dh"]) == 87, "abonner_push : appareil et trois types")
+    verif(page.evaluate("window.__options && window.__options.userVisibleOnly === true && window.__options.applicationServerKey.length === 65"), "abonnement avec la clé publique de la fonction")
+    shot("2-active")
+
+    # 3. Un type retiré : l'abonnement suit
+    page.click("[data-act=nttype][data-v=meteo]"); page.wait_for_timeout(500)
+    a = appels("abonner_push")
+    verif(len(a) == 2 and a[1]["p"]["types"]["meteo"] is False, "météo retirée : abonnement mis à jour")
+    verif(page.evaluate("JSON.parse(localStorage.getItem('apiviz-rappels-envoyes')).meteo") is False, "choix gardé (même clé que l'écran Bravo)")
+
+    # 4. Désabonnement
+    page.click("[data-act=ntbascule]"); page.wait_for_selector(".nt-carte:has-text('Désactivés')", timeout=10000)
+    verif(len(appels("desabonner_push")) == 1 and appels("desabonner_push")[0]["p_endpoint"] == "https://push.example/appareil-1" and page.evaluate("window.__retraits") == 1, "désabonnement : base et navigateur")
+
+    # 5. Serveur sans clés VAPID
+    FN["cle"] = None
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('rappels')"); page.wait_for_selector(".nt-carte [data-act=ntbascule]", timeout=10000)
+    page.click("[data-act=ntbascule]"); page.wait_for_selector(".nt-carte .ob-err", timeout=10000)
+    verif("pas encore branchés" in page.locator(".nt-carte .ob-err").inner_text(), "sans clés : expliqué, rien d'enregistré")
+
+    # 6. Lien d'un rappel : ?ecran=agenda
+    page.goto(url + "?ecran=agenda"); page.wait_for_function("S.route === 'agenda'", timeout=15000)
+    verif("ecran=" not in page.url, "?ecran=agenda ouvre l'Agenda, puis l'adresse est nettoyée")
+    page.goto(url + "?ecran=reglages"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_timeout(400)
+    verif(page.evaluate("S.route") == "dash", "écran hors liste : l'accueil")
+    verif(page.evaluate("document.documentElement.scrollWidth") <= 390, "rien ne dépasse à 390 px")
