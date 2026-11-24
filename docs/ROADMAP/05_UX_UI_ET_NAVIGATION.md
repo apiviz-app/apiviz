@@ -38,6 +38,10 @@ Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réser
 * visible au niveau Professionnel ou après activation
 ```
 
+**v5.80 (24 nov. 2026)** : écran **Préparer ma sortie** (niveau 2 sous l'Agenda, ouvert par Agenda › ⋯ ; retour
+« ‹ Agenda » ; route `sortie`). Pas de nouvelle rubrique. Décision de Pierre-Louis (24 nov. 2026, maquette « Idées à
+forte valeur », idée 4).
+
 **v5.77 (24 nov. 2026)** : écran **Offres de vente** (niveau 2 sous Produits, ouvert par Produits › ⋯ › « Offres de
 vente » ; retour « ‹ Produits ») et saisie **Créer une offre** (écran pas à pas, « Annuler »). Nouvelle vente et Caisse
 du marché gagnent le bloc des remises (offre appliquée toute seule, coup de pouce, « Ajouter une remise » qui ouvre une

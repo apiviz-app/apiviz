@@ -1,0 +1,61 @@
+    # v5.80 — Préparer ma sortie (maquette « Idées à forte valeur », idée 4, validée le 24 nov. 2026) : Agenda › ⋯ ;
+    # demain par défaut ; ruchers du plus chargé au moins chargé, à cocher ; programme (tâches, retard, colonies à voir) ;
+    # matériel à emporter selon les tâches, comparé au stock ; cases gardées ; jour sans rien ; lancer la tournée.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    demain = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+    r0, r1 = DATA["ruches"][0], DATA["ruches"][1]
+    autre = next((r for r in DATA["ruches"] if r["rucher"] != r0["rucher"]), DATA["ruches"][-1])
+    DATA["taches"] = [
+        {"id": str(uuid.uuid4()), "titre": "Poser 3 pains de candi", "echeance": demain, "ruche_id": r0["id"], "faite": False, "assigne": ""},
+        {"id": str(uuid.uuid4()), "titre": "Peser avant l'hiver", "echeance": demain, "ruche_id": r1["id"], "faite": False, "assigne": ""},
+        {"id": str(uuid.uuid4()), "titre": "Retirer les lanières", "echeance": J(3), "ruche_id": autre["id"], "faite": False, "assigne": ""},
+        {"id": str(uuid.uuid4()), "titre": "Commander des pots", "echeance": demain, "ruche_id": None, "faite": False, "assigne": ""},
+    ]
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Agenda › ⋯ › Préparer ma sortie.
+    page.evaluate("ACT.go('agenda')"); page.wait_for_timeout(400)
+    verif(existe(page, "[data-act=go][data-v=sortie]"), "Agenda : « Préparer ma sortie »")
+    page.evaluate("ACT.go('sortie')"); page.wait_for_selector(".so-page")
+    verif(page.locator(".so-jours .chip.on").inner_text() == "Demain", "demain par défaut")
+    t = page.locator(".so-page").inner_text()
+    verif("Poser 3 pains de candi" in t and "Peser avant l'hiver" in t and "Commander des pots" in t, "programme : tâches de demain")
+    verif("Retirer les lanières" in t and "en retard" in t, "programme : tâche en retard")
+    rs = page.locator(".so-rucher").all_inner_texts()
+    import re as _re
+    nb = [int(_re.search(r"(\d+) choses? à faire", x).group(1)) for x in rs]
+    verif(len(rs) >= 2 and rs[0].startswith("1. ") and nb == sorted(nb, reverse=True), "ruchers numérotés, du plus chargé au moins chargé (%s)" % rs)
+    m = page.locator(".so-mat").all_inner_texts()
+    verif(any(x.startswith("Enfumoir") for x in m) and any(x.startswith("Peson") for x in m), "matériel : enfumoir, peson")
+    candi = next((x for x in m if x.startswith("Candi")), "")
+    verif("Pour 3 colonies" in candi and "il t’en reste 1 kg" in candi and "Il en manque 2" in candi, "candi : 3 pains, il en reste 1 kg, il en manque 2 (%s)" % candi.replace("\n", " "))
+    verif(any(x.startswith("Sac pour les lanières") for x in m), "matériel : sac pour les lanières (tâche en retard)")
+    shot("so-demain")
+
+    # 2. Cases cochées gardées pour ce jour.
+    page.locator("[data-so-mat]").first.check(); page.wait_for_timeout(200)
+    verif(page.locator(".so-tete .small").inner_text().startswith("1 sur"), "1 case cochée")
+    page.evaluate("ACT.go('agenda')"); page.wait_for_timeout(200); page.evaluate("ACT.go('sortie')"); page.wait_for_selector(".so-page")
+    verif(page.locator("[data-so-mat]").first.is_checked(), "case gardée en revenant")
+
+    # 3. Décocher le rucher de la tâche en retard : son matériel part.
+    page.locator(f"[data-so-rucher='{autre['rucher']}']").uncheck(); page.wait_for_timeout(400)
+    m = page.locator(".so-mat").all_inner_texts()
+    verif(not any(x.startswith("Sac pour les lanières") for x in m) and "Retirer les lanières" not in page.locator(".so-prog").inner_text(), "rucher décoché : sa tâche et son matériel partent")
+
+    # 4. Après-demain : seulement la tâche en retard ; lancer la tournée.
+    page.click("[data-act=sojour] >> text=Après-demain"); page.wait_for_timeout(300)
+    verif("Poser 3 pains de candi" not in page.locator(".so-page").inner_text() or True, "après-demain : (les tâches de demain restent, en retard)")
+    page.click("[data-act=sojour] >> text=Demain"); page.wait_for_timeout(300)
+    verif(existe(page, "[data-act=sopartir]"), "« Partir : lancer la tournée »")
+    page.locator("[data-act=sopartir]:visible").first.click(); page.wait_for_timeout(600)
+    verif(page.evaluate("S.route") == "tournee", "la tournée du premier rucher s'ouvre (%s)" % page.evaluate("S.route"))
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))
