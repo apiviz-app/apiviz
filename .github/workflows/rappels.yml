@@ -1,0 +1,51 @@
+# Rappels même quand Apiviz est fermée (v5.87, migration 040) : chaque matin, la fonction serveur « rappels » envoie à
+# chaque personne abonnée au plus un rappel (deux par semaine au plus).
+#
+# Inactive tant que les secrets ne sont pas créés : sans eux, elle le dit et s'arrête sans erreur.
+#   - RAPPELS_SECRET_PRODUCTION et RAPPELS_SECRET_RECETTE : la même valeur que le secret RAPPELS_SECRET de la fonction
+#     « rappels » de chaque projet Supabase (apidoo, apidoo-test). Jamais dans le dépôt.
+# Lancement à la main (Run workflow) : cible et « essai » (rien n'est envoyé, la réponse dit ce qui partirait).
+name: Rappels
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: "production ou recette"
+        default: "recette"
+        type: choice
+        options: [recette, production]
+      essai:
+        description: "Essai : ne rien envoyer"
+        default: true
+        type: boolean
+
+permissions: {}
+
+concurrency:
+  group: rappels
+  cancel-in-progress: false
+
+jobs:
+  envoyer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Envoyer les rappels
+        env:
+          CIBLE: ${{ github.event.inputs.cible || 'production' }}
+          ESSAI: ${{ github.event.inputs.essai || 'false' }}
+          SECRET_PRODUCTION: ${{ secrets.RAPPELS_SECRET_PRODUCTION }}
+          SECRET_RECETTE: ${{ secrets.RAPPELS_SECRET_RECETTE }}
+        run: |
+          if [ "$CIBLE" = "production" ]; then URL="https://xkucyqzlqfeyuomrtjbu.supabase.co"; SECRET="$SECRET_PRODUCTION"
+          else URL="https://zaaaiqyhxehvgowlgztx.supabase.co"; SECRET="$SECRET_RECETTE"; fi
+          if [ -z "$SECRET" ]; then echo "Secret RAPPELS_SECRET_$(echo "$CIBLE" | tr a-z A-Z) absent : rappels inactifs, rien n'est envoyé."; exit 0; fi
+          code=$(curl -sS -o reponse.json -w '%{http_code}' -X POST "$URL/functions/v1/rappels" \
+            -H "Content-Type: application/json" -H "x-rappels-secret: $SECRET" \
+            -d "{\"envoyer\": true, \"essai\": $ESSAI}")
+          echo "Réponse $code : $(cat reponse.json)"
+          echo "### Rappels ($CIBLE)" >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"; cat reponse.json >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+          [ "$code" = "200" ] || [ "$code" = "503" ]

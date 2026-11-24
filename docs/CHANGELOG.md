@@ -5,6 +5,47 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.87 · à publier en recette · rappels même quand Apiviz est fermée
+**Migration 040** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
+`rappels`** et **action GitHub « Rappels »**. Maquette « apiviz — Onboarding irréprochable », écran 9, validé par
+Pierre-Louis le 24 nov. 2026 (« Ok pour les notifications »). Tant que les clés et les secrets ne sont pas posés, rien
+ne change : les rappels restent ceux d'Apiviz ouverte.
+
+Pour l'apiculteur :
+1. **« Activer les rappels »** (écran Bravo, v5.84) abonne aussi l'appareil aux rappels app fermée, avec les types
+   choisis.
+2. **Réglages › Rappels et notifications** : carte « Même quand Apiviz est fermée » : cet appareil activé ou non, les
+   trois types (ruches à visiter, créneau météo idéal, gestes de saison), retirer.
+3. **Chaque matin** (8 h 17, heure de Paris en hiver), au plus un rappel par personne, **deux par semaine au plus**,
+   jamais deux fois le même : geste de saison (printemps, hausses, essaimage, varroa d'été, hivernage, varroa d'hiver),
+   beau créneau demain sur le rucher qui a le plus de ruches à voir (15 °C ou plus, vent sous 20 km/h, sans pluie), ou
+   ruches pas vues depuis 30 jours. Toucher le rappel ouvre l'écran concerné.
+4. Se déconnecter retire l'appareil.
+
+Limites : navigateur et écran d'accueil seulement (dans l'application des stores, Web Push n'existe pas : rappels app
+fermée à faire avec les notifications natives) ; sur iPhone, Apiviz doit être ajoutée à l'écran d'accueil.
+
+À poser une fois par projet Supabase (jamais dans le dépôt) :
+1. `npx web-push generate-vapid-keys` → secrets de la fonction `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, et `VAPID_SUJET`
+   (`mailto:` de l'équipe) ; `RAPPELS_SECRET` (un mot de passe long).
+2. `supabase functions deploy rappels --no-verify-jwt --project-ref <ref>`.
+3. GitHub › Secrets : `RAPPELS_SECRET_RECETTE` et `RAPPELS_SECRET_PRODUCTION` (même valeur que `RAPPELS_SECRET`).
+   « Run workflow » avec « Essai » coché montre ce qui partirait, sans rien envoyer.
+
+Technique :
+- Migration 040 : `abonnements_push` (chacun ses appareils), `abonner_push(p)`, `desabonner_push(p_endpoint)`,
+  `notifications_envoyees` (rôle de service seulement).
+- `supabase/functions/rappels/` : `{ cle: true }` donne la clé publique ; `{ envoyer: true }` (en-tête
+  `x-rappels-secret`) choisit et envoie (bibliothèque `web-push`), retire les appareils disparus (404/410), garde la
+  trace ; `essai`. Règles pures `regles.js` (ruches à voir, créneau, saison, choix, semaine ISO, « au Verger »).
+- `src/domaines/compte/notifications.js` : `window.Notifications` (abonner, désabonner, état), carte de l'écran Rappels,
+  `?ecran=` et message du service de fond. `regles-notifications.js` : types partagés avec l'écran Bravo. `sw.js` :
+  `push` et clic vers l'écran du rappel. `app.js` : désabonnement à la déconnexion. `.github/workflows/rappels.yml`.
+- Tests : SQL `test_040` ; unitaires `rappels.test.mjs` ; scénario `etapes_nt` (Web Push simulé) ; `etapes_nk`.
+
+À vérifier :
+- Sur un vrai téléphone Android (Chrome) et un iPhone (écran d'accueil) : activer, recevoir l'essai, toucher le rappel.
+
 ## v5.86 · à publier en recette · mieux connaître ses utilisateurs
 **Migration 039** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). Maquette « apiviz — Onboarding
 irréprochable », écran 11 et tableau de bord « Mes utilisateurs », et recommandation sur les données du profil,

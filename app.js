@@ -2151,6 +2151,8 @@ async function purgerLocal() {
 }
 async function deconnecter() {
   $sheet.open && $sheet.close();
+  // v5.87 : cet appareil ne reçoit plus les rappels app fermée de ce compte (avant signOut : il faut encore la session).
+  try { await window.Notifications?.desabonner?.(); } catch { /* rien à retirer */ }
   // Hors ligne, signOut ne joint pas le serveur : on ferme au moins la session sur l'appareil.
   try {
     const { error: erreur } = await sb.auth.signOut();
