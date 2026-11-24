@@ -6,6 +6,7 @@ import { ecranEtiquettes, actions as actionsQr } from "./qr.js";
 import { actions as actionsOrdre } from "./ordre-pose.js";
 import { actions as actionsGroupe } from "./groupe-ecran.js";
 import { completerRucher as completerPhotos } from "../photos/ecrans.js";
+import { ecran as ecranComparer, actions as actionsComparer } from "./comparer.js";
 
 export default [
   // Liste des ruchers : nav4.js (un bloc par rucher de la table, y compris sans colonie, IT-05), complétée par
@@ -31,4 +32,6 @@ export default [
   { id: "deplacer", titre: "Déplacer des colonies", rubrique: "ruches", rendu: ecranDeplacer, actions: actionsDeplacer },
   // Étiquettes QR des ruches (v5.57) : planche à imprimer ; scanner une ruche et sa feuille sont des actions de qr.js.
   { id: "etiquettesqr", titre: "Étiquettes QR", rubrique: "ruches", rendu: ecranEtiquettes, actions: actionsQr },
+  // Comparer mes ruchers (v5.81) : comparer.js, ouvert par Ruchers › ⋯.
+  { id: "comparaison", titre: "Comparer mes ruchers", rubrique: "ruches", rendu: ecranComparer, actions: actionsComparer },
 ];

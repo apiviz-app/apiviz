@@ -164,6 +164,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Préparer ma sortie** *(v5.80)* : Agenda › ⋯. Pour aujourd'hui, demain ou après-demain : les ruchers à voir (à
   cocher), le créneau météo, les tâches et colonies à voir, et le matériel à emporter d'après tes tâches, comparé à ton
   stock (« Il en manque 2 »). « Partir » lance la tournée.
+- **Comparer mes ruchers** *(v5.81)* : Ruchers › ⋯. Kilos par colonie, pertes, varroa et valeur de la récolte par
+  rucher, triables, avec le meilleur et le plus faible, et les kilos par colonie sur 3 saisons. apiviz ne conclut pas à
+  ta place : il dit quoi regarder.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.

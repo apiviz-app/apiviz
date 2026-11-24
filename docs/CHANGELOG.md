@@ -5,6 +5,32 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.81 · à publier en recette · comparer mes ruchers
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 2, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Ruchers › ⋯ › **Comparer mes ruchers**, écran « Comparaison », année au choix) :
+1. Une carte par rucher : **kilos par colonie** (barre), récolte, **pertes**, **varroa** moyen (et colonies au-dessus de
+   ton seuil), **valeur** estimée de la récolte (kilos × prix moyen du kilo vendu dans l'année).
+2. Trier par kilos par colonie, pertes, varroa ou valeur ; repères **Meilleur rendement** et **Le plus faible**.
+3. **Ce que montrent tes chiffres** : pour le rucher le plus faible, s'il l'est plusieurs saisons de suite, s'il a le
+   varroa le plus haut ou le plus de pertes — jamais présenté comme une cause (« l'emplacement, les reines et l'année
+   jouent aussi »).
+4. **Kilos par colonie sur 3 saisons** ; une année sans récolte notée affiche « — », pas zéro.
+5. Un seul rucher : l'écran dit qu'il n'y a rien à comparer.
+
+Technique : `src/domaines/ruchers/comparer-regles.js` (règles pures : colonies vivantes dans l'année, kilos, pertes,
+varroa par `sante/regles.js`, valeur, histoire, tri, repères, lecture), `comparer.js` (écran `comparaison`, niveau 2
+sous Ruchers ; entrée dans le menu ⋯ de `vue-tableau.js`), `styles/74-comparer.css`. Une colonie compte dans le rucher
+où elle est aujourd'hui (dit à l'écran). Tests : unitaires `comparer.test.mjs` (4 tests) ; scénario `etapes_cr` ;
+`etapes_sd` et `etapes_nk` (61 écrans) mis à jour.
+
+Pas fait : répartir les kilos d'une colonie déplacée dans l'année entre ses ruchers ; coût par rucher (les dépenses ne
+sont pas rattachées à un rucher).
+
+À vérifier :
+- Plusieurs ruchers avec récoltes et comptages : cartes, tri, repères, lecture, tableau 3 saisons.
+- Changer d'année ; un seul rucher.
+
 ## v5.80 · à publier en recette · préparer ma sortie
 **Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 4, validée par Pierre-Louis le 24 nov. 2026.
 

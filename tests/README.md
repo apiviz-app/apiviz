@@ -29,6 +29,8 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.81 : `etapes_cr` (Comparer mes ruchers : une carte par rucher, repères, tri, 3 saisons ; un seul rucher).
+
 Scénario v5.80 : `etapes_so` (Agenda › Préparer ma sortie : demain par défaut, ruchers du plus chargé au moins chargé,
 programme avec retard, matériel et stock, cases gardées, rucher décoché, lancer la tournée). Avec `CAPTURES=<dossier>`.
 

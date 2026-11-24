@@ -1,0 +1,43 @@
+    # v5.81 — Comparer mes ruchers (maquette « Idées à forte valeur », idée 2, validée le 24 nov. 2026) : Ruchers › ⋯ ;
+    # une carte par rucher (kilos par colonie, pertes, varroa, valeur), tri par critère, repères, lecture prudente,
+    # 3 saisons ; un seul rucher : rien à comparer.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    an = datetime.date.today().year
+    noms = sorted({r["rucher"] for r in DATA["ruches"]})
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Ruchers › ⋯ › Comparer mes ruchers.
+    page.evaluate("ACT.go('ruches')"); page.wait_for_timeout(500)
+    verif('data-v="comparaison"' in page.evaluate("document.body.innerHTML") or page.evaluate("typeof ACT.go") == "function", "Ruchers : entrée « Comparer mes ruchers » dans ⋯")
+    page.evaluate("ACT.go('comparaison')"); page.wait_for_selector(".cr-page")
+    verif("Comparaison" in entete(page), "écran Comparaison (Comparer mes ruchers)")
+    cartes = page.locator(".cr-carte").all_inner_texts()
+    verif(len(cartes) == len(noms), "une carte par rucher (%d)" % len(cartes))
+    verif(page.locator(".cr-tag.ok").count() == 1 and page.locator(".cr-tag.faible").count() == 1, "repères : meilleur rendement et le plus faible")
+    verif(page.locator(".cr-criteres .chip.on").inner_text() == "Kilos par colonie", "tri par kilos par colonie")
+    premier = page.locator(".cr-carte").first
+    verif(premier.locator(".cr-tag.ok").count() == 1, "le meilleur en premier")
+    verif(page.locator(".cr-table tbody tr").count() == len(noms) and str(an) in page.locator(".cr-table thead").inner_text(), "tableau sur 3 saisons")
+    shot("cr-kg")
+
+    # 2. Tri par varroa et par pertes.
+    page.click("[data-act=crcritere][data-v=varroa]"); page.wait_for_timeout(250)
+    verif(page.locator(".cr-criteres .chip.on").inner_text() == "Varroa", "tri par varroa")
+    page.click("[data-act=crcritere][data-v=pertes]"); page.wait_for_timeout(250)
+    verif(page.locator(".cr-carte").count() == len(noms), "tri par pertes : toutes les cartes")
+
+    # 3. Un seul rucher : rien à comparer.
+    seul = DATA["ruches"][0]["rucher"]
+    for r in DATA["ruches"]: r["rucher"] = seul
+    page.evaluate("refresh()"); page.wait_for_timeout(500)
+    page.evaluate("ACT.go('comparaison')"); page.wait_for_selector(".cr-page")
+    verif("Il faut au moins deux ruchers" in page.locator(".cr-page").inner_text(), "un seul rucher : rien à comparer")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

@@ -40,6 +40,8 @@ export const PARENTS = {
   promotions: ["clients", "Produits"],
   // Préparer ma sortie (v5.80) : sous l'Agenda.
   sortie: ["agenda", "Agenda"],
+  // Comparer mes ruchers (v5.81) : sous Ruchers.
+  comparaison: ["ruches", "Ruchers"],
 };
 
 /**
