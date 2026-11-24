@@ -29,6 +29,12 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.77 (migration 037) : `etapes_rm` (Produits › ⋯ › Offres de vente vide, Créer une offre « 4 achetés,
+1 offert » sur le miel 250 g avec nom et aperçu qui suivent, interrupteur, Nouvelle vente : coup de pouce à 4 pots, offre
+à 5, total net ; feuille « Remise sur cette vente » −10 % avec motif, en € sans motif, retirée ; `creer_vente` avec la
+remise de chaque ligne et le détail ; caisse du marché ; reçu ; Bilan ; base sans 037). Avec `CAPTURES=<dossier>` :
+captures à 390 px.
+
 Scénarios IT-12 (v5.76, migration 036) : `etapes_va` (Ruchers › Santé : reprise du comptage d'une visite à
 l'identique, aucun seuil par défaut, seuil ajouté avec source et date dans l'onglet, comptage du rucher avec taux au fur et
 à mesure, chute sur lange ramenée à un jour, comptage sans réseau puis envoyé, fiche colonie et « D'où vient ce seuil ? »,

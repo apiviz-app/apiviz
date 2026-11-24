@@ -1,0 +1,74 @@
+/* Apiviz — remises et offres de vente (v5.77, migration 037, maquette « Remises et offres » du 24 nov. 2026).
+   Bloc des remises de la vente et de la caisse, feuille « Remise sur cette vente », Offres de vente, Créer une offre.
+   Couleurs et rayons par les jetons (jetons.css) ; textes de 12 px au moins ; cibles de 44 px. */
+
+/* ---------- Bloc des remises (Nouvelle vente, caisse) ---------- */
+.rm-bloc{display:flex;flex-direction:column;gap:10px}
+.rm-offre,.rm-manuelle{display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--r-m)}
+.rm-offre{background:var(--goodbg);color:#174F2B}
+.rm-offre svg{flex:none}
+.rm-manuelle{background:var(--ground)}
+.rm-t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rm-t b{font-size:var(--t-m)}
+.rm-offre .small{color:#2D5A3C}
+.rm-m{font-size:var(--t-m);white-space:nowrap}
+.rm-manuelle .link{min-height:var(--cible);padding:0 4px}
+.rm-pct{display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;border:1.5px solid currentColor;border-radius:var(--r-pill);font-size:var(--t-s);font-weight:700}
+.rm-pouce{margin:0;padding:10px 12px;border:1px dashed var(--honey);border-radius:var(--r-m);background:var(--cire);color:#5C3D00;font-size:var(--t-s);line-height:1.4}
+.rm-ajout{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:var(--cible);padding:0 2px;border:0;background:none;font:inherit;font-size:var(--t-m);font-weight:600;color:var(--ink);cursor:pointer}
+.rm-recap{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.rm-recap p,.rm-apercu p{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0;font-size:var(--t-m)}
+.rm-recap .small{display:block;font-size:var(--t-s)}
+.rm-vert{color:var(--good)}
+.rm-total b:last-child{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:var(--t-xl)}
+.u-remise{color:var(--good)}
+
+/* ---------- Feuille « Remise sur cette vente » ---------- */
+.rm-feuille{display:flex;flex-direction:column;gap:14px}
+.rm-champ{display:flex;flex-direction:column;gap:8px;margin:0}
+.rm-champ .lab{font-size:var(--t-s);font-weight:600;color:var(--muted)}
+.rm-champ .lab .small{font-weight:400}
+.rm-puces{display:flex;flex-wrap:wrap;gap:8px}
+.rm-puces .chip{min-height:var(--cible)}
+.rm-autre{display:flex;flex-direction:column;gap:6px;font-size:var(--t-s);color:var(--muted)}
+.rm-apercu{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:var(--r-m);background:#fff;border:1px solid var(--line)}
+.rm-apercu .link{align-self:flex-start;min-height:var(--cible);padding:0;font-size:var(--t-s);font-weight:600;text-decoration:underline}
+.rm-feuille .link.crit{align-self:center;min-height:var(--cible)}
+
+/* ---------- Offres de vente ---------- */
+.rm-regle{margin:0 0 4px}
+.rm-carte{display:flex;flex-direction:column;gap:10px}
+.rm-carte-h{display:flex;align-items:flex-start;gap:12px}
+.rm-carte-b{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;padding:0;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.rm-carte-b b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:19px}
+.rm-carte-b:disabled{cursor:default;opacity:1}
+.rm-ligne{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rm-tag{font-size:var(--t-xs);font-weight:600;padding:3px 8px;border-radius:var(--r-pill)}
+.rm-actif{background:var(--goodbg);color:#174F2B}
+.rm-prevu{background:var(--watchbg);color:#5C3D00}
+.rm-coupe{background:#EEF0EA;color:#3F4A44}
+.rm-off .rm-carte-b{opacity:.75}
+.rm-inter{position:relative;flex:none;width:52px;height:32px;margin:6px 0;padding:0;border:0;border-radius:var(--r-pill);background:var(--line2);cursor:pointer}
+.rm-inter::before{content:"";position:absolute;inset:-6px -2px}
+.rm-inter span{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:var(--r-pill);background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left var(--duree-rapide) var(--sortie)}
+.rm-inter.on{background:var(--good)}
+.rm-inter.on span{left:23px}
+.rm-inter:focus-visible{outline:3px solid var(--honey-light);outline-offset:2px}
+.rm-usage{display:flex;flex-wrap:wrap;gap:16px;margin:0;padding-top:10px;border-top:1px solid #EEF0EA;font-size:var(--t-s);color:#3F4A44}
+
+/* ---------- Créer une offre ---------- */
+.rm-form{display:flex;flex-direction:column;gap:18px}
+.rm-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rm-type{display:flex;flex-direction:column;gap:2px;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.rm-type b{font-size:var(--t-m)}
+.rm-type span{font-size:var(--t-xs);opacity:.85}
+.rm-type.on{background:var(--pine);border-color:var(--pine);color:#fff}
+.rm-pas{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:6px 6px 6px 14px}
+.rm-clients{max-height:220px;overflow-y:auto}
+.rm-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rm-apercu-offre{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--r-l);background:var(--pine);color:#fff}
+.rm-apercu-offre .rm-k{font-size:var(--t-s);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--honey-light)}
+.rm-apercu-offre b{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px}
+.rm-apercu-offre span:last-child{font-size:14px;color:#D5DBD3}
+.rm-form .link.crit{align-self:center;min-height:var(--cible)}
+.rm-dans{padding-top:10px;border-top:1px solid var(--line)}

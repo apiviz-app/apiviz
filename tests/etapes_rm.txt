@@ -1,0 +1,150 @@
+    # v5.77 — Remises et offres de vente (migration 037, maquette « Remises et offres » du 24 nov. 2026, validée :
+    # deux offres ne s'additionnent pas, motif facultatif). Produits › ⋯ › Offres de vente, Créer une offre
+    # (4 achetés, 1 offert sur le miel 250 g), interrupteur, Nouvelle vente avec l'offre appliquée toute seule et le coup
+    # de pouce, feuille « Remise sur cette vente », creer_vente avec les remises, caisse du marché, reçu, bilan, base
+    # sans 037. Avec CAPTURES=<dossier> : captures à 390 px.
+    import pathlib as _pl, os
+    _ici = _pl.Path(__file__).parent
+    exec((_ici / "donnees_v2.txt").read_text(encoding="utf-8").replace("\n    ", "\n").lstrip())
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ctx.route("https://data.geopf.fr/**", lambda rt: rt.abort())
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom, plein=True: cap and (page.wait_for_timeout(350), page.screenshot(path=f"{cap}/{nom}.png", full_page=plein))
+    DATA["promotions"] = []
+    sans037 = {"oui": False}
+    def promotions_route(route):
+        if sans037["oui"] and route.request.method == "GET":
+            return route.fulfill(status=404, headers={"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+                                 body=json.dumps({"code": "PGRST205", "message": "Could not find the table 'public.promotions'"}))
+        return route.fallback()
+    ctx.route("**/rest/v1/promotions*", promotions_route)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".ac-hero", timeout=15000)
+
+    # 1. Produits › ⋯ › Offres de vente : écran vide qui explique.
+    page.evaluate("ACT.go('clients')"); page.wait_for_timeout(500)
+    verif(existe(page, "[data-act=rmoffres]"), "Produits › ⋯ : « Offres de vente »")
+    cliquer(page, "[data-act=rmoffres]"); page.wait_for_timeout(400)
+    verif(page.evaluate("S.route") == "promotions" and "Offres de vente" in entete(page), "écran Offres de vente")
+    verif("4 achetés, 1 offert" in page.locator(".wrap").inner_text(), "écran vide : un exemple d'offre")
+    shot("rm-offres-vide")
+
+    # 2. Créer une offre : 4 achetés, 1 offert sur le miel 250 g.
+    page.evaluate("ACT.rmnouvelle()"); page.wait_for_selector(".rm-form")
+    verif(page.locator(".rm-type").count() == 4 and page.locator(".rm-type.on").inner_text().startswith("X achetés, Y offerts"), "4 modèles, « X achetés, Y offerts » choisi")
+    verif(page.input_value("#rm_nom") == "4 achetés, 1 offert", "nom proposé : « 4 achetés, 1 offert »")
+    page.click(".rm-puces .chip:has-text('Miel 250 g')"); page.wait_for_timeout(200)
+    verif(page.locator(".rm-puces .chip.on:has-text('Miel 250 g')").count() == 1, "produit choisi : Miel 250 g")
+    ap = page.locator(".rm-apercu-offre").inner_text()
+    verif("5 pour 28 €" in ap and "35 €" in ap, "aperçu : 5 pots pour 28 € au lieu de 35 € (%s)" % ap.replace("\n", " "))
+    page.click("[data-act=rmpas][data-k=offerts][data-v='1']"); page.wait_for_timeout(150)
+    verif(page.input_value("#rm_nom") == "4 achetés, 2 offerts", "le nom suit les chiffres")
+    page.click("[data-act=rmpas][data-k=offerts][data-v='-1']"); page.wait_for_timeout(150)
+    shot("rm-creer-offre")
+    page.click("[data-act=rmenregistrer]"); page.wait_for_selector(".toast >> text=Offre créée", timeout=8000)
+    p = [r for t, u, rows in recu["upsert"] if t == "promotions" for r in rows]
+    verif(len(p) == 1 and p[0]["type"] == "xy" and p[0]["achetes"] == 4 and p[0]["offerts"] == 1 and p[0]["produits"] == ["Miel|250 g"]
+          and p[0]["nom"] == "4 achetés, 1 offert" and p[0]["quantite"] is None and p[0]["actif"] is True, "promotions : offre enregistrée (%s)" % (p[:1],))
+    page.evaluate("refresh()"); page.wait_for_timeout(500)
+    verif(page.evaluate("S.route") == "promotions" and page.locator(".rm-carte").count() == 1, "retour à la liste : 1 offre")
+    verif("Active" in page.locator(".rm-carte").inner_text() and "Miel 250 g" in page.locator(".rm-carte").inner_text(), "carte : Active, Miel 250 g")
+    shot("rm-offres")
+
+    # 3. Interrupteur : coupée puis réactivée.
+    page.click(".rm-inter"); page.wait_for_timeout(500)
+    verif(any(t == "promotions" and c == {"actif": False} for t, c in patchs), "interrupteur : offre coupée")
+    page.evaluate("refresh()"); page.wait_for_timeout(400)
+    verif("Coupée" in page.locator(".rm-carte").inner_text(), "carte : Coupée")
+    page.click(".rm-inter"); page.wait_for_timeout(500); page.evaluate("refresh()"); page.wait_for_timeout(400)
+    verif("Active" in page.locator(".rm-carte").inner_text(), "réactivée")
+
+    # 4. Nouvelle vente : coup de pouce à 4 pots, offre appliquée à 5, total net dans la barre.
+    page.evaluate("ACT.newvente()"); page.wait_for_selector(".pq-champ")
+    page.click(".pq-champ"); page.wait_for_selector("#sheet[open] #pq_q")
+    page.click(f"#pq_res [data-act=pqchoisir][data-v='{C1}']"); page.wait_for_timeout(300)
+    for _ in range(4):
+        page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(120)
+    verif(page.locator(".rm-pouce").count() == 1 and "Encore 1 pot de Miel 250 g" in page.locator(".rm-pouce").inner_text(), "4 pots : « Encore 1 pot de Miel 250 g… »")
+    verif(page.locator(".rm-offre").count() == 0, "4 pots : pas encore d'offre")
+    page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(200)
+    o = page.locator(".rm-offre").inner_text() if page.locator(".rm-offre").count() else ""
+    verif("4 achetés, 1 offert" in o and "−7 €" in o, "5 pots : offre appliquée, −7 € (%s)" % o.replace("\n", " "))
+    verif(page.locator(".rm-pouce").count() == 0, "5 pots : plus de coup de pouce")
+    verif(page.locator(".sv-total b").inner_text() == "28 €", "barre : total net 28 € (%s)" % page.locator(".sv-total b").inner_text())
+    verif("Mme Martin économise 7 €" in page.locator(".rm-recap").inner_text(), "récapitulatif : Mme Martin économise 7 €")
+    shot("rm-vente-offre")
+
+    # 5. Feuille « Remise sur cette vente » : −10 %, motif facultatif, nouveau total.
+    page.click(".rm-ajout"); page.wait_for_selector("#sheet[open] .rm-seg")
+    verif(page.locator("#sheet .rm-seg button.on").inner_text() == "En %", "feuille : En % par défaut")
+    verif("25,2 €" in page.locator("#sheet .rm-apercu").inner_text(), "10 % de 28 € : nouveau total 25,2 €")
+    page.click("#sheet [data-act=rmval][data-v='20']"); page.wait_for_timeout(150)
+    verif("22,4 €" in page.locator("#sheet .rm-apercu").inner_text(), "20 % : 22,4 €")
+    page.click("#sheet [data-act=rmval][data-v='10']"); page.wait_for_timeout(150)
+    verif(page.locator("#sheet [data-act=rmarrondir]").count() == 1, "« Arrondir à 25 € » proposé")
+    page.click("#sheet [data-act=rmmotif][data-v='Client fidèle']"); page.wait_for_timeout(100)
+    shot("rm-feuille-remise", False)
+    page.click("#sheet .btn.main"); page.wait_for_timeout(400)
+    verif(not page.evaluate("$sheet.open"), "feuille fermée")
+    m = page.locator(".rm-manuelle").inner_text() if page.locator(".rm-manuelle").count() else ""
+    verif("Remise −10 %" in m and "Client fidèle" in m and "−2,8 €" in m, "remise affichée avec son motif (%s)" % m.replace("\n", " "))
+    verif(page.locator(".sv-total b").inner_text() == "25,2 €", "barre : 25,2 €")
+    shot("rm-vente-remise")
+    page.click("form[data-form=vente] .btn.main"); page.wait_for_selector(".toast >> text=Vente enregistrée", timeout=10000)
+    v = [b["p"] for n_, b in recu["rpc"] if n_ == "creer_vente"]
+    verif(len(v) == 1 and v[0]["lignes"] == [{"lot_id": L2, "quantite": 5, "remise": 9.8}], "creer_vente : 5 pots, 9,80 € de remise sur la ligne (%s)" % (v[0]["lignes"] if v else None))
+    verif(v and v[0]["remise_offre"] == 7 and v[0]["remise_manuelle"] == 2.8 and v[0]["promotion_nom"] == "4 achetés, 1 offert" and v[0]["promotion_id"]
+          and v[0]["remise_libelle"] == "−10 %" and v[0]["remise_motif"] == "Client fidèle" and v[0]["client_id"] == C1, "creer_vente : détail des remises")
+
+    # 6. Remise sans motif, en € ; puis retirée.
+    page.evaluate("ACT.newvente()"); page.wait_for_selector(".pq-champ")
+    page.click(f"[data-act=sstep][data-k='{L1}'][data-v='1']"); page.wait_for_timeout(150)
+    page.click(".rm-ajout"); page.wait_for_selector("#sheet[open] .rm-seg")
+    page.click("#sheet [data-act=rmmode][data-v=eur]"); page.wait_for_timeout(100)
+    verif(page.locator("#sheet .btn.main").is_disabled(), "en € : rien à appliquer tant que le montant est vide")
+    page.fill("#rm_val", "2"); page.wait_for_timeout(150)
+    page.click("#sheet .btn.main"); page.wait_for_timeout(300)
+    verif(page.locator(".sv-total b").inner_text() == "10 €", "12 € − 2 € = 10 €, sans motif")
+    page.click(".rm-manuelle [data-act=rmremise]"); page.wait_for_selector("#sheet[open] [data-act=rmretirer]")
+    page.click("#sheet [data-act=rmretirer]"); page.wait_for_timeout(300)
+    verif(page.locator(".rm-manuelle").count() == 0 and page.locator(".sv-total b").inner_text() == "12 €", "remise retirée : 12 €")
+    page.evaluate("ACT.cancel ? ACT.cancel() : ACT.go('clients')"); page.wait_for_timeout(300)
+
+    # 7. Caisse du marché : l'offre s'applique aussi.
+    page.evaluate("S.caisse = null; ACT.go('caisse')"); page.wait_for_selector(".cs-pots")
+    t250 = page.locator(".cs-pot:has-text('250 g')").first
+    for _ in range(5):
+        t250.click(); page.wait_for_timeout(100)
+    verif(page.locator(".cs-panier .rm-bloc .rm-offre").count() == 1, "caisse : offre appliquée, dans le panier")
+    verif("Encaisser 28 €" in page.locator("[data-act=csencaisser]").first.inner_text(), "caisse : Encaisser 28 € (%s)" % page.locator("[data-act=csencaisser]").first.inner_text())
+    verif(page.locator(".rm-recap").count() == 0, "caisse : pas de récapitulatif en double")
+    shot("rm-caisse")
+    page.locator("[data-act=csencaisser]:visible").first.click(); page.wait_for_selector(".toast >> text=Vente de 28 €", timeout=10000)
+    v = [b["p"] for n_, b in recu["rpc"] if n_ == "creer_vente"]
+    verif(len(v) == 2 and v[1]["remise_offre"] == 7 and sum(l["remise"] for l in v[1]["lignes"]) == 7 and v[1]["remise_manuelle"] == 0, "caisse : creer_vente avec l'offre")
+
+    # 8. Reçu d'une vente remisée et bilan.
+    V9 = str(uuid.uuid4())
+    DATA["ventes"].append({"id": V9, "client_id": C1, "date_vente": J(0), "paye": True, "mode": "Espèces", "promotion_id": None, "promotion_nom": "4 achetés, 1 offert",
+                           "remise_offre": 7, "remise_manuelle": 2.8, "remise_libelle": "−10 %", "remise_motif": "Client fidèle"})
+    DATA["vente_lignes"].append({"id": str(uuid.uuid4()), "vente_id": V9, "lot_id": L2, "quantite": 5, "prix_unitaire": 7, "remise": 9.8})
+    page.evaluate("refresh()"); page.wait_for_timeout(500)
+    page.evaluate(f"ACT.uvente('{V9}')"); page.wait_for_selector("#sheet[open] .u-total")
+    r = page.locator("#sheet").inner_text()
+    verif("Offre « 4 achetés, 1 offert »" in r and "Remise (−10 %, Client fidèle)" in r and page.locator("#sheet .u-total b").inner_text() == "25,2 €", "reçu : lignes de remise et total net")
+    shot("rm-recu", False)
+    page.evaluate("$sheet.close()")
+    page.evaluate("ACT.go('pilotage')"); page.wait_for_timeout(500)
+    verif("de remises accordées" in page.locator(".wrap").inner_text(), "bilan : remises accordées")
+
+    # 9. Base sans 037 : rien ne casse, l'écran le dit.
+    sans037["oui"] = True; page.evaluate("refresh()"); page.wait_for_timeout(500)
+    page.evaluate("ACT.go('promotions')"); page.wait_for_timeout(300)
+    verif("migration 037" in page.locator(".wrap").inner_text(), "sans 037 : « La base doit être mise à jour »")
+    page.evaluate("ACT.newvente()"); page.wait_for_selector(".pq-champ")
+    for _ in range(5):
+        page.click(f"[data-act=sstep][data-k='{L2}'][data-v='1']"); page.wait_for_timeout(80)
+    verif(page.locator(".rm-offre").count() == 0 and page.locator(".rm-ajout").count() == 0, "sans 037 : ni offre ni remise")
+    verif(page.locator(".sv-total b").inner_text() == "35 €", "sans 037 : prix plein")
+    verif(not erreurs, "aucune erreur JavaScript" + ("" if not erreurs else " : " + " | ".join(erreurs)))

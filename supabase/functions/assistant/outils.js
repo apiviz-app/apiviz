@@ -150,14 +150,14 @@ export const OUTILS = [
       const ventes = await lire(q);
       const vIds = ventes.map((v) => v.id), cIds = [...new Set(ventes.map((v) => v.client_id).filter(Boolean))];
       const [lignes, clients] = await Promise.all([
-        vIds.length ? lire(db.from("vente_lignes").select("vente_id,lot_id,quantite,prix_unitaire").in("vente_id", vIds)) : [],
+        vIds.length ? lire(db.from("vente_lignes").select("*").in("vente_id", vIds)) : [],
         cIds.length ? lire(db.from("clients").select("id,nom").in("id", cIds)) : [],
       ]);
       noter(ids, ventes); noter(ids, clients);
       const nom = new Map(clients.map((c) => [c.id, c.nom]));
       return ventes.map((v) => {
         const l = lignes.filter((x) => x.vente_id === v.id);
-        return sansVide({ ...v, client: nom.get(v.client_id), lignes: l.map(({ vente_id, ...x }) => x), total: Math.round(l.reduce((s, x) => s + Number(x.quantite || 0) * Number(x.prix_unitaire || 0), 0) * 100) / 100 });
+        return sansVide({ ...v, client: nom.get(v.client_id), lignes: l.map(({ vente_id, id, exploitation_id, ...x }) => x), total: Math.round(l.reduce((s, x) => s + Number(x.quantite || 0) * Number(x.prix_unitaire || 0) - Number(x.remise || 0), 0) * 100) / 100 });
       });
     },
   },

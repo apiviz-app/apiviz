@@ -56,9 +56,11 @@ const sb = supabase.createClient(window.APIDOO.url, window.APIDOO.key),
     comptesVarroa: ["operation_colonies"],
     seuils: ["seuils_varroa", "methode"],
     observations: ["observations_sanitaires", "date_observation", !1],
+    // v5.77 (migration 037) : offres de vente appliquées toutes seules pendant la vente.
+    promotions: ["promotions", "nom"],
   },
   // Tables lues sans bloquer l'application si la base ne les a pas encore (migration pas faite) : liste vide.
-  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020", compositions: "028", operations: "036", comptesVarroa: "036", seuils: "036", observations: "036" },
+  TABLES_FACULTATIVES = { ruchers: "015", emplacements: "016", deplacements: "016", contenants: "016", occupations: "016", mouvements: "018", reines: "019", liens: "019", reglements: "020", compositions: "028", operations: "036", comptesVarroa: "036", seuils: "036", observations: "036", promotions: "037" },
   DEF = {
     nom: "", // AP-BUG-006 : jamais de nom codé en dur, voir cfg()
     napi: "",
@@ -1017,7 +1019,7 @@ function pilotFin() {
     const lotVendu = byId(donnees.lots, ligne.lot_id),
       format = lotVendu && !Regles.produits.estMiel(lotVendu) ? Regles.produits.libelleLot(lotVendu) : n(lotVendu?.format_g, 0) + " g";
     ((parFormat[format] = parFormat[format] || { v: 0, p: 0 }),
-      (parFormat[format].v += ligne.quantite * ligne.prix_unitaire),
+      (parFormat[format].v += Regles.remises.montantLigne(ligne)),
       (parFormat[format].p += ligne.quantite));
   });
   const ventesParFormat = Object.entries(parFormat).map(([format, totaux]) => [
@@ -1047,7 +1049,7 @@ function pilotFin() {
       ]),
     resteACouvrir = finances.charges - finances.ca;
   return `<div class="grid">
-    ${kpi("Chiffre d\u2019affaires", eur0(finances.ca), finances.ventes.length + " vente(s)" + evolution)}
+    ${kpi("Chiffre d\u2019affaires", eur0(finances.ca), finances.ventes.length + " vente(s)" + evolution + (Regles.remises.remisesAccordees(finances.ventes).total > 0 ? " \xB7 " + eur0(Regles.remises.remisesAccordees(finances.ventes).total) + " de remises accord\xE9es" : ""))}
     ${kpi("D\xE9penses", eur0(finances.charges), finances.dep.length + " d\xE9pense(s)")}
     ${kpi("R\xE9sultat", eur0(finances.resultat), finances.ca ? "Marge " + n((finances.resultat / finances.ca) * 100, 0) + " %" : "", finances.resultat < 0 ? "crit" : "good")}
     ${kpi("Tr\xE9sorerie fin de p\xE9riode", eur0(finances.tresoFin), finances.aEncaisser ? eur0(finances.aEncaisser) + " \xE0 encaisser" : "Tout est encaiss\xE9")}
@@ -2005,6 +2007,7 @@ const EXP = {
           "Format g",
           "Quantit\xE9",
           "Prix unitaire",
+          "Remise",
           "Montant",
           "Pay\xE9e",
           "Mode",
@@ -2019,7 +2022,8 @@ const EXP = {
             lot?.format_g ?? (lot ? Regles.produits.libelleLot(lot) : ""),
             ligne.quantite,
             ligne.prix_unitaire,
-            ligne.quantite * ligne.prix_unitaire,
+            Number(ligne.remise) || 0,
+            Regles.remises.montantLigne(ligne),
             vente?.paye ? "Oui" : "Non",
             vente?.mode,
           ];

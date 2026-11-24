@@ -6,7 +6,8 @@
     # 23 depuis IT-07 : reines, liens de colonies ; 24 depuis la v5.32 : règlements entre associés. La table
     # mouvements_stock de 018 est absente de cette base simulée).
     # 25 depuis la v5.58 : compositions des types de ruche (migration 028).
-    verif(len(lectures) <= 29, "lectures de données à l'ouverture : %s (29 au plus : 17 + 4 tables d'IT-06 + 2 d'IT-07 + 1 de la v5.32 + 1 de la v5.58 + 4 d'IT-12)" % len(lectures))
+    # +1 depuis la v5.77 : offres de vente (table promotions, migration 037), lues au départ pour la caisse hors ligne.
+    verif(len(lectures) <= 30, "lectures de données à l'ouverture : %s (30 au plus : 17 + 4 tables d'IT-06 + 2 d'IT-07 + 1 de la v5.32 + 1 de la v5.58 + 4 d'IT-12 + 1 de la v5.77)" % len(lectures))
     page.evaluate("ACT.newvisite(S.d.ruches[0].id)"); page.wait_for_selector("form[data-form=visite]")
     page.locator("details[data-sec=intrants]").evaluate("d => d.open = true"); page.click("[data-act=vstep][data-v='0.5']")
     page.fill("#v_note", "Visite comptée")

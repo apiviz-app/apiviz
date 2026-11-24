@@ -10,7 +10,7 @@
 // rendu (crochet « apresRendu » déclaré par le dernier module chargé), et ne change aucune donnée.
 
 /** Écrans de saisie pas à pas : leur en-tête (Annuler, étapes) n'est pas touché. */
-export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "produit", "deplacer", "inventaire", "comptage"]);
+export const FLUX = new Set(["visite", "visiteexpress", "tournee", "vente", "recolte", "miseenpots", "produit", "deplacer", "inventaire", "comptage", "promotion"]);
 
 /** Écrans de 1er niveau (barre du bas ou Menu) : pas de bouton retour. */
 export const NIVEAU1 = new Set(["dash", "ruches", "carte", "varroa", "clients", "ventes", "miel", "recoltes", "agenda", "pilotage", "compta", "factures", "commandes",
@@ -36,6 +36,8 @@ export const PARENTS = {
   stockage: ["reglages", "Réglages"],
   // Aide au signalement d'un signe sanitaire (IT-12) : revient à Ruchers › Santé.
   signalement: ["varroa", "Santé"],
+  // Offres de vente (v5.77) : rangées dans Produits (⋯ de Ventes).
+  promotions: ["clients", "Produits"],
 };
 
 /**
