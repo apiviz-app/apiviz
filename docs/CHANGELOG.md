@@ -5,6 +5,30 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.82 · à publier en recette · prêt pour l'hiver
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 5, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Ruchers › ⋯ › **Prêt pour l'hiver** ; aussi Ma saison › Hiver › « Voir colonie par colonie ») :
+1. Chaque colonie active est classée d'après ses mesures d'automne (depuis le 1er août, réglable) : **À reprendre**,
+   **À surveiller**, **Prête**, ou **À compléter** (aucune visite cet automne). Barre de résumé, puces pour filtrer, la
+   plus urgente d'abord ; toucher une colonie ouvre sa fiche.
+2. Ce qui est regardé : **poids** (sous ton repère de plus de 10 % → à reprendre ; juste sous → à surveiller),
+   **varroa** (au-dessus de ton repère → à reprendre), **reine** (orpheline ou non vue aux 2 dernières visites → à
+   reprendre ; reine de 3 ans ou plus → à surveiller), **force** (1 ou 2 sur 5) et **réserves faibles** notées à la
+   visite (à surveiller). Ce qui manque est dit (pesée, comptage, traitement noté depuis juillet).
+3. **Tes repères** (poids d'hivernage, varroa après traitement, début de l'automne) se règlent dans une feuille, à fixer
+   avec ton GDS ou ton vétérinaire. Sans repère, le critère n'est pas jugé et l'écran le dit. Le poids est le même
+   réglage que celui de Ma saison et d'API (`hiverPoids`). Jamais une prédiction de survie.
+
+Technique : `src/domaines/colonies/hiver-regles.js` (règles pures : repères, bilan d'une colonie, liste triée et
+comptes ; varroa par `sante/regles.js`), `hiver.js` (écran `hiver`, niveau 2 sous Ruchers ; entrée dans le menu ⋯ de
+`vue-tableau.js`), `styles/75-hiver.css` ; `equipe/suivi-saison.js` : le bouton de l'aperçu « Hiver » mène à l'écran.
+Tests : unitaires `hiver.test.mjs` (6 tests) ; scénario `etapes_hv` ; `etapes_sd` et `etapes_nk` (62 écrans) mis à jour.
+
+À vérifier :
+- Sans repère : le message ; régler poids et varroa ; colonies classées avec leurs raisons.
+- Filtres ; toucher une colonie ; Ma saison › Hiver › « Voir colonie par colonie ».
+
 ## v5.81 · à publier en recette · comparer mes ruchers
 **Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 2, validée par Pierre-Louis le 24 nov. 2026.
 

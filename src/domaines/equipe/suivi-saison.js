@@ -243,7 +243,7 @@ export function apercu(id, S, extra = {}) {
     case "hiver": return { titre: "Prêtes pour l’hiver", pct: S.hiver.total ? Math.round((S.hiver.pretes / S.hiver.total) * 100) : null,
       lignes: S.hiver.aRevoir.length ? S.hiver.aRevoir.slice(0, 5).map((h) => L(h.nom, h.raisons.join(", "), h.id)) : [L("Toutes les ruches", "réserves, traitement et ponte vus")],
       note: "Prête : réserves notées depuis le 1er septembre, traitement depuis le 1er juillet, reine ou ponte vue depuis le 15 août.",
-      bouton: ["ruches", "Voir les ruchers"] };
+      bouton: ["hiver", "Voir colonie par colonie"] }; // v5.82 : écran « Prêt pour l’hiver »
     case "essaimage": return { titre: "Essaimage", pct: null,
       lignes: S.essaimage.length ? S.essaimage.map((e) => L(e.nom, `cellules ${e.cellules} le ${dCourte(e.date)}`, e.id)) : [L("Cellules royales", "aucune aux dernières visites")],
       bouton: ["ruches", "Voir les ruchers"] };
