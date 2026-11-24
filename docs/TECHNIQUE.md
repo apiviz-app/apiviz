@@ -282,6 +282,16 @@ d'activer une offre payée ou une recharge.
 `abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
 changent pas : seul le bouton « Payer » sera branché.
 
+## Mieux connaître ses utilisateurs (v5.86, migration 039)
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Base | `migrations/039-mieux-connaitre-usage.sql` | `profils.attente`, `mieux_connaitre_fin` ; `activite_jours` + `noter_activite()` ; `comparaison_departement()` ; `admin_stats_utilisateurs()` (équipe, groupes < 5 masqués) |
+| Règles | `src/domaines/compte/regles-mieux.js` | Carte due (J+14), questions, rubrique d'un écran, sections du tableau de bord |
+| Écrans | `src/domaines/compte/mieux.js` | Carte de l'accueil, jours d'utilisation, route `utilisateurs` |
+
+Ajouter une personne à l'équipe : `insert into public.administrateurs_apiviz (email) values ('…')` (à la main, SQL Editor).
+
 ## Lecture d'un carnet par API (v5.85)
 
 Après le premier rucher et depuis Réglages › Tes données. Rien n'est écrit avant « Importer ».

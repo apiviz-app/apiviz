@@ -43,6 +43,11 @@ programme avec retard, matériel et stock, cases gardées, rucher décoché, lan
 Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
 partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
+Scénario v5.86 (migration 039) : `etapes_mc` (carte « Pour mieux te connaître » à J+14 : une question à la fois, « Passer »,
+réponses dans le profil, fin et comparaison avec le département, carte qui ne revient pas ; noter_activite ; Mon profil
+sans le sexe, avec l'attente ; « Mes utilisateurs » absent hors équipe, tableau de bord pour l'équipe, période ; base
+sans 039). Avec `CAPTURES=<dossier>` : captures à 390 et 1 280 px.
+
 Scénario v5.85 : `etapes_ca` (reprendre son carnet : Réglages › Tes données, tableur CSV et colonnes reconnues, ruche
 créée d'office reprise, ruche ajoutée, 3 visites, « Annuler l'import », photo lue par « lire-carnet » simulée avec un
 doute et « Ignorer », fonction absente). Avec `CAPTURES=<dossier>` : captures à 390 px.

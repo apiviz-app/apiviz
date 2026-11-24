@@ -1,0 +1,97 @@
+    # v5.86 — Mieux connaître ses utilisateurs (maquette « apiviz — Onboarding irréprochable », écran 11 et tableau de
+    # bord, validés le 24 nov. 2026 ; migration 039). Carte « Pour mieux te connaître » à J+14 : une question à la fois,
+    # « Passer », réponses dans le profil, fin et comparaison avec le département ; jours d'utilisation
+    # (noter_activite) ; Mon profil sans le sexe, avec l'attente ; tableau de bord « Mes utilisateurs » réservé à l'équipe ;
+    # base sans 039. Avec CAPTURES=<dossier> : captures à 390 et 1 280 px.
+    import os, datetime as _dt
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/mc-{nom}.png", full_page=True))
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    il_y_a = lambda j: (_dt.datetime.now(_dt.timezone.utc).replace(tzinfo=None) - _dt.timedelta(days=j)).isoformat() + "Z"
+    def profil(**k):
+        p = {"email": "test@apidoo.fr", "prenom": "Camille", "nom": "", "tranche_age": "", "sexe": "", "code_postal": "35000", "departement": "35", "anciennete": "",
+             "source": "syndicat", "activite": "", "colonies": "1-10", "stats_ok": True, "newsletter": False, "plateforme": "web", "inscription_finie": il_y_a(20),
+             "created_at": il_y_a(20), "attente": "", "mieux_connaitre_fin": None}
+        p.update(k); return p
+    DATA["profils"] = [profil()]
+    RPC = {"admin": False, "notes": [], "stats": {"jours": 30, "inscrits": 412, "nouveaux": 38, "actifs_semaine": 168, "actifs_periode": 200, "premiere_visite": 71, "retour_30": 46,
+        "parcours": [{"k": "compte", "n": 86}, {"k": "profil", "n": 74}, {"k": "rucher", "n": 70}, {"k": "visite", "n": 61}, {"k": "j7", "n": 44}],
+        "sources": [{"k": "bouche", "n": 31, "retour": 52}, {"k": "syndicat", "n": 24, "retour": 58}], "sources_autres": 4,
+        "colonies": [{"k": "1-10", "n": 46}, {"k": "11-50", "n": 42}], "attentes": [], "departements": [{"k": "35", "n": 48}, {"k": "33", "n": 31}], "departements_autres": 248,
+        "rubriques": [{"k": "visites", "n": 184}, {"k": "recoltes", "n": 116}], "vendent": 55, "reponses": {"colonies": 96, "code_postal": 81, "tranche_age": 41}, "refus_stats": 6}}
+    def rpc(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        nom = req.url.split("/rpc/")[1].split("?")[0]
+        if nom == "est_admin_apiviz": return route.fulfill(status=200, headers=h, body=json.dumps(RPC["admin"]))
+        if nom == "noter_activite": RPC["notes"].append(req.post_data_json); return route.fulfill(status=200, headers=h, body="null")
+        if nom == "comparaison_departement": return route.fulfill(status=200, headers=h, body=json.dumps({"departement": "35", "assez": True, "moi": 3, "moyenne": 2, "personnes": 12}))
+        if nom == "admin_stats_utilisateurs":
+            if not RPC["admin"]: return route.fulfill(status=403, headers=h, body=json.dumps({"code": "42501", "message": "Réservé à l'équipe Apiviz"}))
+            return route.fulfill(status=200, headers=h, body=json.dumps(RPC["stats"]))
+        return route.fallback()
+    ctx.route(f"https://{REF}.supabase.co/rest/v1/rpc/**", rpc)
+    ecrit = lambda: [r for t, u, rs in recu["upsert"] if t == "profils" for r in rs]
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector(".mc", timeout=15000)
+
+    # 1. Carte « Pour mieux te connaître »
+    c = page.locator(".mc")
+    verif("Pour mieux te connaître" in c.inner_text() and "1 sur 4" in c.inner_text(), "accueil : carte à J+14, question 1 sur 4")
+    verif("Depuis quand as-tu des abeilles ?" in c.inner_text() and "adapter les conseils" in c.inner_text(), "une question à la fois, avec pourquoi")
+    shot("1-carte")
+    page.click("[data-act=mcrepondre][data-v='1-3']"); page.wait_for_selector(".mc:has-text('2 sur 4')")
+    verif(any(r.get("anciennete") == "1-3" for r in ecrit()), "réponse enregistrée dans le profil")
+    page.click("[data-act=mcpasser]"); page.wait_for_selector(".mc:has-text('Ta tranche d’âge')")
+    verif(not any("activite" in r for r in ecrit()), "« Passer » : rien d'enregistré")
+    page.click("[data-act=mcrepondre][data-v='35-49']"); page.wait_for_selector(".mc:has-text('Ce que tu attends')")
+    page.click("[data-act=mcrepondre][data-v='vendre']"); page.wait_for_selector(".mc-merci", timeout=10000)
+    verif(any(r.get("attente") == "vendre" for r in ecrit()) and any(r.get("mieux_connaitre_fin") for r in ecrit()), "attente et fin de la carte enregistrées")
+    t = page.locator(".mc-merci").inner_text()
+    verif("Merci Camille" in t and "Ce mois-ci en Ille-et-Vilaine" in t and "3 visites" in t and "2 visites" in t and "(12)" in t, "comparaison avec le département")
+    shot("2-merci")
+    page.click("[data-act=mcfermer]"); page.wait_for_timeout(200)
+    verif(page.locator(".mc").count() == 0, "« Fermer » : la carte disparaît")
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_timeout(500)
+    verif(page.locator(".mc").count() == 0, "elle ne revient pas")
+
+    # 2. Jours d'utilisation
+    page.evaluate("ACT.go('ruches')"); page.wait_for_timeout(300); page.evaluate("Mieux.envoyer()"); page.wait_for_timeout(500)
+    rub = sorted({r for n in RPC["notes"] for r in (n or {}).get("p_rubriques", [])})
+    verif("accueil" in rub and "ruchers" in rub and all((n or {}).get("p_plateforme") == "web" for n in RPC["notes"]), "noter_activite : rubriques ouvertes : " + str(rub))
+
+    # 3. Mon profil
+    page.evaluate("ACT.go('profil')"); page.wait_for_selector(".pf")
+    t = page.locator(".pf").inner_text()
+    verif("Sexe" not in t and "Ce que tu attends" in t and "Vendre mon miel" in t, "Mon profil : plus de sexe, l'attente")
+    page.click("[data-act=pfreponses]"); page.wait_for_selector("form[data-form=inscription]")
+    verif(page.locator("input[name=sexe]").count() == 0 and page.locator("input[name=attente]").count() == 4, "formulaire : attente, pas de sexe")
+    page.click("[data-act=obannuler]") if page.locator("[data-act=obannuler]").count() else None
+
+    # 4. Tableau de bord : pas pour tout le monde
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector(".rg-donnees"); page.wait_for_timeout(500)
+    verif(page.locator("[data-act=mcadmin]").count() == 0, "Réglages : pas de « Mes utilisateurs » hors équipe")
+    RPC["admin"] = True
+    page.evaluate("Mieux.etat().admin = null"); page.evaluate("ACT.go('dash')"); page.evaluate("ACT.go('reglages')")
+    page.wait_for_selector("[data-act=mcadmin]", timeout=5000)
+    page.click("[data-act=mcadmin]"); page.wait_for_selector(".mu-kpi", timeout=10000)
+    t = page.locator(".mu").inner_text()
+    verif("412" in t and "168" in t and "71 %" in t and "46 %" in t, "quatre chiffres clés")
+    verif("Parcours d'arrivée" in t and "Revenus après 7 jours" in t and "La plus grosse perte" in t, "parcours et plus grosse perte")
+    verif("Bouche-à-oreille" in t and "58 %" in t and "Autres départements" in t and "Visites" in t, "sources et retour, départements, rubriques")
+    verif("Les 6 % qui ont désactivé" in t, "garde-fous : refus des statistiques")
+    verif(page.evaluate("document.documentElement.scrollWidth") <= 390, "téléphone : rien ne dépasse")
+    shot("3-tableau-390")
+    page.set_viewport_size({"width": 1280, "height": 900}); page.wait_for_timeout(300)
+    shot("3-tableau-1280")
+    page.click("[data-act=mcperiode][data-v='365']"); page.wait_for_timeout(500)
+    verif(page.locator("[data-act=mcperiode][data-v='365']").get_attribute("aria-pressed") == "true", "période : 12 mois")
+
+    # 5. Base sans 039 : pas de carte
+    page.set_viewport_size({"width": 390, "height": 844})
+    p = profil(); del p["attente"]; del p["mieux_connaitre_fin"]; DATA["profils"] = [p]
+    page.evaluate("localStorage.clear()"); page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000); page.wait_for_timeout(600)
+    verif(page.locator(".mc").count() == 0, "base sans 039 : pas de carte")

@@ -68,9 +68,10 @@ test("Profil : département et lieu déduits du code postal (Corse, outre-mer)",
 test("Profil : tout est facultatif, seules les réponses de la liste sont gardées", () => {
   assert.equal(P.controle({}), null);
   assert.equal(P.controle({ code_postal: "123" }), "Le code postal a cinq chiffres.");
-  assert.equal(P.controle({ sexe: "licorne" }), "Une réponse n’est pas reconnue.");
+  assert.equal(P.controle({ attente: "licorne" }), "Une réponse n’est pas reconnue.");
+  assert.equal(P.controle({ sexe: "licorne" }), null); // v5.86 : plus demandé, ignoré
   assert.deepEqual(P.reponses({ tranche_age: "35-49", sexe: "x", code_postal: " 33750 ", source: "salon" }),
-    { code_postal: "33750", tranche_age: "35-49", sexe: "", anciennete: "", activite: "", colonies: "", source: "salon" });
+    { code_postal: "33750", tranche_age: "35-49", sexe: "", anciennete: "", activite: "", colonies: "", source: "salon", attente: "" });
   assert.equal(P.libelle(P.SOURCES, "syndicat"), "Syndicat ou GDS");
   assert.equal(P.libelle(P.AGES, ""), "");
   assert.deepEqual(P.sansCompte({ associes: [" Jean ", "Société", ""] }), ["Jean"]);

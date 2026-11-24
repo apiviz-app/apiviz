@@ -68,3 +68,8 @@
 #   Additive, ne casse pas l'ancienne version. Après 037. NON APPLIQUÉE : à appliquer sur apidoo-test par la mise en ligne
 #   en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur apidoo avec l'accord de Pierre-Louis. Sans elle,
 #   la v5.78 n'affiche pas la carte et vend comme la v5.77.
+# 039-mieux-connaitre-usage.sql (PR claude/mieux-connaitre, v5.86) : attente et fin de la carte « Pour mieux te connaître »,
+#   sexes effacés, jours d'utilisation (activite_jours, noter_activite), comparaison avec le département, tableau de bord de
+#   l'équipe (admin_stats_utilisateurs). Additive, ne casse pas l'ancienne version. Après 038. NON APPLIQUÉE : d'abord
+#   apidoo-test par la mise en ligne en recette, puis apidoo avec l'accord de Pierre-Louis. Sans elle, la v5.86 ne pose pas
+#   la question « attente », ne note rien et cache le tableau de bord.

@@ -5,6 +5,46 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.86 · à publier en recette · mieux connaître ses utilisateurs
+**Migration 039** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). Maquette « apiviz — Onboarding
+irréprochable », écran 11 et tableau de bord « Mes utilisateurs », et recommandation sur les données du profil,
+validés par Pierre-Louis le 24 nov. 2026 (« Je valide la globalité »).
+
+Pour l'apiculteur :
+1. **« Pour mieux te connaître »** : 14 jours après l'inscription, une carte sur l'accueil pose quatre questions, une
+   à la fois (depuis quand tu as des abeilles, loisir ou métier, tranche d'âge, ce que tu attends d'abord d'Apiviz), avec
+   pourquoi on demande, « Passer » et « Ne plus demander ». À la fin : tes visites du mois à côté de la moyenne de ton
+   département, seulement si au moins 5 apiculteurs du département ont accepté les statistiques.
+2. **Le sexe n'est plus demandé** (inscription, Mon profil) ; les réponses déjà données sont effacées par la migration.
+   Mon profil montre « Ce que tu attends ».
+3. **Mesure de l'utilisation** : pour chaque jour d'ouverture, les grandes rubriques consultées et le type d'appareil.
+   Rien pour qui a désactivé « statistiques » (et ses jours déjà notés sont effacés). Politique de confidentialité mise
+   à jour.
+
+Pour l'équipe Apiviz (administrateurs, table `administrateurs_apiviz`) : **Réglages › Tes données › Mes utilisateurs**,
+tableau de bord : inscrits, actifs de la semaine, part ayant fait sa première visite, part qui revient après 30 jours ;
+parcours d'arrivée étape par étape et plus grosse perte ; sources × retour à 30 jours ; colonies, exploitations qui
+vendent, attentes ; départements ; rubriques utilisées ; taux de réponse par question ; garde-fous. Période : 30 jours,
+12 mois, depuis le début. Aucun nom ni adresse ; tout groupe de moins de 5 personnes est masqué ou regroupé.
+
+Écarts avec la maquette : pas d'étape « a ouvert Apiviz » dans le parcours (rien n'est mesuré avant le compte) ; les
+chiffres sous 5 personnes s'affichent « — » ; « Exporter » n'est pas fait.
+
+Technique :
+- Migration 039 : `profils.attente`, `profils.mieux_connaitre_fin`, sexes effacés (colonne gardée pour l'ancienne
+  version) ; `activite_jours` (sans aucun droit pour l'application) et `noter_activite(p_rubriques, p_plateforme)` ;
+  `comparaison_departement()` ; `admin_stats_utilisateurs(p_jours)` (`est_admin_apiviz()`) ; `stats_profils` sans le sexe.
+- `src/domaines/compte/regles-mieux.js` (règles pures) : carte due, questions, rubrique d'un écran, comparaison,
+  sections du tableau de bord. `mieux.js` : carte (crochet `apresRendu` sur l'accueil), jours d'utilisation (envoyés 4 s
+  après la première ouverture d'une rubrique dans la journée), route `utilisateurs`, ligne de Réglages.
+  `profil.js` : attente, plus de sexe, enregistrement qui se replie sans les colonnes de 039. `styles/79-mieux.css`.
+- Tests : SQL `test_039` (26 vérifications) ; unitaires `mieux.test.mjs` ; scénario `etapes_mc` ; `etapes_op`,
+  `etapes_nk`, `test_appliquer`, `operationnel.test.mjs` adaptés.
+
+À vérifier :
+- Appliquer 039 sur `apidoo-test` ; s'ajouter dans `administrateurs_apiviz` pour voir le tableau de bord.
+- Un compte inscrit depuis plus de 14 jours voit la carte ; « Ne plus demander » ne la ramène pas sur un autre appareil.
+
 ## v5.85 · à publier en recette · reprendre son carnet
 **Pas de migration.** Maquette « apiviz — Onboarding irréprochable », écrans 5 et 6, validée par Pierre-Louis le
 24 nov. 2026. **Nouvelle fonction serveur `lire-carnet`** (à déployer sur chaque projet Supabase, mêmes secrets que

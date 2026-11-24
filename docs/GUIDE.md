@@ -24,6 +24,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   « Enchaîner avec » la ruche suivante et les rappels proposés.
 - **Reprendre son carnet** (après le premier rucher, ou Réglages › Tes données) : photo des pages lue par API, ou
   tableur (CSV, Excel) ; tu vérifies ce qui a été compris, puis « Importer » ; « Annuler l'import » défait tout.
+- **Pour mieux te connaître** (14 jours après l'inscription) : quatre questions facultatives, une à la fois ; en
+  retour, tes visites du mois à côté de la moyenne de ton département (5 apiculteurs au moins).
 - **Exploitation d'exemple** : rien n'est enregistré ; trois bulles montrent la priorité du jour, les ruchers et le
   bouton API ; « Commencer avec mes ruches » mène au compte.
 

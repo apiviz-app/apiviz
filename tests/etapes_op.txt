@@ -45,9 +45,10 @@
     verif(p["colonies"] == "11-50" and p["code_postal"] == "33750" and p["source"] == "syndicat" and p["tranche_age"] == "" and p["inscription_finie"], "réponses enregistrées, inscription finie : " + str({k: p[k] for k in ("colonies", "code_postal", "source")}))
     # L'âge et l'activité, demandés plus tard ou dans Mon profil
     page.evaluate("ACT.go('profil')"); page.wait_for_selector(".pf"); page.click("[data-act=pfreponses]"); page.wait_for_selector("text=Pour mieux te connaître")
-    page.click("label:has(input[name=tranche_age][value='35-49'])"); page.click("label:has(input[name=sexe][value=homme])"); page.click("label:has(input[name=activite][value=loisir])")
+    verif(page.locator("input[name=sexe]").count() == 0, "v5.86 : le sexe n'est plus demandé")
+    page.click("label:has(input[name=tranche_age][value='35-49'])"); page.click("label:has(input[name=activite][value=loisir])")
     page.click("[data-act=obfinir]"); page.wait_for_selector(".pf", timeout=15000)
-    verif(p["tranche_age"] == "35-49" and p["sexe"] == "homme" and p["activite"] == "loisir" and p["source"] == "syndicat", "Mon profil : réponses complétées")
+    verif(p["tranche_age"] == "35-49" and p["sexe"] == "" and p["activite"] == "loisir" and p["source"] == "syndicat", "Mon profil : réponses complétées")
     page.evaluate("ACT.go('dash')"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
     verif("Pierre-Louis" in page.locator(".wrap").inner_text(), "l'accueil dit bonjour avec le prénom")
     page.reload(); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
