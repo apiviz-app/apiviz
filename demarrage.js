@@ -114,7 +114,7 @@ const DM = (() => {
       try { await sb.rpc("regler", { p_modifs: { ...(rubriques ? { rubriques } : {}), premiers_pas_debut: new Date().toISOString().slice(0, 10) } }); } catch { /* réglages plus tard */ }
       S.member = true; S.route = "dash"; render(); await loadAll();
       toast("Ton rucher est prêt");
-      if (window.Arrivee?.apresRucher) window.Arrivee.apresRucher(); else if (window.Arrivee) window.Arrivee.ouvrirVisite(); else render();
+      if (window.Reprise) window.Reprise.apresRucher({ rucher, nb: q.nb }); else if (window.Arrivee) window.Arrivee.ouvrirVisite(); else render(); // v5.85 : reprendre son carnet
     } catch (e) { fail(e); }
     finally { if (bouton?.isConnected) bouton.disabled = false; }
   };

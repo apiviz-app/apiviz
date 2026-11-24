@@ -1,0 +1,117 @@
+    # v5.85 — Reprendre son carnet (maquette « apiviz — Onboarding irréprochable », écrans 5 et 6, validée le 24 nov.
+    # 2026). Réglages › Tes données › « Reprendre un carnet ou un tableur » ; tableur CSV : colonnes reconnues, ruche
+    # créée d'office renommée, ruche ajoutée, visites ; « Importer » puis « Annuler l'import » ; photo du carnet lue par
+    # la fonction « lire-carnet » (simulée) : une question en cas de doute, « Ignorer » ; fonction absente : la photo
+    # n'est pas proposée. Rien n'est écrit avant « Importer ». Avec CAPTURES=<dossier> : captures à 390 px.
+    import os, base64, urllib.parse as _up
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/ca-{nom}.png", full_page=True))
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    ecrits = {"patch": [], "delete": []}
+    def table(route):
+        req = route.request
+        if req.method not in ("PATCH", "DELETE"): return route.fallback()
+        t = re.match(r".*/rest/v1/(\w+)", req.url).group(1)
+        q = _up.parse_qs(_up.urlparse(req.url).query)
+        if req.method == "PATCH":
+            corps = req.post_data_json or {}
+            i = q.get("id", [""])[0].replace("eq.", "")
+            ecrits["patch"].append((t, i, corps))
+            for x in DATA.get(t, []):
+                if x.get("id") == i: x.update(corps)
+        else:
+            ids = q.get("id", [""])[0].replace("in.(", "").rstrip(")").replace('"', "").split(",")
+            ecrits["delete"].append((t, ids))
+            DATA[t] = [x for x in DATA.get(t, []) if x.get("id") not in ids]
+        route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*"}, body="")
+    ctx.route("**/rest/v1/ruches**", table)
+    ctx.route("**/rest/v1/visites**", table)
+
+    def releve():
+        return {"lisible": True, "raison": "", "ruches": [
+            {"nom": "Ruche 1", "rucher": "Verger", "a_verifier": False, "raison": "", "propositions": [], "visites": [
+                {"date": "2026-09-12", "reine": "Vue", "oeufs_vus": None, "couvain": "Normal", "provisions": "Bonnes", "activite": "Normale", "cadres_couvain": 5, "poids_kg": None, "note": "Reine bleue 2025"}]},
+            {"nom": "Ruche 12", "rucher": "Verger", "a_verifier": True, "raison": "Le numéro est peu lisible.", "propositions": ["Ruche 12", "Ruche 17"], "visites": [
+                {"date": "2026-09-12", "reine": "", "oeufs_vus": None, "couvain": "Abondant", "provisions": "", "activite": "", "cadres_couvain": 7, "poids_kg": None, "note": ""}]}]}
+    FN = {"etat": {"actif": True, "plafond": 30, "restant": 30}, "recus": [], "present": True}
+    def fonction(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        if not FN["present"]: return route.fulfill(status=404, headers=h, body=json.dumps({"code": "NOT_FOUND", "message": "Requested function was not found"}))
+        corps = req.post_data_json or {}
+        FN["recus"].append({"corps": corps, "expl": req.headers.get("x-exploitation", "")})
+        if corps.get("etat"): return route.fulfill(status=200, headers=h, body=json.dumps(FN["etat"]))
+        return route.fulfill(status=200, headers=h, body=json.dumps({"carnet": releve(), "restant": 29, "gouttes": None}))
+    ctx.route(f"https://{REF}.supabase.co/functions/v1/lire-carnet", fonction)
+
+    CSV = ("Ruche;Date;Reine;Couvain;Provisions;Remarques\n"
+           "Ruche 1;12/09/2026;oui;5;bonnes;Reine bleue 2025\n"
+           "Ruche 1;03/10/2026;vue;4;moyennes;\n"
+           "La Noire;12/09/2026;non;2;faibles;À surveiller\n").encode("utf-8")
+    PNG = {"name": "page.png", "mimeType": "image/png", "buffer": base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGP4z8DwnwGM/zMwAAAf7gP9NRsAMwAAAABJRU5ErkJggg==")}
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    avant = len(recu["rpc"]); recu["upsert"].clear()
+
+    # 1. Réglages › Tes données
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("[data-act=rpouvrir]", timeout=10000)
+    verif("Reprendre un carnet ou un tableur" in page.locator("[data-act=rpouvrir]").inner_text(), "Réglages › Tes données : « Reprendre un carnet ou un tableur »")
+    page.click("[data-act=rpouvrir]"); page.wait_for_selector(".ar[data-ecran=reprendre]")
+    page.wait_for_function("!document.querySelector('[data-act=rpphoto]').disabled", timeout=5000)
+    t = page.locator(".ar").inner_text()
+    verif("Tu as déjà un carnet ou un tableur ?" in t and page.locator(".rp-option").count() == 3, "trois choix : photo, tableur, partir de zéro")
+    verif("Rien n'est enregistré sans toi" in t, "rassurance : rien sans toi")
+    shot("5-reprendre")
+
+    # 2. Tableur CSV
+    page.set_input_files("#rpTableur", {"name": "carnet-2026.csv", "mimeType": "text/csv", "buffer": CSV})
+    page.wait_for_selector(".ar[data-ecran=carnet]")
+    t = page.locator(".ar").inner_text()
+    verif("carnet-2026.csv" in t and "2 ruches et 3 visites trouvées" in t, "tableur lu : 2 ruches et 3 visites")
+    verif("Reprend Ruche 1" not in t and "Compris" in t and "Ajoutée" in t, "Ruche 1 reprise, La Noire ajoutée")
+    verif(page.locator(".rp-colonnes select[data-col=ruche]").input_value() == "0" and page.locator(".rp-colonnes select[data-col=note]").input_value() == "5", "colonnes reconnues (Ruche, Remarques)")
+    ecrit = [n for n, b in recu["rpc"][avant:] if not n.startswith(("mon_", "mes_", "est_", "gouttes_"))]
+    verif(not ecrit and not recu["upsert"] and not ecrits["patch"], "rien n'est écrit avant « Importer » : " + str([n for n, b in recu["rpc"][avant:]] + [x[0] for x in recu["upsert"]]))
+    shot("6-tableur")
+    page.click("[data-act=rpimporter]"); page.wait_for_selector(".ar[data-ecran=carnet-fait]", timeout=10000)
+    vis = [b["p"] for n, b in recu["rpc"] if n == "creer_visite"]
+    nouvelles = [r for x in recu["upsert"] if x[0] == "ruches" for r in x[2]]
+    verif(len(vis) == 3 and len(nouvelles) == 1 and nouvelles[0]["nom"] == "La Noire" and nouvelles[0]["rucher"] == "Verger", "import : 1 ruche ajoutée au premier rucher, 3 visites")
+    v1 = next(v for v in vis if v["date_visite"] == "2026-09-12" and v["ruche_id"] == R1)
+    verif(v1["reine"] == "Vue" and v1["couvain"] == "Normal" and v1["provisions"] == "Bonnes" and "repris du carnet" in v1["note"].lower(), "visite reprise : reine, couvain, provisions, mention : " + str({k: v1[k] for k in ("reine", "couvain", "provisions", "note")}))
+    verif("activite" not in v1["observes"] and "reine" in v1["observes"], "seuls les champs lus sont observés")
+    verif("Ton carnet est repris" in page.locator(".ar").inner_text(), "écran final : carnet repris")
+    shot("6-fait")
+    page.click("[data-act=rpannuler]"); page.wait_for_selector(".ar[data-ecran=reprendre]", timeout=10000)
+    effaces = {t: ids for t, ids in ecrits["delete"]}
+    verif(len(effaces.get("visites", [])) == 3 and len(effaces.get("ruches", [])) == 1, "« Annuler l'import » retire les 3 visites et la ruche ajoutée : " + str(ecrits["delete"]))
+
+    # 3. Photo du carnet : un doute, « Ignorer »
+    page.set_input_files("#rpPhoto", PNG); page.wait_for_selector("[data-act=rplire]")
+    verif("1 page prête" in page.locator(".rp-pages").inner_text(), "une page prête")
+    page.click("[data-act=rplire]"); page.wait_for_selector(".ar[data-ecran=carnet]", timeout=10000)
+    envoi = FN["recus"][-1]
+    verif(len(envoi["corps"].get("pieces", [])) == 1 and envoi["corps"]["pieces"][0]["type"] == "image/jpeg" and envoi["expl"], "la page part en JPEG, avec l'exploitation")
+    verif(page.locator(".rp-doute").count() == 1 and "Ruche 17" in page.locator(".rp-doute").inner_text(), "une question en cas de doute")
+    verif(page.locator("[data-act=rpimporter]").is_disabled(), "« Importer » attend la réponse")
+    shot("6-photo")
+    page.click("[data-act=rpchoix][data-v='']")
+    verif(not page.locator("[data-act=rpimporter]").is_disabled() and "Importer 1 ruche et 1 visite" in page.locator("[data-act=rpimporter]").inner_text(), "ruche ignorée : 1 ruche et 1 visite")
+    page.click("[data-act=rpchoix][data-v='Ruche 17']")
+    verif("Importer 2 ruches et 2 visites" in page.locator("[data-act=rpimporter]").inner_text(), "doute réglé : Ruche 17 vient aussi")
+    page.click("[data-act=rpretour]"); page.wait_for_selector(".ar[data-ecran=reprendre]")
+    page.click("[data-act=rpzero]"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=10000)
+    verif(True, "« Fermer » ramène à l'accueil")
+
+    # 4. Fonction absente : pas de photo
+    FN["present"] = False
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('reglages')"); page.click("[data-act=rpouvrir]"); page.wait_for_selector(".ar[data-ecran=reprendre]")
+    page.wait_for_function("document.querySelector('[data-act=rpphoto]').disabled", timeout=5000)
+    verif("pas encore disponible" in page.locator("[data-act=rpphoto]").inner_text(), "sans la fonction : la photo n'est pas proposée")
+
+    # 5. Téléphone : rien ne dépasse
+    verif(page.evaluate("document.documentElement.scrollWidth") <= 390, "rien ne dépasse en largeur à 390 px")

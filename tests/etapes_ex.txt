@@ -21,9 +21,10 @@
     # v5.84 : une seule question (le premier rucher) ; l'exploitation prend un nom proposé, puis la première visite guidée.
     page.reload(); page.wait_for_selector("text=Ton premier rucher", timeout=15000)
     page.fill("#dm_rucher", "Le Verger"); page.click("[data-act=dmcreer]")
-    page.wait_for_selector(".ar[data-ecran=premierevisite]", timeout=10000)
+    page.wait_for_selector(".ar[data-ecran=reprendre]", timeout=10000)  # v5.85 : reprendre son carnet, puis « Plus tard »
+    page.click(".ar-fin [data-act=rpzero]"); page.wait_for_selector(".ar[data-ecran=premierevisite]", timeout=10000)
     E2 = EXPL["miennes"][0]["id"]
-    verif(page.evaluate("EX.courante()") == E2 and [b["p_nom"] for n, b in recu["rpc"] if n == "creer_exploitation"] == ["Mon exploitation"], "exploitation créée (nom proposé) puis ouverte sur la première visite")
+    verif(page.evaluate("EX.courante()") == E2 and [b["p_nom"] for n, b in recu["rpc"] if n == "creer_exploitation"] == ["Mon exploitation"], "exploitation créée (nom proposé) puis ouverte sur « reprendre », puis la première visite")
     cr = [b["p"] for n, b in recu["rpc"] if n == "creer_rucher"]
     verif(len(cr) == 1 and cr[0]["nom"] == "Le Verger" and len(cr[0]["colonies"]) == 2 and len(cr[0]["id"]) == 36,
           "premier rucher : le rucher et ses 2 colonies en un seul appel (creer_rucher)")

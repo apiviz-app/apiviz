@@ -43,6 +43,10 @@ programme avec retard, matériel et stock, cases gardées, rucher décoché, lan
 Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
 partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
+Scénario v5.85 : `etapes_ca` (reprendre son carnet : Réglages › Tes données, tableur CSV et colonnes reconnues, ruche
+créée d'office reprise, ruche ajoutée, 3 visites, « Annuler l'import », photo lue par « lire-carnet » simulée avec un
+doute et « Ignorer », fonction absente). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.84 : `etapes_bv` (parcours d'arrivée : bienvenue une fois par appareil, « Faisons connaissance » et les
 trois offres de 029, « Créer mon compte » avec prénom et 15 ans — rien n'est envoyé sans —, étape 1 enregistrée seule,
 « Tu en es où ? » et son aperçu, premier rucher et nom proposé, rubriques proposées, première visite guidée et sa

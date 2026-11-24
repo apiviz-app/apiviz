@@ -5,6 +5,44 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.85 · à publier en recette · reprendre son carnet
+**Pas de migration.** Maquette « apiviz — Onboarding irréprochable », écrans 5 et 6, validée par Pierre-Louis le
+24 nov. 2026. **Nouvelle fonction serveur `lire-carnet`** (à déployer sur chaque projet Supabase, mêmes secrets que
+`lire-facture`) ; sans elle, l'application ne propose pas la photo du carnet et tout le reste fonctionne.
+
+Pour l'apiculteur :
+1. **Après le premier rucher** : « Le Verger est prêt · 4 ruches créées », puis « Tu as déjà un carnet ou un
+   tableur ? » : photographier son carnet, importer un tableur, ou partir de zéro (la première visite guidée suit).
+   Aussi depuis **Réglages › Tes données › Reprendre un carnet ou un tableur**.
+2. **Photo du carnet** : jusqu'à 6 pages (ou un PDF), réduites sur le téléphone, lues par API ; un carnet lu coûte ses
+   gouttes comme une facture. API ne pose une question que s'il doute (« C'est Ruche 12 ou Ruche 17 ? », ou « Ignorer »).
+3. **Tableur** (CSV, Excel, LibreOffice) : les colonnes sont reconnues (ruche, rucher, date, reine, couvain, provisions,
+   activité, poids, remarques) et modifiables ; une ligne = une visite.
+4. **Carnet lu** : ce qui a été compris, ce que deviennent les ruches (« Compris », « Reprend Ruche 3 », « Ajoutée »).
+   Les ruches créées d'office et jamais visitées prennent les noms du carnet ; les autres sont ajoutées au rucher du
+   carnet (ou au premier). **Rien n'est écrit avant « Importer »** ; chaque visite porte « repris du carnet » et ne
+   change pas l'état actuel de la ruche. **« Annuler l'import »** remet tout comme avant.
+
+Écarts avec la maquette : la photo est désactivée (avec une phrase) quand la fonction n'est pas déployée ou sans réseau ;
+l'import demande du réseau (pas de file hors ligne).
+
+Technique :
+- `src/domaines/compte/regles-reprise.js` (règles pures) : lecture CSV (séparateur deviné, guillemets), colonnes
+  reconnues, dates (jj/mm/aaaa, ISO, nombre Excel, jamais dans le futur), valeurs ramenées à celles de la visite,
+  `planImport()` (reprendre, renommer, créer), `chargeVisite()` pour `creer_visite`.
+- `reprise.js` : routes `reprendre` et `carnet`, import (ruches renommées, créées, `creer_visite`), annulation, ligne de
+  Réglages, `window.Reprise.apresRucher` appelé par `demarrage.js`. Excel lu par SheetJS (jsDelivr, chargé à la demande).
+  `styles/78-reprise.css`.
+- `supabase/functions/lire-carnet/` : même garde que `lire-facture` (connexion, `est_membre`, plafond, gouttes, nature
+  « facture » avec `objet: carnet`), outil `carnet`, `normaliser()` (dates futures écartées, valeurs bornées). Secrets :
+  `ANTHROPIC_API_KEY`, `CARNET_MODELE` (sinon `FACTURE_MODELE`), `CARNET_ACTIF`.
+- Tests : unitaires `reprise.test.mjs` ; scénario `etapes_ca` (Réglages, tableur, import, annulation, photo et doute,
+  fonction absente) ; `etapes_bv` passe par « Le Verger est prêt ».
+
+À vérifier :
+- Déployer `lire-carnet` sur `apidoo-test`, puis photographier un vrai carnet manuscrit (écriture, ratures, tableau).
+- Importer un vrai fichier Excel ; « Annuler l'import ».
+
 ## v5.84 · à publier en recette · parcours d'arrivée
 **Pas de migration.** Maquette « apiviz — Onboarding irréprochable » (écrans 1 à 10 et 1 bis), validée par
 Pierre-Louis le 24 nov. 2026 (« Je valide la globalité de ce que tu m'as proposé », puis « implémente tout »). Les

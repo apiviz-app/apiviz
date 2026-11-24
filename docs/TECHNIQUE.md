@@ -282,6 +282,17 @@ d'activer une offre payée ou une recharge.
 `abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
 changent pas : seul le bouton « Payer » sera branché.
 
+## Lecture d'un carnet par API (v5.85)
+
+Après le premier rucher et depuis Réglages › Tes données. Rien n'est écrit avant « Importer ».
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Fonction serveur | `supabase/functions/lire-carnet/index.ts` | Même garde que `lire-facture` (connexion, `est_membre`, plafond, gouttes) ; lit les noms de ruches, appelle Claude avec les pages et l'outil `carnet` |
+| Règles | `…/lire-carnet/regles.js` | Consignes, schéma, contrôle des pièces (PDF seul ou 1 à 6 images), `normaliser()` |
+| Écran | `src/domaines/compte/reprise.js` | Routes `reprendre` et `carnet`, import par `ruches` et `creer_visite`, annulation |
+| Règles de l'écran | `src/domaines/compte/regles-reprise.js` | CSV, colonnes, dates, valeurs, `planImport()`, `chargeVisite()` |
+
 ## Lecture des factures par API (v5.52)
 
 « Ajouter un achat » propose de donner la facture (photo ou PDF) à API ; l'apiculteur valide le relevé, puis l'achat est
