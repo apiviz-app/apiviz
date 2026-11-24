@@ -1,0 +1,5 @@
+# Fonctions serveur déployées avec --no-verify-jwt : elles se protègent elles-mêmes (clé partagée avec une action
+# GitHub, ou réponse publique sans donnée). Une par ligne. Lu par l'action « Fonctions serveur ».
+nettoyer-stockage
+rappels
+supprimer-comptes
