@@ -29,6 +29,9 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.83 : `etapes_tr` (d'un pot à ses ruches : origine et traitement pendant la miellée, QR, clients à
+prévenir et message, lien `?lot=`, QR sur les étiquettes de pots).
+
 Scénario v5.82 : `etapes_hv` (Prêt pour l'hiver : sans repère, réglage des repères, classement, filtre, fiche, lien
 depuis Ma saison).
 

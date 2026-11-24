@@ -5,6 +5,33 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.83 · à publier en recette · d'un pot à ses ruches
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 3, validée par Pierre-Louis le 24 nov. 2026.
+La fiche de lot montrait déjà l'histoire du lot (v5.30) et ses clients : elle est complétée.
+
+Pour l'apiculteur (Produits › un lot) :
+1. Carte **Traçabilité** : ruchers et colonies d'origine, dates et kilos de la récolte (récoltes reliées à
+   l'extraction du lot), et les **traitements notés pendant la miellée** (60 jours avant la première récolte jusqu'à
+   la dernière), signalés à vérifier avec le délai d'attente du produit. Le QR du pot, et « Imprimer la fiche du lot ».
+2. Carte **Si un souci est signalé sur ce lot** : clients connus qui en ont acheté, pots vendus sans nom (marché),
+   pots encore en stock ; « Préparer le message » : texte modifiable (vouvoiement, document émis), envoi par SMS,
+   e-mail (en copie cachée) ou copier. Rien ne part sans l'apiculteur.
+3. **QR sur les étiquettes de pots** (option, retenue dans les réglages `etiquetteQr`, oui par défaut) : le lien
+   `…/?lot=<code>` ouvre la fiche du lot une fois connecté, depuis l'appareil photo du téléphone ou le scanner
+   d'Apiviz (qui lisait seulement les ruches). Code inconnu dans l'exploitation ouverte : apiviz le dit.
+
+Technique : `src/domaines/production/tracabilite.js` (règles pures : lien du QR, origine, traitements, clients à
+prévenir, message), `tracabilite-ecran.js` (cartes de la fiche de lot, lien `?lot=` par le crochet `apresRendu`,
+`window.Tracabilite`), `etiquettes.js` (option QR, `.et-qr`), `ruchers/qr.js` (scanner), `styles/76-tracabilite.css`.
+Le QR des pots est un lien vers l'application : il ne montre rien à un client sans compte (page publique : plus tard,
+si souhaité). Charte de ton : exception ajoutée pour le message aux clients.
+Tests : unitaires `tracabilite.test.mjs` (5 tests) ; scénario `etapes_tr`.
+
+À vérifier :
+- Un lot relié à une extraction : ruchers, colonies, traitement pendant la miellée ; le QR.
+- « Préparer le message » : SMS et e-mail sur téléphone.
+- Étiquettes avec QR, imprimées à 100 % : le QR se lit à l'appareil photo et ouvre le lot.
+
 ## v5.82 · à publier en recette · prêt pour l'hiver
 **Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 5, validée par Pierre-Louis le 24 nov. 2026.
 

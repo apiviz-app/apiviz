@@ -131,7 +131,10 @@ export async function scanner() {
         const lus = await detecteur.detect(video);
         for (const c of lus) {
           const p = T.lireQr(c.rawValue);
-          if (!p) { if (aide) aide.textContent = "Ce QR n’est pas une étiquette de ruche Apiviz."; continue; }
+          // v5.83 : un QR de pot (« ?lot= ») ouvre la fiche du lot.
+          const pot = !p && window.Tracabilite?.lireLienLot(c.rawValue);
+          if (pot) { arreter(); if (window.Tracabilite.ouvrirCode(pot.code) && $sheet.open) $sheet.close(); return; }
+          if (!p) { if (aide) aide.textContent = "Ce QR n’est pas une étiquette Apiviz (ruche ou pot)."; continue; }
           arreter();
           ouvrirLu(p, aide);
           return;

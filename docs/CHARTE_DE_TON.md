@@ -36,6 +36,7 @@ Exceptions actuelles (textes de documents émis) :
 | `saison.js` | « Dites-moi ce qui vous ferait plaisir » | message aux clients qui ont demandé à être prévenus de la récolte (v5.66) |
 | `sante/regles.js` | « Je vous signale avoir observé le… » | fiche de signalement remise au vétérinaire, au groupement sanitaire ou aux services vétérinaires (IT-12) |
 | `sante/regles.js` | « Je souhaite avoir votre avis sur la conduite à tenir. » | même fiche (IT-12) |
+| `production/tracabilite.js` | « Bonjour, vous avez acheté … (lot …) … Je vous l’échange ou je vous rembourse. » | message aux clients qui ont acheté un lot à vérifier, envoyé par SMS ou e-mail (v5.83) |
 | `commande.html` | toute la page | page de commande publique, lue par les clients (v5.57) |
 
 Ajouter une exception : seulement pour un texte destiné à un tiers, en l'inscrivant ici **et** dans le test.
