@@ -6,9 +6,11 @@
 //   - Produits › ⋯ › Offres de vente (écran « promotions ») : une carte par offre, interrupteur, usage ; « Créer une
 //     offre » (écran « promotion ») avec les quatre modèles, les produits, pour qui, quand, le nom et l'aperçu.
 // Les remises partent avec la vente dans creer_vente (037), réparties sur les lignes. Règles pures : remises-regles.js.
-// Globales d'app.js lues à l'appel : S, esc, eur, eur0, today, shell, render, go, redessiner, toast, fail, write, sb,
+// v5.78 : carte de fidélité (fidelite-regles.js, migration 038) dans le bloc de la vente, réglage, reçu.
+// Globales d'app.js lues à l'appel : S, esc, eur, eur0, today, shell, render, go, redessiner, toast, fail, write, sb, sheet, saveCfg,
 // $sheet, $sheetForm, readSaleForm, cfg, twoStep, emptyState, HL. Styles : styles/72-remises.css.
 import * as R from "./remises-regles.js";
+import * as FI from "./fidelite-regles.js";
 
 const e = (t) => esc(t);
 const lecteur = () => document.documentElement.classList.contains("lecteur");
@@ -40,7 +42,56 @@ function contexte(ou) {
 /** Le calcul complet d'une vente en cours. */
 export function calcul(ou, manuelle) {
   const c = contexte(ou);
-  return R.calculerVente({ lignes: c.lignes, lots: S.d.lots || [], promotions: promotions(), client: c.client, date: c.date, manuelle: disponible() ? (manuelle === undefined ? c.manuelle : manuelle) : null });
+  return R.calculerVente({ lignes: c.lignes, lots: S.d.lots || [], promotions: promotions(), client: c.client, date: c.date, manuelle: disponible() ? (manuelle === undefined ? c.manuelle : manuelle) : null,
+    fidelite: ou === "vente" && recompenseDonnee(c) });
+}
+
+// ---------- Carte de fidélité (v5.78, migration 038) ----------
+/** La base a la colonne ventes.remise_fidelite (038) : vérifié une fois, quand la carte est activée. */
+let base038 = null;
+function verifierBase038() {
+  if (base038 !== null || typeof sb == "undefined") return;
+  base038 = "attente";
+  sb.from("ventes").select("remise_fidelite").limit(1).then(({ error }) => {
+    base038 = !error;
+    if (S.route === "vente") redessiner("vente");
+  }, () => { base038 = null; });
+}
+const reglageCarte = () => FI.reglage(typeof cfg == "function" ? cfg() : {});
+/** Carte du client de la vente en cours (null : pas de carte, carte éteinte ou base sans 038). */
+export function carteClient(client) {
+  const r = reglageCarte();
+  if (!r.actif || !FI.aUneCarte(client)) return null;
+  verifierBase038();
+  if (base038 !== true) return null;
+  return FI.carte(client, S.d.ventes || [], S.d.lignes || [], r);
+}
+const articles = (c) => c.lignes.reduce((t, l) => t + Number(l.quantite || 0), 0);
+/** La récompense est donnée dans cette vente : choisie (« Offrir maintenant ») et toujours possible. */
+function recompenseDonnee(c) {
+  if (!c.etat?.fidelite || !c.lignes.length) return false;
+  const k = carteClient(c.client);
+  return !!k && FI.avecVente(k, articles(c)).proposer;
+}
+function blocCarte(c) {
+  const k = carteClient(c.client);
+  if (!k) return "";
+  const donnee = recompenseDonnee(c), apres = FI.avecVente(k, articles(c), donnee);
+  const pastilles = Array.from({ length: k.n }, (_, i) => `<span class="fi-p${i < apres.tampons ? " on" : ""}"></span>`).join("");
+  const tete = `<div class="fi-tete"><span class="rm-t"><b>Carte de fidélité · ${e(apres.tampons)} sur ${k.n}</b><span class="small">${donnee ? "Récompense donnée dans cette vente" : apres.pleine ? "Carte pleine" : `${k.n - apres.tampons > 1 ? `Encore ${k.n - apres.tampons} articles` : "Encore 1 article"} et le suivant est offert`}</span></span></div>
+    <div class="fi-pastilles" style="grid-template-columns:repeat(${Math.min(k.n, 10)},minmax(0,1fr))" role="img" aria-label="${e(apres.tampons)} tampons sur ${k.n}">${pastilles}</div>`;
+  let corps = "";
+  if (donnee) {
+    const v = calcul("vente");
+    corps = `<div class="rm-offre"><span class="rm-t"><b>Article offert par la carte</b><span class="small">Le moins cher du panier</span></span><b class="rm-m">−${e(eur(v.carte?.remise || 0))}</b>
+      ${lecteur() ? "" : '<button type="button" class="link" data-act="rmcarte" data-v="retirer">Retirer</button>'}</div>`;
+  } else if (apres.pleine && !apres.proposer) {
+    corps = '<div class="fi-pleine"><b>Carte pleine avec cette vente</b><span class="small">Le prochain article est offert : maintenant si tu en ajoutes un, sinon à la prochaine visite.</span></div>';
+  } else if (apres.proposer && !c.etat.fideliteNon && !lecteur()) {
+    corps = `<div class="fi-pleine"><b>Carte pleine : un article offert</b><span class="small">L’offrir maintenant (le moins cher du panier) ou à la prochaine visite ?</span>
+      <div class="fi-choix"><button type="button" class="btn main" data-act="rmcarte" data-v="oui">Offrir maintenant</button><button type="button" class="btn" data-act="rmcarte" data-v="non">Plus tard</button></div></div>`;
+  }
+  return `<div class="fi-carte">${tete}${corps}</div>`;
 }
 
 function detailOffre(o) {
@@ -55,6 +106,7 @@ export function blocRemises(ou) {
   const c = contexte(ou);
   if (!c.lignes.length) return "";
   const v = calcul(ou);
+  const carte = ou === "vente" ? blocCarte(c) : "";
   const reste = (id) => { const l = lotDe(id); const pris = c.lignes.filter((x) => x.lot_id === id).reduce((t, x) => t + x.quantite, 0); return l ? Number(l.pots_restants) - pris : null; };
   const pouce = disponible() ? R.prochaineOffre(promotions(), c.lignes, S.d.lots || [], { client: c.client, date: c.date }, reste) : null;
   const offre = v.offre ? `<div class="rm-offre">${CADEAU}<span class="rm-t"><b>Offre « ${e(v.offre.promotion.nom)} »</b><span class="small">${e(detailOffre(v.offre))}</span></span><b class="rm-m">−${e(eur(v.offre.remise))}</b></div>` : "";
@@ -64,11 +116,12 @@ export function blocRemises(ou) {
   // À la caisse, le total du panier est déjà le total net : pas de récapitulatif en double.
   const recap = v.economie > 0 && ou !== "caisse" ? `<div class="rm-recap"><p><span>Sous-total</span><span>${e(eur(v.brut))}</span></p>
     ${v.offre ? `<p class="rm-vert"><span>Offre</span><span>−${e(eur(v.offre.remise))}</span></p>` : ""}
+    ${v.carte ? `<p class="rm-vert"><span>Carte de fidélité</span><span>−${e(eur(v.carte.remise))}</span></p>` : ""}
     ${v.manuelle ? `<p class="rm-vert"><span>Remise ${e(v.manuelle.libelle)}</span><span>−${e(eur(v.manuelle.remise))}</span></p>` : ""}
     <p class="rm-total"><b>Total à payer</b><b>${e(eur(v.total))}</b></p>
     <p class="small">${c.client && ou === "vente" ? e(c.client.nom) + " économise" : "Le client économise"} ${e(eur(v.economie))}.</p></div>` : "";
-  if (!offre && !man && !ajout && !pouce && !recap) return "";
-  const corps = `${offre}${pouce ? `<p class="rm-pouce">${e(pouce.texte)}</p>` : ""}${man}${ajout}${recap}`;
+  if (!offre && !man && !ajout && !pouce && !recap && !carte) return "";
+  const corps = `${carte}${offre}${pouce ? `<p class="rm-pouce">${e(pouce.texte)}</p>` : ""}${man}${ajout}${recap}`;
   // À la caisse, le bloc se range dans le panier, juste au-dessus du total.
   return ou === "caisse" ? `<div class="rm-bloc rm-dans" aria-label="Remises" aria-live="polite">${corps}</div>`
     : `<section class="card rm-bloc" aria-label="Remises" aria-live="polite">${corps}</section>`;
@@ -97,7 +150,8 @@ export function completerVente() {
 export function avecRemises(ou, p) {
   if (!disponible()) return p;
   const c = contexte(ou);
-  const v = R.calculerVente({ lignes: p.lignes || [], lots: S.d.lots || [], promotions: promotions(), client: (S.d.clients || []).find((x) => x.id === p.client_id) || c.client, date: p.date_vente || c.date, manuelle: c.manuelle });
+  const v = R.calculerVente({ lignes: p.lignes || [], lots: S.d.lots || [], promotions: promotions(), client: (S.d.clients || []).find((x) => x.id === p.client_id) || c.client, date: p.date_vente || c.date, manuelle: c.manuelle,
+    fidelite: ou === "vente" && recompenseDonnee(c) });
   if (!(v.economie > 0)) return p;
   return { ...p, lignes: v.lignes, ...v.champs };
 }
@@ -107,6 +161,8 @@ let installe = false;
 export function installer() {
   if (installe || typeof window == "undefined" || typeof HL == "undefined") return;
   installe = true;
+  // Pour les scripts classiques (essentiels.js : ligne de Réglages ; ux.js : reçu).
+  window.CarteFidelite = { ligneReglage, carteRecu };
   const rpc = HL.rpc;
   HL.rpc = (nom, args) => {
     if (nom === "creer_vente" && S.vente && S.route === "vente" && args?.p) args = { ...args, p: avecRemises("vente", args.p) };
@@ -328,6 +384,9 @@ export const actions = {
   },
   rmappliquer: () => appliquer(),
   rmretirer: () => garder(null),
+  // Carte de fidélité : « Offrir maintenant », « Plus tard », « Retirer ».
+  rmcarte: (v) => { if (S.route !== "vente" || !S.vente) return; readSaleForm(); S.vente.fidelite = v === "oui"; S.vente.fideliteNon = v === "non"; redessiner("vente"); },
+  rmreglcarte: () => reglerCarte(),
   // Offres de vente.
   rmoffres: () => go("promotions"),
   rmnouvelle: () => { if (!disponible()) return toast("La base doit être mise à jour pour créer des offres (migration 037).", true); S.promo = NEUVE(); go("promotion"); },
@@ -355,3 +414,29 @@ export const actions = {
     try { await write(sb.from("promotions").update({ actif: p.actif === false }).eq("id", id), p.actif === false ? "Offre activée" : "Offre coupée"); } catch (er) { fail(er); }
   },
 };
+
+// ---------- Réglage de la carte (Réglages › L'exploitation) ----------
+function reglerCarte() {
+  const r = reglageCarte();
+  sheet({ title: "Carte de fidélité", intro: "Un tampon par article acheté par un client nommé (pas la vente au marché). Carte pleine : un article offert, le moins cher du panier.",
+    fields: [
+      { name: "actif", label: "Carte de fidélité", type: "select", options: [["1", "Oui"], ["", "Non"]], value: r.actif ? "1" : "" },
+      { name: "tampons", label: "Carte pleine à (tampons)", type: "number", min: 2, step: 1, required: !0, value: r.tampons },
+      { name: "depuis", label: "Compter les achats à partir du", type: "date", value: r.depuis || today() },
+    ],
+    submit: (v) => saveCfg({ fidelite: { actif: !!v.actif, tampons: Math.min(50, Math.max(2, Math.round(Number(v.tampons) || 10))), depuis: v.depuis || today() } },
+      v.actif ? "Carte de fidélité activée" : "Carte de fidélité éteinte") });
+}
+/** Ligne de Réglages (essentiels.js l'appelle s'il la trouve). */
+export function ligneReglage() {
+  const r = reglageCarte();
+  return { titre: "Carte de fidélité", sous: r.actif ? `${r.tampons} tampons, un article offert` : "Faire revenir tes clients", valeur: r.actif ? "Oui" : "Non" };
+}
+/** Texte de la carte pour le reçu d'une vente enregistrée (« 8 sur 10 »), ou "". */
+export function carteRecu(vente) {
+  const r = reglageCarte();
+  if (!r.actif || !vente) return "";
+  const client = (S.d.clients || []).find((c) => c.id === vente.client_id);
+  const k = FI.carte(client, S.d.ventes || [], S.d.lignes || [], r);
+  return k ? FI.texte(k) : "";
+}

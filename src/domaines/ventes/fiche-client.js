@@ -10,6 +10,7 @@
 //   - « Enregistrer et vendre » ouvre la vente avec ce client ; ouverte depuis une vente, la fiche y revient.
 // Règles : clients-regles.js. Globales lues à l'appel : S, esc, cfg, sb, $sheet, $sheetForm, sheet, del, write,
 // refresh, toast, fail, ACT, redessiner, PF. Styles : 65-ventes-clients.css.
+import { carteClient } from "./remises.js";
 import { initiales, adressesConnues, memeAdresse, urlAdresses, lireAdresses, centre } from "./clients-regles.js";
 import * as P from "../production/produits.js";
 
@@ -43,7 +44,10 @@ export function fiche(client, pre = {}) {
     : depuisVente
       ? '<button class="btn main" style="flex:1">Enregistrer pour cette vente</button><button type="button" class="btn" data-act="closesheet">Annuler</button>'
       : '<button class="btn" value="simple">Enregistrer</button><button class="btn main" style="flex:1" value="vendre">Enregistrer et vendre</button>';
+  // v5.78 : carte de fidélité du client (remises.js, fidelite-regles.js), si elle est activée.
+  const carte = client ? carteClient(client) : null;
   $sheetForm.innerHTML = `<div class="u-entete"><h2>${client ? "Modifier le client" : "Nouveau client"}</h2></div>
+    ${carte ? `<p class="fi-fiche"><b>Carte de fidélité : ${e(carte.tampons)} sur ${carte.n}</b>${carte.dispo ? ` · ${carte.dispo > 1 ? `${carte.dispo} articles offerts à donner` : "1 article offert à donner"}` : ""}</p>` : ""}
     <div class="fc-hero">
       <span class="fc-alv" id="fc_ini" aria-hidden="true">${e(nom ? initiales(nom) : "?")}</span>
       <label class="fc-nom"><span class="pq-sr">Nom</span><input name="nom" required autocomplete="off" placeholder="Prénom et nom" value="${e(nom)}"></label>

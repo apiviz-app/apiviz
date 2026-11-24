@@ -29,6 +29,10 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.78 (migration 038) : `etapes_fi` (Réglages › Carte de fidélité ; vente à un client à 8 tampons : 9 sur
+10, carte pleine à 2 pots, « Offrir maintenant » à 3 avec `remise_fidelite`, « Plus tard », « Retirer » ; pas de carte
+sans client ; reçu et fiche client ; base sans 038). Avec `CAPTURES=<dossier>` : captures à 390 px.
+
 Scénario v5.77 (migration 037) : `etapes_rm` (Produits › ⋯ › Offres de vente vide, Créer une offre « 4 achetés,
 1 offert » sur le miel 250 g avec nom et aperçu qui suivent, interrupteur, Nouvelle vente : coup de pouce à 4 pots, offre
 à 5, total net ; feuille « Remise sur cette vente » −10 % avec motif, en € sans motif, retirée ; `creer_vente` avec la

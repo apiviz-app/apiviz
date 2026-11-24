@@ -5,6 +5,44 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.78 · à publier en recette · carte de fidélité
+**Migration 038** (`038-carte-fidelite.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
+appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur
+`apidoo` avec l'accord de Pierre-Louis. Après 037. Sans elle, la carte ne s'affiche pas (l'application le vérifie) et les
+ventes marchent comme en v5.77. Maquette « apiviz — Idées pour vendre plus », idée 1, validée par Pierre-Louis le
+24 nov. 2026 (« Ok pour l'idée de la carte de fidélité »).
+
+Pour l'apiculteur :
+1. **Réglages › L'exploitation › Carte de fidélité** : Oui / Non, carte pleine à combien de tampons (10 par défaut),
+   à partir de quelle date compter les achats (aujourd'hui par défaut).
+2. **Nouvelle vente** à un client nommé : la carte s'affiche (« Carte de fidélité · 8 sur 10 », tampons) et se remplit
+   avec le panier. Un tampon par article payé. Quand la carte est pleine, l'article suivant est offert : « Carte pleine :
+   un article offert », **Offrir maintenant** (le moins cher du panier) ou **Plus tard** (la récompense attend la
+   prochaine vente). « Retirer » annule. La récompense s'ajoute à une offre ou à une remise ponctuelle ; l'article
+   offert ne compte pas comme tampon.
+3. **Reçu** : ligne « Carte de fidélité −7 € » et « Carte de fidélité : 0 sur 10 » ; le message du reçu le dit
+   (« Votre carte de fidélité : 3 sur 10 »). **Facture** : ligne de remise. **Fiche client** : où en est sa carte et les
+   articles offerts à donner. **Bilan** : la carte compte dans les remises accordées.
+4. Pas de carte pour la « Vente au marché » (client sans nom) ni à la caisse du marché.
+
+Technique :
+- `src/domaines/ventes/fidelite-regles.js` (règles pures, `Regles.fidelite`) : réglage, carte d'un client (tampons
+  comptés depuis ses ventes, récompenses = ventes avec `remise_fidelite`), carte avec la vente en cours.
+- `remises-regles.js` : `calculerVente({ fidelite })` offre l'article le moins cher qui reste après l'offre, puis la
+  remise ponctuelle ; `remise_fidelite` dans les champs seulement quand la carte sert ; `lignesRemise` et
+  `remisesAccordees` comptent la carte.
+- `remises.js` : bloc de la carte dans la vente, action `rmcarte`, réglage (`rmreglcarte`), `window.CarteFidelite`
+  (ligne de Réglages dans `essentiels.js`, reçu dans `ux.js`) ; la colonne 038 est vérifiée une fois (sinon pas de carte).
+  `fiche-client.js` : la carte en tête. `offline.js` : `remise_fidelite` gardée. Styles dans `72-remises.css`.
+- Migration 038 : `ventes.remise_fidelite`, `creer_vente` (total des lignes = offre + remise ponctuelle + carte).
+  Tests : SQL `test_038.mjs` (13 vérifications), `test_appliquer.mjs` ; unitaires `fidelite.test.mjs` (7 tests),
+  `remises.test.mjs` mis à jour ; scénario `etapes_fi`.
+
+À vérifier :
+- Activer la carte ; vendre à un client : 9 sur 10, carte pleine, « Offrir maintenant » (−1 article), « Plus tard ».
+- Reçu (ligne et « x sur 10 »), message du reçu, facture, fiche client, Bilan.
+- Vente sans client, caisse du marché : pas de carte.
+
 ## v5.77 · à publier en recette · remises et offres de vente
 **Migration 037** (`037-remises-offres.sql`), **additive, ne casse pas l'ancienne version** : pas encore appliquée ; à
 appliquer sur `apidoo-test` par la mise en ligne en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur

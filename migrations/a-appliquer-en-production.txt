@@ -64,3 +64,7 @@
 #   version. Après 036. NON APPLIQUÉE : à appliquer sur apidoo-test par la mise en ligne en recette (ou par Claude avec
 #   l'accord de Pierre-Louis), puis sur apidoo avec l'accord de Pierre-Louis. Sans elle, la v5.77 vend sans remise comme
 #   avant et dit « La base doit être mise à jour » dans Offres de vente et dans la feuille Remise.
+# 038-carte-fidelite.sql (PR claude/carte-fidelite, v5.78) : carte de fidélité (ventes.remise_fidelite, creer_vente).
+#   Additive, ne casse pas l'ancienne version. Après 037. NON APPLIQUÉE : à appliquer sur apidoo-test par la mise en ligne
+#   en recette (ou par Claude avec l'accord de Pierre-Louis), puis sur apidoo avec l'accord de Pierre-Louis. Sans elle,
+#   la v5.78 n'affiche pas la carte et vend comme la v5.77.

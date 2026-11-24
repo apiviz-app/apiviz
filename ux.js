@@ -413,7 +413,7 @@ const UX = (() => {
     const lignes = d.lignes.filter((x) => x.vente_id === id).map((x) => { const l = byId(d.lots, x.lot_id); return `<div class="u-lot"><span>${x.quantite} × ${esc(l && !Regles.produits.estMiel(l) ? Regles.produits.libelleLot(l) : n(l?.format_g, 0) + " g")} · lot ${esc(l?.code || "?")}</span><b>${esc(eur(x.quantite * x.prix_unitaire))}</b></div>`; }).join("");
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<h2>${esc(c?.nom || "Vente")}</h2><p class="small">Vente du ${esc(dfr(v.date_vente))}${v.auteur ? " · " + esc(qui(v.auteur)) : ""}</p>
-      ${lignes}${Regles.remises.lignesRemise(v, d.lignes).map((r) => `<div class="u-lot u-remise"><span>${esc(r.libelle)}</span><b>−${esc(eur(r.montant))}</b></div>`).join("")}<div class="u-lot u-total"><span>Total</span><b>${esc(eur(venteTotal(v)))}</b></div>
+      ${lignes}${Regles.remises.lignesRemise(v, d.lignes).map((r) => `<div class="u-lot u-remise"><span>${esc(r.libelle)}</span><b>−${esc(eur(r.montant))}</b></div>`).join("")}<div class="u-lot u-total"><span>Total</span><b>${esc(eur(venteTotal(v)))}</b></div>${window.CarteFidelite?.carteRecu(v) ? `<p class="small u-carte">Carte de fidélité : ${esc(CarteFidelite.carteRecu(v))}</p>` : ""}
       <p>${v.paye ? `Payée${v.mode ? " · " + esc(v.mode) : ""}` : "À encaisser"}</p>
       <div class="u-deux"><button type="button" class="btn" data-act="uvpaye" data-v="${id}">${v.paye ? "Marquer à encaisser" : "Marquer payée"}</button>
       <button type="button" class="btn" data-act="${v.paye ? "urecu" : "urelance"}" data-v="${id}">${v.paye ? "Envoyer le reçu" : "Relancer"}</button></div>
@@ -437,7 +437,7 @@ const UX = (() => {
     const nom = String(c?.nom || "").trim();
     // v5.77 : une vente remisée le dit (« remise de 9,8 € comprise »).
     const remise = Regles.remises.lignesRemise(v, d.lignes).reduce((t, r) => t + r.montant, 0);
-    if (mode === "recu") return `Bonjour ${nom}, merci pour votre achat du ${date} : ${detail}, soit ${eur(venteTotal(v))}${remise > 0 ? ` (remise de ${eur(remise)} comprise)` : ""}${v.paye ? ", réglé" + (v.mode && v.mode !== "Autre" ? " en " + v.mode.toLowerCase() : "") : ""}. Bonne dégustation !\n${cf.nom}`;
+    if (mode === "recu") return `Bonjour ${nom}, merci pour votre achat du ${date} : ${detail}, soit ${eur(venteTotal(v))}${remise > 0 ? ` (remise de ${eur(remise)} comprise)` : ""}${v.paye ? ", réglé" + (v.mode && v.mode !== "Autre" ? " en " + v.mode.toLowerCase() : "") : ""}. ${window.CarteFidelite?.carteRecu(v) ? " Votre carte de fidélité : " + CarteFidelite.carteRecu(v) + "." : ""} Bonne dégustation !\n${cf.nom}`;
     const modes = ou(cf.modes.filter((m) => m !== "Autre").map((m) => m.toLowerCase()));
     return `Bonjour ${nom}, petit rappel pour ${detail} du ${date} : ${eur(venteTotal(v))} restent à régler${modes ? " (" + modes + ")" : ""}. Merci beaucoup !\n${cf.nom}`;
   }
