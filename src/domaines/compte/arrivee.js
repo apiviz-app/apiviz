@@ -10,6 +10,7 @@
 //   (10) complètent app.js, profil.js et demarrage.js.
 // Globales lues à l'appel : S, sb, esc, $app, render, go, toast, fail, today, byId, cfg, loadAll, apresVisites, ACT, HL.
 import * as R from "./regles-arrivee.js";
+import { TYPES as TYPES_R } from "./regles-notifications.js";
 
 const e = (t) => (typeof esc == "function" ? esc(t) : String(t ?? ""));
 const memo = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { return null; } return v; };
@@ -192,7 +193,7 @@ async function programmer() {
 
 const PREFS_RAPPELS = "apiviz-rappels-envoyes";
 export const prefsRappels = () => { try { return { visites: true, meteo: true, saison: true, ...JSON.parse(memo(PREFS_RAPPELS) || "{}") }; } catch { return { visites: true, meteo: true, saison: true }; } };
-const TYPES_RAPPELS = [["visites", "Ruches à visiter", "Pas vues depuis 30 jours"], ["meteo", "Créneau météo idéal", "Pour tes ruchers, la veille"], ["saison", "Gestes de saison", "Comptage varroa, hivernage, hausses"]];
+const TYPES_RAPPELS = TYPES_R; // regles-notifications.js (v5.87 : mêmes types pour les rappels app fermée)
 
 /** Bloc « Qu'apiviz te prévienne au bon moment ? » : exemple, trois types, deux rappels par semaine au plus. */
 export function blocRappels() {

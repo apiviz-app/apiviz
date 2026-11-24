@@ -5,6 +5,10 @@
 #   - variable SAUVEGARDE_CLE_PUBLIQUE : clé publique « age » (age1…). La clé privée reste chez le responsable, hors
 #     ligne : personne d'autre, ni GitHub ni Cloudflare, ne peut relire une sauvegarde ;
 #   - secrets R2_ID, R2_SECRET, R2_COMPTE et variable R2_SEAU : seau Cloudflare R2 privé qui reçoit les fichiers.
+# Chaque copie est restaurée sur un Postgres vide avant d'être envoyée (scripts/essai-restauration.sh) : même schéma,
+# même protection par ligne, mêmes nombres de lignes. Une copie qui ne se relit pas fait échouer l'action (e-mail).
+# Fichiers des photos et des factures (le dimanche, ou à la demande avec « fichiers ») : facultatif, actif quand les
+# secrets STOCKAGE_ID, STOCKAGE_SECRET et la variable STOCKAGE_REGION (accès S3 du stockage Supabase) existent.
 # Le dépôt est public : rien n'est écrit en clair, ni dans le dépôt ni dans les artefacts ou le journal de l'action.
 name: Sauvegarde
 
@@ -12,8 +16,14 @@ on:
   schedule:
     - cron: "43 2 * * *"
   workflow_dispatch:
+    inputs:
+      fichiers:
+        description: "Copier aussi les fichiers (photos, factures)"
+        type: boolean
+        default: false
 
-permissions: {}
+permissions:
+  contents: read   # lire scripts/essai-restauration.sh et scripts/socle-supabase.sql
 
 concurrency:
   group: sauvegarde
@@ -22,6 +32,14 @@ concurrency:
 jobs:
   sauvegarder:
     runs-on: ubuntu-24.04
+    services:
+      # Base vide pour l'essai de restauration (jetable, détruite avec la machine).
+      essai:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: essai
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       BASE: ${{ secrets.BASE_PRODUCTION }}
       CLE: ${{ vars.SAUVEGARDE_CLE_PUBLIQUE }}
@@ -31,6 +49,11 @@ jobs:
       R2_COMPTE: ${{ secrets.R2_COMPTE }}
       AWS_DEFAULT_REGION: auto
       RETENTION_JOURS: 30
+      RETENTION_FICHIERS: 4
+      STOCKAGE_ID: ${{ secrets.STOCKAGE_ID }}
+      STOCKAGE_SECRET: ${{ secrets.STOCKAGE_SECRET }}
+      STOCKAGE_REGION: ${{ vars.STOCKAGE_REGION }}
+      ESSAI: postgresql://postgres:essai@localhost:5432/postgres
     steps:
       - name: Réglages présents ?
         id: pret
@@ -45,6 +68,11 @@ jobs:
           case "$CLE" in age1*) ;; *) echo "::error::SAUVEGARDE_CLE_PUBLIQUE doit commencer par age1"; exit 1;; esac
           echo "ok=1" >> "$GITHUB_OUTPUT"
 
+      - uses: actions/checkout@v4
+        if: steps.pret.outputs.ok == '1'
+        with:
+          persist-credentials: false
+
       - name: Outils (pg_dump 17, age)
         if: steps.pret.outputs.ok == '1'
         run: |
@@ -52,27 +80,27 @@ jobs:
           sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
           sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17 age > /dev/null
-          /usr/lib/postgresql/17/bin/pg_dump --version
-
-      - name: Copie de la base, contrôlée puis chiffrée
-        if: steps.pret.outputs.ok == '1'
-        run: |
-          set -euo pipefail
-          umask 077
-          jour=$(date -u +%F)
-          # Données de l'application (schéma public, dont visite_photos, l'index des photos). Les comptes de connexion
-          # (auth) n'y sont pas : l'accès aux exploitations se fait par l'adresse e-mail (membres), une personne retrouve
-          # tout en se reconnectant avec la même adresse. Les fichiers des photos sont à part (voir PROCESSUS.md).
-          /usr/lib/postgresql/17/bin/pg_dump "$BASE" --format=custom --no-owner --no-privileges \
+          bin=/usr/lib/postgresql/17/bin
+          # Nombre de lignes juste avant et juste après la copie : s'ils sont égaux, la base n'a pas bougé pendant la
+          # copie et la restauration doit retrouver exactement les mêmes nombres.
+          PSQL=$bin/psql scripts/essai-restauration.sh --compter "$BASE" > /tmp/avant.txt
+          $bin/pg_dump "$BASE" --format=custom --no-owner --no-privileges \
             --schema=public --file=/tmp/apidoo.dump
-          # Contrôle : le fichier se relit et contient bien les tables de l'application.
-          n=$(/usr/lib/postgresql/17/bin/pg_restore --list /tmp/apidoo.dump | grep -c " TABLE DATA public " || true)
+          PSQL=$bin/psql scripts/essai-restauration.sh --compter "$BASE" > /tmp/apres.txt
+          # Contrôle 1 : le fichier se relit et contient bien les tables de l'application.
+          n=$($bin/pg_restore --list /tmp/apidoo.dump | grep -c " TABLE DATA public " || true)
           [ "$n" -ge 20 ] || { echo "::error::Copie incomplète : $n tables de données (au moins 20 attendues)"; exit 1; }
+          # Contrôle 2 : restauration complète sur une base vide.
+          if cmp -s /tmp/avant.txt /tmp/apres.txt; then attendu=/tmp/apres.txt; essai="mêmes nombres de lignes"
+          else attendu=""; essai="base modifiée pendant la copie, nombres de lignes non comparés"
+            echo "::notice::La base a changé pendant la copie : restauration contrôlée sans comparer les nombres de lignes."; fi
+          PSQL=$bin/psql PG_RESTORE=$bin/pg_restore scripts/essai-restauration.sh /tmp/apidoo.dump "$ESSAI" $attendu
+          shred -u /tmp/avant.txt /tmp/apres.txt
           age -r "$CLE" -o "/tmp/apidoo-$jour.dump.age" /tmp/apidoo.dump
           shred -u /tmp/apidoo.dump
           taille=$(stat -c %s "/tmp/apidoo-$jour.dump.age")
           echo "JOUR=$jour" >> "$GITHUB_ENV"
-          printf '### Sauvegarde du %s\n\n%s tables de données, fichier chiffré de %s Ko.\n' "$jour" "$n" "$((taille / 1024))" >> "$GITHUB_STEP_SUMMARY"
+          printf '### Sauvegarde du %s\n\n%s tables de données, restauration essayée (%s), fichier chiffré de %s Ko.\n' "$jour" "$n" "$essai" "$((taille / 1024))" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Envoi vers Cloudflare R2 et ménage
         if: steps.pret.outputs.ok == '1'
@@ -88,3 +116,34 @@ jobs:
             if [ -n "$d" ] && [ "$d" \< "$limite" ]; then aws s3 rm --only-show-errors "s3://$SEAU/base/$f" --endpoint-url "$r2"; fi
           done
           echo "Sauvegarde envoyée : base/apidoo-$JOUR.dump.age"
+
+      - name: Fichiers des photos et des factures (le dimanche ou à la demande)
+        if: steps.pret.outputs.ok == '1' && (inputs.fichiers || github.event_name == 'schedule')
+        run: |
+          set -euo pipefail
+          # Le dimanche seulement pour l'action de nuit (les fichiers changent peu et pèsent plus lourd).
+          if [ "${{ github.event_name }}" = schedule ] && [ "$(date -u +%u)" != 7 ]; then echo "Pas dimanche : fichiers copiés le dimanche."; exit 0; fi
+          if [ -z "$STOCKAGE_ID" ] || [ -z "$STOCKAGE_SECRET" ] || [ -z "$STOCKAGE_REGION" ]; then
+            echo "::notice::Copie des fichiers inactive : STOCKAGE_ID, STOCKAGE_SECRET ou STOCKAGE_REGION manquant (PROCESSUS.md § Sauvegardes)."
+            printf '\nCopie des fichiers inactive (réglages du stockage manquants).\n' >> "$GITHUB_STEP_SUMMARY"; exit 0
+          fi
+          umask 077
+          ref=$(echo "$BASE" | sed -n 's/.*postgres\.\([a-z0-9]\{20\}\).*/\1/p; s/.*db\.\([a-z0-9]\{20\}\)\.supabase\.co.*/\1/p' | head -1)
+          [ -n "$ref" ] || { echo "::error::Identifiant du projet Supabase introuvable dans BASE_PRODUCTION"; exit 1; }
+          src="https://$ref.storage.supabase.co/storage/v1/s3"
+          mkdir -p /tmp/fichiers
+          for seau in photos-visites factures; do
+            AWS_ACCESS_KEY_ID=$STOCKAGE_ID AWS_SECRET_ACCESS_KEY=$STOCKAGE_SECRET AWS_DEFAULT_REGION=$STOCKAGE_REGION \
+              aws s3 sync --only-show-errors "s3://$seau" "/tmp/fichiers/$seau" --endpoint-url "$src"
+          done
+          nb=$(find /tmp/fichiers -type f | wc -l)
+          tar -C /tmp -cf - fichiers | age -r "$CLE" -o "/tmp/fichiers-$JOUR.tar.age"
+          rm -rf /tmp/fichiers
+          r2="https://$R2_COMPTE.r2.cloudflarestorage.com"
+          aws s3 cp --only-show-errors "/tmp/fichiers-$JOUR.tar.age" "s3://$SEAU/fichiers/fichiers-$JOUR.tar.age" --endpoint-url "$r2"
+          taille=$(stat -c %s "/tmp/fichiers-$JOUR.tar.age"); rm -f "/tmp/fichiers-$JOUR.tar.age"
+          # Garde les RETENTION_FICHIERS dernières copies.
+          aws s3 ls "s3://$SEAU/fichiers/" --endpoint-url "$r2" | awk '{print $4}' | grep '^fichiers-.*\.tar\.age$' | sort -r \
+            | tail -n +$((RETENTION_FICHIERS + 1)) | while read -r f; do aws s3 rm --only-show-errors "s3://$SEAU/fichiers/$f" --endpoint-url "$r2"; done
+          printf '\nFichiers : %s copiés, archive chiffrée de %s Mo.\n' "$nb" "$((taille / 1048576))" >> "$GITHUB_STEP_SUMMARY"
+

@@ -282,6 +282,29 @@ d'activer une offre payée ou une recharge.
 `abonnements` et `gouttes_mouvements` par une fonction serveur idempotente, colonne `canal` et `externe`. Les écrans ne
 changent pas : seul le bouton « Payer » sera branché.
 
+## Mes données et suppression du compte (v5.88, migration 041)
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Base | `migrations/041-supprimer-mes-donnees.sql` | Demande (30 jours), choix par exploitation partagée, bandeau, `effacer_compte()` |
+| Fonction serveur | `supabase/functions/supprimer-comptes/` | Chaque nuit : fichiers des exploitations qui partent, puis la base ; `--no-verify-jwt`, `SUPPRESSION_CLE` |
+| Planification | `.github/workflows/supprimer-comptes.yml` | 2 h 47 UTC ; à la main avec « Simuler » |
+| Écrans | `src/domaines/compte/suppression.js` | Mes données, Avant de supprimer, Confirmer, écran d'attente, bandeau |
+
+Annuler une demande à la main : `delete from public.comptes_a_supprimer where email = '…'`.
+
+## Rappels même quand Apiviz est fermée (v5.87, migration 040)
+
+| Élément | Fichier | Rôle |
+|---|---|---|
+| Base | `migrations/040-rappels-app-fermee.sql` | `abonnements_push`, `abonner_push()`, `desabonner_push()`, `notifications_envoyees` |
+| Fonction serveur | `supabase/functions/rappels/index.ts` et `regles.js` | Clé publique ; envoi quotidien (`x-rappels-secret`), deux par semaine au plus ; `--no-verify-jwt` |
+| Planification | `.github/workflows/rappels.yml` | Chaque matin (7 h 17 UTC) ; à la main : cible et « Essai » |
+| Application | `src/domaines/compte/notifications.js`, `sw.js` | Abonnement de l'appareil, carte de l'écran Rappels ; `push` et clic |
+
+Secrets de la fonction : `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, `VAPID_SUJET`, `RAPPELS_SECRET` ; GitHub :
+`RAPPELS_SECRET_RECETTE`, `RAPPELS_SECRET_PRODUCTION`.
+
 ## Mieux connaître ses utilisateurs (v5.86, migration 039)
 
 | Élément | Fichier | Rôle |
@@ -376,3 +399,20 @@ fonction (effet immédiat, sans redéploiement). L'application continue sans jou
   `relu` vaut `false` (relecture humaine, AP-TECH-183 et 199).
 - **Écrans** : `varroa` (Ruchers › Santé, `src/domaines/sante/ecran.js`), `comptage` (FLUX, `comptage.js`),
   `signalement` (`signes.js`). Les contacts sanitaires sont dans les réglages de l'exploitation (`contactsSanitaires`).
+
+## Sécurité : conseillers Supabase (relevé du 24 nov. 2026)
+
+Conseillers de sécurité de Supabase (Advisors › Security), identiques sur `apidoo` et `apidoo-test` :
+- **À faire, une case à cocher** : Authentication › Sign In / Providers › Email › « Prevent use of leaked passwords »
+  (vérifie les mots de passe contre la base Have I Been Pwned). À activer sur les deux projets. Supabase réserve ce
+  réglage aux offres payantes : sur l'offre gratuite, garder au moins 8 caractères et lettres + chiffres.
+- **Accepté, voulu** : quatre fonctions `security definer` appelables sans connexion :
+  `boutique_publique` et `passer_commande` (page de commande publique, jeton de la boutique, 30 commandes par heure au
+  plus), `invitation_info` (lien d'invitation avant connexion), `empreinte_structure` (empreintes md5 de la structure,
+  aucune donnée ; lue par le contrôle de la mise en ligne avec la clé publique, `scripts/controler-structure.mjs`).
+- **Accepté, voulu** : 29 fonctions `security definer` appelables par un compte connecté. Chacune vérifie elle-même le
+  droit (`est_membre`, `peut_ecrire`, `est_responsable`, `est_admin_apiviz` pour `admin_crediter_gouttes` et
+  `admin_definir_offre`) et fixe `search_path = ''`.
+- **Accepté** : `administrateurs_apiviz`, `journal_erreurs`, `membres_v1` ont la protection par ligne sans règle : fermées à
+  l'application, lues seulement par des fonctions `security definer`.
+Relancer ce relevé après chaque migration qui ajoute une fonction (Supabase › Advisors, ou `get_advisors`).

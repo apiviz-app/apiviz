@@ -73,3 +73,11 @@
 #   l'équipe (admin_stats_utilisateurs). Additive, ne casse pas l'ancienne version. Après 038. NON APPLIQUÉE : d'abord
 #   apidoo-test par la mise en ligne en recette, puis apidoo avec l'accord de Pierre-Louis. Sans elle, la v5.86 ne pose pas
 #   la question « attente », ne note rien et cache le tableau de bord.
+# 040-rappels-app-fermee.sql (PR claude/rappels-app-fermee, v5.87) : abonnements aux rappels Web Push (abonnements_push,
+#   abonner_push, desabonner_push) et rappels envoyés (notifications_envoyees). Additive, ne casse pas l'ancienne version.
+#   Après 039. NON APPLIQUÉE : d'abord apidoo-test, puis apidoo avec l'accord de Pierre-Louis. Avec elle : déployer la
+#   fonction « rappels » (--no-verify-jwt) et ses secrets, puis les secrets RAPPELS_SECRET_* de GitHub.
+# 041-supprimer-mes-donnees.sql (PR claude/supprimer-mes-donnees, v5.88) : suppression du compte en 30 jours annulables,
+#   choix par exploitation partagée, bandeau des autres membres, effacement par la fonction « supprimer-comptes ».
+#   Additive, ne casse pas l'ancienne version. Après 040. NON APPLIQUÉE : d'abord apidoo-test, puis apidoo avec l'accord de
+#   Pierre-Louis. Avec elle : déployer « supprimer-comptes » (--no-verify-jwt, secret SUPPRESSION_CLE) et le secret GitHub.

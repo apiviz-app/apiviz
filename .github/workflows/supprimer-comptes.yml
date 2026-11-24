@@ -1,0 +1,43 @@
+# v5.88 (migration 041) : effacement de nuit des comptes dont la demande de suppression a plus de 30 jours.
+# Fonction serveur « supprimer-comptes » : fichiers des exploitations qui partent, puis la base.
+# Chaque base ne tourne que si son secret existe : SUPPRESSION_CLE_RECETTE (apidoo-test), SUPPRESSION_CLE_PRODUCTION (apidoo).
+# Le secret de production n'est créé qu'avec l'accord de Pierre-Louis (CLAUDE.md). Retour arrière : désactiver cette
+# action (Actions › Suppression des comptes › Disable workflow), ou retirer le secret SUPPRESSION_CLE de la fonction.
+name: Suppression des comptes
+
+on:
+  schedule:
+    - cron: "47 2 * * *" # 3 h 47 à Paris en hiver
+  workflow_dispatch:
+    inputs:
+      simuler:
+        description: "Simuler (compter sans rien effacer)"
+        type: boolean
+        default: true
+
+permissions: {}
+
+jobs:
+  supprimer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recette (apidoo-test)
+        env:
+          CLE: ${{ secrets.SUPPRESSION_CLE_RECETTE }}
+          SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
+        run: |
+          if [ -z "$CLE" ]; then echo "Secret SUPPRESSION_CLE_RECETTE absent : recette ignorée."; exit 0; fi
+          curl -fsS -X POST "https://zaaaiqyhxehvgowlgztx.supabase.co/functions/v1/supprimer-comptes" \
+            -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
+            -d "{\"simuler\": $SIMULER}"
+          echo
+      - name: Production (apidoo)
+        env:
+          CLE: ${{ secrets.SUPPRESSION_CLE_PRODUCTION }}
+          SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
+        run: |
+          if [ -z "$CLE" ]; then echo "Secret SUPPRESSION_CLE_PRODUCTION absent : production ignorée."; exit 0; fi
+          curl -fsS -X POST "https://xkucyqzlqfeyuomrtjbu.supabase.co/functions/v1/supprimer-comptes" \
+            -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
+            -d "{\"simuler\": $SIMULER}"
+          echo

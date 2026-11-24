@@ -5,6 +5,95 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.88 · à publier en recette · mes données et suppression du compte
+**Migration 041** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
+`supprimer-comptes`** et **action GitHub « Suppression des comptes »**. Maquette « apiviz — Onboarding irréprochable »,
+écrans 12 à 14, demandés par Pierre-Louis le 24 nov. 2026 (« Je veux aussi avoir la possibilité en tant qu'utilisateur de
+supprimer toutes mes données »).
+
+Pour l'apiculteur :
+1. **Réglages › Tes données › Mes données** (et depuis Mon profil) : ce qu'Apiviz garde (colonies et ruchers, visites,
+   photos, récoltes-ventes-dépenses, réponses de profil), « Télécharger toutes mes données », « Effacer mes réponses de
+   profil », statistiques, et « Supprimer mon compte et mes données ».
+2. **Avant de supprimer** : pour chaque exploitation partagée, « La laisser à Marc » (ses données restent, ton nom devient
+   « Ancien membre ») ou, si tu en es responsable, « La supprimer pour tout le monde » ; la liste de ce qui sera supprimé
+   suit le choix ; « Pense à tes factures » ; « Télécharger d'abord mes données ».
+3. **Confirmer** : mot de passe redemandé ; le compte est **désactivé tout de suite** et **effacé 30 jours plus tard** ;
+   écran final avec la date ; « Annuler la suppression ».
+4. **Pendant les 30 jours**, se reconnecter n'ouvre que l'écran « Ton compte sera supprimé le … » : annuler, ou se
+   déconnecter.
+5. Les **autres membres** d'une exploitation supprimée pour tout le monde voient un bandeau sur l'accueil (qui l'a
+   demandé, la date) avec « Télécharger la sauvegarde ».
+6. Effacés avec le compte : profil, jours d'utilisation (039), appareils et rappels (040), échanges avec API.
+
+Écarts avec la maquette : pas d'e-mail de confirmation ni de lien d'annulation par e-mail (Apiviz n'envoie pas encore ses
+propres e-mails) : on annule en se reconnectant ; l'associé est prévenu dans Apiviz (bandeau), pas par e-mail ; le
+téléchargement reste la sauvegarde JSON et le profil (pas d'archive zip des photos).
+
+À poser une fois par projet Supabase : secret `SUPPRESSION_CLE` (24 caractères au moins) ; `supabase functions deploy
+supprimer-comptes --no-verify-jwt --project-ref <ref>` ; GitHub › Secrets : `SUPPRESSION_CLE_RECETTE` et
+`SUPPRESSION_CLE_PRODUCTION` (production : avec l'accord de Pierre-Louis). Sans eux, les demandes attendent (comptes
+désactivés, rien d'effacé) ; la suppression immédiate de 022 reste disponible pour l'ancienne version.
+
+Technique :
+- Migration 041 : `comptes_a_supprimer` ; `demander_suppression(p_choix, p_confirmation)`, `annuler_suppression()`,
+  `ma_suppression()`, `suppressions_annoncees()` ; `compte_a_supprimer()` complétée (rôle, autres membres) ;
+  `effacer_compte()` interne (exploitations effacées ou quittées, colonnes `auteur` de l'exploitation à « Ancien
+  membre », tables de 031, 039, 040, compte de connexion) ; `supprimer_mon_compte()` (022) passe par elle ;
+  `suppressions_dues()`, `fichiers_exploitations()`, `effacer_compte_du()` pour le rôle de service.
+- `supabase/functions/supprimer-comptes/` : fichiers des exploitations qui partent (photos, factures) par lots de 100,
+  puis la base ; un échec de fichier remet le compte au lendemain. `.github/workflows/supprimer-comptes.yml` (3 h 47).
+- `src/domaines/compte/suppression.js` (routes `mesdonnees`, `suppression`, `confirmersuppression`, écran d'attente
+  par `avantRendu`, bandeau par `apresRendu`) ; `regles-suppression.js` ; `styles/80-donnees.css`. Mon profil mène à
+  Mes données. Sans 041 : la suppression immédiate (022) est proposée.
+- Tests : SQL `test_041` (24 vérifications) ; unitaires `suppression.test.mjs` ; scénario `etapes_sx` ; `etapes_nk`,
+  `test_appliquer` adaptés.
+
+À vérifier :
+- Sur `apidoo-test` : demander, se reconnecter (écran d'attente), annuler ; avancer une date d'effacement à la main
+  puis « Run workflow » en simulation, puis pour de vrai.
+
+## v5.87 · à publier en recette · rappels même quand Apiviz est fermée
+**Migration 040** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
+`rappels`** et **action GitHub « Rappels »**. Maquette « apiviz — Onboarding irréprochable », écran 9, validé par
+Pierre-Louis le 24 nov. 2026 (« Ok pour les notifications »). Tant que les clés et les secrets ne sont pas posés, rien
+ne change : les rappels restent ceux d'Apiviz ouverte.
+
+Pour l'apiculteur :
+1. **« Activer les rappels »** (écran Bravo, v5.84) abonne aussi l'appareil aux rappels app fermée, avec les types
+   choisis.
+2. **Réglages › Rappels et notifications** : carte « Même quand Apiviz est fermée » : cet appareil activé ou non, les
+   trois types (ruches à visiter, créneau météo idéal, gestes de saison), retirer.
+3. **Chaque matin** (8 h 17, heure de Paris en hiver), au plus un rappel par personne, **deux par semaine au plus**,
+   jamais deux fois le même : geste de saison (printemps, hausses, essaimage, varroa d'été, hivernage, varroa d'hiver),
+   beau créneau demain sur le rucher qui a le plus de ruches à voir (15 °C ou plus, vent sous 20 km/h, sans pluie), ou
+   ruches pas vues depuis 30 jours. Toucher le rappel ouvre l'écran concerné.
+4. Se déconnecter retire l'appareil.
+
+Limites : navigateur et écran d'accueil seulement (dans l'application des stores, Web Push n'existe pas : rappels app
+fermée à faire avec les notifications natives) ; sur iPhone, Apiviz doit être ajoutée à l'écran d'accueil.
+
+À poser une fois par projet Supabase (jamais dans le dépôt) :
+1. `npx web-push generate-vapid-keys` → secrets de la fonction `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, et `VAPID_SUJET`
+   (`mailto:` de l'équipe) ; `RAPPELS_SECRET` (un mot de passe long).
+2. `supabase functions deploy rappels --no-verify-jwt --project-ref <ref>`.
+3. GitHub › Secrets : `RAPPELS_SECRET_RECETTE` et `RAPPELS_SECRET_PRODUCTION` (même valeur que `RAPPELS_SECRET`).
+   « Run workflow » avec « Essai » coché montre ce qui partirait, sans rien envoyer.
+
+Technique :
+- Migration 040 : `abonnements_push` (chacun ses appareils), `abonner_push(p)`, `desabonner_push(p_endpoint)`,
+  `notifications_envoyees` (rôle de service seulement).
+- `supabase/functions/rappels/` : `{ cle: true }` donne la clé publique ; `{ envoyer: true }` (en-tête
+  `x-rappels-secret`) choisit et envoie (bibliothèque `web-push`), retire les appareils disparus (404/410), garde la
+  trace ; `essai`. Règles pures `regles.js` (ruches à voir, créneau, saison, choix, semaine ISO, « au Verger »).
+- `src/domaines/compte/notifications.js` : `window.Notifications` (abonner, désabonner, état), carte de l'écran Rappels,
+  `?ecran=` et message du service de fond. `regles-notifications.js` : types partagés avec l'écran Bravo. `sw.js` :
+  `push` et clic vers l'écran du rappel. `app.js` : désabonnement à la déconnexion. `.github/workflows/rappels.yml`.
+- Tests : SQL `test_040` ; unitaires `rappels.test.mjs` ; scénario `etapes_nt` (Web Push simulé) ; `etapes_nk`.
+
+À vérifier :
+- Sur un vrai téléphone Android (Chrome) et un iPhone (écran d'accueil) : activer, recevoir l'essai, toucher le rappel.
+
 ## v5.86 · à publier en recette · mieux connaître ses utilisateurs
 **Migration 039** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). Maquette « apiviz — Onboarding
 irréprochable », écran 11 et tableau de bord « Mes utilisateurs », et recommandation sur les données du profil,

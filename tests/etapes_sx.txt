@@ -1,0 +1,101 @@
+    # v5.88 — Mes données et suppression du compte en 30 jours (maquette « apiviz — Onboarding irréprochable », écrans
+    # 12 à 14, validés le 24 nov. 2026 ; migration 041, simulée). Réglages › Mes données ; « Avant de supprimer » et le
+    # choix pour une exploitation partagée ; mot de passe redemandé (faux, puis bon) ; demander_suppression ; écran final
+    # et annulation ; écran « Ton compte sera supprimé » à la connexion ; bandeau des autres membres ; base sans 041.
+    # Avec CAPTURES=<dossier> : captures à 390 px.
+    import os
+    cap = os.environ.get("CAPTURES")
+    if cap: os.makedirs(cap, exist_ok=True)
+    shot = lambda nom: cap and (page.wait_for_timeout(300), page.screenshot(path=f"{cap}/sx-{nom}.png", full_page=True))
+    ctx.route("https://api.open-meteo.com/**", lambda rt: rt.abort())
+    E3 = "33333333-3333-4333-8333-333333333333"
+    DATA["profils"] = [{"email": "test@apidoo.fr", "prenom": "Camille", "nom": "", "tranche_age": "", "sexe": "", "code_postal": "", "departement": "", "anciennete": "", "source": "", "activite": "",
+                        "colonies": "", "stats_ok": True, "newsletter": False, "plateforme": "web", "inscription_finie": "2026-11-20T10:00:00Z", "attente": "", "mieux_connaitre_fin": None}]
+    SX = {"demande": None, "annonces": [], "sans041": False, "mdp": [], "appels": []}
+    def rpc(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        nom = req.url.split("/rpc/")[1].split("?")[0]
+        if nom not in ("compte_a_supprimer", "demander_suppression", "annuler_suppression", "ma_suppression", "suppressions_annoncees"): return route.fallback()
+        SX["appels"].append((nom, req.post_data_json))
+        if SX["sans041"] and nom != "compte_a_supprimer": return route.fulfill(status=404, headers=h, body=json.dumps({"code": "PGRST202", "message": f"Could not find the function public.{nom}"}))
+        if nom == "compte_a_supprimer": return route.fulfill(status=200, headers=h, body=json.dumps({"effacees": [{"id": E1, "nom": "Bee’s Brothers", "colonies": 1}], "quittees": [{"id": E3, "nom": "La Lande", "colonies": 4, "role": "responsable", "autres": ["Marc"]}], "photos": []}))
+        if nom == "demander_suppression":
+            SX["demande"] = {"demande_le": "2026-11-24T10:00:00Z", "effacement_le": "2026-12-24T10:00:00Z", "choix": (req.post_data_json or {}).get("p_choix")}
+            return route.fulfill(status=200, headers=h, body=json.dumps({"effacement_le": "2026-12-24T10:00:00Z"}))
+        if nom == "annuler_suppression": SX["demande"] = None; return route.fulfill(status=200, headers=h, body="null")
+        if nom == "ma_suppression": return route.fulfill(status=200, headers=h, body=json.dumps(SX["demande"]))
+        if nom == "suppressions_annoncees": return route.fulfill(status=200, headers=h, body=json.dumps(SX["annonces"]))
+    ctx.route(f"https://{REF}.supabase.co/rest/v1/rpc/**", rpc)
+    def jeton(route):
+        req = route.request
+        h = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+        if req.method == "OPTIONS": return route.fulfill(status=204, headers={**h, "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"})
+        if "grant_type=password" not in req.url: return route.fallback()
+        mdp = (req.post_data_json or {}).get("password"); SX["mdp"].append(mdp)
+        if mdp != "abeilles2026": return route.fulfill(status=400, headers=h, body=json.dumps({"error": "invalid_grant", "error_description": "Invalid login credentials"}))
+        route.fulfill(status=200, headers=h, body=json.dumps(session))
+    ctx.route("**/auth/v1/token**", jeton)
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+
+    # 12. Mes données
+    page.evaluate("ACT.go('reglages')"); page.wait_for_selector("[data-act=sdouvrir]", timeout=10000)
+    page.click("[data-act=sdouvrir]"); page.wait_for_selector(".sd-liste")
+    t = page.locator(".sd").inner_text()
+    verif("Colonies et ruchers" in t and "1 ruche · 1 rucher" in t and "Télécharger toutes mes données" in t and "Effacer mes réponses de profil" in t, "Mes données : ce qui est gardé, télécharger, effacer")
+    verif(page.locator(".sd [data-act=pfbascule][data-v=stats_ok]").count() == 1 and page.locator("[data-act=sdcommencer]").count() == 1, "statistiques et « Supprimer mon compte et mes données »")
+    shot("12-mes-donnees")
+
+    # 13. Avant de supprimer
+    page.click("[data-act=sdcommencer]"); page.wait_for_selector(".sd-partage", timeout=10000)
+    t = page.locator(".sd").inner_text()
+    verif("La Lande est partagée avec Marc" in t and "La laisser à Marc" in t, "exploitation partagée : la laisser à Marc")
+    verif("Bee’s Brothers : 1 colonie" in t and "La Lande, pour tout le monde" not in t, "ce qui part : l'exploitation où l'on est seul")
+    page.click("[data-act=sdchoix][data-v=tout]")
+    verif("La Lande, pour tout le monde : 4 colonies" in page.locator(".sd").inner_text(), "responsable : « pour tout le monde » ajoute La Lande")
+    verif("Pense à tes factures" in page.locator(".sd").inner_text(), "rappel des factures")
+    shot("13-avant")
+
+    # 14. Confirmer
+    page.click("[data-act=sdcontinuer]"); page.wait_for_selector("[name=motdepasse]")
+    verif("désactivé tout de suite" in page.locator(".sd").inner_text() and "30 jours" in page.locator(".sd").inner_text(), "trois étapes : désactivé, 30 jours, effacé")
+    page.click("[data-act=sdsupprimer]"); page.wait_for_selector(".sd .ob-err")
+    verif("Écris ton mot de passe" in page.locator(".sd .ob-err").inner_text() and not SX["mdp"], "sans mot de passe : rien n'est envoyé")
+    page.fill("[name=motdepasse]", "faux"); page.click("[data-act=sdsupprimer]"); page.wait_for_selector(".sd .ob-err:has-text('incorrect')", timeout=10000)
+    verif(not any(n == "demander_suppression" for n, _ in SX["appels"]), "mauvais mot de passe : pas de demande")
+    shot("14-confirmer")
+    page.fill("[name=motdepasse]", "abeilles2026"); page.click("[data-act=sdsupprimer]"); page.wait_for_selector(".sd-ok", timeout=10000)
+    d = next(b for n, b in SX["appels"] if n == "demander_suppression")
+    verif(d["p_confirmation"] == "SUPPRIMER" and d["p_choix"] == {E3: "tout"}, "demander_suppression : " + str(d))
+    verif("24 décembre 2026" in page.locator(".sd").inner_text() and "désactivé" in page.locator(".sd").inner_text(), "écran final : date d'effacement")
+    shot("14-fait")
+    page.click("[data-act=sdannuler]"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=10000)
+    verif(any(n == "annuler_suppression" for n, _ in SX["appels"]), "« Annuler la suppression »")
+
+    # Pendant les 30 jours : seul l'écran d'attente
+    SX["demande"] = {"demande_le": "2026-11-24T10:00:00Z", "effacement_le": "2026-12-24T10:00:00Z", "choix": {}}
+    page.goto(url); page.wait_for_selector(".ar[data-ecran=compte-a-supprimer]", timeout=15000)
+    verif("Ton compte sera supprimé le 24 décembre 2026" in page.locator(".ar").inner_text() and page.locator(".bottom, .side").count() == 0, "à la connexion : seul l'écran d'attente")
+    shot("attente")
+    page.click("[data-act=sdannuler]"); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=10000)
+    verif(SX["demande"] is None, "annulée depuis l'écran d'attente")
+
+    # Bandeau des autres membres
+    SX["annonces"] = [{"exploitation_id": E1, "nom": "Bee’s Brothers", "effacement_le": "2026-12-24T10:00:00Z", "par": "Anne"}]
+    page.goto(url); page.wait_for_selector(".sd-annonce", timeout=15000)
+    verif("Anne a demandé sa suppression pour tout le monde" in page.locator(".sd-annonce").inner_text(), "bandeau : exploitation supprimée par un responsable")
+    SX["annonces"] = []
+
+    # Mon profil mène à Mes données
+    page.evaluate("ACT.go('profil')"); page.wait_for_selector(".pf")
+    verif(page.locator(".pf [data-act=sdouvrir]").count() == 1 and page.locator(".pf [data-act=pfsupprimer]").count() == 0, "Mon profil : « Mes données et suppression du compte »")
+
+    # Base sans 041 : la suppression immédiate de 022
+    SX["sans041"] = True
+    page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
+    page.evaluate("ACT.go('mesdonnees')"); page.wait_for_selector(".sd-danger")
+    verif(page.locator(".sd-danger [data-act=pfsupprimer]").count() == 1, "sans 041 : suppression immédiate (022)")
+    verif(page.evaluate("document.documentElement.scrollWidth") <= 390, "rien ne dépasse à 390 px")

@@ -92,6 +92,14 @@ Pour fonctionner sans réseau, l'application garde sur votre téléphone ou votr
 l'exploitation ouverte, les saisies en attente d'envoi et les photos pas encore envoyées. Elles sont effacées à la
 déconnexion. Vos préférences d'affichage y sont aussi gardées.
 
+**Rappels quand Apiviz est fermée.** Si vous les activez, votre navigateur fournit une adresse technique propre à cet
+appareil (gérée par Google, Apple, Mozilla ou Microsoft selon le navigateur), enregistrée avec les types de rappels
+choisis. Le serveur d'Apiviz y envoie deux rappels par semaine au plus (ruches à visiter, beau créneau, gestes de
+saison) ; le texte du rappel transite chiffré par le service du navigateur. Pour un beau créneau, la position de vos
+ruchers est envoyée à Open-Meteo pour la prévision (sans rien qui vous identifie). L'adresse de l'appareil est effacée
+quand vous retirez les rappels, vous déconnectez de l'appareil ou supprimez votre compte ; ce qui a été envoyé est
+gardé 400 jours au plus, pour ne jamais répéter un rappel.
+
 ## Si vous commandez du miel en ligne
 
 Un apiculteur qui utilise Apiviz peut ouvrir une page de commande et vous en envoyer le lien. Quand vous réservez des
@@ -117,6 +125,6 @@ données »).
 ## Vos droits
 
 Vous pouvez à tout moment accéder à vos données, les corriger, les exporter (Réglages, en bas de l’écran : fichier comptable,
-fichiers lisibles dans un tableur et sauvegarde complète ; Réglages › Mon profil : « Télécharger mes données »), et demander leur effacement. Vous pouvez supprimer votre compte vous-même : Réglages › Mon profil › « Supprimer mon compte ». Les exploitations sans autre membre que vous sont effacées avec toutes leurs données et leurs photos ; vous quittez celles que vous partagez, dont les données restent aux autres membres (si vous en étiez le dernier responsable, la personne inscrite depuis le plus longtemps le devient). Votre profil et votre compte de connexion sont effacés.
+fichiers lisibles dans un tableur et sauvegarde complète ; Réglages › Mon profil : « Télécharger mes données »), et demander leur effacement. Vous pouvez supprimer votre compte et toutes vos données vous-même : Réglages › Mes données › « Supprimer mon compte et mes données ». Votre mot de passe vous est redemandé ; le compte est désactivé tout de suite et tout est effacé 30 jours plus tard (vous pouvez annuler pendant ce délai en vous reconnectant). Les exploitations sans autre membre que vous sont effacées avec toutes leurs données, leurs photos et leurs factures. Pour celles que vous partagez, vous choisissez : les laisser aux autres membres (vos traces y deviennent « Ancien membre » ; si vous en étiez le dernier responsable, la personne inscrite depuis le plus longtemps le devient) ou, en tant que responsable, les supprimer pour tout le monde (les autres membres en sont prévenus dans Apiviz et ont 30 jours pour télécharger les données). Votre profil, vos jours d'utilisation, vos appareils abonnés aux rappels, vos échanges avec API et votre compte de connexion sont effacés.
 
 Vous pouvez aussi adresser une réclamation à la CNIL (www.cnil.fr).

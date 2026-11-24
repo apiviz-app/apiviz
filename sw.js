@@ -52,8 +52,19 @@ self.addEventListener("fetch", (e) => {
   }
 });
 
-// Un clic sur une notification rouvre Apiviz sur les rappels.
+// v5.87 : rappel envoyé par la fonction « rappels » (Web Push), même quand Apiviz est fermée.
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { corps: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.titre || "Apiviz", { body: d.corps || "", icon: "icone-192.png", badge: "icone-192.png", tag: d.tag || "apiviz-rappel", data: { route: d.route || "rappels" } }));
+});
+
+// Un clic sur une notification rouvre Apiviz (sur l'écran du rappel : ?ecran=…).
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((l) => (l[0] ? l[0].focus() : self.clients.openWindow("./"))));
+  const route = /^[a-z]{2,20}$/.test(e.notification.data?.route || "") ? e.notification.data.route : "";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((l) => {
+    if (l[0]) { if (route) l[0].postMessage({ type: "apiviz-route", route }); return l[0].focus(); }
+    return self.clients.openWindow(route ? `./?ecran=${route}` : "./");
+  }));
 });

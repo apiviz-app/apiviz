@@ -32,7 +32,7 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
    automatique des bases »), lancer la mise en ligne en production applique d'abord les migrations en attente sur `apidoo`,
    puis publie : **choisir la cible `production` vaut accord pour mettre à jour la base**. Sans le secret, Claude les
    applique par l'accès Supabase une fois l'accord donné dans la conversation, avec un relevé de structure dans
-   `migrations/releves/`. Sauvegarde quotidienne chiffrée prête à activer : voir « Sauvegardes » (D-03).
+   `migrations/releves/`. Sauvegarde quotidienne chiffrée et essayée, prête à activer : voir « Sauvegardes » (D-03).
 7. **Production** : Actions › Mise en ligne › Run workflow, cible `production`. Elle publie **la version en recette,
    telle quelle** (repère `recette`), même si `main` a avancé depuis (documentation, réglage de GitHub, autre fusion) :
    ces changements partiront à la prochaine recette. Seule condition : la version en recette doit être fusionnée sur
@@ -43,6 +43,27 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
    (`scripts/controler-structure.mjs`, clé publique, lecture seule) et refuse de partir en cas d'écart, en disant où en
    est la base et quelles migrations manquent. En recette, un écart avec `apidoo-test` n'est qu'un avertissement.
 8. **Après** : vider la liste des migrations en attente (`migrations/a-appliquer-en-production.txt`, simple mémo), passer la version à « en production » dans `CHANGELOG.md`.
+
+## Gel avant ouverture et rythme des versions (décision du 24 nov. 2026)
+
+Jusqu'à l'ouverture au public (`docs/LANCEMENT.md`), **plus de nouvelle fonction** : seulement des corrections, la
+conformité (juridique, sécurité, boutiques) et ce que la bêta fait remonter. Une idée nouvelle va dans
+`docs/ROADMAP/06_BACKLOG_MASTER.md`, pas dans une PR.
+
+- **Une version par semaine**, le mardi : recette le mardi, essai sur téléphone, production au plus tard le jeudi.
+  Un correctif bloquant peut partir entre deux.
+- **Trois PR ouvertes au plus** en même temps, jamais empilées l'une sur l'autre : chacune part de `main`.
+- Après chaque mise en ligne en production : lancer « Fonctions serveur » sur la même cible (ci-dessous) et vérifier le
+  résumé de l'action « Santé » du lendemain.
+
+## Fonctions serveur
+
+Action « Fonctions serveur » (`.github/workflows/fonctions.yml`), à la main : déploie les fonctions de
+`supabase/functions/` dans la version publiée sur la cible (repère `recette` ou `deploiement`), avec
+`--no-verify-jwt` pour celles de `supabase/functions/sans-jeton.txt`. Réglage, une fois : secret GitHub
+`SUPABASE_ACCESS_TOKEN` (Supabase › Account › Access Tokens). Les secrets de chaque fonction (`ANTHROPIC_API_KEY`,
+`VAPID_…`, `NETTOYAGE_CLE`, `SUPPRESSION_CLE`, `RAPPELS_SECRET`) se règlent dans Supabase › Edge Functions › Secrets,
+projet par projet.
 
 ## Mise à jour automatique des bases
 
@@ -102,25 +123,47 @@ Lire le texte des erreurs : Supabase (projet Apiviz) › SQL Editor :
 ## Sauvegardes
 
 Action « Sauvegarde » (`.github/workflows/sauvegarde.yml`), chaque nuit à 2 h 43 UTC et à la demande : copie de la base
-`apidoo` (schéma `public`), contrôlée (le fichier se relit et contient au moins 20 tables), chiffrée avec `age`, envoyée
-dans un seau Cloudflare R2 privé, gardée 30 jours. **Inactive tant que les réglages ci-dessous n'existent pas** : elle
-le dit dans son résumé et s'arrête sans erreur (décision D-03, 14 nov. 2026 : prête à activer).
+`apidoo` (schéma `public`), **restaurée sur un Postgres vide avant d'être envoyée** (`scripts/essai-restauration.sh` :
+tout se recrée sans erreur, chaque table garde sa protection par ligne, mêmes nombres de lignes si la base n'a pas bougé
+pendant la copie), chiffrée avec `age`, envoyée dans un seau Cloudflare R2 privé, gardée 30 jours. Le dimanche (ou à la
+demande, case « fichiers »), copie chiffrée des fichiers des photos et des factures, gardée 4 semaines. Une copie qui
+ne se restaure pas fait échouer l'action : GitHub envoie un e-mail. **Inactive tant que les réglages ci-dessous
+n'existent pas** : elle le dit dans son résumé et s'arrête sans erreur (D-03).
 
-Activer (une fois, environ 10 minutes) :
+Activer la copie de la base (une fois, environ 10 minutes) :
 1. Sur ton ordinateur : `age-keygen -o apiviz-sauvegarde.key`. Garde ce fichier **hors ligne** (clé USB, gestionnaire de
-   mots de passe) : sans lui, aucune sauvegarde ne se relit. Recopie la ligne « public key: age1… ».
+   mots de passe) : sans lui, aucune sauvegarde ne se relit. Recopie la ligne « public key: age1… ». Ne la donne à
+   personne d'autre, Claude compris : seule la clé publique va dans GitHub.
 2. Cloudflare (compte Apiviz) › R2 : créer un seau privé, par exemple `apiviz-sauvegardes`, puis un jeton d'API R2 limité
    à ce seau, en lecture et écriture. Noter l'identifiant du compte, l'Access Key ID et le Secret Access Key.
 3. GitHub › Settings › Secrets and variables › Actions :
    - variables : `SAUVEGARDE_CLE_PUBLIQUE` (age1…) et `R2_SEAU` (nom du seau) ;
    - secrets : `R2_COMPTE` (identifiant du compte Cloudflare), `R2_ID`, `R2_SECRET`. `BASE_PRODUCTION` existe déjà.
-4. Actions › Sauvegarde › Run workflow : le résumé doit afficher la taille du fichier envoyé.
+4. Actions › Sauvegarde › Run workflow : le résumé doit dire « restauration essayée » et la taille du fichier envoyé.
 
-Restaurer (sur un projet Supabase vide d'abord, jamais directement sur la production) :
-`age -d -i apiviz-sauvegarde.key apidoo-AAAA-MM-JJ.dump.age > apidoo.dump`, puis
-`pg_restore --no-owner --no-privileges --dbname "$BASE_CIBLE" apidoo.dump`. Les comptes de connexion ne sont pas dans la
-copie : chacun se reconnecte avec son adresse e-mail et retrouve ses exploitations (membres). Les fichiers des photos ne
-sont pas sauvegardés par cette action (à prévoir : copie hebdomadaire du stockage, 10_STRATEGIE_DEPLOIEMENT.md § 4).
+Activer en plus la copie des fichiers (photos, factures) :
+1. Supabase (projet `apidoo`) › Project Settings › Storage › S3 Connection : activer l'accès S3, noter la région affichée
+   (par exemple `eu-west-3`), puis « New access key » : noter l'Access Key ID et le Secret.
+2. GitHub : variable `STOCKAGE_REGION` (la région), secrets `STOCKAGE_ID` et `STOCKAGE_SECRET`.
+3. Actions › Sauvegarde › Run workflow avec la case « fichiers » cochée : le résumé donne le nombre de fichiers copiés.
+   Cette clé donne accès à tous les fichiers du projet : la garder seulement dans GitHub.
+
+Restaurer (sur une base vide d'abord, jamais directement sur la production) :
+1. Télécharger le fichier depuis le seau R2, puis `age -d -i apiviz-sauvegarde.key apidoo-AAAA-MM-JJ.dump.age > apidoo.dump`.
+2. Sur un Postgres vide (local ou nouveau projet) : `scripts/essai-restauration.sh apidoo.dump "$BASE_VIDE"` ; sur un
+   projet Supabase neuf, `pg_restore --no-owner --no-privileges --dbname "$BASE_CIBLE" apidoo.dump` (les rôles et schémas
+   de Supabase y sont déjà ; ne pas y lancer `socle-supabase.sql`).
+3. Fichiers : `age -d -i apiviz-sauvegarde.key fichiers-AAAA-MM-JJ.tar.age | tar -x`, puis renvoyer chaque dossier dans
+   le seau du même nom (`aws s3 sync fichiers/photos-visites s3://photos-visites --endpoint-url …`).
+Les comptes de connexion ne sont pas dans la copie : chacun se reconnecte avec son adresse e-mail et retrouve ses
+exploitations (membres).
+
+**Exercice de restauration, une fois par trimestre** (le premier avant l'ouverture au public) : prendre la copie de la
+veille, faire les étapes 1 et 2 sur ton ordinateur, noter la date et la durée ici :
+
+| Date | Copie restaurée | Durée | Remarques |
+|---|---|---|---|
+| | | | |
 
 ## Retour arrière
 

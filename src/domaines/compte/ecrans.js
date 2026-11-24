@@ -9,6 +9,8 @@ import { ecrans as ecransArrivee, actions as actionsArrivee } from "./arrivee.js
 import { completerReglages as completerRubriques, actions as actionsRubriques } from "./rubriques.js";
 import { ecrans as ecransReprise, actions as actionsReprise, completerReglages as completerReprise } from "./reprise.js";
 import { ecrans as ecransMieux, actions as actionsMieux, completerReglages as completerMieux } from "./mieux.js";
+import { actions as actionsNotif } from "./notifications.js";
+import { ecrans as ecransSuppression, actions as actionsSuppression, completerReglages as completerSuppression } from "./suppression.js";
 import { completerReglages as completerSons, actions as actionsSons } from "../retours/reglages.js";
 import { completerReglages as completerApi } from "../assistant/reglages-api.js";
 import { completerReglages as completerPhotos } from "../photos/ecrans.js";
@@ -23,7 +25,9 @@ export default [
   // IT-11 : ligne « Espace photos » et avertissement à 80 % dans L'exploitation (src/domaines/photos/ecrans.js).
   // v5.84 : ligne « Rubriques affichées » dans L'exploitation (rubriques.js). v5.85 : « Reprendre un carnet ou un
   // tableur » dans Tes données (reprise.js). v5.86 : « Mes utilisateurs » pour l'équipe Apiviz (mieux.js).
-  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); completerApi(); completerPhotos(); completerRubriques(); completerReprise(); completerMieux(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons, ...actionsRubriques }, remplace },
+  // v5.87 : actions de la carte « Même quand Apiviz est fermée » de l'écran Rappels (notifications.js). v5.88 : ligne
+  // « Mes données » dans Tes données (suppression.js).
+  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); completerApi(); completerPhotos(); completerRubriques(); completerReprise(); completerMieux(); completerSuppression(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons, ...actionsRubriques, ...actionsNotif }, remplace },
   // Exploitation et membres : exploitations.js.
   // v5.38 : prénom et nom des membres (noms_membres, migration 021) et personnes sans compte (profil.js).
   { id: "membres", titre: "Exploitation et membres", rubrique: "plus", rendu: () => { EX.vue(); completerMembres(); }, actions: actionsProfil },
@@ -45,4 +49,7 @@ export default [
   // Mieux connaître ses utilisateurs (v5.86, migration 039) : carte de l'accueil à J+14, jours d'utilisation, tableau de
   // bord « Mes utilisateurs » de l'équipe (mieux.js). Les actions de la carte servent sur l'accueil.
   ...ecransMieux.map((d) => ({ ...d, actions: actionsMieux })),
+  // Mes données et suppression du compte en 30 jours (v5.88, migration 041) : suppression.js. Les actions servent aussi
+  // sur l'écran « Ton compte sera supprimé » et sur le bandeau de l'accueil.
+  ...ecransSuppression.map((d, i) => (i ? d : { ...d, actions: actionsSuppression })),
 ];
