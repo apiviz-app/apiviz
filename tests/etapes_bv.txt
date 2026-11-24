@@ -77,7 +77,9 @@
     page.fill("#dm_rucher", "Le Verger"); page.click("[data-act=dmnb][data-v='1']"); page.click("[data-act=dmnb][data-v='1']")
     verif(page.locator(".ar-hexas span").count() == 4 and page.locator("#dm_rucher").input_value() == "Le Verger", "quatre ruches prévues, le nom reste")
     shot("4-rucher")
-    page.click("[data-act=dmcreer]"); page.wait_for_selector(".ar[data-ecran=premierevisite]", timeout=15000)
+    page.click("[data-act=dmcreer]"); page.wait_for_selector(".ar[data-ecran=reprendre]", timeout=15000)
+    verif("Le Verger est prêt" in page.locator(".rp-pret").inner_text() and "4 ruches créées" in page.locator(".rp-pret").inner_text(), "v5.85 : « Le Verger est prêt », puis reprendre son carnet")
+    page.click(".ar-fin [data-act=rpzero]"); page.wait_for_selector(".ar[data-ecran=premierevisite]", timeout=15000)
     noms = [b["p_nom"] for n, b in recu["rpc"] if n == "creer_exploitation"]
     verif(noms == ["Les ruches de Camille"], "exploitation créée avec un nom proposé : " + str(noms))
     verif(len([r for r in DATA["ruches"] if r.get("rucher") == "Le Verger"]) == 4, "rucher et quatre colonies créés")

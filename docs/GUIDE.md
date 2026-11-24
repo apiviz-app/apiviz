@@ -22,6 +22,8 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
 - **Première visite guidée** : quatre questions (reine ou œufs, couvain, provisions, abeilles), un conseil d'API à
   chacune, « Passer cette question » ; « Pas au rucher ? » la met dans l'agenda pour demain. Puis **Bravo** : le jalon,
   « Enchaîner avec » la ruche suivante et les rappels proposés.
+- **Reprendre son carnet** (après le premier rucher, ou Réglages › Tes données) : photo des pages lue par API, ou
+  tableur (CSV, Excel) ; tu vérifies ce qui a été compris, puis « Importer » ; « Annuler l'import » défait tout.
 - **Exploitation d'exemple** : rien n'est enregistré ; trois bulles montrent la priorité du jour, les ruchers et le
   bouton API ; « Commencer avec mes ruches » mène au compte.
 

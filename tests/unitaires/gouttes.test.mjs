@@ -5,8 +5,9 @@ import fs from "node:fs";
 import { coutUsd, gouttes, tarif, additionner, TARIFS } from "../../supabase/functions/assistant/gouttes.js";
 import * as R from "../../src/domaines/compte/regles-offre.js";
 
-test("assistant et lire-facture partagent exactement le même calcul", () => {
+test("assistant, lire-facture et lire-carnet partagent exactement le même calcul", () => {
   assert.equal(fs.readFileSync("supabase/functions/assistant/gouttes.js", "utf8"), fs.readFileSync("supabase/functions/lire-facture/gouttes.js", "utf8"));
+  assert.equal(fs.readFileSync("supabase/functions/assistant/gouttes.js", "utf8"), fs.readFileSync("supabase/functions/lire-carnet/gouttes.js", "utf8"));
 });
 
 test("facture mesurée en production le 17 nov. 2026 : 4,4 centimes de dollar, soit 4 gouttes", () => {

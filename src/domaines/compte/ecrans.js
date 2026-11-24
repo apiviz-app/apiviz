@@ -7,6 +7,7 @@ import { ecranSynchronisation } from "./synchronisation.js";
 import { ecrans as ecransOffre } from "./offre.js";
 import { ecrans as ecransArrivee, actions as actionsArrivee } from "./arrivee.js";
 import { completerReglages as completerRubriques, actions as actionsRubriques } from "./rubriques.js";
+import { ecrans as ecransReprise, actions as actionsReprise, completerReglages as completerReprise } from "./reprise.js";
 import { completerReglages as completerSons, actions as actionsSons } from "../retours/reglages.js";
 import { completerReglages as completerApi } from "../assistant/reglages-api.js";
 import { completerReglages as completerPhotos } from "../photos/ecrans.js";
@@ -19,8 +20,9 @@ export default [
   // v5.68 : « Objectif de récolte » (L'exploitation) et « Sons et vibrations » (Affichage), src/domaines/retours/reglages.js.
   // v5.71 : groupe « API » (Offre et gouttes, Ce qu'API sait de toi, Voix d'API, Conseils d'API), src/domaines/assistant/reglages-api.js.
   // IT-11 : ligne « Espace photos » et avertissement à 80 % dans L'exploitation (src/domaines/photos/ecrans.js).
-  // v5.84 : ligne « Rubriques affichées » dans L'exploitation (rubriques.js).
-  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); completerApi(); completerPhotos(); completerRubriques(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons, ...actionsRubriques }, remplace },
+  // v5.84 : ligne « Rubriques affichées » dans L'exploitation (rubriques.js). v5.85 : « Reprendre un carnet ou un
+  // tableur » dans Tes données (reprise.js).
+  { id: "reglages", titre: "Réglages", rubrique: "plus", rendu: () => { ES.ecranReglages(); completerSons(); completerApi(); completerPhotos(); completerRubriques(); completerReprise(); }, actions: { ...actionsReglages, ...actionsDonnees, ...actionsSons, ...actionsRubriques }, remplace },
   // Exploitation et membres : exploitations.js.
   // v5.38 : prénom et nom des membres (noms_membres, migration 021) et personnes sans compte (profil.js).
   { id: "membres", titre: "Exploitation et membres", rubrique: "plus", rendu: () => { EX.vue(); completerMembres(); }, actions: actionsProfil },
@@ -37,4 +39,6 @@ export default [
   // Parcours d'arrivée (v5.84) : bienvenue et « Faisons connaissance » avant le compte (crochet avantRendu), première
   // visite guidée et « Bravo » après la création du rucher (arrivee.js). Les actions servent aussi avant la connexion.
   ...ecransArrivee.map((d, i) => (i ? d : { ...d, actions: actionsArrivee })),
+  // Reprendre son carnet (v5.85) : photo lue par API (fonction lire-carnet) ou tableur, puis vérification (reprise.js).
+  ...ecransReprise.map((d, i) => (i ? d : { ...d, actions: actionsReprise })),
 ];
