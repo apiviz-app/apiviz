@@ -416,3 +416,22 @@ Conseillers de sécurité de Supabase (Advisors › Security), identiques sur `a
 - **Accepté** : `administrateurs_apiviz`, `journal_erreurs`, `membres_v1` ont la protection par ligne sans règle : fermées à
   l'application, lues seulement par des fonctions `security definer`.
 Relancer ce relevé après chaque migration qui ajoute une fonction (Supabase › Advisors, ou `get_advisors`).
+
+## E-mails et comptes inactifs (v5.90, migration 042)
+
+- **Service** : Brevo (société française, données en France et en Allemagne), API `https://api.brevo.com/v3/smtp/email`.
+  Module commun `courriel.js` (gabarits au tutoiement, envoi), copié dans `supabase/functions/courriels/` et
+  `supabase/functions/supprimer-comptes/` (`tests/unitaires/courriel.test.mjs` vérifie qu'ils sont identiques).
+- **Fonction « courriels »** (jeton exigé) : à la demande de l'application, pour la personne connectée et à sa propre
+  adresse seulement ; aujourd'hui la confirmation d'une demande de suppression. Au plus un e-mail de chaque nature par
+  heure (`courriel_a_envoyer`).
+- **Fonction « supprimer-comptes »** (nuit) : `entretien_comptes()`, puis préavis (`inactifs_a_prevenir(50)` →
+  `prevenir_inactif` → e-mail ; échec → `retirer_preavis`), puis les effacements dus (041). Activité = le plus récent de
+  `derniere_activite.jour` (noté par `signaler_activite()` à l'ouverture, une fois par jour), `auth.users.last_sign_in_at`
+  et la création du compte.
+- **Réglages** : secrets `BREVO_CLE`, `COURRIEL_EXPEDITEUR`, `APP_URL` sur chaque projet Supabase. Dans Brevo : vérifier
+  le domaine `apiviz.fr` (enregistrements SPF, DKIM, DMARC chez le registraire), créer l'adresse d'expédition.
+- **E-mails de connexion (Supabase Auth)** : le service d'e-mails intégré de Supabase est limité à quelques envois par
+  heure et ne convient pas à l'ouverture au public. Le brancher sur Brevo : Supabase › Authentication › Emails › SMTP
+  Settings, avec les identifiants SMTP de Brevo (Brevo › SMTP & API › SMTP), même expéditeur, sur les deux projets.
+

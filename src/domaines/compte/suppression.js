@@ -8,6 +8,9 @@
 //     annulable ; écran final.
 //   - Pendant les 30 jours : à la connexion, seul l'écran « Ton compte sera supprimé le … » (annuler ou se déconnecter).
 //   - Bandeau de l'accueil pour les autres membres d'une exploitation qui sera supprimée pour tout le monde.
+//   - v5.90 (migration 042) : une fois par jour, signaler_activite() note le jour d'ouverture (durée de conservation :
+//     comptes sans activité depuis 3 ans) et annule un préavis d'inactivité en cours (« Bon retour ») ; après une
+//     demande de suppression, la fonction serveur « courriels » envoie la confirmation par e-mail.
 // Sans 041 : l'ancienne suppression immédiate (profil.js, migration 022) reste proposée. Globales lues à l'appel : S, sb,
 // esc, shell, ES, $app, go, render, toast, fail, ACT, EX, PF, today, dfr.
 import * as R from "./regles-suppression.js";
@@ -16,6 +19,7 @@ const e = (t) => (typeof esc == "function" ? esc(t) : String(t ?? ""));
 const email = () => String(S.session?.user?.email || "").toLowerCase();
 const st = { apercu: null, choix: {}, verifie: "", demande: undefined, pour: "", annonces: null, annoncesDe: "", fait: null, erreur: "", sans041: false, occupe: false };
 const ICONE = (d, t = 20) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+const jourSignale = { email: "", jour: "", coupe: false };
 const sansFonction = (err) => /PGRST202|42883|function|ma_suppression|demander_suppression|suppressions_annoncees/i.test(`${err?.code} ${err?.message}`);
 
 // ---------- 12. Mes données ----------
@@ -115,6 +119,8 @@ async function supprimer() {
       throw r.error;
     }
     st.fait = r.data; st.demande = r.data; st.pour = email();
+    // Confirmation par e-mail (042) : sans attendre, sans bloquer si Brevo n'est pas configuré.
+    sb.functions?.invoke?.("courriels", { body: { nature: "suppression-demandee" } })?.catch?.(() => {});
   } catch (err) { st.erreur = typeof messageErreur == "function" ? messageErreur(err) : String(err?.message || err); }
   finally { st.occupe = false; render(); }
 }
@@ -128,7 +134,21 @@ async function verifierDemande() {
     st.demande = r.error ? null : r.data || null;
     if (r.error && sansFonction(r.error)) st.sans041 = true;
   } catch { st.demande = null; }
+  // Préavis d'inactivité (042) : revenir suffit à garder le compte, pas d'écran d'attente.
+  if (st.demande?.motif === "inactivite") { st.demande = null; jourSignale.jour = ""; }
   render();
+}
+
+// Jour d'ouverture (042), une fois par jour et par compte ; annule un préavis d'inactivité.
+async function signaler() {
+  const jour = new Date().toISOString().slice(0, 10);
+  if (jourSignale.coupe || (jourSignale.email === email() && jourSignale.jour === jour)) return;
+  jourSignale.email = email(); jourSignale.jour = jour;
+  try {
+    const r = await sb.rpc("signaler_activite");
+    if (r.error) { if (/signaler_activite|PGRST202|42883|404/i.test(`${r.error.code} ${r.error.message}`)) jourSignale.coupe = true; return; }
+    if (r.data === true) { st.demande = null; toast("Bon retour ! Ton compte est gardé."); }
+  } catch { jourSignale.jour = ""; }
 }
 
 function ecranEnAttente() {
@@ -144,6 +164,7 @@ function ecranEnAttente() {
 
 function avantRendu() {
   if (!S.session || S.recovery || S.session.user?.id === "exemple") return;
+  signaler();
   if (st.pour !== email()) { verifierDemande(); return; }
   if (st.demande && !st.fait) { ecranEnAttente(); return true; }
 }

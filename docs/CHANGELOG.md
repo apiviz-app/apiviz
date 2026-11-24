@@ -5,6 +5,37 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.90 · à publier en recette · comptes inactifs et e-mails
+**Migration 042** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
+« courriels »** ; « supprimer-comptes » complétée. Décisions de Pierre-Louis du 24 nov. 2026 : « 3 ans, avec préavis »
+et « Oui, service européen » (Brevo).
+
+Pour l'apiculteur :
+1. **Compte sans activité** : après 3 ans sans ouvrir Apiviz, un e-mail prévient que le compte sera supprimé un mois
+   plus tard, avec les exploitations dont la personne est seule membre (celles qu'elle partage restent aux autres).
+   Se reconnecter avant suffit à tout garder : « Bon retour ! Ton compte est gardé. »
+2. **Confirmation par e-mail** d'une demande de suppression de compte (v5.88), avec la date et la marche à suivre pour
+   annuler.
+3. **Politique de confidentialité** : Brevo ajouté aux services, durées « compte sans activité », « dernier jour
+   d'ouverture », « journal des e-mails ».
+
+Pour l'équipe :
+- Apiviz note le dernier jour d'ouverture (un seul jour, pas de rubrique), nécessaire à la durée de conservation, même
+  quand la personne refuse les statistiques.
+- Chaque nuit, « supprimer-comptes » : entretien (préavis caducs, traces de comptes disparus), au plus 50 préavis par
+  e-mail, puis les effacements dus. **Sans Brevo configuré, aucun préavis ne part et aucun compte inactif n'est effacé.**
+  Si un e-mail ne part pas, le préavis est retiré. Équipe Apiviz (`administrateurs_apiviz`) jamais concernée.
+- Secrets Supabase, sur chaque projet : `BREVO_CLE`, `COURRIEL_EXPEDITEUR` (« Apiviz <…@apiviz.fr> », domaine vérifié
+  dans Brevo), `APP_URL` (`https://recette.apiviz.fr` en recette). Déployer « courriels » et « supprimer-comptes » avec
+  l'action « Fonctions serveur ».
+
+À vérifier :
+- [ ] Recette, compte de test : demander la suppression → e-mail de confirmation reçu, date juste ; annuler.
+- [ ] Recette : pour un compte de test, `update auth.users set last_sign_in_at = now() - interval '4 years'` (et
+      effacer sa ligne de `derniere_activite`), puis lancer « Suppression des comptes » en simulation, puis pour de vrai :
+      e-mail de préavis reçu ; se reconnecter → « Bon retour ! », plus de préavis.
+- [ ] Sans `BREVO_CLE` : le résumé de la fonction dit `preavis_actif: false`, rien n'est envoyé ni effacé.
+
 ## v5.88 · à publier en recette · mes données et suppression du compte
 **Migration 041** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
 `supprimer-comptes`** et **action GitHub « Suppression des comptes »**. Maquette « apiviz — Onboarding irréprochable »,
