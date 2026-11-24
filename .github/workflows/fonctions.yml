@@ -1,0 +1,77 @@
+# Déploiement des fonctions serveur Supabase (supabase/functions/*), à la main seulement.
+# Actions › Fonctions serveur › Run workflow : cible « recette » ou « production ».
+# Déploie la version des fonctions qui correspond à l'application publiée sur la cible : repère git « recette » pour
+# apidoo-test, « deploiement » pour apidoo. Lancer donc juste après « Mise en ligne » sur la même cible.
+# Pourquoi : au 24 nov. 2026, les fonctions étaient déployées à la main et la production n'avait pas « assistant »
+# (API ne répondait pas en production) ; « lire-carnet » et « nettoyer-stockage » n'étaient déployées nulle part.
+# Réglage : secret SUPABASE_ACCESS_TOKEN (Supabase › Account › Access Tokens). Les secrets propres à chaque fonction
+# (ANTHROPIC_API_KEY, VAPID…, *_CLE) restent dans Supabase › Edge Functions › Secrets et ne passent pas par ici.
+name: Fonctions serveur
+
+on:
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: "Où déployer"
+        type: choice
+        options: [recette, production]
+        default: recette
+      fonctions:
+        description: "Fonctions à déployer, séparées par des espaces (vide = toutes)"
+        type: string
+        default: ""
+
+concurrency:
+  group: fonctions-${{ inputs.cible }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - name: Réglage présent ?
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Secret SUPABASE_ACCESS_TOKEN absent (docs/PROCESSUS.md § Fonctions serveur)."; exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Version publiée sur la cible
+        id: v
+        run: |
+          if [ "${{ inputs.cible }}" = production ]; then repere=deploiement; ref=xkucyqzlqfeyuomrtjbu; else repere=recette; ref=zaaaiqyhxehvgowlgztx; fi
+          git rev-parse -q --verify "refs/tags/$repere" > /dev/null || { echo "::error::Repère $repere absent : lance d'abord « Mise en ligne »."; exit 1; }
+          git checkout -q "refs/tags/$repere"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          printf '### Fonctions serveur : %s\n\nVersion publiée : `%s` (repère %s).\n\n' "${{ inputs.cible }}" "$(git rev-parse --short HEAD)" "$repere" >> "$GITHUB_STEP_SUMMARY"
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Déployer
+        env:
+          REF: ${{ steps.v.outputs.ref }}
+          LISTE: ${{ inputs.fonctions }}
+        run: |
+          set -euo pipefail
+          sans=$(grep -v '^#' supabase/functions/sans-jeton.txt 2>/dev/null | tr -s ' \n' ' ' || true)
+          if [ -n "$LISTE" ]; then noms=$LISTE; else noms=$(cd supabase/functions && for d in */; do [ -f "$d/index.ts" ] && echo "${d%/}"; done); fi
+          echo "| Fonction | Jeton de connexion | Résultat |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echec=0
+          for f in $noms; do
+            if [ ! -f "supabase/functions/$f/index.ts" ]; then echo "| $f | | absente de cette version |" >> "$GITHUB_STEP_SUMMARY"; continue; fi
+            opt=""; jeton="exigé"
+            case " $sans " in *" $f "*) opt="--no-verify-jwt"; jeton="non (clé propre)";; esac
+            if supabase functions deploy "$f" --project-ref "$REF" --use-api $opt; then r="déployée"; else r="**échec**"; echec=1; fi
+            echo "| $f | $jeton | $r |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          exit $echec

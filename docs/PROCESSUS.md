@@ -44,6 +44,27 @@ Le code est le même. Seuls `environnements/recette/` (`config.js`, manifeste) e
    est la base et quelles migrations manquent. En recette, un écart avec `apidoo-test` n'est qu'un avertissement.
 8. **Après** : vider la liste des migrations en attente (`migrations/a-appliquer-en-production.txt`, simple mémo), passer la version à « en production » dans `CHANGELOG.md`.
 
+## Gel avant ouverture et rythme des versions (décision du 24 nov. 2026)
+
+Jusqu'à l'ouverture au public (`docs/LANCEMENT.md`), **plus de nouvelle fonction** : seulement des corrections, la
+conformité (juridique, sécurité, boutiques) et ce que la bêta fait remonter. Une idée nouvelle va dans
+`docs/ROADMAP/06_BACKLOG_MASTER.md`, pas dans une PR.
+
+- **Une version par semaine**, le mardi : recette le mardi, essai sur téléphone, production au plus tard le jeudi.
+  Un correctif bloquant peut partir entre deux.
+- **Trois PR ouvertes au plus** en même temps, jamais empilées l'une sur l'autre : chacune part de `main`.
+- Après chaque mise en ligne en production : lancer « Fonctions serveur » sur la même cible (ci-dessous) et vérifier le
+  résumé de l'action « Santé » du lendemain.
+
+## Fonctions serveur
+
+Action « Fonctions serveur » (`.github/workflows/fonctions.yml`), à la main : déploie les fonctions de
+`supabase/functions/` dans la version publiée sur la cible (repère `recette` ou `deploiement`), avec
+`--no-verify-jwt` pour celles de `supabase/functions/sans-jeton.txt`. Réglage, une fois : secret GitHub
+`SUPABASE_ACCESS_TOKEN` (Supabase › Account › Access Tokens). Les secrets de chaque fonction (`ANTHROPIC_API_KEY`,
+`VAPID_…`, `NETTOYAGE_CLE`, `SUPPRESSION_CLE`, `RAPPELS_SECRET`) se règlent dans Supabase › Edge Functions › Secrets,
+projet par projet.
+
 ## Mise à jour automatique des bases
 
 Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations qui manquent à la base de la cible
