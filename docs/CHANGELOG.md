@@ -5,6 +5,33 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.80 · à publier en recette · préparer ma sortie
+**Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 4, validée par Pierre-Louis le 24 nov. 2026.
+
+Pour l'apiculteur (Agenda › ⋯ › **Préparer ma sortie**) :
+1. Choisis le jour (aujourd'hui, **demain** par défaut, après-demain).
+2. **Ruchers à voir**, numérotés du plus chargé au moins chargé, à cocher ; le **créneau météo** conseillé du premier
+   rucher placé sur la carte (bonne plage la plus longue, sinon visite rapide).
+3. **Au programme** : les tâches de ce jour et celles en retard, plus les colonies à revoir sans tâche (orpheline, état
+   critique ou à surveiller, pas de visite depuis plus de 30 jours).
+4. **Dans la voiture** : le matériel de toute sortie, puis ce que demandent les tâches (pesée → peson, candi →
+   candi pour chaque colonie ou le nombre écrit, varroa → sucre glace et bocal, traitement → gants et produit, retirer
+   les lanières → sac, hausses, récolte, essaim, reine, cadres), **comparé au stock** de Matériel (« il t'en reste 1 kg »,
+   « Il en manque 2 », « Plus en stock »). Les cases cochées restent sur le téléphone pour ce jour.
+5. **Partir : lancer la tournée** ouvre la tournée du premier rucher coché.
+
+Technique : `src/domaines/agenda/sortie-regles.js` (règles pures : programme, regroupement par rucher, matériel par mots
+repérés, détail, jours, meilleure plage), `sortie.js` (écran `sortie`, niveau 2 sous l'Agenda ; bouton dans les actions
+de l'Agenda), `styles/73-sortie.css`. Météo par `MT.parHeure` (redessinée quand elle arrive). Tests : unitaires
+`sortie.test.mjs` (5 tests) ; scénario `etapes_so` ; `etapes_sd` et `etapes_nk` (60 écrans) mis à jour.
+
+Pas fait : ordre de visite par distance entre ruchers ; matériel réglable (les mots repérés sont fixes).
+
+À vérifier :
+- Des tâches pour demain avec « candi », « peser », « varroa », « lanières » : le matériel et le stock.
+- Décocher un rucher : ses tâches et son matériel partent. Cocher le matériel, revenir : les cases restent.
+- Rucher placé sur la carte : le créneau conseillé. « Partir » ouvre la tournée.
+
 ## v5.79 · à publier en recette · bilan de saison enrichi
 **Pas de migration.** Maquette « apiviz — Idées à forte valeur », idée 1, validée par Pierre-Louis le 24 nov. 2026
 (« Ok pour les idées 1, 2, 3, 4, 5 »). L'écran « Bilan de la saison » existait (v5.61 : kilos, pots, argent, kilos par

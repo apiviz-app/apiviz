@@ -29,6 +29,9 @@ envoyée, rattachement Visite / Colonie / Rucher, photos des fiches colonie et r
 reconnaissance). Avec `CAPTURES=<dossier>` : captures à 375 et 1 280 px. Recette sur vrais téléphones :
 `docs/ROADMAP/ITERATIONS/RECETTE_IT-11.md`.
 
+Scénario v5.80 : `etapes_so` (Agenda › Préparer ma sortie : demain par défaut, ruchers du plus chargé au moins chargé,
+programme avec retard, matériel et stock, cases gardées, rucher décoché, lancer la tournée). Avec `CAPTURES=<dossier>`.
+
 Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
 partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
 

@@ -161,6 +161,9 @@ place qu'après décision inscrite dans la roadmap, et ce guide est mis à jour 
   Un tampon par article payé par un client nommé. Carte pleine : l'article suivant est offert, maintenant (« Offrir
   maintenant », le moins cher du panier) ou à la prochaine visite. Le reçu et la fiche du client disent où en est sa
   carte.
+- **Préparer ma sortie** *(v5.80)* : Agenda › ⋯. Pour aujourd'hui, demain ou après-demain : les ruchers à voir (à
+  cocher), le créneau météo, les tâches et colonies à voir, et le matériel à emporter d'après tes tâches, comparé à ton
+  stock (« Il en manque 2 »). « Partir » lance la tournée.
 - **Tes échanges avec API** *(v5.62)* : bouton API › « Tes échanges avec API ». Tes conversations passées, rangées
   par jour, une recherche, et les conseils d'API pas encore faits (« Créer la tâche »). Toi seul les vois ; efface une
   conversation ou tout l'historique quand tu veux.
