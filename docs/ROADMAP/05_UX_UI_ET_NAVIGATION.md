@@ -34,9 +34,17 @@ Registre et déclaration : onglets Registre · Déclaration
 Réglages : onglets Réglages · Équipe (détails : Mon profil, Rappels et notifications, Synchronisation — v5.56, ouverte depuis le menu du compte et le bandeau hors ligne ; Ce qu'API sait de toi — v5.71, ouvert depuis Réglages › API et l'écran API › ⋯)
 Cloche : feuille Rappels · Loupe : recherche plein écran · Avatar : exploitations, plein soleil, aide, déconnexion
 API (bouton central) : parler à API (micro ; appui long : écoute directe) · rechercher · saisir (visite, tournée, récolte, vente, dépense, tâche) · Ouvrir l'espace API (écran API : pour aujourd'hui, tes échanges, mains libres)
-Inscription (une fois, avant tout le reste) · Élevage* et Opérations : réservés
+Bienvenue et Faisons connaissance (avant le compte, une fois par appareil) · Inscription (une fois, avant tout le reste : Tu en es où ?, premier rucher, première visite guidée, Bravo) · Élevage* et Opérations : réservés
 * visible au niveau Professionnel ou après activation
 ```
+
+**v5.84 (24 nov. 2026)** : **parcours d'arrivée**. Avant le compte : écrans **Bienvenue** et **Faisons connaissance**
+(une fois par appareil, avant la page de connexion). Après le compte : « Tu en es où ? » remplace la 2e étape de
+l'inscription, **Ton premier rucher** remplace les trois questions, puis **Première visite guidée** (flux, croix pour
+fermer) et **Bravo**. Accueil : « Mes premiers pas » remplace « Bien démarrer » (14 jours). Réglages › L'exploitation
+gagne **Rubriques affichées** : Ventes et clients, Matériel et Finances peuvent quitter le menu, le volet et « Saisir »
+(rien n'est effacé ; Produits reste dans la barre du bas). Pas de nouvelle rubrique. Décision de Pierre-Louis
+(24 nov. 2026, maquette « apiviz — Onboarding irréprochable » : « Je valide la globalité », « implémente tout »).
 
 **v5.82 (24 nov. 2026)** : écran **Prêt pour l'hiver** (niveau 2 sous Ruchers, ouvert par Ruchers › ⋯ et par
 Ma saison › Hiver ; retour « ‹ Ruchers » ; route `hiver`). Pas de nouvelle rubrique. Décision de Pierre-Louis

@@ -64,7 +64,7 @@ export function installer() {
     if (tuiles && !document.documentElement.classList.contains("lecteur") && !$sheetForm.querySelector(".fa-terrain")) {
       ($sheetForm.querySelector(".u-deux") || tuiles).insertAdjacentHTML("afterend", `<div class="u-deux fa-terrain">
         <button type="button" class="btn" data-act="n4q" data-v="qrscanner">Scanner une ruche</button>
-        ${(S.d?.lots || []).length ? '<button type="button" class="btn" data-act="n4q" data-v="cscaisse">Caisse du marché</button>' : ""}</div>`);
+        ${(S.d?.lots || []).length && !window.Rubriques?.masquee("caisse") ? '<button type="button" class="btn" data-act="n4q" data-v="cscaisse">Caisse du marché</button>' : ""}</div>`);
     }
     // Disponibilité déjà connue : tout de suite ; sinon dès la réponse du serveur, si la feuille est encore ouverte.
     ajouterFacture();

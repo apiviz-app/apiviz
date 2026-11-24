@@ -2,7 +2,7 @@
     import os
     cap = os.environ.get("CAPTURES")
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.evaluate("window.name = 'deco'; localStorage.clear(); localStorage.setItem('apiviz-bienvenue-vue', '1')")
     page.goto(url); page.wait_for_selector(".auth.cx form[data-form=auth]", timeout=15000)
     page.get_by_role("button", name="Voir un rucher d’exemple").click()
     page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)

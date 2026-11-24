@@ -1,0 +1,186 @@
+/* Apiviz — parcours d'arrivée (v5.84, maquette « apiviz — Onboarding irréprochable » validée le 24 nov. 2026).
+   Bienvenue et « Faisons connaissance » (fond sapin), première visite guidée et « Bravo » (fond prairie),
+   « Tu en es où ? », premier rucher, « Mes premiers pas », exploitation d'exemple et ses bulles. */
+
+/* ---------- Écrans plein cadre ---------- */
+.ar{min-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;font-family:'Instrument Sans',system-ui,sans-serif;position:relative;overflow:hidden}
+.ar-sombre{background:var(--pine);color:#fff}
+.ar-clair{background:var(--ground);color:var(--ink)}
+.ar-in,.ar-haut,.ar-scene,.ar-pied,.ar-corps,.ar-tete{width:100%;max-width:460px;margin:0 auto;box-sizing:border-box}
+.ar-fond{position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:auto;color:#2F4237;pointer-events:none}
+.ar-fond .ar-miel{fill:var(--honey);stroke:var(--honey)}
+.ar-in{position:relative;flex:1;display:flex;flex-direction:column;padding:64px 24px 28px}
+.ar-marque{margin:0;font:700 22px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--honey-light)}
+.ar-bas{margin-top:auto;display:flex;flex-direction:column;gap:22px}
+.ar-txt{display:flex;flex-direction:column;gap:10px}
+.ar-titre{margin:0;font:700 34px/1.1 'Bricolage Grotesque',system-ui,sans-serif;color:#fff}
+.ar-sous{margin:0;font-size:16px;line-height:1.45;color:#D7DDD3}
+.ar-atouts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ar-atouts li{display:flex;gap:12px;align-items:center;font-size:15px;color:#E4E8E1}
+.ar-atouts svg{color:var(--honey-light);width:20px;height:20px;flex:none}
+.ar-boutons{display:flex;flex-direction:column;gap:10px}
+.ar .btn.block{min-height:52px;font-size:var(--t-l)}
+.ar-contour{background:transparent!important;color:#fff!important;border:1.5px solid #4A5D52!important}
+.ar-lien{min-height:var(--cible);background:none;border:0;color:#D7DDD3;font:500 15px 'Instrument Sans',system-ui,sans-serif;cursor:pointer;padding:0 6px}
+.ar-lien.sombre{color:var(--muted)}
+
+/* ---------- Faisons connaissance : diapositives ---------- */
+.ar-haut{padding:16px 16px 0;display:flex;flex-direction:column;gap:6px;flex:none}
+.ar-barres{display:flex;gap:6px}
+.ar-barre{flex:1;height:22px;border:0;background:none;padding:9px 0;cursor:pointer}
+.ar-barre i{display:block;height:4px;border-radius:var(--r-pill);background:#3A4D42;position:relative;overflow:hidden}
+.ar-barre i::after{content:"";position:absolute;inset:0;background:var(--honey-light);transform-origin:left;transform:scaleX(0)}
+.ar-barre.faite i::after{transform:none}
+.ar-barre.on i::after{animation:ar-remplit linear forwards}
+.ar-barre.on i:not([style])::after{transform:none}
+.ar-entete{display:flex;justify-content:space-between;align-items:center}
+.ar-entete .ar-marque{font-size:18px}
+.ar-scene{flex:1;border:0;background:none;color:inherit;text-align:left;font:inherit;padding:8px 24px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+.ar-diapo{display:flex;flex-direction:column;gap:20px}
+.ar-oeil{margin:0;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--honey-light)}
+.ar-api{animation:ar-pop .55s var(--ressort) both,ar-flotte 3s ease-in-out 1s infinite}
+.ar-cartes{display:flex;flex-direction:column;gap:10px}
+.ar-carte{background:#2A3A31;border-radius:var(--r-m);padding:14px;display:flex;gap:12px;align-items:center;font-size:15px}
+.ar-pastille{width:36px;height:36px;border-radius:999px;background:var(--honey);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.ar-chaine{display:flex;align-items:center;gap:6px}
+.ar-maillon{flex:1;min-width:0;background:#2A3A31;border-radius:var(--r-m);padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--honey-light)}
+.ar-maillon b{font-size:var(--t-xs);color:#fff;font-weight:600}
+.ar-fleche{color:#7C8F83;font-size:18px}
+.ar-offres{gap:12px}
+.ar-offres .ar-titre{font-size:26px}
+.ar-offre{border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ar-gratuit{background:#fff;color:var(--ink)}
+.ar-plus{background:#2A3A31;border:1.5px solid var(--honey)}
+.ar-offre-t{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ar-offre-t b:first-child{font:700 17px 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-plus .ar-offre-t b:first-child{color:var(--honey-light)}
+.ar-prix{font-size:var(--t-m)}
+.ar-gratuit .ar-prix{color:var(--good)}
+.ar-limite,.ar-tout{font-size:var(--t-xs);color:var(--muted)}
+.ar-plus .ar-limite,.ar-plus .ar-tout{color:#C9D1C5}
+.ar-offre ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.ar-l{display:flex;gap:9px;align-items:center;font-size:var(--t-s);line-height:1.3;opacity:0;animation:ar-monte .45s var(--sortie) var(--d,0s) forwards}
+.ar-ok{width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--goodbg);color:var(--good)}
+.ar-plus .ar-ok{background:var(--honey);color:var(--ink)}
+.ar-note{margin:0;font-size:var(--t-s);color:#C9D1C5}
+.ar-pied{padding:12px 24px 28px;display:flex;flex-direction:column;gap:6px;flex:none}
+.ar-aide{text-align:center;font-size:var(--t-xs);color:#B4C0B8;min-height:18px}
+.ar-m{opacity:0;animation:ar-monte .5s var(--sortie) var(--d,0s) forwards}
+.ar-p{opacity:0;animation:ar-pop .55s var(--ressort) var(--d,0s) forwards}
+@keyframes ar-monte{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes ar-pop{0%{opacity:0;transform:scale(.4) rotate(-20deg)}70%{transform:scale(1.08)}100%{opacity:1;transform:none}}
+@keyframes ar-flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ar-remplit{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.ar-m,.ar-p,.ar-l,.ar-api{animation:none!important;opacity:1}.ar-barre.on i::after{animation:none;transform:none}}
+
+/* ---------- Première visite guidée, Bravo ---------- */
+.ar-tete{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;flex:none}
+.ar-tete b{font-size:var(--t-m)}
+.ar-icone{width:var(--cible);height:var(--cible);display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--ink);border-radius:999px}
+.ar-corps{flex:1;padding:4px 20px 24px;display:flex;flex-direction:column;gap:16px}
+.ar-centre{padding-top:32px}
+.ar-etape{display:flex;flex-direction:column;gap:8px}
+.ar-prog{display:flex;gap:6px}
+.ar-prog span{height:5px;flex:1;border-radius:var(--r-pill);background:var(--line)}
+.ar-prog span.on{background:var(--honey)}
+.ar-oeil-c{font-size:var(--t-s);font-weight:600;color:var(--watch)}
+.ar-conseil{display:flex;gap:10px;align-items:flex-start;background:var(--pine);color:#E4E8E1;border-radius:var(--r-m);padding:14px;font-size:14px;line-height:1.45}
+.ar-api-mini{width:32px;height:32px;border-radius:999px;background:var(--honey);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none;font:700 12px 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-question{margin:0;font:700 28px/1.15 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-choix{display:flex;flex-direction:column;gap:10px}
+.ar-choisir{min-height:64px;border-radius:16px;border:1px solid var(--line);background:#fff;color:var(--ink);text-align:left;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 18px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.ar-choisir span{font-size:var(--t-s);font-weight:500;color:var(--muted)}
+.ar-choisir:active{transform:scale(.98)}
+.ar-faits{display:flex;gap:6px;flex-wrap:wrap}
+.ar-fait,.ar-tag{font-size:var(--t-s);font-weight:600;padding:5px 10px;border-radius:var(--r-pill);background:var(--goodbg);color:var(--good)}
+.ar-tag{background:var(--honeysoft);color:var(--watch);font-size:var(--t-xs)}
+.ar-fin{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+.ar-bravo{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.ar-jalon{animation:ar-pop .6s var(--ressort) both}
+.ar-titre-c{margin:0;font:700 28px/1.15 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-petit{margin:0;font-size:var(--t-xs);line-height:1.4;color:var(--muted)}
+.ar-rappels{background:#fff;border-radius:var(--r-l);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.ar-rappels h2{margin:0;font:700 17px 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-notif{background:#EEF0EA;border-radius:var(--r-m);padding:10px 12px;display:flex;gap:10px;align-items:flex-start;font-size:var(--t-s);line-height:1.35}
+.ar-notif>span:last-child{display:flex;flex-direction:column;gap:1px}
+.ar-notif>span:last-child>span{color:#3F4A44}
+.ar-notif-ic{width:28px;height:28px;border-radius:8px;background:var(--pine);color:var(--honey-light);display:flex;align-items:center;justify-content:center;flex:none;font:700 12px 'Bricolage Grotesque',system-ui,sans-serif}
+.ar-types{display:flex;flex-direction:column}
+.ar-type{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #EEF0EA}
+.ar-type>span{display:flex;flex-direction:column;gap:1px;font-size:14px}
+.ar-type>span>span{font-size:var(--t-xs);color:var(--muted)}
+.ar-sw{width:52px;height:32px;border-radius:var(--r-pill);border:0;padding:3px;flex:none;cursor:pointer;background:#C9CFC3;position:relative}
+.ar-sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:999px;background:#fff;transition:transform var(--duree) var(--sortie)}
+.ar-sw[aria-checked="true"]{background:var(--pine)}
+.ar-sw[aria-checked="true"]::after{transform:translateX(20px)}
+
+/* ---------- « Tu en es où ? » (inscription, étape 2) ---------- */
+.ob-niveaux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ob-niveaux .op-radio span{min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+.ob-niveaux .op-radio b{font:700 18px 'Bricolage Grotesque',system-ui,sans-serif}
+.ob-niveaux .op-radio small{font-size:var(--t-xs);opacity:.85}
+.ob-apercu{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:var(--r-m);background:var(--cire);border:1px dashed var(--honey)}
+.ob-apercu b{font-size:14px;color:var(--watch)}
+.ob-apercu div{display:flex;gap:6px;flex-wrap:wrap}
+.ob-apercu span{font-size:var(--t-s);font-weight:600;padding:5px 10px;border-radius:var(--r-pill);background:#fff;color:var(--watch)}
+
+/* ---------- Premier rucher (écran 4) ---------- */
+.ar-rucher .ob-corps{gap:16px}
+.ar-position{display:flex;flex-direction:column;gap:6px}
+.ar-position .ar-place{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:var(--r-m);background:var(--goodbg);color:var(--good);font-weight:600;font-size:14px}
+.ar-compte{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ar-compte>span{display:flex;flex-direction:column;gap:2px}
+.ar-compte>span>span{font-size:var(--t-s);color:var(--muted)}
+.ar-pas{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--r-pill);background:#fff;flex:none}
+.ar-pas button{width:48px;height:48px;border:0;background:none;font-size:22px;color:var(--ink);cursor:pointer}
+.ar-pas b{min-width:30px;text-align:center;font-size:18px}
+.ar-hexas{display:flex;flex-wrap:wrap;gap:6px}
+.ar-hexas span{width:54px;height:46px;display:flex;align-items:center;justify-content:center;background:var(--honeysoft);color:var(--watch);font-size:var(--t-xs);font-weight:600;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);animation:ar-pop .35s var(--ressort) both}
+
+/* ---------- Mes premiers pas (accueil, écran 10) ---------- */
+.pp{border:2px solid var(--honey)!important;gap:10px!important}
+.pp .u-entete h2{font:700 18px 'Bricolage Grotesque',system-ui,sans-serif;margin:0}
+.pp-compte{font-size:14px;font-weight:600;color:var(--watch)}
+.pp-barre{height:8px;border-radius:var(--r-pill);background:#EEF0EA;overflow:hidden}
+.pp-barre i{display:block;height:100%;border-radius:var(--r-pill);background:var(--honey);transition:width var(--duree-lente) var(--sortie)}
+.pp-liste{display:flex;flex-direction:column}
+.pp-etape{min-height:52px;display:flex;align-items:center;gap:12px;border:0;border-top:1px solid #EEF0EA;background:none;padding:6px 0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;width:100%}
+.pp-etape:disabled{cursor:default}
+.pp-rond{width:26px;height:26px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:2px solid var(--line2);font-size:14px;font-weight:700}
+.pp-etape.ok .pp-rond{background:var(--good);border-color:var(--good);color:#fff}
+.pp-txt{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.pp-txt b{font-size:15px}
+.pp-etape.ok .pp-txt b{color:var(--muted);text-decoration:line-through}
+.pp-txt span{font-size:var(--t-xs);color:var(--muted)}
+.pp-duree{font-size:var(--t-xs);font-weight:600;color:var(--muted)}
+.pp-aide{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:var(--r-m);background:var(--cire);border:1px dashed var(--honey);margin-bottom:12px}
+.pp-aide b{font-size:14px;color:var(--watch)}
+.pp-aide div{display:flex;gap:6px;flex-wrap:wrap}
+.pp-aide button{min-height:var(--cible);padding:0 12px;border-radius:var(--r-pill);border:0;background:#fff;color:var(--watch);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+
+/* ---------- Exploitation d'exemple (écran 7) ---------- */
+.ex-bandeau{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px 4px 16px;background:var(--honey);color:var(--ink);font-size:var(--t-s);font-weight:600}
+.ex-bandeau button{min-height:40px;padding:0 10px;border:0;background:none;color:var(--ink);font:600 13px 'Instrument Sans',system-ui,sans-serif;cursor:pointer}
+.ex-commencer{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom));z-index:29;padding:0 16px;display:flex;justify-content:center;pointer-events:none}
+.ex-commencer .btn{pointer-events:auto;width:100%;max-width:428px;min-height:52px;box-shadow:0 10px 28px -12px rgba(30,43,36,.6)}
+@media (min-width:801px){.ex-commencer{bottom:24px}}
+.ex-cible{position:relative;z-index:41;box-shadow:0 0 0 3px var(--honey),0 10px 28px -12px rgba(30,43,36,.5)!important;border-radius:var(--r-m)}
+.ex-voile{position:fixed;inset:0;z-index:40;background:rgba(27,36,32,.35)}
+.ex-bulle{position:fixed;left:16px;right:16px;z-index:42;max-width:428px;margin:0 auto;background:var(--pine);color:#E4E8E1;border-radius:18px;padding:14px 16px 8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);animation:ar-monte .35s var(--sortie) both}
+.ex-bulle .ex-n{font-size:var(--t-xs);font-weight:600;color:var(--honey-light)}
+.ex-bulle b{font-size:16px;color:#fff}
+.ex-bulle p{margin:0;font-size:14px;line-height:1.4}
+.ex-bulle div{display:flex;gap:8px;justify-content:flex-end}
+.ex-bulle button{min-height:var(--cible);border:0;border-radius:var(--r-pill);padding:0 16px;font:600 14px 'Instrument Sans',system-ui,sans-serif;cursor:pointer;background:none;color:#D7DDD3}
+.ex-bulle button.ex-suivant{background:var(--honey);color:var(--ink)}
+
+/* ---------- Créer mon compte (écran 2) ---------- */
+.cx .cx-age{margin-top:12px}
+.cx-rassure{list-style:none;margin:12px 0 0;padding:12px 14px;border-radius:var(--r-m);background:var(--goodbg);display:flex;flex-direction:column;gap:8px;font-size:var(--t-s);line-height:1.4;color:var(--good)}
+.ob-petit{margin:0;font-size:var(--t-xs);line-height:1.4;color:var(--muted);text-align:center}
+.cx form label.cx-age{display:flex;flex-direction:row;align-items:flex-start;gap:10px;font-size:14px;font-weight:500}
+.op-choix > .ob-niveaux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ob-niveaux .op-radio span{width:100%;box-sizing:border-box;border-radius:var(--r-m);padding:8px}
+body[data-route] .wrap .card.pp{background:var(--card);border-radius:var(--r-l);padding:16px 16px 8px;display:flex;flex-direction:column;box-shadow:none}
+.wrap .pp .link{min-height:var(--cible);align-self:flex-start}
+.wrap.ac .pp-aide{margin-bottom:0}

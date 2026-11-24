@@ -14,7 +14,7 @@
     if cap: page.screenshot(path=cap + "/cf-page-1280.png", full_page=True)
     page.set_viewport_size({"width": 390, "height": 844})
     # Avant connexion : on arrive directement sur la page de connexion, sans écran de présentation.
-    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.evaluate("window.name = 'deco'; localStorage.clear(); localStorage.setItem('apiviz-bienvenue-vue', '1')")
     page.goto(url); page.wait_for_selector(".auth.cx form[data-form=auth]", timeout=15000)
     verif(page.locator(".dm-sombre, .dm-prom").count() == 0, "pas d'écran de présentation avant la page de connexion")
     verif(page.locator(".auth.cx a[href='confidentialite.html']").count() >= 1, "lien sur la page de connexion, avant le compte")

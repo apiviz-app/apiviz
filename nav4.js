@@ -62,7 +62,7 @@ const N4 = (() => {
     $sheetForm.onsubmit = (e) => e.preventDefault();
     $sheetForm.innerHTML = `<div class="u-entete"><h2>Saisir</h2><button type="button" class="link" data-act="closesheet">Fermer</button></div>
       ${b ? `<button type="button" class="n4-reprendre" data-act="n4reprendre"><span class="n4-ic">${SVG("M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z")}</span><span><b>Reprendre la visite de ${esc(byId(S.d.ruches, b.ruche_id).nom)}</b><span class="small">Commencée à ${esc(heure)}</span></span><span aria-hidden="true">›</span></button>` : ""}
-      <div class="n4-tuiles">${TUILES.map(([a, t, d, main]) => `<button type="button" class="n4-tuile ${main ? "main" : ""}" data-act="n4q" data-v="${a}">${SVG(d)}<span>${t}</span></button>`).join("")}</div>
+      <div class="n4-tuiles">${TUILES.filter(([a]) => !window.Rubriques?.masquee(a)).map(([a, t, d, main]) => `<button type="button" class="n4-tuile ${main ? "main" : ""}" data-act="n4q" data-v="${a}">${SVG(d)}<span>${t}</span></button>`).join("")}</div>
       <div class="u-deux">${parleur ? `<button type="button" class="btn" data-act="n4q" data-v="n4vocal">Note vocale</button>` : ""}${typeof PH != "undefined" ? `<button type="button" class="btn" data-act="n4q" data-v="n4photo">Photo</button>` : ""}</div>
       <p class="small">Client, lot, ruche, matériel : dans leur écran, avec « Ajouter ».</p>`;
     $sheet.showModal();

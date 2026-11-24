@@ -98,7 +98,7 @@
     DATA["visites"].clear()
     page.reload(); page.wait_for_selector(".ac-hero", timeout=15000); page.wait_for_timeout(1200)  # météo arrivée
     verif(page.locator(".ac-hero h1").inner_text() in ("Bonjour", "Bonsoir"), "sans visite : même bonjour")
-    verif("Note ta première visite" in page.locator(".ac-api").inner_text() and page.locator(".ac-api [data-act=newvisite]").count() == 1, "sans visite : API propose la première visite")
+    verif("Note ta première visite" in page.locator(".ac-api").inner_text() and page.locator(".ac-api [data-act=arvisite]").count() == 1, "sans visite : API propose la première visite (guidée, v5.84)")
     verif(page.locator(".ac-chiffre").count() == 4 and page.locator(".ac-rucher").count() == 3, "sans visite : chiffres et ruchers")
     verif(page.locator(".ac-api.court").count() == 1 and page.locator(".ac-api.court .btn.main").inner_text() == "Noter", "sans visite : bannière d'une ligne")
     g = page.evaluate("[...document.querySelectorAll('.wrap.ac > *')].map(e => e.className)")

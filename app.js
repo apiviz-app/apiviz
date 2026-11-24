@@ -383,7 +383,7 @@ async function saveCfg(modifs, message) {
 // Styles : styles/39-connexion.css. Sur téléphone la phrase est dans le bandeau, sur ordinateur dans la carte.
 const CX_PHRASES = {
   in: ["Tes ruches t’attendent.", "Connecte-toi pour retrouver ton rucher."],
-  up: ["Ton rucher en trois questions.", "Commence par créer ton compte."],
+  up: ["Créons ton compte.", "Trois champs, et c’est tout. Le reste peut attendre."],
   reset: ["Un lien pour repartir.", "Indique ton e-mail, tu recevras un lien pour choisir un nouveau mot de passe."],
   recovery: ["Choisis ton nouveau mot de passe.", "Tu te connecteras avec lui dès maintenant."],
 };
@@ -407,6 +407,8 @@ function authView() {
   const phrase = (cote) => `<div class="cx-phrase cx-${cote}"><h1 class="cx-say">${titre}</h1><p class="sub">${sous}</p></div>`;
   // L'e-mail déjà saisi est gardé quand on passe de « Se connecter » à « Créer mon compte » ou « Mot de passe oublié ».
   const mail = $app.querySelector("form[data-form=auth] [name=email]")?.value || "";
+  // v5.84 (parcours d'arrivée) : le prénom est demandé avec le compte, puis repris par l'inscription (profil.js).
+  const prenomSaisi = $app.querySelector("form[data-form=auth] [name=prenom]")?.value || "";
   const motDePasse = (libelle, memoire) => `<label>${libelle}<span class="cx-mdp"><input name="password" type="password" minlength="8" required autocomplete="${memoire}"><button type="button" class="cx-voir" data-act="cxvoir" aria-pressed="false">Afficher</button></span></label>`;
   const confid = (cote) => `<a class="cx-confid cx-${cote}" href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a>`;
   const premiere = !cxDejaVue;
@@ -430,9 +432,12 @@ function authView() {
       <p class="small cx-aide">8 caractères au moins</p>
       <button class="btn main block">Enregistrer</button>`
         : `
+    ${mode === "up" ? `<label>Ton prénom<input name="prenom" required maxlength="60" autocomplete="given-name" value="${esc(prenomSaisi)}"></label>` : ""}
     <label>E-mail<input name="email" type="email" required autocomplete="email" placeholder="toi@exemple.fr" value="${esc(mail)}"></label>
     ${mode === "reset" ? "" : motDePasse("Mot de passe", mode === "up" ? "new-password" : "current-password")}
-    ${mode === "up" ? '<p class="small cx-aide">8 caractères au moins</p>' : ""}
+    ${mode === "up" ? `<p class="small cx-aide">8 caractères au moins</p>
+    <label class="ob-coche cx-age"><input type="checkbox" name="age15" required><span>J’ai 15 ans ou plus.</span></label>
+    <ul class="cx-rassure"><li><b>Tes données restent à toi.</b> Jamais vendues, téléchargeables à tout moment.</li><li><b>Pas de réseau au rucher ?</b> Apiviz enregistre et envoie plus tard.</li></ul>` : ""}
     ${mode === "in" ? '<button type="button" class="link cx-oubli" data-act="authmode" data-v="reset">Mot de passe oublié</button>' : ""}
     <button class="btn main block">${mode === "up" ? "Créer mon compte" : mode === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
     ${
@@ -458,6 +463,12 @@ async function submitAuth(formulaire) {
   const retour = window.Plateforme?.adresseRetour() || location.origin + location.pathname;
   S.authMsg = "";
   S.authErr = false;
+  // v5.84 : contrôles du formulaire « Créer mon compte » avant tout envoi (pas une erreur à journaliser).
+  if (!S.recovery && S.authMode === "up") {
+    const manque = formulaire.prenom && !String(formulaire.prenom.value || "").trim() ? "Écris ton prénom."
+      : formulaire.age15 && !formulaire.age15.checked ? "Apiviz est réservé aux personnes de 15 ans ou plus." : "";
+    if (manque) { S.authMsg = manque; S.authErr = true; return authView(); }
+  }
   try {
     if (S.recovery) {
       const { error: erreur } = await sb.auth.updateUser({ password: formulaire.password.value });
@@ -472,12 +483,16 @@ async function submitAuth(formulaire) {
       if (erreur) throw erreur;
       S.authMsg = "Si ce compte existe, un lien vient de partir par e-mail.";
     } else if (S.authMode === "up") {
+      // v5.84 : prénom et « 15 ans ou plus » avec le compte ; gardés sur l'appareil et dans le compte (user_metadata),
+      // l'inscription (profil.js) les reprend sans les redemander, même si le lien est ouvert sur un autre appareil.
+      const prenom = String(formulaire.prenom?.value || "").trim().slice(0, 60);
       const { error: erreur } = await sb.auth.signUp({
         email: formulaire.email.value,
         password: formulaire.password.value,
-        options: { emailRedirectTo: retour },
+        options: { emailRedirectTo: retour, data: prenom ? { prenom, age15: true } : {} },
       });
       if (erreur) throw erreur;
+      try { if (prenom) localStorage.setItem("apiviz-inscription-attente", JSON.stringify({ email: formulaire.email.value.trim().toLowerCase(), prenom, age15: true })); } catch {}
       ((S.authMsg =
         "Compte cr\xE9\xE9. Ouvre l\u2019e-mail de confirmation, puis reviens te connecter."),
         (S.authMode = "in"));

@@ -7,7 +7,7 @@
     def visible(sel): return page.locator(sel).first.is_visible()
     page.emulate_media(reduced_motion="reduce")
     page.goto(url); page.wait_for_selector("text=/Bonjour|Bonsoir/", timeout=15000)
-    page.evaluate("window.name = 'deco'; localStorage.clear()")
+    page.evaluate("window.name = 'deco'; localStorage.clear(); localStorage.setItem('apiviz-bienvenue-vue', '1')")  # v5.84 : bienvenue déjà vue (etapes_bv)
     page.goto(url); page.wait_for_selector(".auth.cx form[data-form=auth]", timeout=15000)
     # Téléphone : la phrase est dans le bandeau, le formulaire dans la feuille.
     verif(page.locator(".auth.cx").get_attribute("data-mode") == "in", "écran de connexion affiché")
@@ -38,7 +38,7 @@
     page.fill("input[name=email]", "moi@exemple.fr")
     page.click("form[data-form=auth] [data-act=authmode][data-v=up]"); page.wait_for_selector(".auth.cx[data-mode=up]")
     verif(page.locator("input[name=email]").input_value() == "moi@exemple.fr", "création : l'e-mail déjà saisi est gardé")
-    verif("trois questions" in page.locator(".cx-tete .cx-say").inner_text() and page.locator(".cx-erreur").count() == 0, "création : phrase du bandeau, plus d'erreur")
+    verif("Créons ton compte" in page.locator(".cx-tete .cx-say").inner_text() and page.locator(".cx-erreur").count() == 0, "création : phrase du bandeau, plus d'erreur")
     verif(page.locator("form[data-form=auth] .btn.main").inner_text() == "Créer mon compte" and "8 caractères" in page.locator(".cx-aide").inner_text(), "création : bouton et aide du mot de passe")
     photo("creer-390")
     # Mot de passe oublié.
