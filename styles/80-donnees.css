@@ -1,0 +1,42 @@
+/* Apiviz — mes données et suppression du compte (v5.88, maquette « Onboarding irréprochable », écrans 12 à 14). */
+.sd{display:flex;flex-direction:column;gap:14px;max-width:560px}
+.sd-intro{margin:0 4px}
+.sd-liste{padding:4px 16px!important;gap:0!important}
+.sd-l{display:flex;justify-content:space-between;gap:10px;padding:10px 0;font-size:15px;border-top:1px solid var(--line)}
+.sd-l:first-child{border-top:0}
+.sd-actions{gap:8px!important}
+.sd-btn{justify-content:flex-start;gap:12px;min-height:48px}
+.sd-actions .small{margin:-4px 0 4px}
+.sd-stats{border:0;padding:6px 0 0}
+.sd-danger{border:1px solid #F1C9C0!important;box-shadow:none!important;gap:8px!important}
+.sd-danger b{color:#8A2416}
+.sd-rouge{color:#8A2416!important;border-color:#F1C9C0!important}
+.sd-rouge-plein{background:#8A2416!important;color:#fff!important;border-color:#8A2416!important}
+.sd-politique{align-self:flex-start;min-height:var(--cible);display:flex;align-items:center}
+.sd-partage{gap:10px!important}
+.sd-choix{display:flex;gap:12px;align-items:flex-start;width:100%;padding:12px;margin-top:8px;border-radius:14px;border:1px solid var(--line2);background:var(--card);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.sd-choix.on{border:2px solid var(--ink)}
+.sd-choix:disabled{opacity:.55;cursor:default}
+.sd-choix>span:last-child{display:flex;flex-direction:column;gap:2px}
+.sd-choix>span:last-child span{font-size:13px;line-height:1.35;color:var(--muted)}
+.sd-rond{width:22px;height:22px;border-radius:999px;flex:none;box-sizing:border-box;border:2px solid var(--line2);margin-top:1px}
+.sd-choix.on .sd-rond{border:7px solid var(--ink)}
+.sd-x{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sd-x li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4}
+.sd-x svg{color:#8A2416;flex:none;margin-top:1px}
+.sd-factures{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:var(--r-card,16px);background:var(--honeysoft);border:1px dashed var(--honey);color:var(--watch);font-size:13px;line-height:1.45}
+.sd-fin{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.sd-fin .link{min-height:var(--cible)}
+.sd-titre{margin:0;font:700 24px 'Bricolage Grotesque',system-ui,sans-serif}
+.sd label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.sd-etapes{gap:10px!important}
+.sd-etape{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.sd-etape>span:first-child{width:26px;height:26px;border-radius:999px;background:var(--honeysoft);color:var(--watch);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.sd-centre{align-items:center;text-align:center;margin:0 auto}
+.sd-centre p{margin:0;line-height:1.5}
+.sd-ok{width:72px;height:72px;border-radius:999px;background:#E6F2EA;color:var(--good);display:flex;align-items:center;justify-content:center}
+.sd-ok.attente{background:var(--honeysoft);color:var(--watch)}
+.sd-annonce{border:2px solid #8A2416!important;gap:8px!important}
+.sd-annonce b{color:#8A2416}
+.sd-annonce span{font-size:14px;line-height:1.4}
+.sd-annonce .btn{align-self:flex-start}

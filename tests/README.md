@@ -43,6 +43,11 @@ programme avec retard, matériel et stock, cases gardées, rucher décoché, lan
 Scénario v5.79 : `etapes_bs` (Bilan de la saison : tuiles Colonies, Varroa moyen, Coût du kilo, « À revoir » ;
 partage ; versions Sanitaire sans euro et Simple sans varroa). Avec `CAPTURES=<dossier>` : captures à 390 px.
 
+Scénario v5.88 (migration 041) : `etapes_sx` (Réglages › Mes données ; « Avant de supprimer » et « La supprimer pour tout
+le monde » ; mot de passe vide, faux puis bon ; demander_suppression et son choix ; écran final et annulation ; écran
+d'attente à la connexion ; bandeau des autres membres ; Mon profil ; base sans 041). Avec `CAPTURES=<dossier>` :
+captures à 390 px.
+
 Scénario v5.87 (migration 040) : `etapes_nt` (Réglages › Rappels : carte « Même quand Apiviz est fermée », abonnement avec
 la clé publique de la fonction « rappels » simulée et les trois types, type retiré, désabonnement, serveur sans clés,
 lien `?ecran=agenda` ; Web Push du navigateur simulé). Avec `CAPTURES=<dossier>` : captures à 390 px.
