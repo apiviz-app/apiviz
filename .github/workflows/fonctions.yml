@@ -4,6 +4,7 @@
 # apidoo-test, « deploiement » pour apidoo. Lancer donc juste après « Mise en ligne » sur la même cible.
 # Pourquoi : au 24 nov. 2026, les fonctions étaient déployées à la main et la production n'avait pas « assistant »
 # (API ne répondait pas en production) ; « lire-carnet » et « nettoyer-stockage » n'étaient déployées nulle part.
+# CLI Supabase v3 (nov. 2026) : toute modification d'un projet hébergé demande une confirmation, --yes en CI.
 # Réglage : secret SUPABASE_ACCESS_TOKEN (Supabase › Account › Access Tokens). Les secrets propres à chaque fonction
 # (ANTHROPIC_API_KEY, VAPID…, *_CLE) restent dans Supabase › Edge Functions › Secrets et ne passent pas par ici.
 name: Fonctions serveur
@@ -71,7 +72,7 @@ jobs:
             if [ ! -f "supabase/functions/$f/index.ts" ]; then echo "| $f | | absente de cette version |" >> "$GITHUB_STEP_SUMMARY"; continue; fi
             opt=""; jeton="exigé"
             case " $sans " in *" $f "*) opt="--no-verify-jwt"; jeton="non (clé propre)";; esac
-            if supabase functions deploy "$f" --project-ref "$REF" --use-api $opt; then r="déployée"; else r="**échec**"; echec=1; fi
+            if supabase functions deploy "$f" --project-ref "$REF" --use-api --yes $opt; then r="déployée"; else r="**échec**"; echec=1; fi
             echo "| $f | $jeton | $r |" >> "$GITHUB_STEP_SUMMARY"
           done
           exit $echec
