@@ -41,6 +41,9 @@ Fonctions serveur relevées le 24 nov. : `apidoo-test` a `assistant` et `lire-fa
 - [ ] Copie des fichiers (photos, factures) activée : résumé avec le nombre de fichiers
 - [ ] Premier exercice de restauration fait sur ton ordinateur, noté dans `PROCESSUS.md`
 - [ ] Supabase › Authentication : « Prevent use of leaked passwords » sur les deux projets (`TECHNIQUE.md` § Sécurité)
+- [ ] E-mails (v5.90) : compte Brevo, domaine `apiviz.fr` vérifié (SPF, DKIM, DMARC), secrets `BREVO_CLE`,
+      `COURRIEL_EXPEDITEUR`, `APP_URL` sur les deux projets ; SMTP de Supabase Auth branché sur Brevo
+      (`TECHNIQUE.md` § E-mails)
 - [ ] Clé privée `age` rangée hors ligne à deux endroits
 
 ## C. Juridique et commercial (`docs/juridique/`)

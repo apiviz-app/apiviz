@@ -72,6 +72,7 @@ de votre département, seulement si au moins cinq apiculteurs du département on
 | jsDelivr (diffusion de bibliothèques : accès à la base, carte, QR code) | Votre adresse IP | Télécharger ces bibliothèques | Réseau mondial |
 | IGN – Géoplateforme (fond de carte Plan IGN, recherche d'adresse) | Votre adresse IP, la zone de carte affichée, l'adresse ou la position recherchée | Carte des ruchers, adresse d'un client, nom de la commune | France (Institut national de l'information géographique et forestière, établissement public) |
 | Open-Meteo (météo) | La position de vos ruchers (latitude, longitude) | Prévisions et créneaux de visite | Europe |
+| Brevo (envoi des e-mails d'Apiviz, v5.90) | Votre adresse e-mail et votre prénom, au moment d'un envoi | Vous prévenir avant la suppression d'un compte inactif, confirmer une demande de suppression | Union européenne (Brevo, société française ; serveurs en France et en Allemagne) |
 | Anthropic (modèle Claude, pour l'assistant API et la lecture des factures) | Votre question et les données de votre exploitation utiles à la réponse (colonies, visites, ventes…), au moment où vous la posez ; la facture d'achat que vous lui donnez (photo ou PDF), avec la liste de vos articles et fournisseurs, au moment de la lecture | Répondre à vos questions, lire vos factures | États-Unis (Anthropic, PBC) ; données non utilisées pour entraîner ses modèles, conservées au plus 30 jours par Anthropic pour la sécurité |
 
 Certaines fonctions passent par votre navigateur ou une autre application, seulement si vous les utilisez :
@@ -115,6 +116,9 @@ données »).
 | Donnée | Durée |
 |---|---|
 | Données de l'exploitation | Tant que l'exploitation existe |
+| Compte sans activité (v5.90) | Après 3 ans sans ouvrir Apiviz, un e-mail vous prévient ; sans reconnexion dans le mois qui suit, le compte et les exploitations sans autre membre sont supprimés |
+| Dernier jour d'ouverture d'Apiviz | Un seul jour gardé, pour appliquer la durée ci-dessus ; effacé avec le compte |
+| Journal des e-mails envoyés (nature et date) | 2 ans |
 | Profil (nom, réponses facultatives) | Tant que le compte existe ; les réponses s'effacent à tout moment dans Mon profil |
 | Journal des suppressions et modifications | 1 an, puis effacement automatique |
 | Journal des erreurs techniques | 90 jours, puis effacement automatique |

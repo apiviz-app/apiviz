@@ -10,7 +10,7 @@ des données obligatoire (pas de suivi à grande échelle ni de données sensibl
 
 | # | Traitement | Personnes | Données | Finalité | Base légale | Durée | Destinataires |
 |---|---|---|---|---|---|---|---|
-| 1 | Comptes et accès | Utilisateurs | E-mail, mot de passe (haché), prénom, nom, rôle dans l'exploitation | Se connecter, partager une exploitation | Contrat (CGU) | Durée du compte ; suppression en 30 jours annulables (041) ; [DÉCISION inactifs] | Membres de l'exploitation (prénom, nom) ; Supabase |
+| 1 | Comptes et accès | Utilisateurs | E-mail, mot de passe (haché), prénom, nom, rôle dans l'exploitation | Se connecter, partager une exploitation | Contrat (CGU) | Durée du compte ; suppression en 30 jours annulables (041) ; compte sans activité depuis 3 ans : préavis par e-mail, suppression un mois après (042) | Membres de l'exploitation (prénom, nom) ; Supabase |
 | 2 | Carnet de l'exploitation | Utilisateurs | Ruchers (position), colonies, visites, traitements, récoltes, stock, dépenses, factures d'achat, photos, tâches, fil de l'équipe | Le service lui-même | Contrat | Tant que l'exploitation existe | Membres ; Supabase ; Cloudflare (fichiers de l'app) |
 | 3 | Assistant API, lecture de factures et de carnets | Utilisateurs | Question, extraits utiles des données de l'exploitation, factures et pages de carnet envoyées | Répondre, lire les documents | Contrat (fonction demandée par l'utilisateur) | Historique gardé jusqu'à effacement par l'utilisateur ; Anthropic : 30 jours au plus | Anthropic (États-Unis) |
 | 4 | Profil facultatif et statistiques | Utilisateurs ayant répondu | Tranche d'âge, code postal (département), ancienneté, activité, nombre de colonies, source, attente | Statistiques d'ensemble (groupes ≥ 5) | Consentement (réponses facultatives, effaçables) | Jusqu'à effacement ou suppression du compte | Équipe Apiviz (agrégats) |
@@ -19,6 +19,7 @@ des données obligatoire (pas de suivi à grande échelle ni de données sensibl
 | 7 | Journal des modifications | Utilisateurs | Ancienne valeur, auteur, date | Réparer une erreur | Intérêt légitime | 1 an | Responsables de l'exploitation |
 | 8 | Journal des erreurs | Utilisateurs | Version, écran, message (sans e-mail ni donnée d'exploitation) | Corriger les pannes | Intérêt légitime | 90 jours | Équipe Apiviz |
 | 9 | Offres et facturation (à venir, D-14) | Clients payants | Offre, dates, factures ; paiement chez [PRESTATAIRE] | Vendre les offres, obligations comptables | Contrat ; obligation légale | Factures : 10 ans (Code de commerce, art. L123-22) | [PRESTATAIRE], comptable |
+| 11 | Dernière activité et e-mails (042) | Utilisateurs | Dernier jour d'ouverture ; journal des e-mails (nature, date) ; e-mail et prénom transmis à Brevo à l'envoi | Durée de conservation des comptes, préavis, confirmation de suppression | Obligation légale (limitation de la conservation) ; contrat | Dernier jour : jusqu'à suppression du compte ; journal : 2 ans | Brevo (France) |
 | 10 | Sauvegardes | Tous | Copie chiffrée de la base et des fichiers | Reprise après incident | Intérêt légitime | 30 jours (base), 4 semaines (fichiers) | Cloudflare R2 (chiffré, clé chez le responsable) |
 
 ## Traitements où Apiviz est sous-traitant (annexe des CGU)
@@ -36,6 +37,7 @@ des données obligatoire (pas de suivi à grande échelle ni de données sensibl
 | Supabase, Inc. | Base, comptes, fichiers, fonctions serveur | Projet hébergé dans l'UE ; société aux États-Unis | Accord de traitement (DPA) de Supabase, clauses contractuelles types | [ ] [DATE] |
 | Cloudflare, Inc. | Hébergement des fichiers de l'app, sauvegardes R2 | Réseau mondial ; États-Unis | DPA de Cloudflare ; certifiée Data Privacy Framework [À VÉRIFIER sur dataprivacyframework.gov] | [ ] [DATE] |
 | Anthropic, PBC | Modèle Claude (API, factures, carnets) | États-Unis | Conditions commerciales et DPA d'Anthropic, clauses contractuelles types ; pas d'entraînement sur les données de l'API | [ ] [DATE] |
+| Brevo (Sendinblue SAS) | Envoi des e-mails d'Apiviz | France, Allemagne | DPA de Brevo | [ ] [DATE] |
 | GitHub, Inc. | Code, actions (sauvegarde : données chiffrées en transit seulement) | États-Unis | DPA de GitHub | [ ] [DATE] |
 | IGN, Open-Meteo, jsDelivr | Carte, météo, bibliothèques | France, UE, mondial | Reçoivent l'adresse IP ou la position des ruchers, aucune donnée de compte | Sans objet |
 

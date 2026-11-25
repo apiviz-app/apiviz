@@ -16,9 +16,9 @@ L'éditeur est [DÉNOMINATION] (voir les mentions légales).
   y a accès et avec quel rôle (responsable, membre, lecture seule).
 - Vous pouvez supprimer votre compte à tout moment : Réglages › Mon profil › Mes données. La suppression est effective
   après un délai de 30 jours pendant lequel vous pouvez l'annuler en vous reconnectant.
-- [DÉCISION] Comptes inactifs : sans connexion pendant [3] ans, le compte et les exploitations dont vous êtes le seul
-  membre sont supprimés, après un avertissement [dans l'application / par e-mail] [1] mois avant. *(À mettre en place
-  dans l'application avant d'écrire cette clause : aujourd'hui, rien ne supprime un compte inactif.)*
+- Comptes inactifs : après 3 ans sans ouvrir Apiviz, un e-mail vous prévient ; sans reconnexion dans le mois qui
+  suit, le compte et les exploitations sans autre membre sont supprimés. Les exploitations partagées restent aux autres
+  membres. Se reconnecter avant la date annule la suppression. *(Décidé le 24 nov. 2026, mis en place en v5.90.)*
 
 ## 3. Offres
 

@@ -81,3 +81,8 @@
 #   choix par exploitation partagée, bandeau des autres membres, effacement par la fonction « supprimer-comptes ».
 #   Additive, ne casse pas l'ancienne version. Après 040. NON APPLIQUÉE : d'abord apidoo-test, puis apidoo avec l'accord de
 #   Pierre-Louis. Avec elle : déployer « supprimer-comptes » (--no-verify-jwt, secret SUPPRESSION_CLE) et le secret GitHub.
+# 042-comptes-inactifs.sql (PR claude/emails-inactifs, v5.90) : comptes inactifs (préavis à 3 ans, effacement un mois
+#   après), jour d'ouverture, journal des e-mails. Additive, ne casse pas l'ancienne version. Après 041. NON APPLIQUÉE :
+#   d'abord apidoo-test (mise en ligne en recette), puis apidoo avec l'accord de Pierre-Louis. Avec elle : déployer
+#   « courriels » et « supprimer-comptes » (action « Fonctions serveur ») ; secrets Supabase BREVO_CLE,
+#   COURRIEL_EXPEDITEUR, APP_URL sur chaque projet. Sans Brevo : aucun préavis, aucun compte inactif effacé.
