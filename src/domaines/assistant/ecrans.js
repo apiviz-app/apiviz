@@ -267,7 +267,7 @@ function tete(st, actif, vide) {
   const p = typeof AC != "undefined" && AC.prenom ? AC.prenom() : "";
   const bonjour = actif && vide ? `<b class="as-bonjour">${new Date().getHours() < 18 ? "Bonjour" : "Bonsoir"}${p ? ` ${esc(p)}` : ""}</b>` : "";
   return `<section class="as-tete card${vide ? "" : " mini"}">${Apiviz.compagnon(humeur(fil.echanges, enLigne()), vide ? 56 : 40)}<div>${bonjour}
-      <p>${actif ? (vide ? "Pose-moi une question sur tes ruches, ton miel ou tes comptes. Je lis tes données et je te dis d’où viennent mes réponses." : "Une autre question ?")
+      <p>${actif ? (vide ? "Je suis une intelligence artificielle. Pose-moi une question sur tes ruches, ton miel ou tes comptes : je lis tes données et je te dis d’où viennent mes réponses." : "Une autre question ?")
         : st ? "Bientôt, API répondra à tes questions sur tes ruches, ton miel et tes comptes." : "Un instant, je me prépare…"}</p>
       ${actif && restant(st) ? `<span class="small">${esc(restant(st))}</span>` : ""}</div>
       ${actif && st.gouttes !== null && st.gouttes !== undefined ? `<button type="button" class="as-gouttes ${etatGouttes(st.gouttes)}" data-act="go" data-v="offre" aria-label="Gouttes d'API : ${esc(gouttesTexte(st.gouttes))}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>${esc(String(Math.max(0, Math.round(st.gouttes))))}</button>` : ""}</section>`;
@@ -296,8 +296,8 @@ function accueil(st, actif) {
         <button type="button" class="as-ecarter" data-act="apiecarter" data-v="${esc(c.echange)}:${c.i}" aria-label="Écarter ce conseil : ${esc(H.titreConseil(c.texte))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join("")}</section>` : "";
   const cherche = convs.length > 3 || fil.recherche ? `<label class="as-cherche"><span class="sr">Chercher dans tes échanges</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
       <input id="asCherche" type="search" autocomplete="off" placeholder="Chercher : varroa, Ruche 5, miel…" value="${esc(fil.recherche)}"></label>` : "";
-  const pied = !actif ? "" : h.absent ? '<p class="small as-note">API peut se tromper : vérifie dans tes fiches. Tes échanges seront gardés avec la prochaine mise à jour de l’application.</p>'
-    : `<p class="small as-note">API peut se tromper : vérifie dans tes fiches. Tes échanges ne sont visibles que par toi.${convs.length ? ' <button type="button" class="link" data-act="apieffacertout">Effacer tout l’historique</button>' : ""}</p>`;
+  const pied = !actif ? "" : h.absent ? '<p class="small as-note">API est une intelligence artificielle (modèle Claude, d’Anthropic) : elle peut se tromper, vérifie dans tes fiches. Pour la santé de tes abeilles, ton vétérinaire ou ton GDSA a le dernier mot. Tes échanges seront gardés avec la prochaine mise à jour de l’application.</p>'
+    : `<p class="small as-note">API est une intelligence artificielle (modèle Claude, d’Anthropic) : elle peut se tromper, vérifie dans tes fiches. Pour la santé de tes abeilles, ton vétérinaire ou ton GDSA a le dernier mot. Tes échanges ne sont visibles que par toi.${convs.length ? ' <button type="button" class="link" data-act="apieffacertout">Effacer tout l’historique</button>' : ""}</p>`;
   return `<div class="as-ecran as-accueil">${tete(st, actif, true)}${S.d ? J.listeEcran() : ""}${actif ? zoneEcrire(st) : ""}${suggestions}${afaire}${cherche}
     ${h.erreur ? `<p class="small" role="alert">${esc(h.erreur)}</p>` : ""}<div class="as-liste">${listeHistorique(trouvees)}</div>${pied}</div>`;
 }

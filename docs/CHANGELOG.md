@@ -35,6 +35,25 @@ Pour l'équipe :
       effacer sa ligne de `derniere_activite`), puis lancer « Suppression des comptes » en simulation, puis pour de vrai :
       e-mail de préavis reçu ; se reconnecter → « Bon retour ! », plus de préavis.
 - [ ] Sans `BREVO_CLE` : le résumé de la fonction dit `preavis_actif: false`, rien n'est envoyé ni effacé.
+## v5.89 · à publier en recette · API se présente comme une intelligence artificielle, dossier juridique
+Aucune migration. Recommandation n° 3 de l'analyse « mise sur le marché » du 24 nov. 2026.
+
+Pour l'apiculteur :
+1. **Écran API** : l'accueil dit « Je suis une intelligence artificielle » ; le pied d'écran précise le modèle (Claude,
+   d'Anthropic), qu'API peut se tromper, et que pour la santé des abeilles le vétérinaire ou le GDSA a le dernier mot
+   (AI Act, art. 50, applicable depuis le 2 août 2026).
+2. **Politique de confidentialité** : base des envois hors de l'Union européenne ; pour les commandes en ligne,
+   l'apiculteur est responsable des informations de ses clients et Apiviz sous-traitant.
+
+Pour l'équipe : projets de mentions légales, CGU (annexe sous-traitance, RGPD art. 28), CGV et registre des traitements
+dans `docs/juridique/`, non publiés : `[CROCHETS]` à remplir une fois la structure juridique choisie, relecture par un
+juriste avant publication.
+
+À vérifier :
+- [ ] API, écran d'accueil sans échange : la phrase commence par « Je suis une intelligence artificielle ».
+- [ ] Pied de l'écran API (avec et sans historique) : mention de Claude, d'Anthropic, du vétérinaire et du GDSA.
+- [ ] confidentialite.html : paragraphe « Données envoyées hors de l'Union européenne » ; rubrique « Si vous commandez du
+      miel en ligne » avec la phrase sur le sous-traitant.
 
 ## v5.88 · à publier en recette · mes données et suppression du compte
 **Migration 041** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
