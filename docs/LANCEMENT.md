@@ -41,8 +41,8 @@ Fonctions serveur relevées le 24 nov. : `apidoo-test` a `assistant` et `lire-fa
 
 ## B. Sécurité et sauvegardes
 
-- [ ] Sauvegarde activée (`PROCESSUS.md` § Sauvegardes) : résumé « restauration essayée »
-- [ ] Copie des fichiers (photos, factures) activée : résumé avec le nombre de fichiers
+- [x] Sauvegarde activée (`PROCESSUS.md` § Sauvegardes) : résumé « restauration essayée » (27 nov., Sauvegarde #14 : 55 tables, mêmes nombres de lignes, 468 Ko chiffrés)
+- [x] Copie des fichiers (photos, factures) activée : résumé avec le nombre de fichiers (27 nov. : 1 fichier)
 - [ ] Premier exercice de restauration fait sur ton ordinateur, noté dans `PROCESSUS.md`
 - [ ] Supabase › Authentication : « Prevent use of leaked passwords » sur les deux projets (`TECHNIQUE.md` § Sécurité)
 - [x] E-mails (v5.90) : compte Brevo, domaine `apiviz.fr` vérifié (SPF, DKIM, DMARC), secrets `BREVO_CLE`,
