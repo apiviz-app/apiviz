@@ -65,6 +65,16 @@ Action « Fonctions serveur » (`.github/workflows/fonctions.yml`), à la main :
 `VAPID_…`, `NETTOYAGE_CLE`, `SUPPRESSION_CLE`, `RAPPELS_SECRET`) se règlent dans Supabase › Edge Functions › Secrets,
 projet par projet.
 
+Le jeton `SUPABASE_ACCESS_TOKEN` doit couvrir **les deux projets** (Apiviz et Apiviz-test) avec les droits « Edge
+Functions » et « Edge Function Secrets » en lecture-écriture et « Project Settings » en lecture (26 nov. 2026 : un
+jeton limité à la production faisait échouer la recette avec une erreur 403). La version de la CLI Supabase est fixée
+dans les actions (`supabase/setup-cli@v2`, `version: 3.4.0`) : « latest » échouait quand l'API GitHub limitait les
+appels anonymes.
+
+**Clés VAPID des rappels** (v5.87) : action « Clés VAPID » (`.github/workflows/cles-vapid.yml`), à la main, une fois
+par projet. Elle crée la paire de clés et la range dans les secrets Supabase sans jamais l'afficher ; si les clés
+existent déjà, elle ne fait rien (en changer couperait les rappels des appareils abonnés).
+
 ## Mise à jour automatique des bases
 
 Depuis le 11 nov. 2026, « Mise en ligne » applique elle-même les migrations qui manquent à la base de la cible

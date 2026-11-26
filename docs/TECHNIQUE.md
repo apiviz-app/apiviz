@@ -304,6 +304,7 @@ Annuler une demande à la main : `delete from public.comptes_a_supprimer where e
 
 Secrets de la fonction : `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, `VAPID_SUJET`, `RAPPELS_SECRET` ; GitHub :
 `RAPPELS_SECRET_RECETTE`, `RAPPELS_SECRET_PRODUCTION`.
+Les trois `VAPID_…` sont créées par l'action « Clés VAPID » (une fois par projet, jamais affichées).
 
 ## Mieux connaître ses utilisateurs (v5.86, migration 039)
 

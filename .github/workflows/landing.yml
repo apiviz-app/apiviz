@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Contrôler la page
         run: |
           test -s landing/public/index.html || { echo "::error::landing/public/index.html est absent ou vide."; exit 1; }
