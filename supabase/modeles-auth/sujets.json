@@ -1,0 +1,18 @@
+{
+  "confirm-sign-up": {
+    "champ": "MAILER_SUBJECTS_CONFIRMATION",
+    "sujet": "Confirme ton adresse pour commencer Apiviz"
+  },
+  "reset-password": {
+    "champ": "MAILER_SUBJECTS_RECOVERY",
+    "sujet": "Choisis un nouveau mot de passe Apiviz"
+  },
+  "magic-link-or-otp": {
+    "champ": "MAILER_SUBJECTS_MAGIC_LINK",
+    "sujet": "Ton lien de connexion à Apiviz"
+  },
+  "change-email-address": {
+    "champ": "MAILER_SUBJECTS_EMAIL_CHANGE",
+    "sujet": "Confirme ta nouvelle adresse e-mail Apiviz"
+  }
+}
