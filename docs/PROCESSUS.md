@@ -144,7 +144,8 @@ Activer la copie de la base (une fois, environ 10 minutes) :
 1. Sur ton ordinateur : `age-keygen -o apiviz-sauvegarde.key`. Garde ce fichier **hors ligne** (clé USB, gestionnaire de
    mots de passe) : sans lui, aucune sauvegarde ne se relit. Recopie la ligne « public key: age1… ». Ne la donne à
    personne d'autre, Claude compris : seule la clé publique va dans GitHub.
-2. Cloudflare (compte Apiviz) › R2 : créer un seau privé, par exemple `apiviz-sauvegardes`, puis un jeton d'API R2 limité
+2. Cloudflare (compte Apiviz) › R2 : seau privé **`apiviz-sauvegardes-ue`** (créé le 26 nov. 2026, emplacement Europe de
+   l'Ouest WEUR, choisi par « location hint » ; un nom déjà utilisé garde l'emplacement de sa première création), puis un jeton d'API R2 limité
    à ce seau, en lecture et écriture. Noter l'identifiant du compte, l'Access Key ID et le Secret Access Key.
 3. GitHub › Settings › Secrets and variables › Actions :
    - variables : `SAUVEGARDE_CLE_PUBLIQUE` (age1…) et `R2_SEAU` (nom du seau) ;
