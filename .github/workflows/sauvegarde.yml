@@ -68,7 +68,7 @@ jobs:
           case "$CLE" in age1*) ;; *) echo "::error::SAUVEGARDE_CLE_PUBLIQUE doit commencer par age1"; exit 1;; esac
           echo "ok=1" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: steps.pret.outputs.ok == '1'
         with:
           persist-credentials: false

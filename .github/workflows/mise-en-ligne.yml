@@ -43,7 +43,7 @@ jobs:
     outputs:
       sha: ${{ steps.c.outputs.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -86,7 +86,7 @@ jobs:
           sh /tmp/src-recette/scripts/assembler-site.sh /tmp/src-prod /tmp/src-recette _site
           # shellcheck disable=SC2016 # accents graves littéraux : code Markdown du résumé
           printf '### Mise en ligne : %s\n\nVersion publiée : `%s` (%s)\n\n' "$CIBLE" "$(git rev-parse --short "$sha")" "$(git log -1 --format=%s "$sha")" >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Migrations de la base
@@ -199,7 +199,7 @@ jobs:
     environment:
       name: github-pages
     steps:
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
 
   finir:
     name: Repère et contrôle de santé
@@ -208,7 +208,7 @@ jobs:
     timeout-minutes: 10
     steps:
       # Historique complet : une branche essayée en recette doit être connue pour y poser le repère (IT-04).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Déplacer le repère
