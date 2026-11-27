@@ -27,10 +27,10 @@ Pour l'équipe :
 - Les canaux `apple` et `google` sont prêts côté base (même fonction d'écriture) pour l'achat intégré des applications.
 
 À vérifier (recette, mode test Stripe, carte 4242 4242 4242 4242, date future, n'importe quel code) :
-- [ ] Changer d'offre › S'abonner à Rucher à l'année → page Stripe en français → payer → retour, « Mon offre » : Rucher,
+- [x] Changer d'offre › S'abonner à Rucher à l'année → page Stripe en français → payer → retour, « Mon offre » : Rucher,
       active, bloc « Abonnement par carte ».
 - [ ] Gérer mon abonnement → espace Stripe → passer à Exploitation → retour : Exploitation.
-- [ ] Gérer mon abonnement → annuler → retour : « résiliée, jusqu'au … » ; réactiver → active.
+- [x] Gérer mon abonnement → annuler → retour : « résiliée, jusqu'au … » ; réactiver → active.
 - [ ] Recharger › Sachet › Payer → retour : 400 gouttes de plus, une seule fois.
 - [ ] Carte refusée 4000 0000 0000 0002 : Stripe refuse, rien ne change dans Apiviz.
 - [ ] Un membre qui n'est pas responsable ne voit pas « S'abonner ».

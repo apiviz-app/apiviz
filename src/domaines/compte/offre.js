@@ -146,7 +146,7 @@ function ecranOffre() {
     </section>`;
   const resilier = peutResilier ? `<section class="card"><button type="button" class="link crit" data-act="ofresilier">${d.abonnement.statut === "essai" ? "Arrêter l'essai" : "Résilier l'offre"}</button><p class="small">Tes données restent entières ; seules les gouttes du mois et les limites changent.</p></section>` : "";
   const gerer = canal === "web" && d.responsable ? `<section class="card"><h2>Abonnement par carte</h2>
-      <p class="small">${d.abonnement.periode === "mois" ? "Payé chaque mois" : d.abonnement.periode === "an" ? "Payé chaque année" : "Payé par carte"}, renouvelé tout seul. Carte, factures, changement d'offre ou résiliation : tout se fait dans l'espace de paiement sécurisé (Stripe).</p>
+      <p class="small">Payé par carte, renouvelé tout seul. Carte, factures, changement d'offre ou résiliation : tout se fait dans l'espace de paiement sécurisé (Stripe).</p>
       <button type="button" class="btn" data-act="ofgerer">Gérer mon abonnement</button></section>`
     : canal === "apple" || canal === "google" ? `<section class="card"><p class="small">Abonnement pris sur ${canal === "apple" ? "iPhone (App Store)" : "Android (Google Play)"} : il se gère et se résilie depuis les réglages du téléphone.</p></section>` : "";
   shell("Mon offre", "", "", `<div class="of">${carte}${gestes}${detail}${reglage}${gerer}${resilier}${d.admin ? equipe(d) : ""}</div>`);
