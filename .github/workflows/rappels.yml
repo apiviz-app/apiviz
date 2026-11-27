@@ -3,7 +3,7 @@
 #
 # Inactive tant que les secrets ne sont pas créés : sans eux, elle le dit et s'arrête sans erreur.
 #   - RAPPELS_SECRET_PRODUCTION et RAPPELS_SECRET_RECETTE : la même valeur que le secret RAPPELS_SECRET de la fonction
-#     « rappels » de chaque projet Supabase (apidoo, apidoo-test). Jamais dans le dépôt.
+#     « rappels » de chaque projet Supabase (Apiviz, Apiviz-test). Jamais dans le dépôt.
 # Lancement à la main (Run workflow) : cible et « essai » (rien n'est envoyé, la réponse dit ce qui partirait).
 name: Rappels
 

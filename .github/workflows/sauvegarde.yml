@@ -1,7 +1,7 @@
 # Sauvegarde quotidienne chiffrée de la base de production (décision D-03, docs/PROCESSUS.md § Sauvegardes).
 #
 # Inactive tant que les réglages ne sont pas créés : sans eux, elle le dit et s'arrête sans erreur.
-#   - secret BASE_PRODUCTION (existe déjà pour la mise en ligne) : connexion à la base apidoo ;
+#   - secret BASE_PRODUCTION (existe déjà pour la mise en ligne) : connexion à la base Apiviz ;
 #   - variable SAUVEGARDE_CLE_PUBLIQUE : clé publique « age » (age1…). La clé privée reste chez le responsable, hors
 #     ligne : personne d'autre, ni GitHub ni Cloudflare, ne peut relire une sauvegarde ;
 #   - secrets R2_ID, R2_SECRET, R2_COMPTE et variable R2_SEAU : seau Cloudflare R2 privé qui reçoit les fichiers.

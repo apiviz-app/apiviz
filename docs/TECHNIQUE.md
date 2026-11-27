@@ -237,8 +237,8 @@ sans appel au modèle. La clé Claude ne quitte jamais le serveur.
 dépense), et facultatifs `ASSISTANT_MODELE` (défaut `claude-sonnet-5-5`), `ASSISTANT_PLAFOND` (défaut 30),
 `ASSISTANT_ACTIF` (`non` coupe API : l'application revient à « Bientôt » ; c'est le retour arrière d'IT-24).
 
-**Déploiement.** Recette : `apidoo-test`, par Claude (accès Supabase), avec la migration 024. Production : même code sur
-`apidoo` avec la migration 024, après l'accord de Pierre-Louis. La mise en ligne GitHub ne déploie pas encore les
+**Déploiement.** Recette : `Apiviz-test`, par Claude (accès Supabase), avec la migration 024. Production : même code sur
+`Apiviz` avec la migration 024, après l'accord de Pierre-Louis. La mise en ligne GitHub ne déploie pas encore les
 fonctions serveur (il lui faudrait un jeton `SUPABASE_ACCESS_TOKEN`).
 
 **Qualité des réponses.** `tests/assistant/questions.json` : 30 questions de référence (semaine, colonies, santé, hiver,
@@ -342,7 +342,7 @@ enregistré par `enregistrer_achat()` (migration 018), exactement comme une sais
 **Secrets** : ceux de la fonction `assistant` (`ANTHROPIC_API_KEY`, `ASSISTANT_PLAFOND`) ; facultatifs `FACTURE_MODELE`
 (à défaut `ASSISTANT_MODELE`, puis `claude-sonnet-5-5`) et `FACTURE_ACTIF` (`non` coupe la lecture : retour arrière).
 `ASSISTANT_ACTIF=non` la coupe aussi. **Aucune écriture** par la fonction ; la facture n'est pas conservée.
-**Déploiement** : comme `assistant`, par Claude (accès Supabase), `apidoo-test` d'abord, `apidoo` après accord.
+**Déploiement** : comme `assistant`, par Claude (accès Supabase), `Apiviz-test` d'abord, `Apiviz` après accord.
 **Coût** : une facture d'une page coûte de l'ordre de 2 à 5 centimes avec Sonnet ; jetons écrits dans le journal de la fonction.
 
 ## Photos de fiche et nettoyage du stockage (IT-11, v5.75)
@@ -372,7 +372,7 @@ somme peut dépasser le quota avant qu'une exploitation n'atteigne 80 % (limite 
 existante (anciens chemins d'avant 008) ; tout autre stockage (factures). Double contrôle : la fonction SQL, puis
 `parExploitation()` côté serveur.
 
-**Mise en service, par base** (`apidoo-test` d'abord, `apidoo` avec l'accord de Pierre-Louis) :
+**Mise en service, par base** (`Apiviz-test` d'abord, `Apiviz` avec l'accord de Pierre-Louis) :
 1. Migration 035 appliquée.
 2. `supabase functions deploy nettoyer-stockage --no-verify-jwt --project-ref <ref>` (la clé partagée remplace le jeton).
 3. Secret de la fonction : `NETTOYAGE_CLE` = une valeur aléatoire d'au moins 24 caractères (`openssl rand -hex 24`),
@@ -403,7 +403,7 @@ fonction (effet immédiat, sans redéploiement). L'application continue sans jou
 
 ## Sécurité : conseillers Supabase (relevé du 24 nov. 2026)
 
-Conseillers de sécurité de Supabase (Advisors › Security), identiques sur `apidoo` et `apidoo-test` :
+Conseillers de sécurité de Supabase (Advisors › Security), identiques sur `Apiviz` et `Apiviz-test` :
 - **À faire, une case à cocher** : Authentication › Sign In / Providers › Email › « Prevent use of leaked passwords »
   (vérifie les mots de passe contre la base Have I Been Pwned). À activer sur les deux projets. Supabase réserve ce
   réglage aux offres payantes : sur l'offre gratuite, garder au moins 8 caractères et lettres + chiffres.

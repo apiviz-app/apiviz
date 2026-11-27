@@ -1,6 +1,6 @@
 # v5.88 (migration 041) : effacement de nuit des comptes dont la demande de suppression a plus de 30 jours.
 # Fonction serveur « supprimer-comptes » : fichiers des exploitations qui partent, puis la base.
-# Chaque base ne tourne que si son secret existe : SUPPRESSION_CLE_RECETTE (apidoo-test), SUPPRESSION_CLE_PRODUCTION (apidoo).
+# Chaque base ne tourne que si son secret existe : SUPPRESSION_CLE_RECETTE (Apiviz-test), SUPPRESSION_CLE_PRODUCTION (Apiviz).
 # Le secret de production n'est créé qu'avec l'accord de Pierre-Louis (CLAUDE.md). Retour arrière : désactiver cette
 # action (Actions › Suppression des comptes › Disable workflow), ou retirer le secret SUPPRESSION_CLE de la fonction.
 name: Suppression des comptes
@@ -21,7 +21,7 @@ jobs:
   supprimer:
     runs-on: ubuntu-latest
     steps:
-      - name: Recette (apidoo-test)
+      - name: Recette (Apiviz-test)
         env:
           CLE: ${{ secrets.SUPPRESSION_CLE_RECETTE }}
           SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
@@ -31,7 +31,7 @@ jobs:
             -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
             -d "{\"simuler\": $SIMULER}"
           echo
-      - name: Production (apidoo)
+      - name: Production (Apiviz)
         env:
           CLE: ${{ secrets.SUPPRESSION_CLE_PRODUCTION }}
           SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}

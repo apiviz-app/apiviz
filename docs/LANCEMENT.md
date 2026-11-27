@@ -16,27 +16,27 @@ boutiques d'applications. Règles de travail jusque-là : `PROCESSUS.md` § Gel 
 
 ## A. Mise en production des versions en attente
 
-**26 nov. 2026, 23 h** : production et recette en **v5.90** (`386214b`, migrations 039 à 042 appliquées sur `apidoo`),
+**26 nov. 2026, 23 h** : production et recette en **v5.90** (`386214b`, migrations 039 à 042 appliquées sur `Apiviz`),
 fonctions serveur déployées sur les deux projets, clés VAPID créées par l'action « Clés VAPID ». Restent l'essai sur
 téléphone et le contrôle du lendemain.
 
 État au 24 nov. 2026, 22 h : production et recette sur `0a9fb8a` (v5.78) jusqu'à 21 h 44, puis recette sur `main`
-(`9ca73b4`, v5.79 à v5.86, migration 039 appliquée sur `apidoo-test`).
+(`9ca73b4`, v5.79 à v5.86, migration 039 appliquée sur `Apiviz-test`).
 
-Fonctions serveur relevées le 24 nov. : `apidoo-test` a `assistant` et `lire-facture` ; **`apidoo` n'a que
+Fonctions serveur relevées le 24 nov. : `Apiviz-test` a `assistant` et `lire-facture` ; **`Apiviz` n'a que
 `lire-facture`** (API ne répond pas en production) ; `lire-carnet` et `nettoyer-stockage` ne sont déployées nulle part.
 
 - [ ] Essai sur téléphone en recette : rubriques « À vérifier » v5.79 à v5.86 de `CHANGELOG.md`
 - [x] Fusionner #126 (v5.87, migration 040) puis #127 (v5.88, migration 041) ; recette depuis `main` ; essai sur téléphone
 - [x] Fusionner la PR « Fonctions serveur » ; secret `SUPABASE_ACCESS_TOKEN` ; lancer « Fonctions serveur » › recette
-- [x] Secrets Supabase de `apidoo-test`, puis de `apidoo` :
+- [x] Secrets Supabase de `Apiviz-test`, puis de `Apiviz` :
   - v5.87 : `VAPID_PUBLIQUE`, `VAPID_PRIVEE`, `VAPID_SUJET`, `RAPPELS_SECRET` (et `RAPPELS_SECRET_RECETTE` /
     `RAPPELS_SECRET_PRODUCTION` dans GitHub)
   - v5.88 : `SUPPRESSION_CLE` (et `SUPPRESSION_CLE_RECETTE` / `SUPPRESSION_CLE_PRODUCTION` dans GitHub)
   - nettoyage : `NETTOYAGE_CLE` (et `NETTOYAGE_CLE_RECETTE` / `NETTOYAGE_CLE_PRODUCTION` dans GitHub)
   - `ANTHROPIC_API_KEY` existe déjà sur les deux projets (`lire-facture`) : `assistant` et `lire-carnet` s'en servent
-- [x] « Mise en ligne » › production (applique 039 à 041 sur `apidoo`), puis « Fonctions serveur » › production
-- [x] Équipe Apiviz : `insert into public.administrateurs_apiviz values ('…')` sur `apidoo` (tableau « Mes utilisateurs »)
+- [x] « Mise en ligne » › production (applique 039 à 041 sur `Apiviz`), puis « Fonctions serveur » › production
+- [x] Équipe Apiviz : `insert into public.administrateurs_apiviz values ('…')` sur `Apiviz` (tableau « Mes utilisateurs »)
 - [ ] Le lendemain : résumé de l'action « Santé » vert ; une question à API depuis la production
 
 ## B. Sécurité et sauvegardes
