@@ -30,7 +30,7 @@ La Trusted Web Activity (Chrome en plein écran sur Android) prévue dans la ver
 
 ## Applis de test (IT-30, depuis v5.60)
 
-Les applis embarquent la **recette** (base `apidoo-test`) : tous les fichiers du site sont dans l'appli, rien n'est
+Les applis embarquent la **recette** (base `Apiviz-test`) : tous les fichiers du site sont dans l'appli, rien n'est
 chargé depuis le site, rien n'est publié sur les stores.
 
 **Fabriquer** : automatique sur une pull request qui touche aux applis ; sinon GitHub › Actions › **Applis mobiles** › Run workflow, avec la branche à essayer (`main` par défaut).

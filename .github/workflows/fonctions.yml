@@ -1,7 +1,7 @@
 # Déploiement des fonctions serveur Supabase (supabase/functions/*), à la main seulement.
 # Actions › Fonctions serveur › Run workflow : cible « recette » ou « production ».
 # Déploie la version des fonctions qui correspond à l'application publiée sur la cible : repère git « recette » pour
-# apidoo-test, « deploiement » pour apidoo. Lancer donc juste après « Mise en ligne » sur la même cible.
+# Apiviz-test, « deploiement » pour Apiviz. Lancer donc juste après « Mise en ligne » sur la même cible.
 # Pourquoi : au 24 nov. 2026, les fonctions étaient déployées à la main et la production n'avait pas « assistant »
 # (API ne répondait pas en production) ; « lire-carnet » et « nettoyer-stockage » n'étaient déployées nulle part.
 # CLI Supabase v3 (nov. 2026) : toute modification d'un projet hébergé demande une confirmation, --yes en CI.

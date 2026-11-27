@@ -1,6 +1,6 @@
 # IT-11 (AP-TECH-166) : nettoyage de nuit du stockage des photos, par la fonction serveur « nettoyer-stockage ».
 # Retire les fichiers photo qu'aucune fiche n'utilise depuis plus de 7 jours et écrit le journal (migration 035).
-# Chaque base ne tourne que si son secret existe : NETTOYAGE_CLE_RECETTE (apidoo-test), NETTOYAGE_CLE_PRODUCTION (apidoo).
+# Chaque base ne tourne que si son secret existe : NETTOYAGE_CLE_RECETTE (Apiviz-test), NETTOYAGE_CLE_PRODUCTION (Apiviz).
 # Le secret de production n'est créé qu'avec l'accord de Pierre-Louis (CLAUDE.md). Retour arrière : désactiver cette
 # action (Actions › Nettoyage du stockage › Disable workflow), ou NETTOYAGE_ACTIF=non dans les secrets de la fonction.
 name: Nettoyage du stockage
@@ -21,7 +21,7 @@ jobs:
   nettoyer:
     runs-on: ubuntu-latest
     steps:
-      - name: Recette (apidoo-test)
+      - name: Recette (Apiviz-test)
         env:
           CLE: ${{ secrets.NETTOYAGE_CLE_RECETTE }}
           SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}
@@ -31,7 +31,7 @@ jobs:
             -H "Authorization: Bearer $CLE" -H "Content-Type: application/json" \
             -d "{\"simuler\": $SIMULER}"
           echo
-      - name: Production (apidoo)
+      - name: Production (Apiviz)
         env:
           CLE: ${{ secrets.NETTOYAGE_CLE_PRODUCTION }}
           SIMULER: ${{ github.event_name == 'workflow_dispatch' && inputs.simuler || false }}

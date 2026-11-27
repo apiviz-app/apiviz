@@ -1,5 +1,5 @@
 # Applications Android et iOS de test (IT-30). Actions › Applis mobiles › Run workflow, ou automatiquement sur une pull request qui touche aux applis.
-# Elles embarquent la recette (base apidoo-test) d'une branche, fichiers compris : rien n'est publié, ni sur le site,
+# Elles embarquent la recette (base Apiviz-test) d'une branche, fichiers compris : rien n'est publié, ni sur le site,
 # ni sur les stores. Android : un fichier APK à télécharger en bas du résumé de l'action, à installer sur le téléphone.
 # iOS : compilation vérifiée sur le simulateur ; l'installation sur iPhone attend le compte Apple Developer (TestFlight).
 name: Applis mobiles

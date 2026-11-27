@@ -7,7 +7,7 @@
 # base de la cible doit correspondre exactement aux fichiers de migrations (IT-04 / AP-TECH-042).
 # Migrations : si le secret de connexion de la cible existe (BASE_RECETTE, BASE_PRODUCTION), la mise en ligne applique
 # elle-même les migrations en attente avant de publier (scripts/appliquer-migrations.mjs) : lancer « production »
-# vaut accord pour mettre à jour la base apidoo. Sans le secret, rien n'est appliqué et le contrôle dit quoi faire.
+# vaut accord pour mettre à jour la base Apiviz. Sans le secret, rien n'est appliqué et le contrôle dit quoi faire.
 # Chaque mise en ligne en recette annonce déjà ce que la production demandera (résumé de l'action).
 name: Mise en ligne
 
@@ -97,8 +97,8 @@ jobs:
         run: |
           # Applique les migrations de la version publiée qui manquent à la base, chacune dans sa transaction.
           # Une erreur annule la migration en cours et arrête la mise en ligne : rien n'est publié.
-          nom=apidoo-test; secret=BASE_RECETTE
-          if [ "$CIBLE" = production ]; then nom=apidoo; secret=BASE_PRODUCTION; fi
+          nom=Apiviz-test; secret=BASE_RECETTE
+          if [ "$CIBLE" = production ]; then nom=Apiviz; secret=BASE_PRODUCTION; fi
           if [ -z "$BASE" ]; then
             echo "::notice::Secret $secret absent : les migrations ne sont pas appliquées automatiquement sur $nom (voir docs/PROCESSUS.md)."
             exit 0
@@ -126,22 +126,22 @@ jobs:
           if [ "$CIBLE" = production ]; then
             node scripts/controler-structure.mjs config.js | tee /tmp/structure.log || {
               rm -f node_modules
-              m="La base apidoo n'a pas les migrations de cette version ($(grep -o 'Migrations à appliquer.*' /tmp/structure.log || echo 'détail juste au-dessus')). Pour que la mise en ligne les applique elle-même, ajouter une fois le secret BASE_PRODUCTION (docs/PROCESSUS.md) ; sinon les faire appliquer, puis relancer."
+              m="La base Apiviz n'a pas les migrations de cette version ($(grep -o 'Migrations à appliquer.*' /tmp/structure.log || echo 'détail juste au-dessus')). Pour que la mise en ligne les applique elle-même, ajouter une fois le secret BASE_PRODUCTION (docs/PROCESSUS.md) ; sinon les faire appliquer, puis relancer."
               echo "::error::$m"; printf '### Mise en ligne refusée\n\n%s\n' "$m" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
-            echo "Base apidoo : à jour." >> "$GITHUB_STEP_SUMMARY"
+            echo "Base Apiviz : à jour." >> "$GITHUB_STEP_SUMMARY"
           else
             node scripts/controler-structure.mjs environnements/recette/config.js || \
-              echo "::warning::La base apidoo-test ne correspond pas aux migrations de cette version (recette publiée quand même)."
-            # Ce que la production demandera, dit dès maintenant (lecture seule de apidoo, clé publique).
+              echo "::warning::La base Apiviz-test ne correspond pas aux migrations de cette version (recette publiée quand même)."
+            # Ce que la production demandera, dit dès maintenant (lecture seule de Apiviz, clé publique).
             if node scripts/controler-structure.mjs config.js > /tmp/prod.log 2>&1; then
-              echo "Production : la base apidoo a déjà les migrations de cette version, rien à appliquer." >> "$GITHUB_STEP_SUMMARY"
+              echo "Production : la base Apiviz a déjà les migrations de cette version, rien à appliquer." >> "$GITHUB_STEP_SUMMARY"
             else
-              manque=$(grep -o 'Migrations à appliquer.*' /tmp/prod.log || echo "la base apidoo ne correspond pas aux fichiers (voir le journal de cette étape)")
+              manque=$(grep -o 'Migrations à appliquer.*' /tmp/prod.log || echo "la base Apiviz ne correspond pas aux fichiers (voir le journal de cette étape)")
               if [ "$AUTO_PRODUCTION" = true ]; then
                 m="Production : $manque Elles seront appliquées automatiquement au lancement de la production (secret BASE_PRODUCTION présent)."
                 echo "::notice::$m"
               else
-                m="Production : $manque Le secret BASE_PRODUCTION est absent : la production sera refusée tant qu'elles ne sont pas appliquées sur apidoo (docs/PROCESSUS.md, « Mise à jour automatique des bases »)."
+                m="Production : $manque Le secret BASE_PRODUCTION est absent : la production sera refusée tant qu'elles ne sont pas appliquées sur Apiviz (docs/PROCESSUS.md, « Mise à jour automatique des bases »)."
                 echo "::warning::$m"
               fi
               echo "$m" >> "$GITHUB_STEP_SUMMARY"
