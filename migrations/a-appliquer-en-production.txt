@@ -86,3 +86,9 @@
 #   d'abord apidoo-test (mise en ligne en recette), puis apidoo avec l'accord de Pierre-Louis. Avec elle : déployer
 #   « courriels » et « supprimer-comptes » (action « Fonctions serveur ») ; secrets Supabase BREVO_CLE,
 #   COURRIEL_EXPEDITEUR, APP_URL sur chaque projet. Sans Brevo : aucun préavis, aucun compte inactif effacé.
+# 043-paiements.sql (PR claude/paiement-stripe, v5.91) : paiement des offres et des recharges par carte (Stripe).
+#   Additive, ne casse pas l'ancienne version. Après 042. D'abord apidoo-test (mise en ligne en recette), puis apidoo avec
+#   l'accord de Pierre-Louis. Avec elle : déployer « paiement » et « stripe-webhook » (action « Fonctions serveur ») ;
+#   secrets Supabase STRIPE_CLE et STRIPE_WEBHOOK_SECRET sur chaque projet (clés de test en recette, réelles en
+#   production) ; point de terminaison webhook et espace client configurés dans Stripe (docs/PAIEMENT.md).
+#   Sans STRIPE_CLE : l'application garde « Le paiement arrive bientôt ».

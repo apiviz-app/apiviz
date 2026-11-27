@@ -5,6 +5,35 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.91 · à publier en recette · paiement par carte (Stripe, mode test d'abord)
+**Migration 043** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Deux nouvelles fonctions
+serveur** : « paiement » et « stripe-webhook ». Demande de Pierre-Louis du 27 nov. 2026 : « construis toute la partie
+paiement sur la recette ». Réglages et marche à suivre : `docs/PAIEMENT.md`.
+
+Pour l'apiculteur :
+1. **S'abonner** (Réglages › Offre et gouttes d'API › Changer d'offre) : Rucher ou Exploitation, au mois ou à l'année,
+   par carte sur la page sécurisée de Stripe. Pendant un essai gratuit en cours, la carte n'est débitée qu'à la fin de
+   l'essai. Réservé au responsable de l'exploitation.
+2. **Gérer mon abonnement** : carte, factures, changement d'offre ou résiliation dans l'espace client Stripe. Une
+   résiliation laisse l'offre courir jusqu'à l'échéance.
+3. **Recharger des gouttes** par carte (Sachet, Pot, Seau) : les gouttes s'ajoutent toutes seules au retour.
+4. Retour dans Apiviz après le paiement, avec un message ; « Paiement annulé : rien n'a été débité » si l'on renonce.
+
+Pour l'équipe :
+- Le bouton n'apparaît que si la fonction « paiement » répond et que le secret `STRIPE_CLE` existe sur le projet :
+  sans lui, rien ne change (« Le paiement arrive bientôt »). Le bloc « Équipe Apiviz » reste (activer sans payer).
+- « stripe-webhook » vérifie la signature Stripe, relit toujours l'abonnement chez Stripe (notifications en double ou
+  dans le désordre sans effet) et note chaque notification dans `paiements_evenements`.
+- Les canaux `apple` et `google` sont prêts côté base (même fonction d'écriture) pour l'achat intégré des applications.
+
+À vérifier (recette, mode test Stripe, carte 4242 4242 4242 4242, date future, n'importe quel code) :
+- [ ] Changer d'offre › S'abonner à Rucher à l'année → page Stripe en français → payer → retour, « Mon offre » : Rucher,
+      active, bloc « Abonnement par carte ».
+- [ ] Gérer mon abonnement → espace Stripe → passer à Exploitation → retour : Exploitation.
+- [ ] Gérer mon abonnement → annuler → retour : « résiliée, jusqu'au … » ; réactiver → active.
+- [ ] Recharger › Sachet › Payer → retour : 400 gouttes de plus, une seule fois.
+- [ ] Carte refusée 4000 0000 0000 0002 : Stripe refuse, rien ne change dans Apiviz.
+- [ ] Un membre qui n'est pas responsable ne voit pas « S'abonner ».
 ## v5.90 · à publier en recette · comptes inactifs et e-mails
 **Migration 042** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
 « courriels »** ; « supprimer-comptes » complétée. Décisions de Pierre-Louis du 24 nov. 2026 : « 3 ans, avec préavis »
