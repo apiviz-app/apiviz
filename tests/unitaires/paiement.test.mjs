@@ -100,3 +100,24 @@ test("adresse de retour", () => {
   assert.equal(P.retour("https://recette.apiviz.fr", "ok"), "https://recette.apiviz.fr/?paiement=ok");
   assert.equal(P.retour("", "annule"), "https://app.apiviz.fr/?paiement=annule");
 });
+
+test("abonnement payé en cours : pas de second abonnement pendant une résiliation à échéance", async () => {
+  const R = await import("../../src/domaines/compte/regles-offre.js");
+  const t = Date.parse("2026-11-28T12:00:00Z");
+  for (const f of [P.abonnementPayeEnCours, R.abonnementPayeEnCours]) {
+    assert.equal(f(null, t), false);
+    assert.equal(f({ canal: "manuel", statut: "actif" }, t), false, "offre activée à la main : pas de paiement en cours");
+    assert.equal(f({ canal: "manuel", statut: "essai", fin: "2026-12-20T00:00:00Z" }, t), false, "essai sans carte");
+    assert.equal(f({ canal: "web", statut: "actif", fin: null }, t), true);
+    assert.equal(f({ canal: "web", statut: "essai", fin: "2026-12-20T00:00:00Z" }, t), true);
+    assert.equal(f({ canal: "web", statut: "resilie", fin: "2027-11-27T00:00:00Z" }, t), true, "résilié à échéance : il court encore");
+    assert.equal(f({ canal: "web", statut: "resilie", fin: "2026-11-01T00:00:00Z" }, t), false, "échéance passée : on peut se réabonner");
+    assert.equal(f({ canal: "web", statut: "resilie", fin: null }, t), false);
+    assert.equal(f({ canal: "apple", statut: "actif" }, t), true);
+  }
+});
+
+test("applis natives : pas de bouton de paiement par carte", () => {
+  const s = fs.readFileSync("src/domaines/compte/offre.js", "utf8");
+  assert.match(s, /Plateforme\?\.native\) \{ st\.paiement = false; return; \}/);
+});

@@ -67,6 +67,9 @@ async function paiement(corps) {
 function verifierPaiement() {
   if (st.paiement !== null || st.paiementEnVol) return;
   if (typeof window == "undefined" || !window.APIDOO?.url) { st.paiement = false; return; }
+  // Applis iPhone et Android : une offre numérique s'y vend par l'achat intégré du store (LANCEMENT.md, liste E), et
+  // la page Stripe ferait sortir de l'application. Pas de bouton de paiement par carte dans l'appli installée.
+  if (window.Plateforme?.native) { st.paiement = false; return; }
   st.paiementEnVol = true;
   paiement({ action: "etat" }).then((j) => { st.paiement = !!j.actif; }).catch(() => { st.paiement = false; })
     .finally(() => { st.paiementEnVol = false; if (["offre", "offres", "recharge"].includes(S.route)) render(); });
@@ -168,7 +171,7 @@ function ecranOffres() {
   if (!d) return attente("Choisir une offre");
   verifierPaiement();
   const essaiPossible = d.responsable && !d.abonnement?.essai_utilise && d.offre === "decouverte";
-  const ab = d.abonnement, abonneWeb = ab && ab.canal !== "manuel" && ab.statut !== "resilie";
+  const ab = d.abonnement, abonneWeb = R.abonnementPayeEnCours(ab);
   const carte = (o) => {
     const courante = o.id === d.offre;
     const prixTexte = !o.prix_an_cts ? ["0 €", "pour toujours"]
@@ -181,7 +184,9 @@ function ecranOffres() {
     else if (!d.responsable) gestes.push('<p class="small of-bientot">Seul un responsable de l\'exploitation peut changer d\'offre.</p>');
     else {
       if (essaiPossible && o.essai_jours) gestes.push(`<button type="button" class="btn ${st.paiement ? "" : "main"}" data-act="ofessai" data-v="${esc(o.id)}">Essayer ${o.essai_jours} jours gratuitement</button>`);
-      if (st.paiement && abonneWeb) gestes.push(ab.canal === "web" ? '<button type="button" class="btn" data-act="ofgerer">Changer d\'offre dans Gérer mon abonnement</button>' : '<p class="small">Ton abonnement se change depuis les réglages du téléphone.</p>');
+      if (st.paiement && abonneWeb) gestes.push(ab.canal === "web"
+        ? `<button type="button" class="btn" data-act="ofgerer">${ab.statut === "resilie" ? "Réactiver" : "Changer d'offre"} dans Gérer mon abonnement</button>`
+        : '<p class="small">Ton abonnement se change depuis les réglages du téléphone.</p>');
       else if (st.paiement) gestes.push(`<button type="button" class="btn main" data-act="ofabonner" data-v="${esc(o.id)}">${courante ? "Garder cette offre après l'essai" : "S'abonner"} · ${esc(R.prix(prixChoisi))} ${st.an ? "par an" : "par mois"}</button>`);
       else if (!d.admin) gestes.push('<p class="small of-bientot">Le paiement arrive bientôt dans Apiviz.</p>');
       if (d.admin && !courante) gestes.push(`<button type="button" class="btn sm" data-act="ofadmin" data-v="${esc(o.id)}">Activer sans payer (équipe)</button>`);

@@ -15,7 +15,7 @@
 // dans paiements_clients avec la clé de service.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { clePrix, finEssai, formulaire, recharge, retour } from "./stripe.js";
+import { abonnementPayeEnCours, clePrix, finEssai, formulaire, recharge, retour } from "./stripe.js";
 
 const CLE = Deno.env.get("STRIPE_CLE") || "";
 const APP = Deno.env.get("APP_URL") || "https://app.apiviz.fr";
@@ -88,7 +88,9 @@ Deno.serve(async (req) => {
       const cle = clePrix(corps.offre, corps.periode);
       if (!cle) return erreur("Offre ou période inconnue.", 400, "offre");
       const ab = offre.abonnement;
-      if (ab && ab.canal !== "manuel" && ab.statut !== "resilie") return erreur("Un abonnement est déjà en cours : change d'offre depuis « Gérer mon abonnement ».", 409, "deja");
+      if (abonnementPayeEnCours(ab)) return erreur(ab.statut === "resilie"
+        ? "Ton abonnement court encore jusqu'à son échéance : réactive-le depuis « Gérer mon abonnement »."
+        : "Un abonnement est déjà en cours : change d'offre depuis « Gérer mon abonnement ».", 409, "deja");
       const prix = await stripe(`prices?active=true&lookup_keys[]=${encodeURIComponent(cle)}`);
       const p = prix?.data?.[0];
       if (!p?.id) return erreur("Ce prix n'est pas encore en place.", 503, "prix");

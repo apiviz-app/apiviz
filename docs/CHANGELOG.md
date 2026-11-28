@@ -25,6 +25,10 @@ Pour l'équipe :
 - « stripe-webhook » vérifie la signature Stripe, relit toujours l'abonnement chez Stripe (notifications en double ou
   dans le désordre sans effet) et note chaque notification dans `paiements_evenements`.
 - Les canaux `apple` et `google` sont prêts côté base (même fonction d'écriture) pour l'achat intégré des applications.
+- Relecture du 28 nov. : pas de second abonnement tant que l'actuel court (même résilié à échéance) : le bouton devient
+  « Réactiver dans Gérer mon abonnement » et le serveur refuse (409), sinon la même période était payée deux fois.
+- Applis iPhone et Android : pas de bouton de paiement par carte (la page Stripe sortait de l'application, et une offre
+  numérique s'y vend par l'achat intégré) ; elles gardent « Le paiement arrive bientôt ».
 
 À vérifier (recette, mode test Stripe, carte 4242 4242 4242 4242, date future, n'importe quel code) :
 - [x] Changer d'offre › S'abonner à Rucher à l'année → page Stripe en français → payer → retour, « Mon offre » : Rucher,
@@ -34,6 +38,8 @@ Pour l'équipe :
 - [ ] Recharger › Sachet › Payer → retour : 400 gouttes de plus, une seule fois.
 - [ ] Carte refusée 4000 0000 0000 0002 : Stripe refuse, rien ne change dans Apiviz.
 - [ ] Un membre qui n'est pas responsable ne voit pas « S'abonner ».
+- [ ] Abonnement résilié à échéance → Changer d'offre : « Réactiver dans Gérer mon abonnement », pas « S'abonner ».
+- [ ] Appli Android de test : Mon offre et Recharger sans bouton de paiement par carte.
 ## v5.90 · à publier en recette · comptes inactifs et e-mails
 **Migration 042** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Nouvelle fonction serveur
 « courriels »** ; « supprimer-comptes » complétée. Décisions de Pierre-Louis du 24 nov. 2026 : « 3 ans, avec préavis »

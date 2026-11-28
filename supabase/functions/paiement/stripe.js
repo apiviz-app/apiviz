@@ -98,6 +98,18 @@ export function finEssai(abonnement, maintenant = Date.now()) {
   return Number.isFinite(t) && t * 1000 - maintenant > 49 * 3600e3 ? t : null;
 }
 
+/**
+ * Abonnement payé (carte ou store) encore en cours : actif, en essai, ou résilié mais pas encore arrivé à échéance
+ * (résiliation à la fin de la période). Dans ces cas, un nouvel abonnement ferait payer deux fois la même période :
+ * on renvoie vers l'espace de paiement (réactiver, changer d'offre) ou vers le store.
+ */
+export function abonnementPayeEnCours(abonnement, maintenant = Date.now()) {
+  if (!abonnement || !abonnement.canal || abonnement.canal === "manuel") return false;
+  if (abonnement.statut !== "resilie") return true;
+  const fin = abonnement.fin ? Date.parse(abonnement.fin) : NaN;
+  return Number.isFinite(fin) && fin > maintenant;
+}
+
 /** Adresse de retour dans l'application : APP_URL + ?paiement=… (l'application l'efface en arrivant). */
 export function retour(app, etat) {
   const u = new URL(app || "https://app.apiviz.fr");

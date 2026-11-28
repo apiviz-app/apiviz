@@ -53,3 +53,15 @@ export function statutTexte(ab, maintenant = new Date()) {
 
 /** Libellé d'une nature de dépense. */
 export const natureTexte = (n, nb) => (n === "facture" ? `${nb} facture${nb > 1 ? "s" : ""} lue${nb > 1 ? "s" : ""}` : `${nb} question${nb > 1 ? "s" : ""} à API`);
+
+/**
+ * Abonnement payé (carte ou store) encore en cours : actif, en essai, ou résilié mais pas encore arrivé à échéance
+ * (résiliation à la fin de la période). Dans ces cas, un nouvel abonnement ferait payer deux fois la même période :
+ * on renvoie vers l'espace de paiement (réactiver, changer d'offre) ou vers le store.
+ */
+export function abonnementPayeEnCours(abonnement, maintenant = Date.now()) {
+  if (!abonnement || !abonnement.canal || abonnement.canal === "manuel") return false;
+  if (abonnement.statut !== "resilie") return true;
+  const fin = abonnement.fin ? Date.parse(abonnement.fin) : NaN;
+  return Number.isFinite(fin) && fin > maintenant;
+}
