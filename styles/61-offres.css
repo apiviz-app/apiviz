@@ -82,3 +82,4 @@
 .as-cout{display:flex;justify-content:space-between;gap:8px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--muted)}
 .as-cout-g{font-weight:600;color:var(--watch)}
 .as-gestes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.of-offre .of-gestes{grid-template-columns:1fr;margin-top:10px}
