@@ -41,10 +41,14 @@ Fonctions serveur relevées le 24 nov. : `Apiviz-test` a `assistant` et `lire-fa
 
 ## B. Sécurité et sauvegardes
 
-- [ ] Sauvegarde activée (`PROCESSUS.md` § Sauvegardes) : résumé « restauration essayée »
-- [ ] Copie des fichiers (photos, factures) activée : résumé avec le nombre de fichiers
+- [x] Sauvegarde activée (`PROCESSUS.md` § Sauvegardes) : résumé « restauration essayée » (relevé le 28 nov. : chaque
+      nuit depuis le 26 nov., 55 tables restaurées avec les mêmes nombres de lignes)
+- [ ] Copie des fichiers (photos, factures) activée : résumé avec le nombre de fichiers (le dimanche seulement :
+      vérifier le résumé du dimanche 29 nov.)
 - [ ] Premier exercice de restauration fait sur ton ordinateur, noté dans `PROCESSUS.md`
 - [ ] Supabase › Authentication : « Prevent use of leaked passwords » sur les deux projets (`TECHNIQUE.md` § Sécurité)
+      (28 nov. : toujours désactivé sur `Apiviz-test`, seul avertissement de sécurité restant, les autres sont voulus ;
+      si l'option est grisée, elle demande l'offre Pro de Supabase)
 - [x] E-mails (v5.90) : compte Brevo, domaine `apiviz.fr` vérifié (SPF, DKIM, DMARC), secrets `BREVO_CLE`,
       `COURRIEL_EXPEDITEUR`, `APP_URL` sur les deux projets ; SMTP de Supabase Auth branché sur Brevo
       (`TECHNIQUE.md` § E-mails)
@@ -61,6 +65,8 @@ Fonctions serveur relevées le 24 nov. : `Apiviz-test` a `assistant` et `lire-fa
 - [ ] Pages publiées sur apiviz.fr et liées depuis l'application (inscription, Réglages, page de commande publique)
 
 ## D. Bêta fermée
+
+Kit complet (indicateurs et seuils, recrutement, messages prêts, missions d'hiver, canal de retour, tri) : `BETA.md`.
 
 - [ ] 20 à 30 apiculteurs recrutés (débutants et confirmés, au moins 3 avec une exploitation partagée)
 - [ ] Un canal de retour (fil de l'équipe ou formulaire) et un point hebdomadaire
