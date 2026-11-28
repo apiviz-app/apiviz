@@ -1,6 +1,6 @@
 # Apiviz — confidentialité et services tiers
 
-Version du 20 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.73). Ce texte est la source de la page publiée `confidentialite.html`
+Version du 28 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.73). Ce texte est la source de la page publiée `confidentialite.html`
 (racine du site) : toute modification se fait dans les deux fichiers, dans la même pull request
 (contrôlé par `tests/unitaires/confidentialite.test.mjs`).
 
@@ -10,8 +10,8 @@ Version du 20 novembre 2026 (IT-04, AP-FEAT-021 ; services tiers revus en v5.73)
 
 ## Qui traite vos données
 
-Apiviz est un carnet de bord pour apiculteurs. Le responsable du traitement est [à compléter : nom, adresse].
-Pour toute question ou demande : [à compléter : adresse e-mail de contact].
+Apiviz est un carnet de bord pour apiculteurs. Le responsable du traitement est [DÉNOMINATION], [ADRESSE DU SIÈGE].
+Pour toute question ou demande : contact@apiviz.fr.
 
 ## Ce que nous enregistrons
 
@@ -31,7 +31,8 @@ Pour toute question ou demande : [à compléter : adresse e-mail de contact].
 - **Le journal des erreurs techniques** : version de l'application, écran, message d'erreur, sans adresse e-mail ni
   donnée de votre exploitation.
 
-Il n'y a ni publicité, ni mesure d'audience, ni revente de données.
+Il n'y a ni publicité, ni outil de mesure d'audience d'une autre société, ni revente de données. La seule mesure de
+l'utilisation est celle d'Apiviz décrite plus bas, que vous pouvez refuser.
 
 ## Qui voit vos données
 
@@ -74,6 +75,7 @@ de votre département, seulement si au moins cinq apiculteurs du département on
 | Open-Meteo (météo) | La position de vos ruchers (latitude, longitude) | Prévisions et créneaux de visite | Europe |
 | Brevo (envoi des e-mails d'Apiviz, v5.90) | Votre adresse e-mail et votre prénom, au moment d'un envoi | Vous prévenir avant la suppression d'un compte inactif, confirmer une demande de suppression | Union européenne (Brevo, société française ; serveurs en France et en Allemagne) |
 | Anthropic (modèle Claude, pour l'assistant API et la lecture des factures) | Votre question et les données de votre exploitation utiles à la réponse (colonies, visites, ventes…), au moment où vous la posez ; la facture d'achat que vous lui donnez (photo ou PDF), avec la liste de vos articles et fournisseurs, au moment de la lecture | Répondre à vos questions, lire vos factures | États-Unis (Anthropic, PBC) ; données non utilisées pour entraîner ses modèles, conservées au plus 30 jours par Anthropic pour la sécurité |
+| Stripe (paiement des offres et des recharges, v5.91) | Votre adresse e-mail, le nom de l'exploitation, l'offre achetée, vos coordonnées de carte (saisies chez Stripe, jamais chez Apiviz) | Encaisser le paiement, établir factures et reçus, lutter contre la fraude | Union européenne (Stripe, entité européenne) ; transferts vers Stripe, LLC aux États-Unis |
 
 Certaines fonctions passent par votre navigateur ou une autre application, seulement si vous les utilisez :
 

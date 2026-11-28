@@ -401,6 +401,8 @@ const CX_VITRINE = `<div class="cx-vitrine">
       </ul>
     </div>`;
 let cxDejaVue = false;
+// Version des CGU acceptée à l'inscription (docs/juridique/cgu.md), gardée avec le compte (v5.92).
+const CGU_VERSION = "2026-11-28";
 function authView() {
   const mode = S.recovery ? "recovery" : CX_PHRASES[S.authMode] ? S.authMode : "in";
   const [titre, sous] = CX_PHRASES[mode];
@@ -410,7 +412,7 @@ function authView() {
   // v5.84 (parcours d'arrivée) : le prénom est demandé avec le compte, puis repris par l'inscription (profil.js).
   const prenomSaisi = $app.querySelector("form[data-form=auth] [name=prenom]")?.value || "";
   const motDePasse = (libelle, memoire) => `<label>${libelle}<span class="cx-mdp"><input name="password" type="password" minlength="8" required autocomplete="${memoire}"><button type="button" class="cx-voir" data-act="cxvoir" aria-pressed="false">Afficher</button></span></label>`;
-  const confid = (cote) => `<a class="cx-confid cx-${cote}" href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a>`;
+  const confid = (cote) => `<span class="cx-confid cx-${cote}"><a href="confidentialite.html" target="_blank" rel="noopener">Où vont mes données</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></span>`;
   const premiere = !cxDejaVue;
   cxDejaVue = true;
   $app.innerHTML = `<div class="auth cx${premiere ? " cx-premiere" : ""}" data-mode="${mode}">
@@ -436,7 +438,7 @@ function authView() {
     <label>E-mail<input name="email" type="email" required autocomplete="email" placeholder="toi@exemple.fr" value="${esc(mail)}"></label>
     ${mode === "reset" ? "" : motDePasse("Mot de passe", mode === "up" ? "new-password" : "current-password")}
     ${mode === "up" ? `<p class="small cx-aide">8 caractères au moins</p>
-    <label class="ob-coche cx-age"><input type="checkbox" name="age15" required><span>J’ai 15 ans ou plus.</span></label>
+    <label class="ob-coche cx-age"><input type="checkbox" name="age15" required><span>J’ai 15 ans ou plus et j’accepte les <a href="cgu.html" target="_blank" rel="noopener">conditions d’utilisation</a>.</span></label>
     <ul class="cx-rassure"><li><b>Tes données restent à toi.</b> Jamais vendues, téléchargeables à tout moment.</li><li><b>Pas de réseau au rucher ?</b> Apiviz enregistre et envoie plus tard.</li></ul>` : ""}
     ${mode === "in" ? '<button type="button" class="link cx-oubli" data-act="authmode" data-v="reset">Mot de passe oublié</button>' : ""}
     <button class="btn main block">${mode === "up" ? "Créer mon compte" : mode === "reset" ? "Recevoir le lien" : "Se connecter"}</button>
@@ -489,7 +491,7 @@ async function submitAuth(formulaire) {
       const { error: erreur } = await sb.auth.signUp({
         email: formulaire.email.value,
         password: formulaire.password.value,
-        options: { emailRedirectTo: retour, data: prenom ? { prenom, age15: true } : {} },
+        options: { emailRedirectTo: retour, data: prenom ? { prenom, age15: true, cgu: CGU_VERSION } : { cgu: CGU_VERSION } },
       });
       if (erreur) throw erreur;
       try { if (prenom) localStorage.setItem("apiviz-inscription-attente", JSON.stringify({ email: formulaire.email.value.trim().toLowerCase(), prenom, age15: true })); } catch {}

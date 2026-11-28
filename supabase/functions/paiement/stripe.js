@@ -110,6 +110,35 @@ export function abonnementPayeEnCours(abonnement, maintenant = Date.now()) {
   return Number.isFinite(fin) && fin > maintenant;
 }
 
+/** Version des CGV acceptées à la commande (docs/juridique/cgv.md), gardée dans les métadonnées Stripe comme preuve. */
+export const CGV_VERSION = "2026-11-28";
+
+/**
+ * Textes de la page de paiement (v5.92) : la case obligatoire (consent_collection) vaut acceptation des CGV et demande
+ * expresse d'exécution immédiate (CGV, article 7) ; le texte au-dessus du bouton rappelle le renouvellement et la
+ * résiliation. Stripe limite chaque texte à 1 200 caractères et accepte un lien Markdown.
+ */
+export function textesCommande(type, cgv) {
+  const lien = `[conditions générales de vente](${cgv})`;
+  if (type === "abonnement") return {
+    terms_of_service_acceptance: { message: `J'accepte les ${lien}. Je demande que mon offre commence dès le paiement ; si je me rétracte dans les 14 jours, je paierai seulement la part de l'abonnement déjà écoulée.` },
+    submit: { message: "Abonnement renouvelé automatiquement à chaque échéance. Résiliable à tout moment, sans frais, dans Apiviz › Mon offre › Résilier mon abonnement." },
+  };
+  return {
+    terms_of_service_acceptance: { message: `J'accepte les ${lien}. Je demande que mes gouttes soient disponibles dès le paiement et je reconnais perdre mon droit de rétractation pour les gouttes que j'aurai utilisées.` },
+    submit: { message: "Paiement unique, sans abonnement." },
+  };
+}
+
+/**
+ * Pied des factures Stripe : mention de TVA (secret TVA_MENTION, par exemple « TVA non applicable, art. 293 B du CGI »
+ * en franchise en base) et rappel de la demande d'exécution immédiate, qui doit figurer dans la confirmation du contrat.
+ */
+export function piedFacture(mentionTva, cgv) {
+  return [String(mentionTva || "").trim(), `Exécution immédiate demandée à la commande ; droit de rétractation : CGV, article 7 (${cgv}).`]
+    .filter(Boolean).join("\n");
+}
+
 /** Adresse de retour dans l'application : APP_URL + ?paiement=… (l'application l'efface en arrivant). */
 export function retour(app, etat) {
   const u = new URL(app || "https://app.apiviz.fr");

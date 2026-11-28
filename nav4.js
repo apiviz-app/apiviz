@@ -244,7 +244,10 @@ const N4 = (() => {
         <button type="button" class="n4-ligne" data-act="n4q" data-v="go" data-k="reglages"><span class="u-todo-t"><b>Réglages, exports et sauvegarde</b></span><span aria-hidden="true">›</span></button>
         ${installee() ? "" : `<button type="button" class="n4-ligne" data-act="n4installer"><span class="u-todo-t"><b>${appareil() === "ios" || appareil() === "android" ? "Installer sur l’écran d’accueil" : "Installer sur cet ordinateur"}</b></span><span aria-hidden="true">›</span></button>`}
       </section>
-      <section class="n4-bloc"><a class="n4-ligne" href="confidentialite.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Confidentialité</b><span class="small">Où vont tes données, services utilisés</span></span><span aria-hidden="true">›</span></a></section>
+      <section class="n4-bloc"><a class="n4-ligne" href="confidentialite.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Confidentialité</b><span class="small">Où vont tes données, services utilisés</span></span><span aria-hidden="true">›</span></a>
+        <a class="n4-ligne" href="cgv.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Conditions de vente</b><span class="small">Offres, résiliation, rétractation</span></span><span aria-hidden="true">›</span></a>
+        <a class="n4-ligne" href="cgu.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Conditions d’utilisation</b></span><span aria-hidden="true">›</span></a>
+        <a class="n4-ligne" href="mentions-legales.html" target="_blank" rel="noopener"><span class="u-todo-t"><b>Mentions légales</b></span><span aria-hidden="true">›</span></a></section>
       <button type="button" class="btn n4-sortir" data-act="logout">Se déconnecter</button>`;
     if (!$sheet.open) $sheet.showModal();
   };

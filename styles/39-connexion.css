@@ -50,6 +50,7 @@
 .cx .cx-erreur{background:var(--critbg);color:#8A1414;font-weight:600}
 .cx-confid{display:flex;align-items:center;justify-content:center;min-height:40px;font-size:13px;font-weight:500;color:#3F4A44}
 .cx form .cx-confid{margin-top:12px}
+.cx-confid{gap:6px;flex-wrap:wrap}.cx-confid a{color:inherit}
 
 @media (min-width:801px){
   .auth.cx{flex-direction:row;background:var(--ground)}

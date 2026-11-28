@@ -1,16 +1,23 @@
-# Conditions générales d'utilisation (CGU)
+<!--
+Projet du 24 nov. 2026, complété le 28 nov. 2026 (clause bêta, crochets). Source de la page publiée `cgu.html` :
+modifier ce fichier puis lancer `node scripts/pages-juridiques.mjs`. Les commentaires ne sont pas publiés.
+Texte NON validé par un juriste (voir README.md).
+-->
+# Conditions générales d'utilisation
 
-*Projet du 24 nov. 2026 — à compléter et faire relire (voir `README.md`).*
+*Version du [DATE DE PUBLICATION]*
 
 ## 1. Objet
 
 Apiviz est un carnet de bord en ligne pour apiculteurs : suivi des ruchers et des colonies, visites, traitements,
 récoltes, stock, ventes et clients, avec un assistant d'intelligence artificielle appelé « API ». Les présentes
-conditions s'appliquent à toute personne qui crée un compte ou utilise Apiviz. Elles sont acceptées à l'inscription.
-L'éditeur est [DÉNOMINATION] (voir les mentions légales).
+conditions s'appliquent à toute personne qui crée un compte ou utilise Apiviz. Vous les acceptez en cochant la case
+prévue à l'inscription. L'éditeur est [DÉNOMINATION] (voir les mentions légales).
 
 ## 2. Compte
 
+- Apiviz est réservé aux personnes de 15 ans ou plus. Une personne de moins de 18 ans ne peut souscrire une offre
+  payante qu'avec l'accord de ses parents.
 - Un compte est personnel. Vous choisissez un mot de passe et le gardez secret.
 - Vous pouvez créer une exploitation ou en rejoindre une sur invitation. Le responsable d'une exploitation décide qui
   y a accès et avec quel rôle (responsable, membre, lecture seule).
@@ -18,7 +25,7 @@ L'éditeur est [DÉNOMINATION] (voir les mentions légales).
   après un délai de 30 jours pendant lequel vous pouvez l'annuler en vous reconnectant.
 - Comptes inactifs : après 3 ans sans ouvrir Apiviz, un e-mail vous prévient ; sans reconnexion dans le mois qui
   suit, le compte et les exploitations sans autre membre sont supprimés. Les exploitations partagées restent aux autres
-  membres. Se reconnecter avant la date annule la suppression. *(Décidé le 24 nov. 2026, mis en place en v5.90.)*
+  membres. Se reconnecter avant la date annule la suppression. 
 
 ## 3. Offres
 
@@ -62,17 +69,42 @@ suspendu après avertissement, sauf urgence.
   avant de vous déconnecter ou de changer d'appareil.
 - [DÉNOMINATION] n'est pas responsable des décisions prises sur la base des informations affichées (conseils d'API,
   météo, seuils de varroa, indicateurs), ni des pertes de colonies.
-- *(À faire relire : clauses limitatives de responsabilité, inopposables aux consommateurs dans certains cas.)*
+- Ces limites ne s'appliquent pas en cas de faute lourde ou intentionnelle de [DÉNOMINATION], ni aux dommages
+  corporels, et ne privent pas un consommateur des garanties légales rappelées dans les CGV.
+<!-- À faire relire : clauses limitatives de responsabilité, en partie inopposables aux consommateurs. -->
 
 ## 8. Modification des CGU
 
-Les CGU peuvent évoluer. Toute modification importante est annoncée dans l'application [30] jours avant de
+Les CGU peuvent évoluer. Toute modification importante est annoncée dans l'application et par e-mail 30 jours avant de
 s'appliquer ; si vous la refusez, vous pouvez supprimer votre compte et exporter vos données.
 
-## 9. Droit applicable et litiges
+## 9. Version bêta (janvier et février 2027)
 
-Droit français. En cas de difficulté, écrivez d'abord à [E-MAIL]. Un consommateur peut recourir gratuitement au
-médiateur de la consommation indiqué dans les CGV. [DÉCISION : tribunal compétent pour les professionnels.]
+Avant son ouverture au public, Apiviz est proposé du [DATE DE DÉBUT DE LA BÊTA] au [DATE DE FIN DE LA BÊTA] à un groupe
+restreint d'apiculteurs invités, en « version bêta ». Pendant cette période :
+
+- l'accès est gratuit et sur invitation ; aucune offre payante n'est vendue aux participants, et les fonctions des
+  offres Rucher et Exploitation peuvent leur être ouvertes sans paiement ;
+- Apiviz est en cours de mise au point : des erreurs, des interruptions plus fréquentes et des changements d'écran ou
+  de fonction sont possibles, parfois sans préavis ; nous vous conseillons d'exporter régulièrement vos données
+  (Réglages, sauvegarde complète) ;
+- vos données sont réelles et protégées comme elles le seront ensuite : elles ne sont ni effacées ni réinitialisées à
+  la fin de la bêta, sauf si vous le demandez ;
+- vos retours (fil de l'équipe, formulaire, échanges hebdomadaires) nous aident à corriger Apiviz ; vous nous autorisez
+  à les utiliser librement pour l'améliorer, sans contrepartie, sans que votre nom soit publié sans votre accord ;
+- vous pouvez quitter la bêta à tout moment en supprimant votre compte, et nous pouvons y mettre fin à tout moment en
+  vous prévenant par e-mail ;
+- à la fin de la bêta, votre exploitation passe à l'offre Découverte, ou à l'offre qui vous a été annoncée par écrit,
+  sans perte de données ; rien ne vous est facturé sans votre commande expresse.
+
+Les autres articles des présentes CGU s'appliquent pendant la bêta. Les engagements de disponibilité de l'article 7
+s'entendent avec la tolérance propre à une version en cours de mise au point.
+
+## 10. Droit applicable et litiges
+
+Droit français. En cas de difficulté, écrivez d'abord à contact@apiviz.fr. Un consommateur peut recourir gratuitement au
+médiateur de la consommation indiqué dans les CGV. Pour un professionnel, les tribunaux du
+ressort du siège de [DÉNOMINATION] sont seuls compétents.
 
 ---
 
@@ -90,7 +122,7 @@ préférences, commandes passées sur votre page de commande en ligne), **vous �
    les données d'une autre), sauvegardes chiffrées, journal des modifications ;
 4. ne recourir qu'aux sous-traitants ultérieurs listés dans la politique de confidentialité (Supabase, Cloudflare,
    Anthropic pour l'assistant si vous l'interrogez sur vos clients), liés par des engagements équivalents ; vous
-   informer de tout changement de cette liste [30] jours à l'avance, avec la possibilité de vous y opposer en
+   informer de tout changement de cette liste 30 jours à l'avance, avec la possibilité de vous y opposer en
    supprimant votre compte ;
 5. vous aider à répondre aux demandes de vos clients (accès, rectification, effacement) : vous pouvez modifier ou
    supprimer un client et exporter ses données depuis Apiviz ;
@@ -101,5 +133,5 @@ préférences, commandes passées sur votre page de commande en ligne), **vous �
 8. mettre à votre disposition les informations utiles pour démontrer le respect de ces obligations.
 
 Vous vous engagez à informer vos clients de ce traitement (une mention sur vos reçus ou votre page de commande suffit,
-par exemple : « Vos coordonnées sont enregistrées par [votre nom] dans l'application Apiviz pour gérer vos commandes »)
+par exemple : « Vos coordonnées sont enregistrées par (votre nom) dans l'application Apiviz pour gérer vos commandes »)
 et à ne pas enregistrer de données sans rapport avec la vente.
