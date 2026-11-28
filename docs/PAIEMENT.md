@@ -41,11 +41,25 @@ gouttes_mouvements)
      Customers, Checkout Sessions, Customer portal, Prices en lecture, Subscriptions en lecture) ;
    - `STRIPE_WEBHOOK_SECRET` : secret de signature du point de terminaison (`whsec_…`) ;
    - `APP_URL` : déjà en place (retour vers l'application).
+   - `CGV_URL` (v5.92, facultatif) : adresse des CGV publiées ; par défaut `https://app.apiviz.fr/cgv.html` ;
+   - `TVA_MENTION` (v5.92, facultatif) : texte imprimé en pied des factures, `TVA non applicable, art. 293 B du CGI`
+     en franchise en base ; l'écran Recharger retire alors sa ligne « TVA (20 %) ». À laisser vide si assujetti.
 5. Essai : rubrique « À vérifier » de la v5.91 dans `CHANGELOG.md`.
 
 Sans `STRIPE_CLE`, rien ne change pour l'utilisateur : « Le paiement arrive bientôt ».
 
 ## Avant le mode réel
+
+- **CGV et rétractation (v5.92)** : Stripe › Paramètres › Informations publiques › *Conditions d'utilisation* = la même
+  adresse que `CGV_URL`, sinon Stripe refuse la case d'acceptation (`consent_collection`). La case vaut acceptation
+  des CGV et demande d'exécution immédiate ; Stripe garde `consent.terms_of_service = accepted` dans la session, et
+  les métadonnées `cgv` (version) et `execution_immediate`.
+- **Factures** : le pied (mention de TVA + rappel de l'exécution immédiate) est posé sur chaque client Stripe ; les
+  recharges créent une facture après paiement (`invoice_creation`), ce que Stripe peut facturer (tarif Invoicing, à
+  vérifier dans le compte).
+- **Résiliation** : « Résilier mon abonnement » ouvre l'espace client sur `flow_data.subscription_cancel` ; il faut donc
+  l'annulation activée dans le portail, « à la fin de la période ».
+- Bloquants restants (bouton « Me rétracter », e-mails de résiliation et de préavis annuel) : `docs/juridique/README.md`.
 
 - Statut juridique, SIRET et compte bancaire dans Stripe ; mentions légales et CGV publiées (`LANCEMENT.md`).
 - Reçus par e-mail (Paramètres › E-mails clients) ; factures Stripe si un client professionnel en demande.

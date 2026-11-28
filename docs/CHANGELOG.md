@@ -5,6 +5,33 @@ le 6 nov. 2026). Avant : v5.16 (`ab93c53`) le matin même, v5.14 (`554f98f`) jus
 Bases `apidoo` et `apidoo-test` : 000 à 013, structure identique (relevé `migrations/releves/structure-2026-11-06-apres-013.json`).
 `apidoo-test` a aussi 014 (IT-04, 6 nov. 2026) ; **014 en attente pour `apidoo`**.
 
+## v5.92 · à publier en recette · documents juridiques et paiement prêt pour les CGV
+Pas de migration. **Fonction serveur « paiement » modifiée** (relancer « Fonctions serveur » › recette). Demande de
+Pierre-Louis du 28 nov. 2026 (liste C de `LANCEMENT.md`). Textes non validés par un juriste : `docs/juridique/README.md`.
+
+Pour l'apiculteur :
+1. **Page de paiement** : case obligatoire « J'accepte les conditions générales de vente… » qui vaut aussi demande que
+   l'offre ou les gouttes commencent tout de suite ; texte au-dessus du bouton sur le renouvellement et la résiliation.
+2. **Mon offre** : bouton « Résilier mon abonnement » (abonnement par carte), qui ouvre directement la confirmation de
+   résiliation dans l'espace Stripe, puis revient avec « Résiliation enregistrée ».
+3. **Pages juridiques** : mentions légales, CGU, CGV, liées depuis l'inscription (la case « 15 ans ou plus » vaut aussi
+   acceptation des CGU), le compte, Réglages, Mon offre, Choisir une offre, Recharger, la page de commande et apiviz.fr.
+4. **TVA** : en franchise en base (secret `TVA_MENTION`), plus de ligne « TVA (20 %) » dans Recharger et « TVA non
+   applicable » sous les prix ; la mention est imprimée sur les factures Stripe.
+
+Pour l'équipe :
+- `scripts/pages-juridiques.mjs` produit `mentions-legales.html`, `cgu.html`, `cgv.html` depuis `docs/juridique/` ;
+  `tests/unitaires/juridique.test.mjs` vérifie qu'elles sont à jour.
+- Politique de confidentialité : Stripe ajouté ; « ni mesure d'audience » corrigé (la v5.86 mesure l'usage).
+- Avant le mode réel : adresse des CGV dans Stripe › Informations publiques (`docs/PAIEMENT.md`).
+
+À vérifier (recette, mode test Stripe) :
+- [ ] S'abonner : la page Stripe montre la case, impossible de payer sans la cocher ; le lien ouvre les CGV.
+- [ ] Recharger › Payer : même case ; une facture est envoyée par e-mail avec le pied « Exécution immédiate… ».
+- [ ] Mon offre › Résilier mon abonnement → confirmation Stripe → retour : « Résiliation enregistrée », offre résiliée
+      jusqu'à l'échéance ; Gérer mon abonnement › Réactiver.
+- [ ] Inscription : la case renvoie vers les CGU ; liens « Mentions légales » sur l'écran de connexion et en bas de Réglages.
+- [ ] Avec `TVA_MENTION` réglé : Recharger sans ligne de TVA, « TVA non applicable » sous les prix.
 ## v5.91 · à publier en recette · paiement par carte (Stripe, mode test d'abord)
 **Migration 043** (additive, ne casse pas l'ancienne version ; d'abord `apidoo-test`). **Deux nouvelles fonctions
 serveur** : « paiement » et « stripe-webhook ». Demande de Pierre-Louis du 27 nov. 2026 : « construis toute la partie

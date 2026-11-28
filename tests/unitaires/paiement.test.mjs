@@ -121,3 +121,21 @@ test("applis natives : pas de bouton de paiement par carte", () => {
   const s = fs.readFileSync("src/domaines/compte/offre.js", "utf8");
   assert.match(s, /Plateforme\?\.native\) \{ st\.paiement = false; return; \}/);
 });
+
+test("page de paiement : case CGV avec demande d'exécution immédiate, textes dans la limite de Stripe (v5.92)", () => {
+  const cgv = "https://app.apiviz.fr/cgv.html";
+  for (const type of ["abonnement", "recharge"]) {
+    const t = P.textesCommande(type, cgv);
+    assert.ok(t.terms_of_service_acceptance.message.includes(`(${cgv})`), "lien vers les CGV");
+    assert.match(t.terms_of_service_acceptance.message, /dès le paiement/);
+    for (const m of [t.terms_of_service_acceptance.message, t.submit.message]) assert.ok(m.length <= 1200);
+  }
+  assert.match(P.textesCommande("abonnement", cgv).submit.message, /Résilier mon abonnement/);
+  assert.match(P.textesCommande("recharge", cgv).terms_of_service_acceptance.message, /perdre mon droit de rétractation/);
+});
+
+test("pied des factures : mention de TVA seulement si elle est réglée", () => {
+  assert.equal(P.piedFacture("", "u").split("\n").length, 1);
+  const pied = P.piedFacture("TVA non applicable, art. 293 B du CGI", "u");
+  assert.match(pied, /^TVA non applicable, art\. 293 B du CGI\nExécution immédiate/);
+});

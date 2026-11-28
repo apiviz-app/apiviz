@@ -1,10 +1,12 @@
 # Registre des traitements (RGPD, art. 30) — document interne
 
-*Projet du 24 nov. 2026, d'après le code (main `9ca73b4` + PR #126, #127) et `confidentialite.html`. À tenir à jour à
+*Projet du 24 nov. 2026, d'après le code (main `9ca73b4` + PR #126, #127) et `confidentialite.html` ; mis à jour le
+28 nov. 2026 (paiement Stripe v5.91, sous-traitants). À tenir à jour à
 chaque migration qui ajoute une donnée personnelle. Non publié.*
 
-**Responsable** : [DÉNOMINATION], [ADRESSE], représenté par [NOM]. **Contact** : [E-MAIL]. Pas de délégué à la protection
-des données obligatoire (pas de suivi à grande échelle ni de données sensibles) ; [NOM] est le référent.
+**Responsable** : [DÉNOMINATION], [ADRESSE DU SIÈGE], représenté par [DIRECTEUR DE LA PUBLICATION]. **Contact** :
+contact@apiviz.fr. Pas de délégué à la protection des données obligatoire (pas de suivi à grande échelle ni de données
+sensibles) ; [DIRECTEUR DE LA PUBLICATION] est le référent.
 
 ## Traitements dont Apiviz est responsable
 
@@ -18,9 +20,9 @@ des données obligatoire (pas de suivi à grande échelle ni de données sensibl
 | 6 | Rappels (040) | Utilisateurs abonnés | Abonnement Web Push de l'appareil, préférences | Envoyer au plus un rappel par matin | Consentement (autorisation du navigateur) | Jusqu'au désabonnement | Service de notification du navigateur (Google, Apple, Mozilla) |
 | 7 | Journal des modifications | Utilisateurs | Ancienne valeur, auteur, date | Réparer une erreur | Intérêt légitime | 1 an | Responsables de l'exploitation |
 | 8 | Journal des erreurs | Utilisateurs | Version, écran, message (sans e-mail ni donnée d'exploitation) | Corriger les pannes | Intérêt légitime | 90 jours | Équipe Apiviz |
-| 9 | Offres et facturation (à venir, D-14) | Clients payants | Offre, dates, factures ; paiement chez [PRESTATAIRE] | Vendre les offres, obligations comptables | Contrat ; obligation légale | Factures : 10 ans (Code de commerce, art. L123-22) | [PRESTATAIRE], comptable |
-| 11 | Dernière activité et e-mails (042) | Utilisateurs | Dernier jour d'ouverture ; journal des e-mails (nature, date) ; e-mail et prénom transmis à Brevo à l'envoi | Durée de conservation des comptes, préavis, confirmation de suppression | Obligation légale (limitation de la conservation) ; contrat | Dernier jour : jusqu'à suppression du compte ; journal : 2 ans | Brevo (France) |
+| 9 | Offres et facturation (v5.91, migration 043) | Clients payants | Offre, dates, montants, identifiant client et abonnement Stripe, notifications de paiement (`paiements_evenements`), acceptation des CGV et demande d'exécution immédiate (session Stripe) ; carte chez Stripe seulement | Vendre les offres et recharges, preuve de la commande, obligations comptables | Contrat ; obligation légale (comptabilité) | Pièces comptables : 10 ans (Code de commerce, art. L123-22) ; le reste : durée du contrat puis 5 ans (prescription) [À VALIDER] | Stripe ; comptable |
 | 10 | Sauvegardes | Tous | Copie chiffrée de la base et des fichiers | Reprise après incident | Intérêt légitime | 30 jours (base), 4 semaines (fichiers) | Cloudflare R2 (chiffré, clé chez le responsable) |
+| 11 | Dernière activité et e-mails (042) | Utilisateurs | Dernier jour d'ouverture ; journal des e-mails (nature, date) ; e-mail et prénom transmis à Brevo à l'envoi | Durée de conservation des comptes, préavis, confirmation de suppression | Obligation légale (limitation de la conservation) ; contrat | Dernier jour : jusqu'à suppression du compte ; journal : 2 ans | Brevo (France) |
 
 ## Traitements où Apiviz est sous-traitant (annexe des CGU)
 
@@ -34,10 +36,12 @@ des données obligatoire (pas de suivi à grande échelle ni de données sensibl
 
 | Sous-traitant | Rôle | Lieu | Garanties | Accord signé |
 |---|---|---|---|---|
-| Supabase, Inc. | Base, comptes, fichiers, fonctions serveur | Projet hébergé dans l'UE ; société aux États-Unis | Accord de traitement (DPA) de Supabase, clauses contractuelles types | [ ] [DATE] |
+| Supabase Pte. Ltd. (Singapour) | Base, comptes, fichiers, fonctions serveur | Projets `Apiviz` et `Apiviz-test` à Francfort (eu-central-1) ; support possible hors UE | Accord de traitement (DPA) de Supabase, clauses contractuelles types | [ ] [DATE] |
 | Cloudflare, Inc. | Hébergement des fichiers de l'app, sauvegardes R2 | Réseau mondial ; États-Unis | DPA de Cloudflare ; certifiée Data Privacy Framework [À VÉRIFIER sur dataprivacyframework.gov] | [ ] [DATE] |
-| Anthropic, PBC | Modèle Claude (API, factures, carnets) | États-Unis | Conditions commerciales et DPA d'Anthropic, clauses contractuelles types ; pas d'entraînement sur les données de l'API | [ ] [DATE] |
-| Brevo (Sendinblue SAS) | Envoi des e-mails d'Apiviz | France, Allemagne | DPA de Brevo | [ ] [DATE] |
+| Anthropic Ireland, Limited (contractant UE ; Anthropic, PBC aux États-Unis) | Modèle Claude (API, factures, carnets) | États-Unis | Conditions commerciales et DPA d'Anthropic, clauses contractuelles types ; pas d'entraînement sur les données de l'API | [ ] [DATE] |
+| Brevo (Sendinblue SAS) | Envoi des e-mails d'Apiviz | France, Allemagne | DPA de Brevo (dans ses conditions générales d'utilisation) | [ ] [DATE] |
+| Stripe (entité de l'accord de services Stripe ; Stripe Payments Europe, Ltd. pour un compte français [À VÉRIFIER]) | Paiement des offres et recharges, factures | UE ; transferts vers Stripe, LLC (États-Unis) | DPA de Stripe, partie de l'accord de services ; Stripe est aussi responsable de traitement pour la fraude et la lutte anti-blanchiment | [ ] [DATE] |
+| OVHcloud | Bureau d'enregistrement du nom de domaine apiviz.fr | France | Aucune donnée d'utilisateur ; seulement les coordonnées du titulaire du domaine | Sans objet |
 | GitHub, Inc. | Code, actions (sauvegarde : données chiffrées en transit seulement) | États-Unis | DPA de GitHub | [ ] [DATE] |
 | IGN, Open-Meteo, jsDelivr | Carte, météo, bibliothèques | France, UE, mondial | Reçoivent l'adresse IP ou la position des ruchers, aucune donnée de compte | Sans objet |
 

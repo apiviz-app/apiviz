@@ -12,7 +12,7 @@
 // Globales lues à l'appel : S, sb, esc, shell, render, toast, fail, ACT.
 import * as R from "./regles-offre.js";
 
-const st = { cle: "", data: null, offres: [], chargement: null, indispo: false, an: true, pack: 0, paiement: null, paiementEnVol: false, retour: "" };
+const st = { cle: "", data: null, offres: [], chargement: null, indispo: false, an: true, pack: 0, paiement: null, franchise: false, paiementEnVol: false, retour: "" };
 const cleExploitation = () => (typeof sb != "undefined" && sb.rest?.headers?.["x-exploitation"]) || "";
 const MODE = "apiviz.api.mode";
 
@@ -71,7 +71,7 @@ function verifierPaiement() {
   // la page Stripe ferait sortir de l'application. Pas de bouton de paiement par carte dans l'appli installée.
   if (window.Plateforme?.native) { st.paiement = false; return; }
   st.paiementEnVol = true;
-  paiement({ action: "etat" }).then((j) => { st.paiement = !!j.actif; }).catch(() => { st.paiement = false; })
+  paiement({ action: "etat" }).then((j) => { st.paiement = !!j.actif; st.franchise = !!j.franchise; }).catch(() => { st.paiement = false; })
     .finally(() => { st.paiementEnVol = false; if (["offre", "offres", "recharge"].includes(S.route)) render(); });
 }
 
@@ -86,6 +86,7 @@ const MESSAGES_RETOUR = {
   ok: "Merci ! Ton abonnement s'active, cela prend quelques secondes.",
   recharge: "Merci ! Tes gouttes arrivent dans quelques secondes.",
   annule: "Paiement annulé : rien n'a été débité.",
+  resilie: "Résiliation enregistrée : ton offre court jusqu'à son échéance. Tu peux la réactiver d'ici là.",
 };
 /** Retour de Stripe : l'écran « Mon offre », puis l'offre relue quelques fois le temps que Stripe prévienne le serveur. */
 function apresRetour() {
@@ -98,6 +99,8 @@ function apresRetour() {
   [2000, 5000, 10000].forEach((t) => setTimeout(() => charger(true).then(() => { if (["offre", "offres", "recharge"].includes(S.route)) render(); }), t));
 }
 
+// Pages juridiques (v5.92), à la racine du site comme confidentialite.html.
+const LIENS_LEGAUX = '<a class="link" href="cgv.html" target="_blank" rel="noopener">Conditions de vente</a> · <a class="link" href="cgu.html" target="_blank" rel="noopener">Conditions d\'utilisation</a>';
 const goutte = (taille = 16) => `<svg class="of-goutte" width="${taille}" height="${taille}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`;
 const offreDe = (id) => st.offres.find((o) => o.id === id) || { id, nom: id, gouttes_mois: 0, prix_an_cts: 0, prix_mois_cts: 0, avantages: [] };
 const limite = (n, max, mot) => (max ? `${n} ${mot}${n > 1 ? "s" : ""} sur ${max}` : `${n} ${mot}${n > 1 ? "s" : ""}`);
@@ -150,7 +153,8 @@ function ecranOffre() {
   const resilier = peutResilier ? `<section class="card"><button type="button" class="link crit" data-act="ofresilier">${d.abonnement.statut === "essai" ? "Arrêter l'essai" : "Résilier l'offre"}</button><p class="small">Tes données restent entières ; seules les gouttes du mois et les limites changent.</p></section>` : "";
   const gerer = canal === "web" && d.responsable ? `<section class="card"><h2>Abonnement par carte</h2>
       <p class="small">Payé par carte, renouvelé tout seul. Carte, factures, changement d'offre ou résiliation : tout se fait dans l'espace de paiement sécurisé (Stripe).</p>
-      <button type="button" class="btn" data-act="ofgerer">Gérer mon abonnement</button></section>`
+      <div class="of-gestes"><button type="button" class="btn" data-act="ofgerer">Gérer mon abonnement</button>${d.abonnement?.statut !== "resilie" ? '<button type="button" class="btn" data-act="ofresilierweb">Résilier mon abonnement</button>' : ""}</div>
+      <p class="small">${LIENS_LEGAUX}</p></section>`
     : canal === "apple" || canal === "google" ? `<section class="card"><p class="small">Abonnement pris sur ${canal === "apple" ? "iPhone (App Store)" : "Android (Google Play)"} : il se gère et se résilie depuis les réglages du téléphone.</p></section>` : "";
   shell("Mon offre", "", "", `<div class="of">${carte}${gestes}${detail}${reglage}${gerer}${resilier}${d.admin ? equipe(d) : ""}</div>`);
 }
@@ -206,14 +210,15 @@ function ecranOffres() {
       <button type="button" class="${st.an ? "on" : ""}" aria-pressed="${st.an}" data-act="ofperiode" data-v="an">À l'année · 2 mois offerts</button>
     </div>
     ${st.offres.map(carte).join("")}
-    <p class="small">Une limite ne bloque jamais la lecture ni une saisie au rucher. Les gouttes du forfait se renouvellent chaque mois ; celles que tu recharges ne se perdent pas.${st.paiement ? " Paiement par carte sécurisé par Stripe, résiliable à tout moment ; pendant un essai en cours, la carte n'est débitée qu'à sa fin." : ""}</p>
+    <p class="small">${st.franchise ? "Prix en euros, TVA non applicable (art. 293 B du CGI)." : "Prix en euros, toutes taxes comprises."} Une limite ne bloque jamais la lecture ni une saisie au rucher. Les gouttes du forfait se renouvellent chaque mois ; celles que tu recharges ne se perdent pas.${st.paiement ? " Paiement par carte sécurisé par Stripe, résiliable à tout moment ; pendant un essai en cours, la carte n'est débitée qu'à sa fin." : ""}</p>
+    <p class="small">${LIENS_LEGAUX}</p>
   </div>`);
 }
 
 // ---------- Recharge ----------
-/** Où vont les euros d'une recharge : coût de l'IA, TVA, frais de paiement, Apiviz (centimes). */
-export function repartition(p) {
-  const tva = Math.round(p.prix_cts - p.prix_cts / 1.2), frais = Math.round(p.prix_cts * 0.015 + 25), ia = p.gouttes;
+/** Où vont les euros d'une recharge : coût de l'IA, TVA (aucune en franchise en base), frais de paiement, Apiviz (centimes). */
+export function repartition(p, franchise = false) {
+  const tva = franchise ? 0 : Math.round(p.prix_cts - p.prix_cts / 1.2), frais = Math.round(p.prix_cts * 0.015 + 25), ia = p.gouttes;
   return { ia, tva, frais, apiviz: p.prix_cts - ia - tva - frais };
 }
 
@@ -221,7 +226,7 @@ function ecranRecharge() {
   const d = offreConnue();
   if (!d) return attente("Recharger des gouttes");
   verifierPaiement();
-  const p = R.RECHARGES[st.pack] || R.RECHARGES[0], r = repartition(p);
+  const p = R.RECHARGES[st.pack] || R.RECHARGES[0], r = repartition(p, st.franchise);
   const ligne = (classe, texte, cts) => `<div class="of-rang"><span><i class="of-pt ${classe}" aria-hidden="true"></i>${texte}</span><b>${esc(R.prix(cts))}</b></div>`;
   const barre = ["ia", "tva", "frais", "apiviz"].map((k) => `<i class="${k}" style="width:${(r[k] / p.prix_cts * 100).toFixed(1)}%"></i>`).join("");
   shell("Recharger des gouttes", "", "", `<div class="of">
@@ -229,11 +234,12 @@ function ecranRecharge() {
     <div class="of-packs" role="radiogroup" aria-label="Recharge">${R.RECHARGES.map((x, i) => `<button type="button" role="radio" aria-checked="${i === st.pack}" class="of-pack ${i === st.pack ? "on" : ""}" data-act="ofpack" data-v="${i}">
       <span><b>${esc(x.nom)}</b><span class="small">${x.gouttes} gouttes · ${esc(R.environQuestions(x.gouttes))}</span></span><b class="of-pack-prix">${esc(R.prix(x.prix_cts))}</b></button>`).join("")}</div>
     <section class="card"><h2>Où vont tes ${esc(R.prix(p.prix_cts))}</h2><div class="of-barre" aria-hidden="true">${barre}</div>
-      ${ligne("ia", "Coût réel de l'IA", r.ia)}${ligne("tva", "TVA (20 %)", r.tva)}${ligne("frais", "Frais de paiement", r.frais)}${ligne("apiviz", "Apiviz", r.apiviz)}
+      ${ligne("ia", "Coût réel de l'IA", r.ia)}${st.franchise ? "" : ligne("tva", "TVA (20 %)", r.tva)}${ligne("frais", "Frais de paiement", r.frais)}${ligne("apiviz", "Apiviz", r.apiviz)}
     </section>
     ${st.paiement || !d.admin ? `<button type="button" class="btn main" data-act="ofpayer">Payer ${esc(R.prix(p.prix_cts))}</button>` : ""}
     ${d.admin ? `<button type="button" class="btn ${st.paiement ? "sm" : "main"}" data-act="ofcrediter" data-v="${p.gouttes}">Créditer ${p.gouttes} gouttes sans payer (équipe)</button>` : ""}
-    <p class="small">${st.paiement ? "Paiement par carte sécurisé par Stripe : tu reviens ici une fois payé, et les gouttes s'ajoutent toutes seules." : "Paiement par carte bientôt disponible, puis par l'achat intégré sur iPhone et Android."}</p>
+    <p class="small">${st.paiement ? "Paiement par carte sécurisé par Stripe : tu reviens ici une fois payé, et les gouttes s'ajoutent toutes seules." : "Paiement par carte bientôt disponible, puis par l'achat intégré sur iPhone et Android."}${st.franchise ? " TVA non applicable (art. 293 B du CGI)." : ""}</p>
+    <p class="small">${LIENS_LEGAUX}</p>
   </div>`);
 }
 
@@ -255,6 +261,7 @@ export const actions = {
     : toast("Le paiement arrive bientôt dans Apiviz. En attendant, l'équipe peut créditer des gouttes à la demande.")),
   ofabonner: (id) => allerPayer({ action: "abonner", offre: id, periode: st.an ? "an" : "mois" }).catch(fail),
   ofgerer: () => allerPayer({ action: "gerer" }).catch(fail),
+  ofresilierweb: () => allerPayer({ action: "gerer", but: "resilier" }).catch(fail),
   ofessai: (id) => appliquer(sb.rpc("demarrer_essai", { p_offre: id }), "Essai démarré : 30 jours offerts.").then(() => ACT.go("offre")).catch(fail),
   ofresilier: () => {
     const essai = st.data?.abonnement?.statut === "essai";
@@ -272,7 +279,7 @@ if (typeof window != "undefined" && typeof location != "undefined") {
   try {
     const u = new URL(location.href), r = u.searchParams.get("paiement");
     if (r) {
-      st.retour = ["ok", "recharge", "annule", "gere"].includes(r) ? r : "";
+      st.retour = ["ok", "recharge", "annule", "gere", "resilie"].includes(r) ? r : "";
       u.searchParams.delete("paiement");
       history.replaceState(history.state, "", u.pathname + u.search + u.hash);
     }

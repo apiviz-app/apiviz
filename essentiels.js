@@ -267,6 +267,7 @@ const ES = (() => {
         <p class="small">Le fichier comptable regroupe les ventes et les achats de ${esc(S.annee || new Date().getFullYear())}, prêt à envoyer. La sauvegarde garde tout.</p>
         <details class="rg-autres"><summary>Autres fichiers</summary><div class="chips"><button type="button" data-act="exp" data-v="visites">Visites</button><button type="button" data-act="exp" data-v="ventes">Ventes</button><button type="button" data-act="exp" data-v="depenses">Dépenses</button><button type="button" data-act="exp" data-v="clients">Clients</button></div></details>
       </div>
+      <p class="small rg-legal"><a class="link" href="cgv.html" target="_blank" rel="noopener">Conditions de vente</a> · <a class="link" href="cgu.html" target="_blank" rel="noopener">Conditions d’utilisation</a> · <a class="link" href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a class="link" href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></p>
       <div class="rg-fin"><button type="button" class="link" data-act="logout">Se déconnecter</button></div>
     </div>`);
     document.querySelector(".wrap")?.classList.add("rg-ecran");
